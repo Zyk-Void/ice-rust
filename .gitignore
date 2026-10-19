@@ -30,3 +30,9 @@ target/*
 website/.ice/*
 .git/ice-release-helper.exe
 publish-*.log
+
+# ice fork: python hooks auto-create this in any cwd
+.venv/
+# local secrets / env
+.env
+.env.*
