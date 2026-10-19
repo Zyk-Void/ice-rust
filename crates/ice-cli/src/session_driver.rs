@@ -435,7 +435,9 @@ pub fn map_remote_event(event: &RemoteEvent) -> Option<UiEvent> {
 fn auth_hint(error: String) -> String {
     let lower = error.to_lowercase();
     if lower.contains("authentication") || lower.contains("token") {
-        format!("{error} (retrieve the token printed by `icers --server` and pass `--token <token>`)")
+        format!(
+            "{error} (retrieve the token printed by `icers --server` and pass `--token <token>`)"
+        )
     } else {
         error
     }

@@ -121,7 +121,11 @@ pub(super) fn add_update_notices(
         add_update_panel(&group, "Update Available", &body, colors.warning);
     }
 
-    for notice in report.notices.iter().filter(|notice| notice.name != "icers") {
+    for notice in report
+        .notices
+        .iter()
+        .filter(|notice| notice.name != "icers")
+    {
         let body = format!(
             "{}\n{} {}",
             colors.muted.fg(&format!(

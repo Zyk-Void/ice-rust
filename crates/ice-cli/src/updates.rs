@@ -1206,7 +1206,9 @@ fn activate_direct_update(plan: &DirectUpdatePlan) -> Result<semver::Version, St
 
     let validation = (|| {
         if !files_are_identical(&plan.staged_exe, &plan.target_exe)? {
-            return Err("updated icers executable does not match the staged executable".to_string());
+            return Err(
+                "updated icers executable does not match the staged executable".to_string(),
+            );
         }
         let updated_version = validate_ice_executable_version(
             &plan.target_exe,
@@ -1622,7 +1624,9 @@ fn run_windows_self_update(build: bool, version: Option<&str>) -> i32 {
     let _ = write_windows_update_status(
         &plan.status_file,
         "scheduled",
-        &format!("validated icers {staged_version}; waiting to replace icers after this process exits"),
+        &format!(
+            "validated icers {staged_version}; waiting to replace icers after this process exits"
+        ),
     );
     let mut command = windows_update_helper_command(
         &powershell,

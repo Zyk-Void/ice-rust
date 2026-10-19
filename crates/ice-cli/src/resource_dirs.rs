@@ -429,7 +429,9 @@ mod tests {
         assert!(diags[0]
             .message
             .contains("/home/.icers/agent/skills/echo/SKILL.md"));
-        assert!(diags[0].message.contains("/proj/.icers/skills/echo/SKILL.md"));
+        assert!(diags[0]
+            .message
+            .contains("/proj/.icers/skills/echo/SKILL.md"));
         assert_eq!(diags[0].path, "/home/.icers/agent/skills/echo/SKILL.md");
     }
 

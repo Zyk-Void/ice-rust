@@ -720,10 +720,9 @@ fn linked_package_is_discovered_and_unlinked_cleanly() {
         return;
     }
     let temp = tempfile::tempdir().unwrap();
-    let source =
-        PathBuf::from(std::env::var_os("ICERS_TEST_PROVIDER_PACKAGE").expect(
-            "set ICERS_TEST_PROVIDER_PACKAGE to packages/ice-providers for link/unlink testing",
-        ));
+    let source = PathBuf::from(std::env::var_os("ICERS_TEST_PROVIDER_PACKAGE").expect(
+        "set ICERS_TEST_PROVIDER_PACKAGE to packages/ice-providers for link/unlink testing",
+    ));
     let run = |args: &[&str]| {
         Command::new(env!("CARGO_BIN_EXE_icers"))
             .current_dir(temp.path())
