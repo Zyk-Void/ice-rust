@@ -44,6 +44,9 @@ done
 done
 # Renamed packages sort differently; let cargo rewrite Cargo.lock in its own order.
 cargo metadata --format-version 1 --offline >/dev/null 2>&1 || cargo metadata --format-version 1 >/dev/null
+# Renames change line lengths, and CI checks rustfmt and the embedded-docs copy.
+cargo fmt --all
+sh scripts/sync-embedded-docs.sh >/dev/null
 git add -u
 
 # 3. Anything left is unexpected: fail so a human looks at it.
