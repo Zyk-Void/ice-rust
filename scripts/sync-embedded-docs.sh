@@ -1,5 +1,5 @@
 #!/bin/sh
-# Refresh the documentation snapshot that is compiled into the `ice` binary.
+# Refresh the documentation snapshot that is compiled into the `icers` binary.
 #
 # crates/ice-cli/src/docs_tool.rs pulls these files in with include_str!, so they
 # must be byte-copies of the dedicated docs/ice-tool/ sources. Keep these

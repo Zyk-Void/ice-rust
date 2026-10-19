@@ -20,14 +20,14 @@ target/*
 # Static frontend deployment bundle
 .deploy/
 .codegraph
-.ice/*
-!.ice/skills/
-.ice/skills/*
-!.ice/skills/ice-extension-authoring/
-!.ice/skills/ice-extension-authoring/SKILL.md
-!.ice/skills/ice-release/
-!.ice/skills/ice-release/SKILL.md
-website/.ice/*
+.icers/*
+!.icers/skills/
+.icers/skills/*
+!.icers/skills/ice-extension-authoring/
+!.icers/skills/ice-extension-authoring/SKILL.md
+!.icers/skills/ice-release/
+!.icers/skills/ice-release/SKILL.md
+website/.icers/*
 .git/ice-release-helper.exe
 publish-*.log
 

@@ -14,7 +14,7 @@ use crossterm::{
 use thiserror::Error;
 
 /// Mouse tracking prevents native text selection in macOS terminal emulators.
-/// ICE only consumes wheel events, so keep the platform default selectable.
+/// ICERS only consumes wheel events, so keep the platform default selectable.
 const fn mouse_tracking_enabled_for(is_macos: bool) -> bool {
     !is_macos
 }
@@ -49,12 +49,12 @@ fn keyboard_protocol_enabled_for(
     !is_macos || !is_ime_incompatible_terminal(term_program, term)
 }
 
-/// `ICE_KITTY_KEYBOARD=1` forces the protocol on, `ICE_KITTY_KEYBOARD=0` forces
+/// `ICERS_KITTY_KEYBOARD=1` forces the protocol on, `ICERS_KITTY_KEYBOARD=0` forces
 /// legacy input; otherwise [`keyboard_protocol_enabled_for`] decides from the
 /// platform and the terminal name.
 #[cfg(unix)]
 fn keyboard_protocol_enabled() -> bool {
-    if let Some(value) = std::env::var_os("ICE_KITTY_KEYBOARD") {
+    if let Some(value) = std::env::var_os("ICERS_KITTY_KEYBOARD") {
         return value != "0";
     }
     keyboard_protocol_enabled_for(
@@ -626,7 +626,7 @@ mod tests {
             None
         ));
         // An unknown local terminal keeps the protocol rather than silently
-        // losing Shift+Enter; `ICE_KITTY_KEYBOARD=0` is the escape hatch.
+        // losing Shift+Enter; `ICERS_KITTY_KEYBOARD=0` is the escape hatch.
         assert!(keyboard_protocol_enabled_for(
             true,
             None,

@@ -9,7 +9,7 @@ use ice_tui::Container;
 use crate::config;
 
 /// Path of the "first-time setup done" sentinel, under the agent dir
-/// (`~/.ice/agent/.setup_done`).
+/// (`~/.icers/agent/.setup_done`).
 pub fn setup_done_path() -> Option<std::path::PathBuf> {
     config::agent_dir().ok().map(|d| d.join(".setup_done"))
 }
@@ -22,7 +22,7 @@ pub fn setup_done() -> bool {
 /// Mark first-time setup complete (write the sentinel). Best-effort.
 pub fn mark_setup_done() -> std::io::Result<()> {
     let path = setup_done_path().ok_or_else(|| {
-        std::io::Error::new(std::io::ErrorKind::NotFound, "no home dir for .ice/agent")
+        std::io::Error::new(std::io::ErrorKind::NotFound, "no home dir for .icers/agent")
     })?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -44,8 +44,8 @@ pub fn maybe_first_time_setup(chat: &Arc<Container>) -> bool {
     let mut lines: Vec<String> = Vec::new();
     lines.extend(border.render(80));
     lines.push(format!(
-        " {} Welcome to ice!",
-        accent.fg(&bold("Welcome to ice!"))
+        " {} Welcome to icers!",
+        accent.fg(&bold("Welcome to icers!"))
     ));
     lines.push(format!(
         " {} Pick a theme with /theme (dark/light/monochrome).",
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn test_sentinel_paths_under_agent_dir() {
         // The sentinel lives directly under the resolved agent dir and honors
-        // the `ICE_CODING_AGENT_DIR` override (delegated to `config::agent_dir`).
+        // the `ICERS_CODING_AGENT_DIR` override (delegated to `config::agent_dir`).
         let _guard = crate::config::test_support::env_lock().lock().unwrap();
         let prev = std::env::var_os(crate::config::CONFIG_DIR_ENV);
         let tmp = tempfile::TempDir::new().unwrap();

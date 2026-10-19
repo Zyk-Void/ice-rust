@@ -64,7 +64,7 @@ function Invoke-Test([string] $Name, [scriptblock] $Arrange, [scriptblock] $Chec
     $env:PROCESSOR_ARCHITEW6432 = $null
     $CaseDir = Join-Path $TestRoot $Name
     $env:LOCALAPPDATA = Join-Path $CaseDir 'local app data'
-    $TestState.InstallDir = Join-Path $env:LOCALAPPDATA 'Programs\ice'
+    $TestState.InstallDir = Join-Path $env:LOCALAPPDATA 'Programs\icers'
     $TestState.Options = @{ Version = 'v0.3.19' }
     $TestState.Mode = 'Success'
     $TestState.FixtureArchive = $TestState.BinaryArchive
@@ -92,10 +92,10 @@ function Invoke-Test([string] $Name, [scriptblock] $Arrange, [scriptblock] $Chec
 
 function Assert-Installed {
     Assert-True (-not $TestState.Failure) "Installation failed: $TestState.Failure"
-    $Installed = Join-Path $TestState.InstallDir 'ice.exe'
-    Assert-True (Test-Path -LiteralPath $Installed -PathType Leaf) 'ice.exe was not installed.'
+    $Installed = Join-Path $TestState.InstallDir 'icers.exe'
+    Assert-True (Test-Path -LiteralPath $Installed -PathType Leaf) 'icers.exe was not installed.'
     Assert-True ((Get-FileHash -LiteralPath $Installed).Hash -eq $TestState.BinaryHash) 'Installed binary differs from the archive.'
-    Assert-True ($TestState.Output -match 'ice fixture 0\.3\.19') 'Installed binary did not print its version.'
+    Assert-True ($TestState.Output -match 'icers fixture 0\.3\.19') 'Installed binary did not print its version.'
     Assert-True ($TestState.Downloads.Count -eq 2) 'Expected archive and checksum downloads.'
     Assert-True ($TestState.Downloads[0] -eq 'https://github.com/Zyk-Void/ice-rust/releases/download/v0.3.19/ice-v0.3.19-x86_64-pc-windows-msvc.zip') 'Wrong archive URL.'
     Assert-True ($TestState.Downloads[1] -eq "$($TestState.Downloads[0]).sha256") 'Wrong checksum URL.'
@@ -119,23 +119,23 @@ function Assert-FailedBeforeExtraction([string] $Message) {
 try {
     $FixtureDir = Join-Path $TestRoot 'fixture'
     New-Item -ItemType Directory -Path $FixtureDir -Force | Out-Null
-    $Binary = Join-Path $FixtureDir 'ice.exe'
+    $Binary = Join-Path $FixtureDir 'icers.exe'
     if ($OnWindows) {
         $Source = Join-Path $TestRoot 'fixture.cs'
-        [IO.File]::WriteAllText($Source, 'class Fixture { static void Main() { System.Console.WriteLine("ice fixture 0.3.19"); } }')
+        [IO.File]::WriteAllText($Source, 'class Fixture { static void Main() { System.Console.WriteLine("icers fixture 0.3.19"); } }')
         # .NET Framework's compiler is included in Windows, including the CI image.
         $Compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
         & $Compiler /nologo /target:exe "/out:$Binary" $Source
         if ($LASTEXITCODE -ne 0) { throw 'Could not compile the Windows test fixture.' }
     }
     else {
-        [IO.File]::WriteAllText($Binary, "#!/bin/sh`nprintf 'ice fixture 0.3.19\n'`n")
+        [IO.File]::WriteAllText($Binary, "#!/bin/sh`nprintf 'icers fixture 0.3.19\n'`n")
     }
     $TestState.BinaryHash = (Get-FileHash -LiteralPath $Binary).Hash
     $TestState.BinaryArchive = Join-Path $TestRoot 'binary.zip'
     Compress-Archive -LiteralPath $Binary -DestinationPath $TestState.BinaryArchive
     $Readme = Join-Path $TestRoot 'README.txt'
-    [IO.File]::WriteAllText($Readme, 'Archive without ice.exe')
+    [IO.File]::WriteAllText($Readme, 'Archive without icers.exe')
     $TestState.EmptyArchive = Join-Path $TestRoot 'missing-binary.zip'
     Compress-Archive -LiteralPath $Readme -DestinationPath $TestState.EmptyArchive
 
@@ -145,11 +145,11 @@ try {
         Assert-True ($TestState.Output -match 'user PATH') 'Installer omitted PATH instructions.'
     }
     Invoke-Test 'custom-directory' {
-        $TestState.InstallDir = Join-Path $CaseDir "tools [ice]'s directory"
+        $TestState.InstallDir = Join-Path $CaseDir "tools [icers]'s directory"
         $TestState.Options = @{ Version = '0.3.19'; Dir = $TestState.InstallDir }
     } {
         Assert-Installed
-        Assert-True ($TestState.Output.Contains("tools [ice]''s directory;")) 'PATH instruction did not quote the apostrophe.'
+        Assert-True ($TestState.Output.Contains("tools [icers]''s directory;")) 'PATH instruction did not quote the apostrophe.'
     }
     Invoke-Test 'latest-release' { $TestState.Options = @{} } {
         Assert-Installed
@@ -186,11 +186,11 @@ try {
     Invoke-Test 'checksum-mismatch-preserves-install' {
         $TestState.Mode = 'Mismatch'
         New-Item -ItemType Directory -Path $TestState.InstallDir -Force | Out-Null
-        [IO.File]::WriteAllText((Join-Path $TestState.InstallDir 'ice.exe'), 'existing installation')
+        [IO.File]::WriteAllText((Join-Path $TestState.InstallDir 'icers.exe'), 'existing installation')
     } {
         Assert-True ($TestState.Failure -like '*Checksum verification failed*') 'Checksum mismatch did not fail.'
         Assert-True ($TestState.Extractions -eq 0) 'Mismatched archive was extracted.'
-        Assert-True ((Get-Content -LiteralPath (Join-Path $TestState.InstallDir 'ice.exe') -Raw) -eq 'existing installation') 'Checksum mismatch overwrote the existing installation.'
+        Assert-True ((Get-Content -LiteralPath (Join-Path $TestState.InstallDir 'icers.exe') -Raw) -eq 'existing installation') 'Checksum mismatch overwrote the existing installation.'
     }
     foreach ($Mode in @('MissingChecksum', 'MalformedChecksum', 'WrongChecksumAsset')) {
         Invoke-Test $Mode { $TestState.Mode = $Mode } {
@@ -198,7 +198,7 @@ try {
         }
     }
     Invoke-Test 'missing-binary' { $TestState.FixtureArchive = $TestState.EmptyArchive } {
-        Assert-True ($TestState.Failure -eq 'Archive did not contain ice.exe.') 'Archive without ice.exe did not fail clearly.'
+        Assert-True ($TestState.Failure -eq 'Archive did not contain icers.exe.') 'Archive without icers.exe did not fail clearly.'
         Assert-True (-not (Test-Path -LiteralPath $TestState.InstallDir)) 'Incomplete archive created an installation directory.'
     }
     foreach ($Mode in @('ApiFailure', 'EmptyTag')) {

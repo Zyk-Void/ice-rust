@@ -37,7 +37,7 @@ elif args[0] == 'api':
         if 'homebrew-tap' in path:
             data = b'version "9.0.0"\n'
         elif 'scoop-bucket' in path:
-            data = Path('packaging/scoop/ice.json').read_bytes()
+            data = Path('packaging/scoop/icers.json').read_bytes()
         else:
             data = b'old manifest'
         print(json.dumps({'sha': 'existing-file-sha', 'content': base64.b64encode(data).decode()}))
@@ -80,7 +80,7 @@ class ChannelScriptTests(unittest.TestCase):
         return result, calls
 
     def version(self):
-        return json.loads((self.root / "packaging/scoop/ice.json").read_text())["version"]
+        return json.loads((self.root / "packaging/scoop/icers.json").read_text())["version"]
 
     def test_winget_retry_updates_existing_files_with_sha_without_duplicate_pr(self):
         result, calls = self.execute("winget-submit.sh", "existing", self.version())

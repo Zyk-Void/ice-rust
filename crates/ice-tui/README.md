@@ -3,11 +3,11 @@
 [![crates.io](https://img.shields.io/crates/v/ice-tui.svg)](https://crates.io/crates/ice-tui)
 [![docs.rs](https://docs.rs/ice-tui/badge.svg)](https://docs.rs/ice-tui)
 
-The terminal UI primitives behind the `ice` interactive agent: a component
+The terminal UI primitives behind the `icers` interactive agent: a component
 model, layout containers, an editor, transcript rendering, and both fullscreen
 and main-screen terminal modes.
 
-This is the rendering layer, not an extension point. Agents extend `ice` by
+This is the rendering layer, not an extension point. Agents extend `icers` by
 registering tools and event handlers (see
 [`ice-plugin-sdk`](https://crates.io/crates/ice-plugin-sdk)), and the CLI decides
 how to draw them.

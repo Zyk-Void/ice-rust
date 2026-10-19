@@ -77,7 +77,7 @@ serde_json::json!({
 `--list-models` 展示完整目录，不要求凭据；`--no-extensions` 同时禁用扩展实现和声明。
 `/provider` 展示完整目录与认证状态，选择或 `/provider <id>` 会即时切换当前会话并保存默认值。
 切换只使用会话中已认证的模型；失败时保留当前模型与原默认值。`/model` 用于选择具体模型。
-`/provider remove <id>` 删除配置；卸载 package 使用 `ice package unlink <name>`。
+`/provider remove <id>` 删除配置；卸载 package 使用 `icers package unlink <name>`。
 
 ## 4. 推荐实现骨架
 
@@ -155,12 +155,12 @@ OAuth package 另外使用 `register_oauth_provider`，认证 ID 应与推理 pr
 命令留在宿主。完整 action / response 契约见 [OAuth 扩展接口](authoring.md#11-oauth-扩展接口统一标准实验阶段)。
 
 ```sh
-ice auth login --provider vendor-example
-ice auth check --provider vendor-example --json
-ice auth refresh --provider vendor-example
-ice auth logout --provider vendor-example
+icers auth login --provider vendor-example
+icers auth check --provider vendor-example --json
+icers auth refresh --provider vendor-example
+icers auth logout --provider vendor-example
 # 尚未安装的动态库：显式路径写在 auth 子命令后
-ice auth check --provider vendor-example --extension /path/to/provider.dll --json
+icers auth check --provider vendor-example --extension /path/to/provider.dll --json
 ```
 
 `refresh` 需要对应 OAuth 实现；API key 不通过它刷新。`auth check` 只检查本地就绪状态，
@@ -244,7 +244,7 @@ cargo test --workspace
 本仓库不再提供 DeepSeek 的重复教学实现；CLI 跨项目测试使用正式 `ice_providers` 动态库。
 
 统一包验证在 ice-package 仓库运行 `cargo build -p ice-providers`、`cargo test -p ice-providers`。
-本仓库 CLI 测试通过 `ICE_TEST_PROVIDER_LIBRARY` 指定该包的 DLL / so / dylib，
-通过 `ICE_TEST_PROVIDER_PACKAGE` 指定 `packages/ice-providers` 源码目录，覆盖 link / unlink。
+本仓库 CLI 测试通过 `ICERS_TEST_PROVIDER_LIBRARY` 指定该包的 DLL / so / dylib，
+通过 `ICERS_TEST_PROVIDER_PACKAGE` 指定 `packages/ice-providers` 源码目录，覆盖 link / unlink。
 不设置路径的跳过结果不能作为跨项目验收；具体命令见 [Provider packages](../architecture/provider-packages.md#验证)。
 同一动态库必须注册全部预期 provider，并验证并发请求不会串用 factory 或 key。

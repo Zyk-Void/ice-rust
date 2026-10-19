@@ -1,17 +1,17 @@
-//! `ice auth` subcommand — persistent credential management. Mirrors the
+//! `icers auth` subcommand — persistent credential management. Mirrors the
 //! Rust-relevant slice of the TS `packages/coding-agent/src/cli/auth-command.ts`
 //! + `main.ts:runAuthCommand` + `core/auth-check.ts`.
 //!
 //! The host owns credential storage and standard login/check/logout/refresh
 //! commands. Packages own provider-specific policy and OAuth implementations.
 //!
-//! - `ice auth login`  — legacy API-key prompt (no echo, via `rpassword`) for
-//!   the default provider and persist it to `~/.ice/auth.json`.
+//! - `icers auth login`  — legacy API-key prompt (no echo, via `rpassword`) for
+//!   the default provider and persist it to `~/.icers/auth.json`.
 //!   Mirrors the upstream `/login` TUI's `type:"secret"` prompt + `modify`.
-//! - `ice auth check`  — local-only probe of `auth.json`, models.json and the
+//! - `icers auth check`  — local-only probe of `auth.json`, models.json and the
 //!   provider's declared policy; reports `ready`/`not_ready` (no network call — the upstream
 //!   `--no-refresh` equivalent). `--json` emits a structured result.
-//! - `ice auth logout` — drop the selected provider entry from `auth.json`
+//! - `icers auth logout` — drop the selected provider entry from `auth.json`
 //!   (env vars are left untouched).
 //!
 //! # Not ported (deferred — see the initial port notes (retired))
@@ -32,7 +32,7 @@ const EXIT_NOT_READY: i32 = 1;
 /// Exit code for an operational error (IO failure, bad args).
 const EXIT_ERROR: i32 = 2;
 
-/// `ice auth <sub> [args]` entry. `args` is the slice *after* `auth` (i.e. the
+/// `icers auth <sub> [args]` entry. `args` is the slice *after* `auth` (i.e. the
 /// subcommand + its flags). Returns the process exit code. Async to match the
 /// `app::run` shape, though v1 does no async work here.
 pub async fn run(args: &[String]) -> i32 {
@@ -64,7 +64,7 @@ pub async fn run_with_extensions(
     }
 }
 
-/// `ice auth login [--provider <id>]` — prompt for a key and persist it.
+/// `icers auth login [--provider <id>]` — prompt for a key and persist it.
 async fn run_login(
     args: &[String],
     snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
@@ -108,11 +108,11 @@ async fn run_login(
         }
     };
     println!("Credentials saved to {}", path.display());
-    println!("Run `ice auth check --provider {provider}` to verify.");
+    println!("Run `icers auth check --provider {provider}` to verify.");
     0
 }
 
-/// `ice auth check [--provider <id>] [--json]` — local readiness probe.
+/// `icers auth check [--provider <id>] [--json]` — local readiness probe.
 async fn run_check(
     args: &[String],
     snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
@@ -140,7 +140,7 @@ async fn run_check(
     } else {
         println!("not_ready — no credentials found.");
         eprintln!();
-        eprintln!("Run `ice auth login --provider {provider}`, configure this provider's apiKey in models.json, or pass --api-key when starting ice.");
+        eprintln!("Run `icers auth login --provider {provider}`, configure this provider's apiKey in models.json, or pass --api-key when starting icers.");
         let env = match snapshot.and_then(|snapshot| snapshot.provider_manifest(provider)) {
             Some(manifest) => manifest.api_key_env.as_deref(),
             None => crate::credentials::builtin_api_key_env(provider),
@@ -156,7 +156,7 @@ async fn run_check(
     }
 }
 
-/// `ice auth refresh [--provider <id>]` — refresh a stored OAuth credential.
+/// `icers auth refresh [--provider <id>]` — refresh a stored OAuth credential.
 async fn run_refresh(
     args: &[String],
     snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
@@ -394,7 +394,7 @@ fn detect_credential(
     Ok(CredentialSource::Missing)
 }
 
-/// `ice auth --help`. Mirrors the TS auth-command usage but scoped to v1.
+/// `icers auth --help`. Mirrors the TS auth-command usage but scoped to v1.
 fn print_auth_help() {
     println!(
         "Usage: {name} auth <subcommand> [options]
@@ -425,7 +425,7 @@ Notes:
   otherwise it is a provider-neutral API-key compatibility prompt. The host
   only handles standard interaction and credential responses for OAuth.
   `refresh` and `logout` use extension actions. API-key providers may still
-  use ~/.ice/agent/models.json or environment variables.
+  use ~/.icers/agent/models.json or environment variables.
 ",
         name = crate::APP_NAME
     );
@@ -438,7 +438,7 @@ mod tests {
         auth_path, test_support::env_lock, upsert_credential, Credential, DEFAULT_PROVIDER_ID,
     };
 
-    /// Scope `ICE_CODING_AGENT_DIR` + the `ANTHROPIC_*` env vars to a temp dir
+    /// Scope `ICERS_CODING_AGENT_DIR` + the `ANTHROPIC_*` env vars to a temp dir
     /// for the duration of a test. Holds the shared env lock for its whole
     /// lifetime so it can't race with config/provider env-mutating tests.
     struct TempConfig {
@@ -600,9 +600,9 @@ mod tests {
         upsert_credential(
             "gateway",
             Credential::ApiKey {
-                key: Some("$ICE_TEST_STORED_KEY".into()),
+                key: Some("$ICERS_TEST_STORED_KEY".into()),
                 env: Some(std::collections::BTreeMap::from([(
-                    "ICE_TEST_STORED_KEY".into(),
+                    "ICERS_TEST_STORED_KEY".into(),
                     "stored-key".into(),
                 )])),
             },
@@ -612,7 +612,7 @@ mod tests {
             detect_credential("gateway", None).unwrap(),
             CredentialSource::StoredApiKey
         );
-        for key in [Some("$ICE_TEST_AUTH_MISSING_VARIABLE"), Some("   "), None] {
+        for key in [Some("$ICERS_TEST_AUTH_MISSING_VARIABLE"), Some("   "), None] {
             upsert_credential(
                 "gateway",
                 Credential::ApiKey {

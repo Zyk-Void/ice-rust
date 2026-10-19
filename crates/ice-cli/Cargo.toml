@@ -8,7 +8,7 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation = "https://docs.rs/ice-cli"
-description = "Terminal coding-agent CLI (the `ice` binary) built on the ice-* library crates"
+description = "Terminal coding-agent CLI (the `icers` binary) built on the ice-* library crates"
 readme = "README.md"
 keywords = ["agent", "llm", "ai", "claude", "cli"]
 categories = [
@@ -79,10 +79,10 @@ nix = { version = "0.29", features = ["signal"] }
 rustdoc-args = ["--cfg", "docsrs"]
 
 # `cargo binstall ice-cli` support. The release workflow publishes
-# `ice-v<version>-<target>.tar.gz` (`.zip` on Windows) with the `ice` binary at
+# `ice-v<version>-<target>.tar.gz` (`.zip` on Windows) with the `icers` binary at
 # the archive root, plus a sibling `.sha256`. The URL has to be built from
 # `{ bin }` rather than `{ name }`, because the assets are named after the
-# binary (`ice`) while the crate is `ice-cli`. Default `pkg-fmt` is `tgz`; only
+# binary (`icers`) while the crate is `ice-cli`. Default `pkg-fmt` is `tgz`; only
 # the Windows target needs the zip override.
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ bin }-v{ version }-{ target }.{ archive-format }"
@@ -103,5 +103,5 @@ clipboard = ["dep:arboard"]
 path = "src/lib.rs"
 
 [[bin]]
-name = "ice"
-path = "src/bin/ice.rs"
+name = "icers"
+path = "src/bin/icers.rs"

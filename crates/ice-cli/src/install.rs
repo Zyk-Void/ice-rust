@@ -1,7 +1,7 @@
-//! `ice install` — install a prebuilt or explicitly built Rust `cdylib` extension.
+//! `icers install` — install a prebuilt or explicitly built Rust `cdylib` extension.
 //!
 //! Cargo's `cargo install` command is intended for binaries and does not copy
-//! dynamic-library targets. ice extensions are cdylibs loaded by
+//! dynamic-library targets. icers extensions are cdylibs loaded by
 //! `ice-extensions`. The default async path uses the prebuilt distribution
 //! protocol; the explicit source backend creates a tiny temporary Cargo workspace,
 //! resolves the requested crate through Cargo, builds the dependency in
@@ -20,7 +20,7 @@ const NATIVE_PACKAGES_FILE: &str = "native-packages.json";
 const NATIVE_PACKAGES_LOCK_FILE: &str = "native-packages.lock";
 const CDYLIB_EXTENSION_HINT: &str = "hint: the crate must declare `crate-type = [\"cdylib\"]` and export `ice_plugin_register` (the unified ABI; legacy `ice_plugin_register_v2` and `ice_plugin_register_v3` remain supported for migration)";
 
-/// A Rust-native extension installed through `ice install`.
+/// A Rust-native extension installed through `icers install`.
 ///
 /// `source` is absent for Cargo registry builds, contains the local source
 /// path for `--path`, or marks prebuilt packages so older hosts do not rebuild
@@ -217,7 +217,7 @@ struct CargoTarget {
     crate_types: Vec<String>,
 }
 
-/// Run `ice install ...`. This is intentionally synchronous: it is a short
+/// Run `icers install ...`. This is intentionally synchronous: it is a short
 /// lived package operation and keeping Cargo's build output attached to the
 /// user's terminal makes failures actionable.
 pub fn run(args: &[String]) -> i32 {
@@ -318,7 +318,7 @@ pub fn run(args: &[String]) -> i32 {
         .collect();
     if cdylib_targets.is_empty() {
         eprintln!(
-            "error: `{}` is not an ice extension crate; it has no `cdylib` target",
+            "error: `{}` is not an icers extension crate; it has no `cdylib` target",
             options.package
         );
         eprintln!("{CDYLIB_EXTENSION_HINT}");
@@ -342,7 +342,7 @@ pub fn run(args: &[String]) -> i32 {
     let agent_dir = match crate::config::agent_dir() {
         Ok(dir) => dir,
         Err(error) => {
-            eprintln!("error: could not resolve the ice config directory: {error}");
+            eprintln!("error: could not resolve the icers config directory: {error}");
             return 1;
         }
     };
@@ -387,14 +387,14 @@ pub fn run(args: &[String]) -> i32 {
     for target in installed {
         println!("installed {}", target.display());
     }
-    println!("ice will load this extension on the next start.");
+    println!("icers will load this extension on the next start.");
     0
 }
 
-/// Remove a Rust-native extension installed by `ice install`.
+/// Remove a Rust-native extension installed by `icers install`.
 ///
 /// The install registry is authoritative for new installs. For metadata from
-/// older ice versions, dynamic libraries whose normalized file stem matches
+/// older icers versions, dynamic libraries whose normalized file stem matches
 /// the crate name are removed as a compatibility fallback.
 pub fn uninstall(args: &[String]) -> i32 {
     if args.len() == 1 && matches!(args[0].as_str(), "--help" | "-h") {
@@ -412,7 +412,7 @@ pub fn uninstall(args: &[String]) -> i32 {
     let agent = match crate::config::agent_dir() {
         Ok(path) => path,
         Err(error) => {
-            eprintln!("error: could not resolve the ice config directory: {error}");
+            eprintln!("error: could not resolve the icers config directory: {error}");
             return 1;
         }
     };
@@ -515,7 +515,7 @@ fn parse_uninstall_name(args: &[String]) -> Result<String, String> {
     let mut name = None;
     for arg in args {
         match arg.as_str() {
-            "--help" | "-h" => return Err("use `ice uninstall --help` for usage".into()),
+            "--help" | "-h" => return Err("use `icers uninstall --help` for usage".into()),
             value if value.starts_with('-') => {
                 return Err(format!("unknown uninstall option `{value}`"))
             }
@@ -1202,16 +1202,16 @@ fn valid_package_name(name: &str) -> bool {
 }
 
 fn help_requested() -> &'static str {
-    "use `ice install --help` for usage"
+    "use `icers install --help` for usage"
 }
 
 pub fn print_help() {
-    println!("Usage: ice install [<crate>] [options]\n\nInstall or upgrade a prebuilt Rust extension using the versioned ice-extension.json protocol.\nRepository and latest stable version are resolved from crates.io metadata.\nNewer versions upgrade automatically; an already installed version is skipped.\n\nOptions:\n  --version <version>  Install an exact package version\n  --github <owner/repo> Use this GitHub repository; default version comes from package-specific tags\n  --build              Explicitly compile the extension with Cargo\n  --path <directory>   Build a local extension crate; crate name may be omitted\n  --locked             Require Cargo.lock to remain unchanged (with --build/--path)\n  --force, -f          Reinstall the same version or allow a downgrade/replacement\n  --help, -h           Show this help\n\nExamples:\n  ice install ice-todo\n  ice install ice-todo --version 0.2.0\n  ice install my-extension --github owner/repo --version 1.2.3\n  ice install ice-todo --build\n  ice install --path . --force\n\nA missing or incompatible prebuilt release is an error; Cargo compilation requires --build.");
+    println!("Usage: icers install [<crate>] [options]\n\nInstall or upgrade a prebuilt Rust extension using the versioned ice-extension.json protocol.\nRepository and latest stable version are resolved from crates.io metadata.\nNewer versions upgrade automatically; an already installed version is skipped.\n\nOptions:\n  --version <version>  Install an exact package version\n  --github <owner/repo> Use this GitHub repository; default version comes from package-specific tags\n  --build              Explicitly compile the extension with Cargo\n  --path <directory>   Build a local extension crate; crate name may be omitted\n  --locked             Require Cargo.lock to remain unchanged (with --build/--path)\n  --force, -f          Reinstall the same version or allow a downgrade/replacement\n  --help, -h           Show this help\n\nExamples:\n  icers install ice-todo\n  icers install ice-todo --version 0.2.0\n  icers install my-extension --github owner/repo --version 1.2.3\n  icers install ice-todo --build\n  icers install --path . --force\n\nA missing or incompatible prebuilt release is an error; Cargo compilation requires --build.");
 }
 
 fn print_uninstall_help() {
     println!(
-        "Usage: ice uninstall <crate>\n\nRemove a Rust cdylib extension installed by `ice install`.\n\nOptions:\n  --help, -h           Show this help\n\nExample:\n  ice uninstall ice-extension-example"
+        "Usage: icers uninstall <crate>\n\nRemove a Rust cdylib extension installed by `icers install`.\n\nOptions:\n  --help, -h           Show this help\n\nExample:\n  icers uninstall ice-extension-example"
     );
 }
 
@@ -1222,7 +1222,7 @@ fn write_manifest(path: &Path, options: &InstallOptions) -> Result<(), String> {
         .join("src");
     std::fs::create_dir_all(&source_dir).map_err(|error| error.to_string())?;
     // Cargo requires the temporary root package to have a target even though
-    // ice never builds it; the requested extension is built as a dependency.
+    // icers never builds it; the requested extension is built as a dependency.
     std::fs::write(source_dir.join("lib.rs"), "pub fn installer_marker() {}\n")
         .map_err(|error| error.to_string())?;
     let dependency = if let Some(local_path) = &options.path {

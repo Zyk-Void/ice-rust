@@ -3,11 +3,11 @@
 [![crates.io](https://img.shields.io/crates/v/ice-plugin-sdk.svg)](https://crates.io/crates/ice-plugin-sdk)
 [![docs.rs](https://docs.rs/ice-plugin-sdk/badge.svg)](https://docs.rs/ice-plugin-sdk)
 
-The stable `#[repr(C)]` ABI contract for ice plugins. Depend on this crate, and
-nothing else, to build a Rust `cdylib` that extends the `ice` agent with tools,
+The stable `#[repr(C)]` ABI contract for icers plugins. Depend on this crate, and
+nothing else, to build a Rust `cdylib` that extends the `icers` agent with tools,
 providers, slash commands, event handlers, renderers and discovered resources.
 
-This crate has **no dependency on the ice runtime** on purpose. A plugin must
+This crate has **no dependency on the icers runtime** on purpose. A plugin must
 not link the host — the host links the plugin. Both sides share only the types
 defined here.
 
@@ -186,7 +186,7 @@ The host loader only resolves `ice_plugin_register`, exported with
 `export_plugin!`. The host passes a `PluginApi` containing registration slots,
 `runtime_action` and `declare` (priority and platforms).
 
-The SDK checks `abi_version` against `ICE_PLUGIN_ABI_VERSION_UNIFIED` and
+The SDK checks `abi_version` against `ICERS_PLUGIN_ABI_VERSION_UNIFIED` and
 requires `struct_size` to cover the `PluginApi` expected by the plugin before
 calling its registration body. A mismatch returns a nonzero status and the
 host reports a load failure. Extensions using retired entrypoints must be

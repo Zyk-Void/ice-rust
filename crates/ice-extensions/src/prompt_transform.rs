@@ -4,9 +4,9 @@
 //! ## Why this exists (and why it is not an event)
 //!
 //! pi fires `before_agent_start` and lets a handler **return** `systemPrompt`,
-//! which becomes the run's `forceSystemPrompt` (`agent-session.ts:1436`). ice
+//! which becomes the run's `forceSystemPrompt` (`agent-session.ts:1436`). icers
 //! already broadcasts [`EventTag::BeforeAgentStart`] to observers, but the event
-//! handler signature is fire-and-forget (`i32` only), so an ice plugin could
+//! handler signature is fire-and-forget (`i32` only), so an icers plugin could
 //! watch the turn start and not influence it. This module carries the return
 //! channel the broadcast cannot: an out-param handler, the same shape
 //! `resources_discover` uses and for the same reason.

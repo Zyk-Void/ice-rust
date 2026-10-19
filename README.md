@@ -1,4 +1,4 @@
-# ice — a Rust-native coding-agent runtime
+# icers — a Rust-native coding-agent runtime
 
 [![crates.io](https://img.shields.io/crates/v/ice-cli.svg)](https://crates.io/crates/ice-cli)
 [![downloads](https://img.shields.io/crates/d/ice-cli.svg)](https://crates.io/crates/ice-cli)
@@ -9,23 +9,23 @@
 [![GitHub stars](https://img.shields.io/github/stars/Zyk-Void/ice-rust?style=flat)](https://github.com/Zyk-Void/ice-rust/stargazers)
 [![Latest release](https://img.shields.io/github/v/release/Zyk-Void/ice-rust)](https://github.com/Zyk-Void/ice-rust/releases/latest)
 
-`ice` is a library-first coding-agent runtime written in Rust, plus a terminal
+`icers` is a library-first coding-agent runtime written in Rust, plus a terminal
 agent built on top of it. Nine composable crates span provider adapters, a
 durable crash-resumable agent loop, a terminal UI, and a stable plugin ABI — so
-the same code works as an embedded SDK or as a ready-to-run `ice` command.
+the same code works as an embedded SDK or as a ready-to-run `icers` command.
 
-ice began as a Rust reimplementation of the [Pi TypeScript SDK](https://github.com/earendil-works/pi)
+icers began as a Rust reimplementation of the [Pi TypeScript SDK](https://github.com/earendil-works/pi)
 by Mario Zechner. It now includes its own Rust-native plugin ABI and execution
 infrastructure. See [Acknowledgements](#acknowledgements) and [NOTICE](NOTICE)
 for upstream attribution.
 
 Website: <https://rpi.laofu.online/> · Docs: <https://rpi.laofu.online/docs.html>
 
-![ice interactive session](docs/images/ice-interactive.png)
+![icers interactive session](docs/images/ice-interactive.png)
 
 <sub>Interactive TUI. See [`docs/guides/user-guide.md`](docs/guides/user-guide.md) for the full command surface.</sub>
 
-![ice SDK demo — an agent loop and a real tool round-trip, offline with the faux provider](docs/images/ice-sdk-demo.gif)
+![icers SDK demo — an agent loop and a real tool round-trip, offline with the faux provider](docs/images/ice-sdk-demo.gif)
 
 <sub>The agent loop and a real `write` tool round-trip, recorded with no API key and no network — the same path the tests take. Source of truth is [`demo/sdk.tape`](demo/sdk.tape); regenerate with `task demo`.</sub>
 
@@ -38,7 +38,7 @@ Website: <https://rpi.laofu.online/> · Docs: <https://rpi.laofu.online/docs.htm
 | A tool/provider that extends every session | `ice-plugin-sdk` | [`examples/plugin-stub`](examples/plugin-stub) |
 
 The three share one implementation. Build your tools once, debug them inside an
-embedded agent, and ship the same code as a `cdylib` plugin that the global `ice`
+embedded agent, and ship the same code as a `cdylib` plugin that the global `icers`
 loads. See [`docs/agent/project-structure.md`](docs/agent/project-structure.md) for the recommended
 project layout.
 
@@ -60,23 +60,23 @@ On **Windows (x64)**, run in PowerShell 5.1 or later:
 ```
 
 Verifies the published SHA-256 checksum and installs to
-`$env:LOCALAPPDATA\Programs\ice`. Follow the printed instructions to add it to
-PATH, then run `ice --version`. Append `-DryRun` to preview, or use
-`-Version 0.3.22` and `-Dir 'C:\Tools\ice'` to select a version and directory.
+`$env:LOCALAPPDATA\Programs\icers`. Follow the printed instructions to add it to
+PATH, then run `icers --version`. Append `-DryRun` to preview, or use
+`-Version 0.3.22` and `-Dir 'C:\Tools\icers'` to select a version and directory.
 
 **From crates.io** (requires Rust 1.78+):
 
 ```bash
 cargo install ice-cli
-ice --version
+icers --version
 ```
 
 **Package managers:**
 
 ```bash
-brew tap bigfish1913/tap && brew install ice          # macOS (Apple silicon), Linux
+brew tap bigfish1913/tap && brew install icers          # macOS (Apple silicon), Linux
 scoop bucket add bigfish1913 https://github.com/bigfish1913/scoop-bucket
-scoop install ice                                     # Windows
+scoop install icers                                     # Windows
 ```
 
 The Homebrew formula currently supports Apple silicon on macOS. Intel Macs can
@@ -113,15 +113,15 @@ AgentEnd observed; tool ran against OsExecutionEnv.
 ### The CLI
 
 ```bash
-export ANTHROPIC_API_KEY=...          # or OPENAI_API_KEY, or ~/.ice/agent/models.json
-ice                                   # interactive TUI
-ice -p "summarize the README"         # one-shot
-ice --mode json -p "list the crates"  # machine-readable event stream
+export ANTHROPIC_API_KEY=...          # or OPENAI_API_KEY, or ~/.icers/agent/models.json
+icers                                   # interactive TUI
+icers -p "summarize the README"         # one-shot
+icers --mode json -p "list the crates"  # machine-readable event stream
 ```
 
-Sessions persist as JSONL and survive a crash mid-run; `ice` resumes from the
+Sessions persist as JSONL and survive a crash mid-run; `icers` resumes from the
 last committed frame rather than replaying the turn. Custom Anthropic or
-OpenAI-compatible gateways are declared in `~/.ice/agent/models.json` and
+OpenAI-compatible gateways are declared in `~/.icers/agent/models.json` and
 selected with `--model <provider>/<model>`.
 
 ### The SDK
@@ -179,7 +179,7 @@ Four crates sit outside that chain:
   the ABI. That edge is names-only — nothing is linked or called.
 - `ice-extensions` is `ice-plugin-sdk` plus `ice-ai`/`ice-agent`, since it hosts
   plugins that run tools.
-- `ice-cli` depends on all eight of the others, which is how the `ice` binary
+- `ice-cli` depends on all eight of the others, which is how the `icers` binary
 gets the TUI, the harness and the plugin loader at once.
 
 | Crate | What it is |
@@ -190,16 +190,16 @@ gets the TUI, the harness and the plugin loader at once.
 | [`ice-tools`](https://crates.io/crates/ice-tools) | `read`/`write`/`edit`/`bash` (+ `grep`, `find`, `ls`, `powershell`) and the `ExecutionEnv` seam |
 | [`ice-harness`](https://crates.io/crates/ice-harness) | Session tree, JSONL persistence, compaction, crash recovery, the run loop |
 | [`ice-tui`](https://crates.io/crates/ice-tui) | Terminal UI primitives: components, layout, editor, transcript rendering |
-| [`ice-cli`](https://crates.io/crates/ice-cli) | The `ice` binary: TUI, one-shot and JSON modes, config, plugin loading |
+| [`ice-cli`](https://crates.io/crates/ice-cli) | The `icers` binary: TUI, one-shot and JSON modes, config, plugin loading |
 | [`ice-plugin-sdk`](https://crates.io/crates/ice-plugin-sdk) | The stable `#[repr(C)]` ABI contract for plugins. No `ice-*` deps; only `serde_json`, behind a default `json` feature that can be turned off |
 | [`ice-extensions`](https://crates.io/crates/ice-extensions) | Host-side plugin loader and the async-across-ABI tool bridge |
 
 Every crate has its own README and docs.rs page. The `crates/ice-*`
 directories and the published crate names use the same `ice-` prefix.
 
-## Why ice
+## Why icers
 
-Most coding agents are CLIs. `ice` is a **runtime with a CLI attached**, which
+Most coding agents are CLIs. `icers` is a **runtime with a CLI attached**, which
 changes what you can build with it:
 
 - **Embeddable.** The agent loop is a library. `ice-agent` + `ice-ai` is enough
@@ -223,9 +223,9 @@ changes what you can build with it:
 
 Structural differences against other terminal coding agents. Facts about other
 tools are as of 2026-09 and change often — check their documentation; only the
-`ice` column is maintained here.
+`icers` column is maintained here.
 
-| | ice | Claude Code | Codex CLI | opencode | aider |
+| | icers | Claude Code | Codex CLI | opencode | aider |
 | --- | --- | --- | --- | --- | --- |
 | Language | Rust | TypeScript | Rust | TypeScript/Go | Python |
 | Source available | ✅ MIT | ❌ | ✅ | ✅ | ✅ |
@@ -235,7 +235,7 @@ tools are as of 2026-09 and change often — check their documentation; only the
 | Provider-agnostic gateways | ✅ | ❌ | ❌ | ✅ | ✅ |
 
 If you want the most polished single-vendor experience, use the vendor's tool.
-`ice` is for people who want to own the loop.
+`icers` is for people who want to own the loop.
 
 ## Performance
 
@@ -247,13 +247,13 @@ rebuild and re-measure on your own machine.
 | Metric | Value |
 | ------ | ----- |
 | Release binary size | **21.8 MiB** |
-| `ice --version` wall time | **~17 ms** median |
+| `icers --version` wall time | **~17 ms** median |
 | RSS once the agent is ready | **12.0 MiB** |
 
 `node scripts/bench-vs-pi.mjs --pi <path-to-pi>` — against native Pi on the same
 machine, both offline, each with a fresh isolated config directory:
 
-| Metric | ice (Rust) | pi (TypeScript) | Difference |
+| Metric | icers (Rust) | pi (TypeScript) | Difference |
 | ------ | ---------: | --------------: | ---------- |
 | `--version` | **17.5 ms** | 169.5 ms | **9.7× faster** |
 | Cold start | **17.7 ms** | 189.5 ms | **10.7× faster** |
@@ -261,12 +261,12 @@ machine, both offline, each with a fresh isolated config directory:
 | Install footprint | **21.8 MiB** (one binary) | ~385 MiB (+ ~91 MiB Node) | **~18–22× smaller** |
 
 **Cold start** is spawn → the agent answering its first command: process creation
-plus full initialisation, excluding teardown and any LLM work. ice's `--version`
+plus full initialisation, excluding teardown and any LLM work. icers's `--version`
 (17.5 ms) and cold start (17.7 ms) are effectively equal, so startup is process
 creation, not initialisation; Pi is dominated by Node boot.
 
-Isolation caveat: ice reads `ICE_CODING_AGENT_DIR` / `ICE_OFFLINE`, native Pi reads
-`PI_CODING_AGENT_DIR` / `PI_OFFLINE`. Set the matching pair for each, or ice
+Isolation caveat: icers reads `ICERS_CODING_AGENT_DIR` / `ICERS_OFFLINE`, native Pi reads
+`PI_CODING_AGENT_DIR` / `PI_OFFLINE`. Set the matching pair for each, or icers
 silently loads the machine's global plugins.
 
 Method, raw per-run numbers, and what is *not* measured (LLM latency, tool-loop
@@ -280,13 +280,13 @@ can register tools, providers, slash commands, event handlers, markdown
 renderers and discovered resources.
 
 ```bash
-ice install ice-todo                    # prebuilt extension; no Rust toolchain needed
-ice install my-ext --path ../my-ext     # local, for development
-ice dev                                 # build + watch + live reload
+icers install ice-todo                    # prebuilt extension; no Rust toolchain needed
+icers install my-ext --path ../my-ext     # local, for development
+icers dev                                 # build + watch + live reload
 ```
 
-The host loads project `.ice/extensions`, then global
-`~/.ice/agent/extensions`, then any `--extensions-dir`.
+The host loads project `.icers/extensions`, then global
+`~/.icers/agent/extensions`, then any `--extensions-dir`.
 
 Ready-to-install extensions live in the companion
 [`ice-rust/ice-package`](https://github.com/ice-rust/ice-package) repository, with
@@ -297,11 +297,11 @@ an [online catalog](https://rpi.laofu.online/packages.html).
 Web access is optional, not part of the CLI's default tool set:
 
 ```bash
-ice install ice-websearch                # websearch: titles, URLs and snippets
-ice install ice-webfetch                 # webfetch: readable text from public pages
+icers install ice-websearch                # websearch: titles, URLs and snippets
+icers install ice-webfetch                 # webfetch: readable text from public pages
 ```
 
-Restart ice after installation to load the tools. These extensions do not
+Restart icers after installation to load the tools. These extensions do not
 provide an interactive browser: clicking, login flows and page JavaScript
 execution require separate browser tooling.
 
@@ -310,7 +310,7 @@ execution require separate browser tooling.
 Install the companion `ice-subagents` extension to expose `delegate_task`:
 
 ```bash
-ice install ice-subagents
+icers install ice-subagents
 ```
 
 The host snapshots the parent's effective model/provider binding, thinking
@@ -352,8 +352,8 @@ rules, which are load-bearing rather than stylistic.
 ## Remote mode
 
 ```bash
-ice --server                        # headless agent over TCP, prints an auth token
-ice --connect host:port --token T   # TUI client with zero local agent resources
+icers --server                        # headless agent over TCP, prints an auth token
+icers --connect host:port --token T   # TUI client with zero local agent resources
 ```
 
 The client holds no provider, tools, extensions or session files — all agent
@@ -370,7 +370,7 @@ machine. See [`docs/remote/user-guide.md`](docs/remote/user-guide.md).
 | Platforms | Linux, macOS, Windows (CI runs the suite on Linux) |
 | Binary release targets | Linux (x86_64/aarch64), macOS (Intel/Apple silicon), Windows (x86_64) |
 
-`ice` is a self-contained Rust coding-agent stack. No Node component is
+`icers` is a self-contained Rust coding-agent stack. No Node component is
 required and none is loaded.
 
 ## Documentation
@@ -397,9 +397,9 @@ The whole test suite runs offline: `cargo test --workspace --locked`.
 
 ## Support / 赞赏支持
 
-If ice helps you, consider buying the author a coffee. Tips and donations support continued development and maintenance. Thank you!
+If icers helps you, consider buying the author a coffee. Tips and donations support continued development and maintenance. Thank you!
 
-如果 ice 帮到了你，欢迎请作者喝杯咖啡，赞赏或捐助支持持续开发与维护。感谢每一份支持！
+如果 icers 帮到了你，欢迎请作者喝杯咖啡，赞赏或捐助支持持续开发与维护。感谢每一份支持！
 
 | 微信支付 / WeChat Pay | 支付宝 / Alipay | Binance Pay |
 | :---: | :---: | :---: |
@@ -430,7 +430,7 @@ Questions, ideas and early builds are welcome in either group:
 
 Thank you to Mario Zechner and the [Pi contributors](https://github.com/earendil-works/pi)
 for the original TypeScript SDK and the agent, tool and session designs that
-formed ice's starting point. ice reimplements that foundation in Rust and adds
+formed icers's starting point. icers reimplements that foundation in Rust and adds
 its own runtime and extension infrastructure; it does not load the TypeScript
 SDK or its npm extensions. Upstream copyright and MIT license notices are
 retained in [LICENSE](LICENSE) and [NOTICE](NOTICE).

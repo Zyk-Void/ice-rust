@@ -4,7 +4,7 @@ use ice_tui::ansi::visible_width;
 use ice_tui::utils::{truncate_to_width, wrap_text_with_ansi};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
-pub(super) const PET_KEY: &str = "ice.pet";
+pub(super) const PET_KEY: &str = "icers.pet";
 
 #[derive(serde::Deserialize)]
 struct PetState {
@@ -126,7 +126,7 @@ fn pet_lines(state: &PetState, width: usize, height: usize, frame: u64) -> Vec<S
     };
     let mut lines = vec![
         fit(
-            &colors.accent.fg(&format!("ice / pet · {name} · {voice}")),
+            &colors.accent.fg(&format!("icers / pet · {name} · {voice}")),
             width,
         ),
         String::new(),

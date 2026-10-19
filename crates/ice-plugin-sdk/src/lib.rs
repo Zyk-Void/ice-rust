@@ -1,6 +1,6 @@
-//! Stable `#[repr(C)]` ABI contract for ice **Rust-native (cdylib) plugins**.
+//! Stable `#[repr(C)]` ABI contract for icers **Rust-native (cdylib) plugins**.
 //!
-//! ice loads extensions as compiled Rust cdylibs (`.dll`/`.so`/`.dylib`) via
+//! icers loads extensions as compiled Rust cdylibs (`.dll`/`.so`/`.dylib`) via
 //! `libloading` — **not** TS/jiti. Because we control both sides, the plugin is
 //! Rust, but the *boundary* is still a hand-defined C ABI: the two sides may be
 //! compiled with different Rust versions / crate versions, so no Rust type with
@@ -142,7 +142,7 @@ impl StbString {
         let len = buf.len();
         // Stabilize the pointer via `Box::into_raw`; the free fn reconstructs a
         // slice from ptr+len and drops it. Store the element pointer as
-        // `*mut c_char` (u8 ↔ c_char on every platform ice targets). Ownership
+        // `*mut c_char` (u8 ↔ c_char on every platform icers targets). Ownership
         // moves into the `StbString` (we do NOT drop here).
         let ptr = Box::into_raw(buf) as *mut [u8] as *mut u8 as *mut c_char;
         let _ = len;
@@ -650,7 +650,7 @@ pub enum EventTag {
 /// `EVENT_TAG_COUNT == 37` so a future edit that adds/removes a tag is caught.
 pub const EVENT_TAG_COUNT: usize = 37;
 
-/// The application name of the host that loads plugins: `"ice"`.
+/// The application name of the host that loads plugins: `"icers"`.
 ///
 /// This is the **contract's** copy of the host identity, and the host's
 /// `APP_NAME` is defined in terms of it, so the two cannot drift. An extension
@@ -663,7 +663,7 @@ pub const EVENT_TAG_COUNT: usize = 37;
 /// extension should prefer: that value always describes the process actually
 /// running, whereas these constants describe the host the plugin was *built*
 /// against.
-pub const HOST_NAME: &str = "ice";
+pub const HOST_NAME: &str = "icers";
 
 /// Version of the [`HOST_NAME`] host that this SDK ships with.
 ///
@@ -678,16 +678,16 @@ pub const HOST_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The host **rewrites** it whenever a session becomes active — at startup and
 /// on every in-process swap (`/import`, fork, switch) — so the value always
 /// names the session currently being served. It is not an embedder override:
-/// a value inherited from a parent process would otherwise make a child `ice`
+/// a value inherited from a parent process would otherwise make a child `icers`
 /// report its ancestor's session forever. Embedders that need to pin the id set
 /// it after the session is active rather than before.
 ///
 /// The id is a plain UTF-8 string (no NUL), which is what makes writing it with
 /// `std::env::set_var` sound.
-pub const SESSION_ID_ENV: &str = "ICE_SESSION_ID";
+pub const SESSION_ID_ENV: &str = "ICERS_SESSION_ID";
 
 /// Environment variable a tracing extension publishes to name the trace a
-/// *nested* `ice` should attach to, and reads back to decide it is a subagent.
+/// *nested* `icers` should attach to, and reads back to decide it is a subagent.
 ///
 /// The name is `ice-langfuse`'s (it owns the `LANGFUSE_` prefix), but the
 /// variable is declared here because **three** parties have to agree on it and
@@ -695,7 +695,7 @@ pub const SESSION_ID_ENV: &str = "ICE_SESSION_ID";
 ///
 /// - the extension writes it (so a launcher can attach a nested run),
 /// - the host's `bash`/`powershell` must *not* pass it on to a shell (or a plain
-///   `ice` started from one mistakes itself for a subagent), and
+///   `icers` started from one mistakes itself for a subagent), and
 /// - a launcher may set it deliberately, which is the supported nesting path.
 ///
 /// Declaring it once here is what keeps those three in step. The host builds its
@@ -1346,7 +1346,7 @@ pub type OAuthRegisterFn = OAuthRequestFn;
 // ---------------------------------------------------------------------------
 
 /// The unified ABI version.
-pub const ICE_PLUGIN_ABI_VERSION_UNIFIED: u32 = 4;
+pub const ICERS_PLUGIN_ABI_VERSION_UNIFIED: u32 = 4;
 
 /// The unversioned symbol for the unified ABI.
 pub const REGISTER_SYMBOL_UNIFIED: &[u8] = b"ice_plugin_register\0";
@@ -1595,7 +1595,7 @@ pub unsafe fn register_entrypoint(
     // Read the version and size fields first — they're at known offsets
     // regardless of future struct growth.
     let (abi_version, struct_size) = unsafe { ((*api).abi_version, (*api).struct_size) };
-    if abi_version != ICE_PLUGIN_ABI_VERSION_UNIFIED {
+    if abi_version != ICERS_PLUGIN_ABI_VERSION_UNIFIED {
         // Mismatch: refuse to register. The host logs "ABI version mismatch"
         // and skips loading this plugin.
         return 1;
@@ -1650,7 +1650,7 @@ mod tests {
         // Set the version/size fields so the entrypoint gets past the checks
         // and into the body (which panics).
         unsafe {
-            (*api_ptr).abi_version = ICE_PLUGIN_ABI_VERSION_UNIFIED;
+            (*api_ptr).abi_version = ICERS_PLUGIN_ABI_VERSION_UNIFIED;
             (*api_ptr).struct_size = core::mem::size_of::<PluginApi>() as u32;
         }
         let rc = unsafe {
@@ -1876,7 +1876,7 @@ mod tests {
         // The API struct is a plain old data struct: every fn pointer is
         // non-Drop, the struct has no Drop impl.
         let api = PluginApi {
-            abi_version: ICE_PLUGIN_ABI_VERSION_UNIFIED,
+            abi_version: ICERS_PLUGIN_ABI_VERSION_UNIFIED,
             struct_size: core::mem::size_of::<PluginApi>() as u32,
             free_string: test_free,
             register_tool: None,
@@ -2041,7 +2041,7 @@ mod tests {
 
     fn entrypoint_test_api() -> PluginApi {
         PluginApi {
-            abi_version: ICE_PLUGIN_ABI_VERSION_UNIFIED,
+            abi_version: ICERS_PLUGIN_ABI_VERSION_UNIFIED,
             struct_size: core::mem::size_of::<PluginApi>() as u32,
             free_string: test_free,
             register_tool: None,
@@ -2067,11 +2067,11 @@ mod tests {
     #[test]
     fn register_entrypoint_version_mismatch_refuses() {
         let api = entrypoint_test_api();
-        assert_eq!(ICE_PLUGIN_ABI_VERSION_UNIFIED, 4);
+        assert_eq!(ICERS_PLUGIN_ABI_VERSION_UNIFIED, 4);
 
         // A future version is rejected by the pre-dereference check.
         let mut future_api = api;
-        future_api.abi_version = ICE_PLUGIN_ABI_VERSION_UNIFIED + 1;
+        future_api.abi_version = ICERS_PLUGIN_ABI_VERSION_UNIFIED + 1;
         let rc = unsafe {
             register_entrypoint(&future_api, |_| {
                 panic!("body must not run on version mismatch");

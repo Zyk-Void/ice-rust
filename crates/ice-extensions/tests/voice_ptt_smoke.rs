@@ -29,7 +29,7 @@
 //! # in ../ice-package
 //! cargo build -p ice-voice --release --features local-stt
 //! ```
-//! The test uses `ICE_VOICE_PTT_KEY` to assert the key name is honored rather
+//! The test uses `ICERS_VOICE_PTT_KEY` to assert the key name is honored rather
 //! than hard-coding `space`.
 
 use std::path::PathBuf;
@@ -141,7 +141,7 @@ fn voice_registers_ptt_shortcut_and_input_handler() {
     assert!(warned.is_empty(), "unexpected load diagnostics: {warned:?}");
 
     // The key the plugin claimed. Defaults to `space`.
-    let key = std::env::var("ICE_VOICE_PTT_KEY")
+    let key = std::env::var("ICERS_VOICE_PTT_KEY")
         .ok()
         .map(|s| s.trim().to_ascii_lowercase())
         .filter(|s| !s.is_empty())
@@ -242,7 +242,7 @@ fn voice_registers_a_prompt_transformer_that_respects_the_speech_switch() {
     // The switch lives in the plugin's process-global state, driven by env at
     // registration; drive it through the same door the plugin reads so the test
     // is independent of test ordering. `/voice on|off` sets the same flag.
-    let speech_on = std::env::var("ICE_VOICE_AUTO_TTS")
+    let speech_on = std::env::var("ICERS_VOICE_AUTO_TTS")
         .map(|v| {
             matches!(
                 v.trim().to_ascii_lowercase().as_str(),
@@ -251,7 +251,7 @@ fn voice_registers_a_prompt_transformer_that_respects_the_speech_switch() {
         })
         .unwrap_or(false);
     if !speech_on {
-        eprintln!("ICE_VOICE_AUTO_TTS is not on — exercising only the no-change path");
+        eprintln!("ICERS_VOICE_AUTO_TTS is not on — exercising only the no-change path");
         let payload = transform(h, "BASE");
         assert_eq!(
             payload,

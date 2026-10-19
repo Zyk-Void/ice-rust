@@ -6,8 +6,8 @@
     "publishedAt": "2026-10-18",
     "age": 0,
     "ageLabel": "v0.5.1",
-    "description": "终端 coding-agent CLI，提供 ice 命令、交互式 TUI、配置和插件加载。",
-    "author": "ice / crates.io",
+    "description": "终端 coding-agent CLI，提供 icers 命令、交互式 TUI、配置和插件加载。",
+    "author": "icers / crates.io",
     "downloads": 738,
     "downloadsLabel": "738",
     "install": "cargo install ice-cli",
@@ -21,7 +21,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "终端 UI 原语：组件模型、布局容器、编辑器、转录渲染，以及全屏与主屏两种终端模式。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 875,
     "downloadsLabel": "875",
     "install": "cargo add ice-tui",
@@ -35,7 +35,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "Session 树、JSONL 持久化、上下文压缩和 AgentHarness run loop。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 980,
     "downloadsLabel": "980",
     "install": "cargo add ice-harness",
@@ -49,7 +49,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "与 Pi 对齐的 read、write、edit、bash 工具和 ExecutionEnv。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 1121,
     "downloadsLabel": "1,121",
     "install": "cargo add ice-tools",
@@ -63,7 +63,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "宿主侧动态插件加载器，将 ABI 插件适配为 AgentTool 并管理生命周期。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 864,
     "downloadsLabel": "864",
     "install": "cargo add ice-extensions",
@@ -77,7 +77,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "Rust cdylib 插件的稳定 #[repr(C)] ABI 合约，插件只依赖这一层边界。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 1516,
     "downloadsLabel": "1,516",
     "install": "cargo add ice-plugin-sdk",
@@ -91,7 +91,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "异步 Agent runtime 和 loop，包含 AgentTool、事件、hooks 与消息队列。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 1426,
     "downloadsLabel": "1,426",
     "install": "cargo add ice-agent",
@@ -105,7 +105,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "统一的多 Provider LLM 类型与流式事件层：Anthropic、OpenAI-compatible 和 faux provider 共享同一套消息模型。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 1638,
     "downloadsLabel": "1,638",
     "install": "cargo add ice-ai",
@@ -119,7 +119,7 @@
     "age": 0,
     "ageLabel": "v0.5.1",
     "description": "Span 与事件契约，默认 no-op：插桩是可选项，核心构建不引入任何追踪后端依赖。",
-    "author": "ice / crates.io",
+    "author": "icers / crates.io",
     "downloads": 1768,
     "downloadsLabel": "1,768",
     "install": "cargo add ice-telemetry",
@@ -132,11 +132,11 @@
     "publishedAt": "2026-10-13T03:34:18.512968Z",
     "age": 0.4666793287037037,
     "ageLabel": "v0.1.3",
-    "description": "通过 ACP 将 ice 接入 Zed 等编辑器，支持流式回复、持久化会话、恢复与取消。",
+    "description": "通过 ACP 将 icers 接入 Zed 等编辑器，支持流式回复、持久化会话、恢复与取消。",
     "author": "ice-packages / crates.io",
     "downloads": 34,
     "downloadsLabel": "34",
-    "install": "ice install ice-acp",
+    "install": "icers install ice-acp",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-acp"
   },
   {
@@ -150,7 +150,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 140,
     "downloadsLabel": "140",
-    "install": "ice install ice-voice",
+    "install": "icers install ice-voice",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-voice"
   },
   {
@@ -164,7 +164,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 21,
     "downloadsLabel": "21",
-    "install": "ice install ice-run-stats",
+    "install": "icers install ice-run-stats",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-run-stats"
   },
   {
@@ -178,7 +178,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 148,
     "downloadsLabel": "148",
-    "install": "ice install ice-im-message",
+    "install": "icers install ice-im-message",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-im-message"
   },
   {
@@ -192,7 +192,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 60,
     "downloadsLabel": "60",
-    "install": "ice install ice-mcp-adapter",
+    "install": "icers install ice-mcp-adapter",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-mcp-adapter"
   },
   {
@@ -206,7 +206,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 30,
     "downloadsLabel": "30",
-    "install": "ice install ice-plan-mode",
+    "install": "icers install ice-plan-mode",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-plan-mode"
   },
   {
@@ -220,7 +220,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 143,
     "downloadsLabel": "143",
-    "install": "ice install ice-todo",
+    "install": "icers install ice-todo",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-todo"
   },
   {
@@ -234,7 +234,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 120,
     "downloadsLabel": "120",
-    "install": "ice install ice-langfuse",
+    "install": "icers install ice-langfuse",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-langfuse"
   },
   {
@@ -248,7 +248,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 68,
     "downloadsLabel": "68",
-    "install": "ice install ice-goal",
+    "install": "icers install ice-goal",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-goal"
   },
   {
@@ -258,11 +258,11 @@
     "publishedAt": "2026-09-30T14:48:42.210667Z",
     "age": 12.998349490740742,
     "ageLabel": "v0.3.4",
-    "description": "TCP JSONL 服务器，支持流式订阅和 Transport trait 抽象，可通过 ice --server 启动。",
+    "description": "TCP JSONL 服务器，支持流式订阅和 Transport trait 抽象，可通过 icers --server 启动。",
     "author": "ice-packages / crates.io",
     "downloads": 116,
     "downloadsLabel": "116",
-    "install": "ice install ice-server",
+    "install": "icers install ice-server",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-server"
   },
   {
@@ -276,7 +276,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 72,
     "downloadsLabel": "72",
-    "install": "ice install ice-webfetch",
+    "install": "icers install ice-webfetch",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-webfetch"
   },
   {
@@ -290,7 +290,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 61,
     "downloadsLabel": "61",
-    "install": "ice install ice-websearch",
+    "install": "icers install ice-websearch",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-websearch"
   },
   {
@@ -304,7 +304,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 59,
     "downloadsLabel": "59",
-    "install": "ice install ice-permissions",
+    "install": "icers install ice-permissions",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-permissions"
   },
   {
@@ -318,7 +318,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 84,
     "downloadsLabel": "84",
-    "install": "ice install ice-ask-user",
+    "install": "icers install ice-ask-user",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-ask-user"
   },
   {
@@ -332,7 +332,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 62,
     "downloadsLabel": "62",
-    "install": "ice install ice-codegraph",
+    "install": "icers install ice-codegraph",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-codegraph"
   },
   {
@@ -346,7 +346,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 46,
     "downloadsLabel": "46",
-    "install": "ice install ice-lens",
+    "install": "icers install ice-lens",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-lens"
   },
   {
@@ -360,7 +360,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 46,
     "downloadsLabel": "46",
-    "install": "ice install ice-subagents",
+    "install": "icers install ice-subagents",
     "repository": "https://github.com/ice-rust/ice-package/tree/main/packages/ice-subagents"
   },
   {
@@ -374,7 +374,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 53,
     "downloadsLabel": "53",
-    "install": "ice install ice-extension-rpc",
+    "install": "icers install ice-extension-rpc",
     "repository": "https://crates.io/crates/ice-extension-rpc"
   },
   {
@@ -388,7 +388,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 35,
     "downloadsLabel": "35",
-    "install": "ice install ice-firecrawl",
+    "install": "icers install ice-firecrawl",
     "repository": "https://crates.io/crates/ice-firecrawl"
   },
   {
@@ -402,7 +402,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 59,
     "downloadsLabel": "59",
-    "install": "ice install ice-search",
+    "install": "icers install ice-search",
     "repository": "https://crates.io/crates/ice-search"
   },
   {
@@ -416,7 +416,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 37,
     "downloadsLabel": "37",
-    "install": "ice install ice-simplify",
+    "install": "icers install ice-simplify",
     "repository": "https://crates.io/crates/ice-simplify"
   },
   {
@@ -430,7 +430,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 38,
     "downloadsLabel": "38",
-    "install": "ice install ice-token-usage",
+    "install": "icers install ice-token-usage",
     "repository": "https://crates.io/crates/ice-token-usage"
   },
   {
@@ -444,7 +444,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 36,
     "downloadsLabel": "36",
-    "install": "ice install ice-memory",
+    "install": "icers install ice-memory",
     "repository": "https://crates.io/crates/ice-memory"
   },
   {
@@ -458,7 +458,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 34,
     "downloadsLabel": "34",
-    "install": "ice install ice-background-tasks",
+    "install": "icers install ice-background-tasks",
     "repository": "https://crates.io/crates/ice-background-tasks"
   },
   {
@@ -472,7 +472,7 @@
     "author": "ice-packages / crates.io",
     "downloads": 34,
     "downloadsLabel": "34",
-    "install": "ice install ice-web-access",
+    "install": "icers install ice-web-access",
     "repository": "https://crates.io/crates/ice-web-access"
   }
 ]

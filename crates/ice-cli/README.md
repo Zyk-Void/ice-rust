@@ -4,9 +4,9 @@
 [![docs.rs](https://docs.rs/ice-cli/badge.svg)](https://docs.rs/ice-cli)
 [![CI](https://github.com/Zyk-Void/ice-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/Zyk-Void/ice-rust/actions)
 
-The terminal coding-agent CLI — the `ice` binary — built on the `ice-*` library
+The terminal coding-agent CLI — the `icers` binary — built on the `ice-*` library
 crates. It is the ready-to-run surface of the
-[ice](https://github.com/Zyk-Void/ice-rust) project: an interactive TUI, a
+[icers](https://github.com/Zyk-Void/ice-rust) project: an interactive TUI, a
 one-shot `-p` mode, a JSON event mode, durable sessions, and Rust `cdylib`
 plugin loading.
 
@@ -19,15 +19,15 @@ cargo install ice-cli
 Requires Rust 1.78 or newer. Then point it at a provider and start it:
 
 ```bash
-export ANTHROPIC_API_KEY=...     # or OPENAI_API_KEY, or ~/.ice/agent/models.json
-ice
+export ANTHROPIC_API_KEY=...     # or OPENAI_API_KEY, or ~/.icers/agent/models.json
+icers
 ```
 
 One-shot, and machine-readable output:
 
 ```bash
-ice -p "summarize the README"
-ice --mode json -p "list the crates"
+icers -p "summarize the README"
+icers --mode json -p "list the crates"
 ```
 
 ## Authentication
@@ -35,17 +35,17 @@ ice --mode json -p "list the crates"
 Credentials are resolved in priority order:
 
 1. `--api-key` on the command line
-2. `~/.ice/auth.json`, written by `ice auth login` (mode `0o600` on Unix)
-3. the `apiKey` field of a provider in `~/.ice/agent/models.json`
+2. `~/.icers/auth.json`, written by `icers auth login` (mode `0o600` on Unix)
+3. the `apiKey` field of a provider in `~/.icers/agent/models.json`
 4. provider environment variables: `OPENAI_API_KEY`, `ANTHROPIC_AUTH_TOKEN`,
    `ANTHROPIC_API_KEY`
 
-`~/.ice/` can be relocated with `ICE_CODING_AGENT_DIR`.
+`~/.icers/` can be relocated with `ICERS_CODING_AGENT_DIR`.
 
 ## Custom providers and gateways
 
 Any Anthropic-Messages or OpenAI-compatible endpoint can be declared in
-`~/.ice/agent/models.json`:
+`~/.icers/agent/models.json`:
 
 ```jsonc
 {
@@ -63,7 +63,7 @@ Any Anthropic-Messages or OpenAI-compatible endpoint can be declared in
 ```
 
 ```bash
-ice --model gateway/custom-claude -p "hi"
+icers --model gateway/custom-claude -p "hi"
 ```
 
 Use `"api": "openai-completions"` for an OpenAI-compatible endpoint. Anthropic
@@ -73,34 +73,34 @@ endpoint overrides also honour `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`.
 
 - Sessions are JSONL v4 files under the session directory, with branching and
   context compaction.
-- Project resources are discovered from `.ice/` (skills, prompts, themes, and
-  `SYSTEM.md`), with `~/.ice/agent/` as the global layer. When both define the
+- Project resources are discovered from `.icers/` (skills, prompts, themes, and
+  `SYSTEM.md`), with `~/.icers/agent/` as the global layer. When both define the
   same skill or prompt name, the project copy wins.
-- Plugins are loaded from project `.ice/extensions`, global
-  `~/.ice/agent/extensions`, and `--extensions-dir`.
+- Plugins are loaded from project `.icers/extensions`, global
+  `~/.icers/agent/extensions`, and `--extensions-dir`.
 
 ## Plugins
 
 ```bash
-ice install ice-todo                           # prebuilt: repository discovered via crates.io
-ice install ice-todo --version 0.2.0
-ice install my-extension --github owner/repo --version 1.2.3
-ice install ice-todo --build                    # explicitly compile source
-ice install my-extension --path ../my-extension --force   # local
-ice dev                                        # build + watch a local extension
+icers install ice-todo                           # prebuilt: repository discovered via crates.io
+icers install ice-todo --version 0.2.0
+icers install my-extension --github owner/repo --version 1.2.3
+icers install ice-todo --build                    # explicitly compile source
+icers install my-extension --path ../my-extension --force   # local
+icers dev                                        # build + watch a local extension
 ```
 
-`ice install` defaults to the versioned `ice-extension.json` prebuilt protocol: it resolves a non-yanked stable package version and repository through crates.io, loads the `<package>-v<version>` Release manifest, and verifies the archive and declared library before transactionally installing it into `~/.ice/agent/extensions`. Explicit `--github owner/repo` installs use package-specific tags and also support unpublished extensions. Both repository forms consume the same protocol; they never infer library filenames or use repository-wide latest bundles. Missing prebuilt releases fail with an actionable error; `--build` and `--path` explicitly select Cargo compilation. Installed provenance preserves the source for update discovery, reinstalls and uninstall. Actual plugin ABI/API-size validation still happens when loading the library.
+`icers install` defaults to the versioned `ice-extension.json` prebuilt protocol: it resolves a non-yanked stable package version and repository through crates.io, loads the `<package>-v<version>` Release manifest, and verifies the archive and declared library before transactionally installing it into `~/.icers/agent/extensions`. Explicit `--github owner/repo` installs use package-specific tags and also support unpublished extensions. Both repository forms consume the same protocol; they never infer library filenames or use repository-wide latest bundles. Missing prebuilt releases fail with an actionable error; `--build` and `--path` explicitly select Cargo compilation. Installed provenance preserves the source for update discovery, reinstalls and uninstall. Actual plugin ABI/API-size validation still happens when loading the library.
 
-`ice install <name>` installs or upgrades an extension without `--force`. An already installed version is skipped; use `--force` to reinstall the same version or allow a downgrade. These rules also apply to explicit Cargo builds and local installs.
+`icers install <name>` installs or upgrades an extension without `--force`. An already installed version is skipped; use `--force` to reinstall the same version or allow a downgrade. These rules also apply to explicit Cargo builds and local installs.
 
-`ice package update` updates all linked project packages and globally installed registry/prebuilt extensions; `ice package update <name>` selects one package. Updates retain the original Cargo build backend or explicit GitHub repository. Global development installs made with `--path` are excluded from registry updates.
+`icers package update` updates all linked project packages and globally installed registry/prebuilt extensions; `icers package update <name>` selects one package. Updates retain the original Cargo build backend or explicit GitHub repository. Global development installs made with `--path` are excluded from registry updates.
 
 ## Remote mode
 
 ```bash
-ice --server                      # headless agent over TCP, prints a token
-ice --connect host:port --token T # zero-local-resource TUI client
+icers --server                      # headless agent over TCP, prints a token
+icers --connect host:port --token T # zero-local-resource TUI client
 ```
 
 The client holds no local provider, tools, extensions or session files; all
@@ -145,4 +145,4 @@ This crate is part of a Rust port of the MIT-licensed TypeScript `pi` SDK
 
 ### CLI self-update
 
-`ice update` downloads the matching GitHub prebuilt CLI using the versioned `ice-release.json` distribution protocol. It verifies target, archive size, both SHA-256 hashes, and the executable version before using the existing atomic replacement and Windows staging helper. Version discovery uses crates.io. Only `ice update --build` selects local Cargo compilation; missing manifests and failed checks preserve the installed executable. `--force` reinstalls and `--offline` reports cached information without downloads or builds.
+`icers update` downloads the matching GitHub prebuilt CLI using the versioned `ice-release.json` distribution protocol. It verifies target, archive size, both SHA-256 hashes, and the executable version before using the existing atomic replacement and Windows staging helper. Version discovery uses crates.io. Only `icers update --build` selects local Cargo compilation; missing manifests and failed checks preserve the installed executable. `--force` reinstalls and `--offline` reports cached information without downloads or builds.

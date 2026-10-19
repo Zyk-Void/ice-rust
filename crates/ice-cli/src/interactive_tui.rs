@@ -913,7 +913,7 @@ pub async fn interactive_tui(
     let show_images = tui_settings.show_images;
     let cache_miss_notices = tui_settings.cache_miss_notices;
     let quiet_startup = tui_settings.quiet_startup;
-    // ice only checks its own update channel.
+    // icers only checks its own update channel.
     // Session display preferences (durable, latest-wins) override the
     // settings-file defaults. These are per-session facts stored as custom
     // entries (see `ice_harness::session::values`), so resuming a session with
@@ -1006,7 +1006,7 @@ pub async fn interactive_tui(
         None
     };
 
-    // First-launch gate: if `~/.ice/.setup_done` is absent, show the welcome
+    // First-launch gate: if `~/.icers/.setup_done` is absent, show the welcome
     // banner once, then write the sentinel. The banner covers the theme hint;
     // the theme stays pickable via `/theme`. See `extras.rs`.
     // Capture this before first-time setup writes its sentinel.
@@ -1507,7 +1507,7 @@ pub async fn interactive_tui(
     tui.start_readerless();
 
     // Consume local self-update results even when network checks are disabled.
-    // Check ice and installed registry packages in the background so startup
+    // Check icers and installed registry packages in the background so startup
     // remains responsive while their latest versions are fetched.
     let mut update_check_handles = Vec::new();
     let ice_chat = chat_container.clone();
@@ -1691,7 +1691,7 @@ pub async fn interactive_tui(
         let mut windows_paste_run = WindowsPasteRun::default();
         if crate::key_trace::enabled() {
             crate::key_trace::note(&format!(
-                "--- ice TUI key trace start pid={} TERM={} raw_mode={} ---",
+                "--- icers TUI key trace start pid={} TERM={} raw_mode={} ---",
                 std::process::id(),
                 std::env::var("TERM").unwrap_or_else(|_| "(unset)".to_string()),
                 crossterm::terminal::is_raw_mode_enabled().unwrap_or(false),
@@ -1902,7 +1902,7 @@ pub async fn interactive_tui(
                 continue;
             };
             let key = ice_tui::terminal::normalize_key_event(key);
-            // Diagnostic trace (off unless ICE_DEBUG_KEYS is set): records what
+            // Diagnostic trace (off unless ICERS_DEBUG_KEYS is set): records what
             // actually arrived before any routing decision, so a client that
             // sends LF for Enter is visible as `Char('j') mods=CONTROL`.
             crate::key_trace::key(&key, "");
@@ -2784,7 +2784,7 @@ pub async fn interactive_tui(
     )
     .await
     {
-        tracing::warn!("[ice] extension vetoed SessionStart (advisory): {reason}");
+        tracing::warn!("[icers] extension vetoed SessionStart (advisory): {reason}");
     }
 
     // ---- Initial prompts (run before reading from the channel) ----

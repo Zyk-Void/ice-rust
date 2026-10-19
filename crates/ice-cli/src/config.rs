@@ -1,10 +1,10 @@
 //! # Layout
 //!
-//! Uses a nested layout: a `~/.ice/agent/` directory (or one pointed at via
-//! `ICE_CODING_AGENT_DIR`) "just works":
+//! Uses a nested layout: a `~/.icers/agent/` directory (or one pointed at via
+//! `ICERS_CODING_AGENT_DIR`) "just works":
 //!
 //! ```text
-//! ~/.ice/                 (ICE_CODING_AGENT_DIR env overrides the agent/ dir)
+//! ~/.icers/                 (ICERS_CODING_AGENT_DIR env overrides the agent/ dir)
 //! └── agent/
 //!     ├── auth.json       # persisted credentials (mode 0o600 on Unix)
 //!     ├── models.json     # user-defined provider/model catalog (hand-edited)
@@ -13,7 +13,7 @@
 //!     ├── .setup_done     # first-time-setup sentinel (extras.rs)
 //! ```
 //!
-//! Flat-installed `~/.ice/{auth.json,models.json}` from older ice releases are
+//! Flat-installed `~/.icers/{auth.json,models.json}` from older icers releases are
 //! migrated under `agent/` on the next launch by [`migrate_legacy_layout`]
 //! (best-effort, idempotent; only when the env override is unset).
 //!
@@ -22,7 +22,7 @@
 //! v1 is a single-process CLI, so we use **atomic rename** instead of upstream's
 //! `proper-lockfile`: write a sibling temp file, `fs::rename` over the target,
 //! then `chmod 0o600` on Unix (Windows chmod is a no-op, matching Node).
-//! Concurrent `ice auth login` from two shells could lose one update — that's
+//! Concurrent `icers auth login` from two shells could lose one update — that's
 //! accepted and documented; adding a file lock is deferred.
 //!
 //! # Config-value expansion
@@ -30,7 +30,7 @@
 //! [`resolve_config_value`] expands `$ENV`/`${ENV}`/`!command` inside
 //! `apiKey`/`headers` exactly like upstream's `resolve-config-value.ts` — so a
 //! copied pi `models.json`/`auth.json` that references env vars or shell
-//! commands resolves the same way. Applied where ice consumes those values
+//! commands resolves the same way. Applied where icers consumes those values
 //! (auth.json key, models.json bearer apiKey, provider/model `headers`).
 
 use std::collections::BTreeMap;
@@ -40,13 +40,13 @@ use std::path::{Path, PathBuf};
 use ice_ai::{Api, InputModality, Model, ModelCost, StreamingProtocolCompat, ThinkingLevelMap};
 
 /// The config directory name under the home dir.
-pub const CONFIG_DIR_NAME: &str = ".ice";
+pub const CONFIG_DIR_NAME: &str = ".icers";
 
 /// Env var that overrides the whole config dir. Absolute path; relative
 /// values are rejected.
-pub const CONFIG_DIR_ENV: &str = "ICE_CODING_AGENT_DIR";
+pub const CONFIG_DIR_ENV: &str = "ICERS_CODING_AGENT_DIR";
 
-/// The provider id under which `ice auth login` stores the Anthropic key.
+/// The provider id under which `icers auth login` stores the Anthropic key.
 /// Mirrors upstream's fixed `anthropic` provider id.
 pub const DEFAULT_PROVIDER_ID: &str = "anthropic";
 
@@ -86,7 +86,7 @@ pub enum ConfigError {
 // Path resolution
 // ---------------------------------------------------------------------------
 
-/// The ice config directory (`~/.ice/agent` by default, `ICE_CODING_AGENT_DIR`
+/// The icers config directory (`~/.icers/agent` by default, `ICERS_CODING_AGENT_DIR`
 /// override). Creates nothing — purely a path computation. The `agent/` layer
 /// is `join(homedir(), CONFIG_DIR_NAME, "agent")`. The env override points at
 /// the agent dir itself.
@@ -107,7 +107,7 @@ pub fn agent_dir() -> Result<PathBuf, ConfigError> {
     Ok(home.join(CONFIG_DIR_NAME).join("agent"))
 }
 
-/// The config dir one level above the agent dir (`~/.ice`, or the parent of an
+/// The config dir one level above the agent dir (`~/.icers`, or the parent of an
 /// env override). Used by [`migrate_legacy_layout`] to locate the old flat
 /// layout. Returns `None` when the env override has no parent (a root path).
 fn config_root_dir() -> Result<PathBuf, ConfigError> {
@@ -120,22 +120,22 @@ fn config_root_dir() -> Result<PathBuf, ConfigError> {
         })
 }
 
-/// `~/.ice/agent/auth.json`.
+/// `~/.icers/agent/auth.json`.
 pub fn auth_path() -> Result<PathBuf, ConfigError> {
     Ok(agent_dir()?.join("auth.json"))
 }
 
-/// `~/.ice/agent/models.json`.
+/// `~/.icers/agent/models.json`.
 pub fn models_path() -> Result<PathBuf, ConfigError> {
     Ok(agent_dir()?.join("models.json"))
 }
 
-/// `~/.ice/agent/settings.json` (saved default provider/model/thinking + theme).
+/// `~/.icers/agent/settings.json` (saved default provider/model/thinking + theme).
 pub fn settings_path() -> Result<PathBuf, ConfigError> {
     Ok(agent_dir()?.join("settings.json"))
 }
 
-/// `~/.ice/agent/trust.json` (per-cwd project trust decisions).
+/// `~/.icers/agent/trust.json` (per-cwd project trust decisions).
 pub fn trust_path() -> Result<PathBuf, ConfigError> {
     Ok(agent_dir()?.join("trust.json"))
 }
@@ -167,8 +167,8 @@ fn read_text_with_fallback(
 }
 
 /// One-time best-effort migration of a pre-nesting flat layout
-/// (`~/.ice/{auth.json,models.json,.setup_done}`) into the
-/// nested `~/.ice/agent/` layout. **No-op when `ICE_CODING_AGENT_DIR` is set**
+/// (`~/.icers/{auth.json,models.json,.setup_done}`) into the
+/// nested `~/.icers/agent/` layout. **No-op when `ICERS_CODING_AGENT_DIR` is set**
 /// (never touch an explicit override), when the agent dir already exists, or
 /// when no flat files are present. Idempotent: a partial move resumes. Errors
 /// are swallowed (logged via the returned `Result` only so tests can observe);
@@ -405,7 +405,7 @@ pub struct ModelDefinition {
     pub compat: Option<serde_json::Value>,
 }
 
-/// Load `~/.ice/models.json`. Missing file ⇒ empty config (no error).
+/// Load `~/.icers/models.json`. Missing file ⇒ empty config (no error).
 pub fn load_models_config() -> Result<ModelsConfig, ConfigError> {
     let path = models_path()?;
     match read_text_with_fallback(path, None)? {
@@ -416,7 +416,7 @@ pub fn load_models_config() -> Result<ModelsConfig, ConfigError> {
     }
 }
 
-/// Atomically write the whole `~/.ice/models.json` (used by the interactive
+/// Atomically write the whole `~/.icers/models.json` (used by the interactive
 /// provider form). Note: unlike [`crate::settings::save_settings`], this
 /// serializes the modeled config directly, so hand-written comments and unknown
 /// fields in `models.json` are not preserved on rewrite. A timestamped
@@ -448,12 +448,12 @@ pub fn save_models_config(cfg: &ModelsConfig) -> Result<(), ConfigError> {
 
 /// The trust store: `canonicalCwd -> decision` (`true`/`false`/`null`). Mirrors
 /// pi's `TrustFile = Record<string, boolean | null | undefined>`
-/// (`trust-manager.ts`). ice reads this for layout parity (a copied pi
+/// (`trust-manager.ts`). icers reads this for layout parity (a copied pi
 /// `trust.json` parses + is located correctly) but does **not** gate any
 /// project resources behind trust in v1 — there is no trust prompt. Deferred.
 pub type TrustStore = BTreeMap<String, Option<bool>>;
 
-/// Read `~/.ice/agent/trust.json`. Missing file ⇒ empty store (not an error).
+/// Read `~/.icers/agent/trust.json`. Missing file ⇒ empty store (not an error).
 /// Malformed JSON ⇒ `ConfigError::Json`. `null` decisions deserialize as
 /// `None`; absent entries are simply not present.
 pub fn read_trust() -> Result<TrustStore, ConfigError> {
@@ -1004,7 +1004,7 @@ pub(crate) fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), ConfigError>
     })?;
     let tmp = dir.join(format!(
         ".{}.{}.tmp",
-        path.file_name().and_then(|n| n.to_str()).unwrap_or("ice"),
+        path.file_name().and_then(|n| n.to_str()).unwrap_or("icers"),
         uuid::Uuid::new_v4().simple()
     ));
     let mut options = std::fs::OpenOptions::new();
@@ -1063,7 +1063,7 @@ impl<T> Pipe for T {}
 #[cfg(test)]
 pub(crate) mod test_support {
     /// A shared workspace lock for tests that touch process-global env vars
-    /// (`ICE_CODING_AGENT_DIR`, `ANTHROPIC_*`). All env-mutating tests across
+    /// (`ICERS_CODING_AGENT_DIR`, `ANTHROPIC_*`). All env-mutating tests across
     /// the crate (config / provider / auth) share this ONE mutex so they can't
     /// race on the shared environment. Hold the returned guard for the whole
     /// test (store it in a RAII struct).
@@ -1079,7 +1079,7 @@ mod tests {
     use super::*;
     use crate::config::test_support::env_lock;
 
-    /// Point `ICE_CODING_AGENT_DIR` at a fresh temp dir for the duration of the
+    /// Point `ICERS_CODING_AGENT_DIR` at a fresh temp dir for the duration of the
     /// test (cleaned up on drop). Holds the prior value of the env var to
     /// restore it. Hold the env lock for its whole lifetime.
     struct TempConfig {
@@ -1447,12 +1447,12 @@ mod tests {
     #[test]
     fn custom_openai_provider_resolves_explicit_api_key_environment_reference() {
         let _guard = env_lock().lock().unwrap();
-        let env_name = "ICE_FAKE_PROVIDER_API_KEY";
+        let env_name = "ICERS_FAKE_PROVIDER_API_KEY";
         std::env::set_var(env_name, "env-secret");
         let cfg = ProviderConfig {
             name: None,
             base_url: Some("https://gateway.example.com/v1".into()),
-            api_key: Some("$ICE_FAKE_PROVIDER_API_KEY".into()),
+            api_key: Some("$ICERS_FAKE_PROVIDER_API_KEY".into()),
             api: Some("openai-completions".into()),
             headers: None,
             auth_header: None,
@@ -1547,7 +1547,7 @@ mod tests {
 
     #[test]
     fn agent_dir_nests_under_agent_by_default() {
-        // With no env override, agent_dir() must end in `.../.ice/agent`
+        // With no env override, agent_dir() must end in `.../.icers/agent`
         // (mirrors pi's `getAgentDir`). We can't assertion the home prefix
         // portably, but the leaf two segments are stable.
         let _guard = env_lock().lock().unwrap();
@@ -1565,7 +1565,7 @@ mod tests {
     #[test]
     fn migrate_legacy_layout_moves_flat_files_into_agent() {
         // Drive the core migration directly against a temp root/agent so the
-        // result is independent of whatever ICE_CODING_AGENT_DIR the parallel
+        // result is independent of whatever ICERS_CODING_AGENT_DIR the parallel
         // TempConfig tests happen to set.
         let tmp = tempfile::TempDir::new().unwrap();
         let root = tmp.path().to_path_buf();
@@ -1603,7 +1603,7 @@ mod tests {
 
     #[test]
     fn migrate_legacy_layout_public_skips_env_override() {
-        // When ICE_CODING_AGENT_DIR is set, the public entry point is a no-op
+        // When ICERS_CODING_AGENT_DIR is set, the public entry point is a no-op
         // (it must never touch an explicit override). TempConfig sets it.
         let _cfg = TempConfig::new();
         let moved = migrate_legacy_layout().unwrap();
@@ -1647,46 +1647,46 @@ mod tests {
     #[test]
     fn resolve_config_value_env_var() {
         let _guard = env_lock().lock().unwrap();
-        let prev = std::env::var_os("ICE_TEST_CFG_KEY");
-        let prev2 = std::env::var_os("ICE_TEST_CFG_KEY2");
-        std::env::set_var("ICE_TEST_CFG_KEY", "secret-from-env");
+        let prev = std::env::var_os("ICERS_TEST_CFG_KEY");
+        let prev2 = std::env::var_os("ICERS_TEST_CFG_KEY2");
+        std::env::set_var("ICERS_TEST_CFG_KEY", "secret-from-env");
         assert_eq!(
-            resolve_config_value("$ICE_TEST_CFG_KEY", None),
+            resolve_config_value("$ICERS_TEST_CFG_KEY", None),
             Some("secret-from-env".into())
         );
         assert_eq!(
-            resolve_config_value("prefix-${ICE_TEST_CFG_KEY}-suffix", None),
+            resolve_config_value("prefix-${ICERS_TEST_CFG_KEY}-suffix", None),
             Some("prefix-secret-from-env-suffix".into())
         );
         // Two vars in one template.
-        std::env::set_var("ICE_TEST_CFG_KEY2", "two");
+        std::env::set_var("ICERS_TEST_CFG_KEY2", "two");
         assert_eq!(
-            resolve_config_value("a-$ICE_TEST_CFG_KEY-b-$ICE_TEST_CFG_KEY2-c", None),
+            resolve_config_value("a-$ICERS_TEST_CFG_KEY-b-$ICERS_TEST_CFG_KEY2-c", None),
             Some("a-secret-from-env-b-two-c".into())
         );
         // Env overlay wins over process env.
         let mut overlay = BTreeMap::new();
-        overlay.insert("ICE_TEST_CFG_KEY".into(), "overlay-value".into());
+        overlay.insert("ICERS_TEST_CFG_KEY".into(), "overlay-value".into());
         assert_eq!(
-            resolve_config_value("$ICE_TEST_CFG_KEY", Some(&overlay)),
+            resolve_config_value("$ICERS_TEST_CFG_KEY", Some(&overlay)),
             Some("overlay-value".into())
         );
-        restore_env("ICE_TEST_CFG_KEY", prev);
-        restore_env("ICE_TEST_CFG_KEY2", prev2);
+        restore_env("ICERS_TEST_CFG_KEY", prev);
+        restore_env("ICERS_TEST_CFG_KEY2", prev2);
     }
 
     #[test]
     fn resolve_config_value_unset_env_is_none() {
         let _guard = env_lock().lock().unwrap();
-        let prev = std::env::var_os("ICE_TEST_CFG_ABSENT");
-        std::env::remove_var("ICE_TEST_CFG_ABSENT");
+        let prev = std::env::var_os("ICERS_TEST_CFG_ABSENT");
+        std::env::remove_var("ICERS_TEST_CFG_ABSENT");
         // Any referenced unset var ⇒ the whole value is None (pi semantics).
-        assert_eq!(resolve_config_value("$ICE_TEST_CFG_ABSENT", None), None);
+        assert_eq!(resolve_config_value("$ICERS_TEST_CFG_ABSENT", None), None);
         assert_eq!(
-            resolve_config_value("prefix-$ICE_TEST_CFG_ABSENT-suffix", None),
+            resolve_config_value("prefix-$ICERS_TEST_CFG_ABSENT-suffix", None),
             None
         );
-        restore_env("ICE_TEST_CFG_ABSENT", prev);
+        restore_env("ICERS_TEST_CFG_ABSENT", prev);
     }
 
     #[test]
@@ -1712,11 +1712,11 @@ mod tests {
     #[test]
     fn resolve_headers_drops_unresolvable() {
         let _guard = env_lock().lock().unwrap();
-        let prev = std::env::var_os("ICE_TEST_HDR_SET");
-        std::env::set_var("ICE_TEST_HDR_SET", "set-value");
+        let prev = std::env::var_os("ICERS_TEST_HDR_SET");
+        std::env::set_var("ICERS_TEST_HDR_SET", "set-value");
         let mut h = BTreeMap::new();
-        h.insert("x-set".into(), "$ICE_TEST_HDR_SET".into());
-        h.insert("x-unset".into(), "$ICE_TEST_HDR_UNSET".into());
+        h.insert("x-set".into(), "$ICERS_TEST_HDR_SET".into());
+        h.insert("x-unset".into(), "$ICERS_TEST_HDR_UNSET".into());
         h.insert("x-literal".into(), "literal-value".into());
         let resolved = resolve_headers(&h, None);
         assert_eq!(resolved.len(), 2);
@@ -1726,7 +1726,7 @@ mod tests {
             Some("literal-value")
         );
         assert!(!resolved.contains_key("x-unset"));
-        restore_env("ICE_TEST_HDR_SET", prev);
+        restore_env("ICERS_TEST_HDR_SET", prev);
     }
 
     #[test]

@@ -1,12 +1,12 @@
 # 远程 Agent 架构：无头服务与零状态 TUI 客户端
 
-> ice 不只是一台机器上的终端程序。远程模式把 Agent 状态、模型调用和工具执行留在 server，客户端只负责显示事件和发送输入，适合在服务器上运行长任务。
+> icers 不只是一台机器上的终端程序。远程模式把 Agent 状态、模型调用和工具执行留在 server，客户端只负责显示事件和发送输入，适合在服务器上运行长任务。
 
 ## 数据链路
 
 ```mermaid
 flowchart LR
-    TUI[本地 ice --connect] -->|TCP + token| Server[远程 ice --server]
+    TUI[本地 icers --connect] -->|TCP + token| Server[远程 icers --server]
     Server --> Loop[Agent loop]
     Loop --> Model[Provider]
     Loop --> Tools[ExecutionEnv / tools]
@@ -20,13 +20,13 @@ flowchart LR
 
 ```bash
 # 服务器上
-ice --server --connect-token "$ICE_CONNECT_TOKEN"
+icers --server --connect-token "$ICERS_CONNECT_TOKEN"
 
 # 客户端
-ice --connect 10.0.0.8:PORT --connect-token "$ICE_CONNECT_TOKEN"
+icers --connect 10.0.0.8:PORT --connect-token "$ICERS_CONNECT_TOKEN"
 ```
 
-具体参数请运行 `ice --help`，因为端口和认证选项会随版本变化。认证 token 应通过安全的 secret 管理，不要写进 shell 历史或仓库。
+具体参数请运行 `icers --help`，因为端口和认证选项会随版本变化。认证 token 应通过安全的 secret 管理，不要写进 shell 历史或仓库。
 
 ## 连接生命周期
 
@@ -56,7 +56,7 @@ sequenceDiagram
 
 In remote mode, the server owns the workspace, credentials, tools, and session. The client renders the conversation and sends input. A disconnected terminal does not take the agent state with it.
 
-The usual shape is `ice --server` on the machine that has the project and `ice --connect` on a laptop. The connection carries commands and events; it does not copy the full model context to the client.
+The usual shape is `icers --server` on the machine that has the project and `icers --connect` on a laptop. The connection carries commands and events; it does not copy the full model context to the client.
 
 Treat the connection token as a secret. Use a private network or TLS/VPN where appropriate, rotate tokens, and restrict the server account. Remote mode provides a process split, not a complete security policy.
 

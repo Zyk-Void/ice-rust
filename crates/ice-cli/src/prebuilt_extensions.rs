@@ -349,11 +349,11 @@ fn validate_manifest<'a>(
         return Err("manifest source_commit must be a full Git commit SHA".into());
     }
     semver::Version::parse(&manifest.sdk.version).map_err(|_| "invalid SDK version in manifest")?;
-    if manifest.sdk.plugin_abi != ice_plugin_sdk::ICE_PLUGIN_ABI_VERSION_UNIFIED {
+    if manifest.sdk.plugin_abi != ice_plugin_sdk::ICERS_PLUGIN_ABI_VERSION_UNIFIED {
         return Err(format!(
             "extension SDK ABI {} is incompatible with host ABI {}",
             manifest.sdk.plugin_abi,
-            ice_plugin_sdk::ICE_PLUGIN_ABI_VERSION_UNIFIED
+            ice_plugin_sdk::ICERS_PLUGIN_ABI_VERSION_UNIFIED
         ));
     }
     let distribution = manifest.targets.get(target).ok_or_else(|| {
@@ -517,7 +517,7 @@ pub async fn install(
     let target = host_target()?;
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(15))
-        .user_agent(format!("ice/{}", crate::VERSION))
+        .user_agent(format!("icers/{}", crate::VERSION))
         .build()
         .map_err(|e| e.to_string())?;
     let repository = repository.or_else(|| {
@@ -578,7 +578,7 @@ pub async fn install(
     for path in installed {
         println!("installed {}", path.display());
     }
-    println!("ice will validate the plugin entrypoint/SDK API size and load this extension on the next start.");
+    println!("icers will validate the plugin entrypoint/SDK API size and load this extension on the next start.");
     Ok(())
 }
 
@@ -895,7 +895,7 @@ mod tests {
         let manifest = serde_json::json!({
             "schema_version":1, "name":package.name, "version":package.version,
             "repository":package.repository, "tag":"independent-plugin-v1.2.3", "source_commit":"a".repeat(40),
-            "sdk":{"version":"0.3.23", "plugin_abi":ice_plugin_sdk::ICE_PLUGIN_ABI_VERSION_UNIFIED},
+            "sdk":{"version":"0.3.23", "plugin_abi":ice_plugin_sdk::ICERS_PLUGIN_ABI_VERSION_UNIFIED},
             "targets":{target:{"url":release_url(&package.repository,&package.name,&package.version,file).unwrap(),
                 "format":format,"size":archive.len(),"sha256":hash(&archive),"library":{"path":library,"sha256":hash(&bytes)}}}
         });

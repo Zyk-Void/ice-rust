@@ -1276,7 +1276,7 @@ pub(super) async fn switch_provider(
         .collect();
     if candidates.is_empty() {
         return Err(format!(
-            "Provider \"{provider_id}\" has no authenticated model loaded in this session. Check ice auth check --provider {provider_id}, then /reload and retry. The current provider is unchanged."
+            "Provider \"{provider_id}\" has no authenticated model loaded in this session. Check icers auth check --provider {provider_id}, then /reload and retry. The current provider is unchanged."
         ));
     }
     let mut settings = crate::settings::load_settings().map_err(|error| error.to_string())?;
@@ -1668,7 +1668,7 @@ pub(super) fn remove_provider(input: &str) -> Result<String, String> {
     let id = input.trim();
     if cfg.providers.shift_remove(id).is_none() {
         return Err(format!(
-            "Provider \"{id}\" has no models.json configuration to remove. To remove an installed package, use ice package unlink <name>."
+            "Provider \"{id}\" has no models.json configuration to remove. To remove an installed package, use icers package unlink <name>."
         ));
     }
     crate::config::save_models_config(&cfg).map_err(|error| error.to_string())?;
@@ -1681,7 +1681,7 @@ pub(super) fn remove_provider(input: &str) -> Result<String, String> {
         settings.default_model = None;
         let _ = crate::settings::save_settings(&settings);
     }
-    Ok(format!("Removed models.json configuration for provider \"{id}\" — restart ice to apply. Installed provider packages remain available; use ice package unlink to remove a package."))
+    Ok(format!("Removed models.json configuration for provider \"{id}\" — restart icers to apply. Installed provider packages remain available; use icers package unlink to remove a package."))
 }
 
 /// Write the completed form into `models.json` as a new provider with one
@@ -1716,7 +1716,7 @@ pub(super) fn save_provider_from_form(form: &ProviderFormState) -> Result<String
     cfg.providers.insert(form.id.clone(), provider);
     crate::config::save_models_config(&cfg).map_err(|error| error.to_string())?;
     Ok(format!(
-        "Added provider \"{}\" ({} · {} model) — restart ice to use it.",
+        "Added provider \"{}\" ({} · {} model) — restart icers to use it.",
         form.id, form.api, form.model_id
     ))
 }

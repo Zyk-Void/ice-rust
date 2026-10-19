@@ -55,10 +55,10 @@ fn take_flag_value(argv: &[String], flag: &str) -> Option<String> {
 }
 
 /// Resolve the `--connect` auth token: the `--token` flag wins, then the
-/// `ICE_SERVER_TOKEN` environment variable (ignoring empty/whitespace values).
+/// `ICERS_SERVER_TOKEN` environment variable (ignoring empty/whitespace values).
 fn resolve_connect_token(argv: &[String]) -> Option<String> {
     take_flag_value(argv, "--token").or_else(|| {
-        std::env::var("ICE_SERVER_TOKEN")
+        std::env::var("ICERS_SERVER_TOKEN")
             .ok()
             .map(|value| value.trim().to_string())
             .filter(|value| !value.is_empty())
@@ -68,10 +68,10 @@ fn resolve_connect_token(argv: &[String]) -> Option<String> {
 /// The v1 CLI entry point. Mirrors TS `export async function main(args)`.
 ///
 /// Returns the process exit code (0 = success). The binary wrapper
-/// ([`crate::bin`] / `src/bin/ice.rs`) calls this under a tokio runtime and
+/// ([`crate::bin`] / `src/bin/icers.rs`) calls this under a tokio runtime and
 /// `std::process::exit`s with the returned code.
 pub async fn run() -> i32 {
-    // Startup profiling wrapper: ICE_TIMING=1 records namespace timings and
+    // Startup profiling wrapper: ICERS_TIMING=1 records namespace timings and
     // flushes them to stderr once the run completes, regardless of exit path.
     crate::timings::reset(crate::timings::TimingNamespace::Main);
     let code = run_inner().await;
@@ -88,20 +88,20 @@ async fn run_inner() -> i32 {
         return crate::dev_extension::run_cleanup_helper(&argv[1..]);
     }
 
-    // ---- `ice --connect <addr>` — pure remote client ----
+    // ---- `icers --connect <addr>` — pure remote client ----
     // Intercepted before any provider / harness / session / extension work so
     // the client holds no local agent resources at all: it only connects to a
-    // running `ice --server` and renders the remote transcript.
+    // running `icers --server` and renders the remote transcript.
     if let Some(addr) = take_flag_value(&argv, "--connect") {
         let token = resolve_connect_token(&argv);
         return crate::remote::tui::run(&addr, token.as_deref()).await;
     }
 
-    // Normalize the CLI flag into ICE_OFFLINE so early-dispatch subcommands and
+    // Normalize the CLI flag into ICERS_OFFLINE so early-dispatch subcommands and
     // the regular parsed path all observe the same process-wide gate.
     crate::args::normalize_offline_mode(&argv);
 
-    // `ice dev` wraps the normal CLI: consume only development-specific
+    // `icers dev` wraps the normal CLI: consume only development-specific
     // options, then pass every remaining argument through the regular parser.
     let dev_command = argv.first().map(String::as_str);
     let dev_options = if matches!(dev_command, Some("dev" | "dev-local")) {
@@ -159,13 +159,13 @@ async fn run_inner() -> i32 {
         // falling through to the prompt path.
         Some(removed @ ("pi-package" | "pi-update" | "install-pi" | "uninstall-pi")) => {
             eprintln!(
-                "error: `ice {removed}` is not available; use `ice package`, `ice install`, or `ice update`."
+                "error: `icers {removed}` is not available; use `icers package`, `icers install`, or `icers update`."
             );
             return EXIT_USAGE;
         }
         // // Never a working invocation; the same fall-through applies.
         // Some("self-update") => {
-        //     eprintln!("error: unknown command `self-update`; use `ice update`");
+        //     eprintln!("error: unknown command `self-update`; use `icers update`");
         //     return EXIT_USAGE;
         // }
         _ => {}
@@ -184,8 +184,8 @@ async fn run_inner() -> i32 {
         Err(code) => return code,
     };
 
-    // ---- Legacy-layout migration (flat ~/.ice → ~/.ice/agent/) ----
-    // Best-effort; never blocks startup. Skipped when ICE_CODING_AGENT_DIR is
+    // ---- Legacy-layout migration (flat ~/.icers → ~/.icers/agent/) ----
+    // Best-effort; never blocks startup. Skipped when ICERS_CODING_AGENT_DIR is
     // set (an explicit override is its own layout).
     let _ = crate::config::migrate_legacy_layout();
     crate::timings::time("config migrated", crate::timings::TimingNamespace::Main);
@@ -220,7 +220,7 @@ async fn run_inner() -> i32 {
 
     // ---- stdin ownership ----
     // Do NOT drain stdin when the run is an RPC/server session: stdin is the
-    // JSONL command channel there (a spawned `ice --mode rpc` child reads its
+    // JSONL command channel there (a spawned `icers --mode rpc` child reads its
     // commands from stdin), so consuming it up-front would leave the protocol
     // loop nothing to read. `--mode rpc` and `--server` both select RunMode::Rpc.
     //
@@ -361,9 +361,9 @@ async fn run_inner() -> i32 {
         mode
     };
 
-    // Debug/testing escape hatch: ICE_FORCE_TUI=1 forces interactive mode
+    // Debug/testing escape hatch: ICERS_FORCE_TUI=1 forces interactive mode
     // (for testing the TUI in non-TTY environments).
-    let mode = if std::env::var("ICE_FORCE_TUI")
+    let mode = if std::env::var("ICERS_FORCE_TUI")
         .map(|v| v == "1")
         .unwrap_or(false)
     {
@@ -375,7 +375,7 @@ async fn run_inner() -> i32 {
     // A plugin that claimed stdio owns this process's stdin/stdout: force the
     // headless Rpc lifecycle (dispatch startup events, then wait for completion)
     // and let the plugin's own protocol server read/write stdio. This is
-    // authoritative — it must win over TTY detection and ICE_FORCE_TUI,
+    // authoritative — it must win over TTY detection and ICERS_FORCE_TUI,
     // otherwise the host would start a TUI/print run that writes to a stream the
     // plugin owns.
     let mode = if stdio_claimed { RunMode::Rpc } else { mode };
@@ -435,7 +435,7 @@ async fn run_inner() -> i32 {
             // Headless lifecycle (P0): no TUI, but a session still starts/ends —
             // extensions (e.g. ice-server) auto-start on SessionStart and clean
             // up on SessionShutdown, exactly as in interactive mode. This is why
-            // `ice --server` works headless: the SessionStart hook fires and the
+            // `icers --server` works headless: the SessionStart hook fires and the
             // extension brings up the TCP server.
             let veto = crate::session::dispatch_session_event_async(
                 &reload_context,
@@ -443,7 +443,7 @@ async fn run_inner() -> i32 {
             )
             .await;
             if let Some(reason) = veto {
-                eprintln!("[ice] startup vetoed by extension: {reason}");
+                eprintln!("[icers] startup vetoed by extension: {reason}");
                 EXIT_VETOED
             } else {
                 if let Some(reason) = crate::session::dispatch_session_event_async(
@@ -453,7 +453,7 @@ async fn run_inner() -> i32 {
                 .await
                 {
                     tracing::warn!(
-                        "[ice] extension vetoed SessionStart (headless, advisory): {reason}"
+                        "[icers] extension vetoed SessionStart (headless, advisory): {reason}"
                     );
                 }
 
@@ -462,7 +462,7 @@ async fn run_inner() -> i32 {
                     // owns the process's I/O. Wait for its completion or Ctrl+C,
                     // then dispatch SessionShutdown before unloading plugins.
                     eprintln!(
-                        "[ice] running in headless mode (no TUI); extension owns stdio; Ctrl+C to stop"
+                        "[icers] running in headless mode (no TUI); extension owns stdio; Ctrl+C to stop"
                     );
                     if stdio_claimed {
                         let lifecycle = stdio_lifecycle
@@ -479,7 +479,7 @@ async fn run_inner() -> i32 {
                 } else {
                     // `--mode rpc`: JSONL command loop over stdio — the
                     // server-side agent that ice-server spawns and that
-                    // `ice --connect` talks to. The extension `UiDialog`
+                    // `icers --connect` talks to. The extension `UiDialog`
                     // mailbox is bridged over the same channel so a permission
                     // gate can ask the client mid-run.
                     crate::modes::rpc(
@@ -498,7 +498,7 @@ async fn run_inner() -> i32 {
                 .await
                 {
                     tracing::warn!(
-                        "[ice] extension vetoed SessionShutdown (ignored, closing): {reason}"
+                        "[icers] extension vetoed SessionShutdown (ignored, closing): {reason}"
                     );
                 }
                 code
@@ -774,9 +774,9 @@ async fn list_models(search: &str, args: &Args, cwd: &Path) -> i32 {
 /// NOTE: if stdin is *not* a TTY but no bytes arrive (e.g. `pi < /dev/null`),
 /// this returns `None` (empty), which is what TS does too (`data.trim() || undefined`).
 fn read_piped_stdin() -> Option<String> {
-    // Debug/testing escape hatch: ICE_SKIP_STDIN=1 skips reading piped stdin
+    // Debug/testing escape hatch: ICERS_SKIP_STDIN=1 skips reading piped stdin
     // (avoids blocking on non-TTY stdin in automated environments).
-    if std::env::var("ICE_SKIP_STDIN")
+    if std::env::var("ICERS_SKIP_STDIN")
         .map(|v| v == "1")
         .unwrap_or(false)
     {
@@ -897,7 +897,7 @@ fn print_resolve_error(e: &ResolveError) {
         ResolveError::Config(_) => {
             eprintln!("error: {e}");
             eprintln!();
-            eprintln!("Check ~/.ice/auth.json / ~/.ice/models.json (set ICE_CODING_AGENT_DIR to relocate).");
+            eprintln!("Check ~/.icers/auth.json / ~/.icers/models.json (set ICERS_CODING_AGENT_DIR to relocate).");
         }
         _ => eprintln!("error: {e}"),
     }
@@ -944,7 +944,7 @@ mod tests {
 
     #[test]
     fn connect_token_prefers_the_flag_over_the_env_var() {
-        // The flag wins regardless of any ICE_SERVER_TOKEN in the environment.
+        // The flag wins regardless of any ICERS_SERVER_TOKEN in the environment.
         let argv = vec!["--token".to_string(), "flag-token".to_string()];
         assert_eq!(resolve_connect_token(&argv).as_deref(), Some("flag-token"));
     }

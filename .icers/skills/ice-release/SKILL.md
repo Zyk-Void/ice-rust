@@ -1,9 +1,9 @@
 ---
 name: ice-release
-description: 发布 ice Rust workspace 的版本，包含预检、版本递增、Git tag、GitHub Release、crates.io、安装渠道、官网部署，以及发布后合并 main 和创建下一个版本分支。用于用户请求发布新版本、打 tag、发布 crates 或整理 release 流程时。
+description: 发布 icers Rust workspace 的版本，包含预检、版本递增、Git tag、GitHub Release、crates.io、安装渠道、官网部署，以及发布后合并 main 和创建下一个版本分支。用于用户请求发布新版本、打 tag、发布 crates 或整理 release 流程时。
 ---
 
-# ice 发布流程
+# icers 发布流程
 
 ## 目标
 
@@ -178,7 +178,7 @@ git tag --list 'v0.3.16'
 git ls-remote --tags origin v0.3.16
 git ls-remote --heads origin main feature-0.3.17
 cargo install ice-cli --version 0.3.16
-ice --version
+icers --version
 ```
 
 如果 winget 只是提交 PR，不要声称它已经进入 winget 主仓库；需要等待微软仓库审核合并。

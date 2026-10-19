@@ -1,5 +1,5 @@
 //! Build ice-providers in the independent ice-package workspace, then set
-//! ICE_TEST_PROVIDER_LIBRARY to its DLL/so/dylib and ICE_TEST_PROVIDER_PACKAGE
+//! ICERS_TEST_PROVIDER_LIBRARY to its DLL/so/dylib and ICERS_TEST_PROVIDER_PACKAGE
 //! to its package directory. The host has no vendor crate dependency.
 //! Then run cargo test -p ice-cli --test provider_packages.
 use std::{
@@ -11,10 +11,10 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 fn library(name: &str) -> Option<PathBuf> {
     if name == "ice_providers" {
-        let path = PathBuf::from(std::env::var_os("ICE_TEST_PROVIDER_LIBRARY")?);
+        let path = PathBuf::from(std::env::var_os("ICERS_TEST_PROVIDER_LIBRARY")?);
         assert!(
             path.is_file(),
-            "ICE_TEST_PROVIDER_LIBRARY must name the built bundle"
+            "ICERS_TEST_PROVIDER_LIBRARY must name the built bundle"
         );
         return Some(path);
     }
@@ -36,11 +36,11 @@ fn library(name: &str) -> Option<PathBuf> {
 }
 
 fn command_base(temp: &tempfile::TempDir) -> Command {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_ice"));
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_icers"));
     cmd.current_dir(temp.path())
         .stdin(Stdio::null())
-        .env("ICE_CODING_AGENT_DIR", temp.path().join("agent"))
-        .env("ICE_OFFLINE", "1")
+        .env("ICERS_CODING_AGENT_DIR", temp.path().join("agent"))
+        .env("ICERS_OFFLINE", "1")
         .env_remove("ANTHROPIC_API_KEY")
         .env_remove("ANTHROPIC_AUTH_TOKEN")
         .env_remove("ANTHROPIC_BASE_URL")
@@ -89,7 +89,7 @@ fn assert_auth_output(output: std::process::Output, ready: bool, source: &str) {
 #[test]
 fn auth_check_uses_package_policy_precedence_and_provider_isolation() {
     let Some(library) = library("ice_providers") else {
-        eprintln!("SKIP: build ice-providers and set ICE_TEST_PROVIDER_LIBRARY first");
+        eprintln!("SKIP: build ice-providers and set ICERS_TEST_PROVIDER_LIBRARY first");
         return;
     };
     let temp = tempfile::tempdir().unwrap();
@@ -157,7 +157,7 @@ fn auth_check_uses_package_policy_precedence_and_provider_isolation() {
     );
     std::fs::write(
         agent.join("auth.json"),
-        r#"{"openrouter":{"type":"api_key","key":"$ICE_TEST_MISSING_PACKAGE_AUTH"}}"#,
+        r#"{"openrouter":{"type":"api_key","key":"$ICERS_TEST_MISSING_PACKAGE_AUTH"}}"#,
     )
     .unwrap();
     assert_auth_output(
@@ -255,7 +255,7 @@ fn auth_check_honors_anonymous_packages_and_logout_keeps_environment_keys() {
 #[test]
 fn package_catalog_is_available_without_credentials_and_respects_no_extensions() {
     let Some(library) = library("ice_providers") else {
-        eprintln!("SKIP: build ice-providers and set ICE_TEST_PROVIDER_LIBRARY first");
+        eprintln!("SKIP: build ice-providers and set ICERS_TEST_PROVIDER_LIBRARY first");
         return;
     };
     let temp = tempfile::tempdir().unwrap();
@@ -374,7 +374,7 @@ async fn packaged_providers_stream_through_the_real_dll_and_cli() {
                     .to_ascii_lowercase()
                     .contains("authorization: bearer package-key"));
                 assert!(
-                    text.to_ascii_lowercase().contains("x-title: ice"),
+                    text.to_ascii_lowercase().contains("x-title: icers"),
                     "the package factory must handle this request"
                 );
             } else {
@@ -493,7 +493,7 @@ async fn reload_updates_the_catalog_endpoint_and_runtime_without_a_restart() {
     };
     // The child gets an isolated environment; parallel tests never mutate the
     // parent's config directory or credentials.
-    if std::env::var_os("ICE_TEST_PACKAGE_RELOAD").is_none() {
+    if std::env::var_os("ICERS_TEST_PACKAGE_RELOAD").is_none() {
         let temp = tempfile::tempdir().unwrap();
         let output = Command::new(std::env::current_exe().unwrap())
             .args([
@@ -501,9 +501,9 @@ async fn reload_updates_the_catalog_endpoint_and_runtime_without_a_restart() {
                 "reload_updates_the_catalog_endpoint_and_runtime_without_a_restart",
                 "--nocapture",
             ])
-            .env("ICE_TEST_PACKAGE_RELOAD", "1")
-            .env("ICE_CODING_AGENT_DIR", temp.path().join("agent"))
-            .env("ICE_TEST_PACKAGE_CWD", temp.path())
+            .env("ICERS_TEST_PACKAGE_RELOAD", "1")
+            .env("ICERS_CODING_AGENT_DIR", temp.path().join("agent"))
+            .env("ICERS_TEST_PACKAGE_CWD", temp.path())
             .env_remove("OPENAI_API_KEY")
             .env_remove("ANTHROPIC_API_KEY")
             .env_remove("ANTHROPIC_AUTH_TOKEN")
@@ -518,7 +518,7 @@ async fn reload_updates_the_catalog_endpoint_and_runtime_without_a_restart() {
         );
         return;
     }
-    let cwd = PathBuf::from(std::env::var_os("ICE_TEST_PACKAGE_CWD").unwrap());
+    let cwd = PathBuf::from(std::env::var_os("ICERS_TEST_PACKAGE_CWD").unwrap());
     let extensions = vec![library];
     let args = ice_cli::args::Args {
         extension: extensions,
@@ -721,14 +721,14 @@ fn linked_package_is_discovered_and_unlinked_cleanly() {
     }
     let temp = tempfile::tempdir().unwrap();
     let source =
-        PathBuf::from(std::env::var_os("ICE_TEST_PROVIDER_PACKAGE").expect(
-            "set ICE_TEST_PROVIDER_PACKAGE to packages/ice-providers for link/unlink testing",
+        PathBuf::from(std::env::var_os("ICERS_TEST_PROVIDER_PACKAGE").expect(
+            "set ICERS_TEST_PROVIDER_PACKAGE to packages/ice-providers for link/unlink testing",
         ));
     let run = |args: &[&str]| {
-        Command::new(env!("CARGO_BIN_EXE_ice"))
+        Command::new(env!("CARGO_BIN_EXE_icers"))
             .current_dir(temp.path())
-            .env("ICE_CODING_AGENT_DIR", temp.path().join("agent"))
-            .env("ICE_OFFLINE", "1")
+            .env("ICERS_CODING_AGENT_DIR", temp.path().join("agent"))
+            .env("ICERS_OFFLINE", "1")
             .stdin(Stdio::null())
             .args(args)
             .output()

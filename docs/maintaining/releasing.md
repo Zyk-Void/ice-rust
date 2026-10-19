@@ -1,4 +1,4 @@
-# Releasing ice
+# Releasing icers
 
 ## Normal releases: merge the Release PR
 
@@ -6,7 +6,7 @@ Contributors, including fork contributors, submit code and tests without changin
 versions. After an ordinary PR lands on `main` and all CI checks pass,
 `release-plz` creates or updates a draft Release PR. It prepares the version and
 root changelog, synchronizes the embedded documentation, validates the nine
-crates, and marks the PR ready. The shared workspace version and `ice` version
+crates, and marks the PR ready. The shared workspace version and `icers` version
 group keep the nine core crates together; examples are excluded.
 
 Merge that Release PR when ready to ship. After its main-branch CI passes:
@@ -182,7 +182,7 @@ task publish:crates RELEASE_VERSION=0.3.4
 | `wait`, `channels` | `gh` authenticated (reads release assets) |
 | `winget` | `gh` authenticated (forks `winget-pkgs`, opens the PR) |
 | `crates` | `cargo login` (a publish-scoped token) |
-| `site` | SSH to the ice web host |
+| `site` | SSH to the icers web host |
 
 ## What no command can finish
 

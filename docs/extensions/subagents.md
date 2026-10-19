@@ -127,7 +127,7 @@ cargo test -p ice-subagents
 cargo build -p ice-subagents
 
 # D:/Projects/ice-rust，将变量设为实际 DLL / so / dylib 路径
-ICE_TEST_SUBAGENT_LIBRARY=/path/to/ice_subagents.dll cargo test -p ice-cli --test subagent_packages
+ICERS_TEST_SUBAGENT_LIBRARY=/path/to/ice_subagents.dll cargo test -p ice-cli --test subagent_packages
 ```
 
 集成测试加载真实 DLL，使用本地 faux provider 和临时项目，验证进度、cwd、工具

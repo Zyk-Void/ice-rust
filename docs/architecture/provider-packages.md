@@ -27,23 +27,23 @@ CLI 不依赖供应商实现。`ice-provider-runtime` 留在核心仓库作为�
 在 ice-package 仓库根目录，使用本分支构建的宿主安装一次：
 
 ```sh
-ice package link providers --path packages/ice-providers --debug
-ice --list-models
-ice auth login --provider deepseek
-ice --provider deepseek --model deepseek-flash
+icers package link providers --path packages/ice-providers --debug
+icers --list-models
+icers auth login --provider deepseek
+icers --provider deepseek --model deepseek-flash
 # 配置 OPENROUTER_API_KEY 后
-ice --provider openrouter --model openrouter/auto
+icers --provider openrouter --model openrouter/auto
 # 本地服务已运行时
-ice --provider llama-cpp --model local --base-url http://localhost:8080/v1
+icers --provider llama-cpp --model local --base-url http://localhost:8080/v1
 ```
 
 `local` 与 Proxy 的 `default` 是目录预设；服务器使用其他模型名、上下文或输出上限时，
 在 models.json 中覆盖对应 provider。用户端点与请求头同样覆盖包的默认值。
 匿名目录就绪不代表服务已运行，使用时指定需要的 provider。
 
-若已分别安装旧包，先 `ice package unlink <旧安装名>`，再 link `providers`，避免旧实现
+若已分别安装旧包，先 `icers package unlink <旧安装名>`，再 link `providers`，避免旧实现
 按加载顺序占用同名 ID。原有 provider ID、models.json 与 auth.json 保持兼容，不合并供应商凭据。
-之后升级只更新统一包，卸载使用 `ice package unlink providers`；会一起移除四份目录和实现。
+之后升级只更新统一包，卸载使用 `icers package unlink providers`；会一起移除四份目录和实现。
 本包尚未发布 crates.io，固定依赖兼容的核心提交，当前使用源码 link。
 
 Rust 调用方改用 `ice_providers::{deepseek,openrouter,llama_cpp,proxy}` 中的类型。
@@ -115,7 +115,7 @@ TUI 的 `/provider` 同样显示已加载的 package、模型数和认证状态�
 `/provider <id>` 与菜单选择即时更新当前 lane 和底部模型显示，成功后保存默认 provider / model。
 缺少可用认证、未知 ID 或 lane 切换失败时，保留原模型与默认值，并显示错误。
 `/model` 选择具体模型；正在生成时的 provider 切换按输入顺序在当前回复结束后处理。
-`/provider remove <id>` 只移除 `models.json` 配置，不卸载 package；卸载使用 `ice package unlink <name>`。
+`/provider remove <id>` 只移除 `models.json` 配置，不卸载 package；卸载使用 `icers package unlink <name>`。
 `/model openrouter/auto` 和完整的 `openrouter/openrouter/auto` 均可定位该模型，跨 provider 重名时需完整限定。
 扩展目录仍遵守项目信任、`--project-only` 和显式扩展路径规则。
 
@@ -127,11 +127,11 @@ TUI 的 `/provider` 同样显示已加载的 package、模型数和认证状态�
 有效的 OAuth access token 按 Bearer 注入请求。`auth check` 不刷新 token，也不发起服务端认证验证。
 
 ```sh
-ice auth login --provider openrouter
-ice auth check --provider openrouter --json
-ice auth logout --provider openrouter
+icers auth login --provider openrouter
+icers auth check --provider openrouter --json
+icers auth logout --provider openrouter
 # 未安装时也可显式加载（扩展路径在 auth 子命令后）
-ice auth check --provider openrouter --extension /path/to/provider.dll --json
+icers auth check --provider openrouter --extension /path/to/provider.dll --json
 ```
 
 `auth check --json` 的 `source` 返回 `auth.json`、`oauth`、`models.json`、专属环境变量名、`headers`、`anonymous` 或 `none`，
@@ -158,7 +158,7 @@ cargo test -p ice-providers --test streaming
 cargo test -p ice-providers --test host
 ```
 
-在 `ice-rust` 中运行 CLI 集成测试前，将 `ICE_TEST_PROVIDER_LIBRARY` 指向构建出的
+在 `ice-rust` 中运行 CLI 集成测试前，将 `ICERS_TEST_PROVIDER_LIBRARY` 指向构建出的
 `ice_providers.dll` / `libice_providers.so` / `libice_providers.dylib`。
 
 端到端测试用真实 DLL、CLI 子进程和本机 SSE 服务，覆盖无凭据目录、禁用扩展、认证隔离、带认证的
@@ -171,8 +171,8 @@ factory / key 隔离；DeepSeek 思考工具续轮、取消与错误测试也在
 本仓库的跨项目 CLI / reload / link 集成测试使用同一份动态库，无需 CLI 依赖供应商 crate：
 
 ```powershell
-$env:ICE_TEST_PROVIDER_LIBRARY = 'C:\path\to\target\debug\ice_providers.dll'
-$env:ICE_TEST_PROVIDER_PACKAGE = 'C:\path\to\ice-package\packages\ice-providers'
+$env:ICERS_TEST_PROVIDER_LIBRARY = 'C:\path\to\target\debug\ice_providers.dll'
+$env:ICERS_TEST_PROVIDER_PACKAGE = 'C:\path\to\ice-package\packages\ice-providers'
 cargo test -p ice-cli --test provider_packages
 ```
 

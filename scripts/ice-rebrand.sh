@@ -15,11 +15,14 @@ HISTORY='^(CHANGELOG\.md|NOTICE|crates/(rpi|ice)-cli/embedded-docs/changelog\.md
 # Tokens that contain "rpi" but are not ours: external npm package, upstream domain.
 protect='s/rpiv-todo/\x00K1\x00/g; s/rpi\.laofu/\x00K2\x00/g;'
 restore='s/\x00K1\x00/rpiv-todo/g; s/\x00K2\x00/rpi.laofu/g;'
-names='s/rpi/ice/g; s/RPI/ICE/g; s/Rpi/Ice/g;'
+# Standalone `rpi` (the binary, ~/.rpi, the product name) becomes `icers` and
+# env vars/consts become ICERS_*, so this build never touches TS ice's `ice`
+# binary, ~/.ice dir or ICE_* env. Compound names (rpi-cli, rpi_ai) become ice-*.
+names='s/CARGO_BIN_EXE_rpi\b/CARGO_BIN_EXE_icers/g; s/(?<![A-Za-z0-9_-])rpi(?![A-Za-z0-9_-])/icers/g; s/rpi/ice/g; s/RPI/ICERS/g; s/Rpi/Ice/g;'
 
 # 1. Paths.
 git ls-files | { grep -iE 'rpi' || true; } | { grep -vE "$SKIP" || true; } | while read -r f; do
-  new=$(printf '%s' "$f" | sed -e 's/bigfish1913\.rpi/Zyk-Void.ice/g' -e 's/rpi/ice/g; s/RPI/ICE/g; s/Rpi/Ice/g')
+  new=$(printf '%s' "$f" | perl -pe 's/bigfish1913\.rpi/Zyk-Void.ice/g; '"$names")
   [ "$f" = "$new" ] && continue
   mkdir -p "$(dirname "$new")"
   git mv "$f" "$new"

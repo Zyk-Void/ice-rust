@@ -85,7 +85,7 @@ class ReleaseGateTests(unittest.TestCase):
         self.assertFalse(config["workspace"]["release"])
         packages = config["package"]
         self.assertEqual(len(packages), 9)
-        self.assertTrue(all(p["release"] and p["version_group"] == "ice" for p in packages))
+        self.assertTrue(all(p["release"] and p["version_group"] == "icers" for p in packages))
         self.assertEqual(sum(p.get("changelog_update", False) for p in packages), 1)
 
     def test_release_plz_linked_changelog_heading_allows_the_release(self):

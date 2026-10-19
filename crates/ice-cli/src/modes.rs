@@ -275,7 +275,7 @@ fn emit_agent_event(event: &AgentEvent) {
 /// Commands: `prompt` (streams the run), `abort`, `get_state`, `set_model`,
 /// `set_thinking_level`, `set_active_tools`, `ping`, `stop`. `stop` (or stdin
 /// EOF) ends the loop. This is the process `ice-server` spawns and that
-/// `ice --connect` talks to. Mirrors TS `runRpcMode` / `modes/rpc`.
+/// `icers --connect` talks to. Mirrors TS `runRpcMode` / `modes/rpc`.
 ///
 /// The extension `UiDialog` mailbox is bridged over the same channel: the host
 /// emits `{"type":"ui_dialog_request","requestId","toolCallId","ui"}`, and the
@@ -416,7 +416,7 @@ where
             Ok(Some(line)) => line,
             Ok(None) => break, // EOF
             Err(error) => {
-                eprintln!("[ice] rpc stdin error: {error}");
+                eprintln!("[icers] rpc stdin error: {error}");
                 cancel_on_exit = true;
                 break;
             }
@@ -477,7 +477,7 @@ where
                     };
                     write_line(&stdout, &response.to_json()).await;
                 } else if let Err(error) = result {
-                    eprintln!("[ice] ui_dialog_response: {error}");
+                    eprintln!("[icers] ui_dialog_response: {error}");
                 }
                 continue;
             }
@@ -578,7 +578,7 @@ where
     let mut exit_code = 0;
     if let Some(task) = run_task {
         if let Err(error) = task.await {
-            eprintln!("[ice] rpc prompt task failed: {error}");
+            eprintln!("[icers] rpc prompt task failed: {error}");
             exit_code = 1;
         }
     }
@@ -592,7 +592,7 @@ where
     match writer_task.await {
         Ok(Ok(())) => {}
         error => {
-            eprintln!("[ice] rpc output failed: {error:?}");
+            eprintln!("[icers] rpc output failed: {error:?}");
             exit_code = 1;
         }
     }
@@ -843,12 +843,12 @@ pub async fn interactive(
     )
     .await
     {
-        eprintln!("[ice] startup vetoed by extension: {reason}");
+        eprintln!("[icers] startup vetoed by extension: {reason}");
         return crate::app::EXIT_VETOED;
     }
 
     // Check if TUI is supported
-    let force_tui = std::env::var("ICE_FORCE_TUI")
+    let force_tui = std::env::var("ICERS_FORCE_TUI")
         .map(|v| v == "1")
         .unwrap_or(false);
     let code = if force_tui || crate::interactive_tui::is_tui_supported() {
@@ -883,7 +883,7 @@ pub async fn interactive(
     .await
     {
         tracing::warn!(
-            "[ice] extension vetoed SessionShutdown (ignored, session closing): {reason}"
+            "[icers] extension vetoed SessionShutdown (ignored, session closing): {reason}"
         );
     }
 
@@ -905,7 +905,7 @@ pub async fn interactive_repl(
 
     if is_tty {
         println!(
-            "ice interactive (v1 minimal REPL). Type /exit to quit, /abort to cancel a run.\n"
+            "icers interactive (v1 minimal REPL). Type /exit to quit, /abort to cancel a run.\n"
         );
     }
 

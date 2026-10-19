@@ -19,8 +19,8 @@ const CACHE_FALLBACK_MAX_AGE_MS: i64 = 6 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS: u64 = 1800;
 const UPDATE_CHECK_CONCURRENCY: usize = 4;
 const CRATES_IO_API: &str = "https://crates.io/api/v1/crates/ice-cli";
-const STAGED_ICE_CHECK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
-const MAX_STAGED_ICE_OUTPUT_BYTES: usize = 4 * 1024;
+const STAGED_ICERS_CHECK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+const MAX_STAGED_ICERS_OUTPUT_BYTES: usize = 4 * 1024;
 const MAX_SELF_UPDATE_STATUS_BYTES: u64 = 64 * 1024;
 const MAX_SELF_UPDATE_STATUS_MESSAGE_CHARS: usize = 2 * 1024;
 /// How long a running self-update may stay in a non-terminal state before a
@@ -28,7 +28,7 @@ const MAX_SELF_UPDATE_STATUS_MESSAGE_CHARS: usize = 2 * 1024;
 /// from source, so the window is generous; a helper that outlives it is stuck,
 /// not slow.
 const STALE_SELF_UPDATE_STATUS_TTL_MS: i64 = 60 * 60 * 1000;
-/// How long a completed update keeps its status record. `ice update` prints
+/// How long a completed update keeps its status record. `icers update` prints
 /// that path, so the file has to outlive the command that named it by long
 /// enough to actually be read; after that it is just clutter.
 const COMPLETED_SELF_UPDATE_STATUS_TTL_MS: i64 = 24 * 60 * 60 * 1000;
@@ -76,7 +76,7 @@ struct UpdateCache {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct UpdateCacheFreshness {
-    ice: i64,
+    icers: i64,
     #[serde(default)]
     native_packages: BTreeMap<String, i64>,
 }
@@ -116,13 +116,13 @@ enum RegistryLookup {
     TransientFailure,
 }
 
-/// Best-effort startup check for the ice release and installed Rust extensions.
+/// Best-effort startup check for the icers release and installed Rust extensions.
 pub async fn check_startup(cwd: &Path) -> UpdateReport {
     let _ = cwd;
     check_ice_startup().await
 }
 
-/// Check the ice release and every installed Rust cdylib extension.
+/// Check the icers release and every installed Rust cdylib extension.
 ///
 /// Native-only: the npm/Git package halves of the old scope went away with the
 /// Pi compatibility layer, so this never shells out to a package manager.
@@ -134,7 +134,7 @@ pub async fn check_ice_startup() -> UpdateReport {
 }
 
 fn update_checks_disabled() -> bool {
-    crate::args::offline_env_enabled() || std::env::var_os("ICE_DISABLE_UPDATE_CHECK").is_some()
+    crate::args::offline_env_enabled() || std::env::var_os("ICERS_DISABLE_UPDATE_CHECK").is_some()
 }
 
 /// Report the outcome of a self-update that ran in a previous process.
@@ -152,7 +152,7 @@ fn report_without_remote_checks() -> UpdateReport {
 fn startup_http_client() -> Option<reqwest::Client> {
     reqwest::Client::builder()
         .timeout(std::time::Duration::from_millis(REQUEST_TIMEOUT_MS))
-        .user_agent(format!("ice/{}", crate::VERSION))
+        .user_agent(format!("icers/{}", crate::VERSION))
         .build()
         .ok()
 }
@@ -166,7 +166,7 @@ async fn check_startup_with_client(client: Option<reqwest::Client>) -> UpdateRep
     let cache_path = agent_dir.join(CACHE_FILE);
     let previous_cache = read_cache(&cache_path);
 
-    // Installed Rust extensions come from `ice install`'s registry, so this
+    // Installed Rust extensions come from `icers install`'s registry, so this
     // path stays independent of any Pi package resource discovery.
     let native_checks = crate::install::installed_native_packages()
         .into_iter()
@@ -252,8 +252,8 @@ where
 }
 
 fn ice_cache_checked_at(cache: &UpdateCache) -> i64 {
-    if cache.freshness.ice > 0 {
-        cache.freshness.ice
+    if cache.freshness.icers > 0 {
+        cache.freshness.icers
     } else {
         cache.checked_at
     }
@@ -333,7 +333,7 @@ fn merge_and_write_cache(
     }
     if let Some((latest, latest_checked_at)) = ice_update {
         cache.ice_latest = latest;
-        cache.freshness.ice = latest_checked_at;
+        cache.freshness.icers = latest_checked_at;
     }
     cache.native_packages = native_packages.0;
     cache.freshness.native_packages = native_packages.1;
@@ -377,10 +377,10 @@ fn report_from_cache(cache: &UpdateCache) -> UpdateReport {
     if let Some(latest) = cache.ice_latest.as_deref() {
         if is_newer(crate::VERSION, latest) {
             notices.push(UpdateNotice {
-                name: "ice".into(),
+                name: "icers".into(),
                 current: crate::VERSION.into(),
                 latest: latest.into(),
-                command: "ice update".into(),
+                command: "icers update".into(),
             });
         }
     }
@@ -400,13 +400,13 @@ fn report_from_cache(cache: &UpdateCache) -> UpdateReport {
                     package.prebuilt.as_ref().filter(|p| p.custom_repository)
                 {
                     format!(
-                        "ice install {} --github {}",
+                        "icers install {} --github {}",
                         package.name, source.repository
                     )
                 } else if package.prebuilt.is_some() {
-                    format!("ice install {}", package.name)
+                    format!("icers install {}", package.name)
                 } else {
-                    format!("ice install {} --build", package.name)
+                    format!("icers install {} --build", package.name)
                 },
             });
         }
@@ -517,7 +517,7 @@ enum SelfUpdateArgs {
     Usage,
 }
 
-/// Parse `ice update`'s own arguments after the global `--offline` flag has been
+/// Parse `icers update`'s own arguments after the global `--offline` flag has been
 /// stripped.
 fn parse_self_update_args(args: &[String]) -> SelfUpdateArgs {
     let mut force = false;
@@ -535,11 +535,11 @@ fn parse_self_update_args(args: &[String]) -> SelfUpdateArgs {
 
 fn print_self_update_help() {
     println!(
-        "Usage: ice update [--force] [--offline] [--build]\n\n\
-         Update the ice CLI using verified GitHub prebuilt releases.\n\n\
+        "Usage: icers update [--force] [--offline] [--build]\n\n\
+         Update the icers CLI using verified GitHub prebuilt releases.\n\n\
          Options:\n  \
          --build    explicitly compile with Cargo instead of downloading a prebuilt binary\n  \
-         --force    reinstall even when this ice is already the latest release\n  \
+         --force    reinstall even when this icers is already the latest release\n  \
          --offline  do not touch the network; report the last known answer only"
     );
 }
@@ -563,7 +563,7 @@ async fn lookup_latest_ice() -> Option<(String, bool)> {
     let cached = cache_path.as_deref().and_then(read_cache);
     let result = match reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(15))
-        .user_agent(format!("ice/{}", crate::VERSION))
+        .user_agent(format!("icers/{}", crate::VERSION))
         .build()
     {
         Ok(client) => fetch_ice_latest(&client).await,
@@ -581,7 +581,7 @@ async fn lookup_latest_ice() -> Option<(String, bool)> {
     latest.map(|latest| (latest, verified))
 }
 
-/// `ice update` is synchronous, so its registry lookup runs on its own thread and
+/// `icers update` is synchronous, so its registry lookup runs on its own thread and
 /// current-thread runtime. That also keeps it safe to call from inside a Tokio
 /// runtime, which is where the CLI enters it.
 fn lookup_latest_ice_blocking() -> Option<(String, bool)> {
@@ -602,7 +602,7 @@ fn lookup_latest_ice_blocking() -> Option<(String, bool)> {
 /// The newest version already staged in a `pending-*` directory.
 ///
 /// A staged update is a fully validated binary waiting for the running process
-/// to exit. Re-running `ice update` while one is queued must not start a second
+/// to exit. Re-running `icers update` while one is queued must not start a second
 /// compile, so the staged version joins the up-to-date comparison.
 fn staged_pending_version(update_root: &Path) -> Option<semver::Version> {
     let entries = std::fs::read_dir(update_root).ok()?;
@@ -628,7 +628,7 @@ fn staged_pending_version(update_root: &Path) -> Option<semver::Version> {
             &staging.join("bin").join(staged_ice_file_name()),
             update_root,
             crate::VERSION,
-            "staged ice",
+            "staged icers",
         ) else {
             continue;
         };
@@ -641,7 +641,7 @@ fn staged_pending_version(update_root: &Path) -> Option<semver::Version> {
 
 fn staged_ice_file_name() -> &'static str {
     if cfg!(windows) {
-        "ice.exe"
+        "icers.exe"
     } else {
         crate::APP_NAME
     }
@@ -650,9 +650,9 @@ fn staged_ice_file_name() -> &'static str {
 /// Reclaim debris and surface a previous run's failure, without a network
 /// round trip.
 ///
-/// `ice update` is the command that creates `self-update` records and staging
+/// `icers update` is the command that creates `self-update` records and staging
 /// directories, so it is also the right place to clean them up: leaving it to
-/// the startup check means a machine that only ever runs `ice chat` keeps the
+/// the startup check means a machine that only ever runs `icers chat` keeps the
 /// debris from every interrupted update until the next start.
 fn reclaim_self_update_artifacts() {
     let Ok(agent_dir) = crate::config::agent_dir() else {
@@ -675,7 +675,7 @@ pub fn run_self_update(args: &[String]) -> i32 {
         }
         SelfUpdateArgs::Run { force, build } => (force, build),
         SelfUpdateArgs::Usage => {
-            eprintln!("error: `ice update` accepts only `--force`, `--offline` and `--build`");
+            eprintln!("error: `icers update` accepts only `--force`, `--offline` and `--build`");
             return 2;
         }
     };
@@ -686,24 +686,24 @@ pub fn run_self_update(args: &[String]) -> i32 {
         // so it may be stale — say so rather than assert a version.
         match known_latest_ice(None, cached_latest_ice().as_deref()) {
             Some((latest, true)) if is_newer(crate::VERSION, &latest) => println!(
-                "ice {} -> {} is available (offline: last known, not verified)\n\
-                 Run `ice update` without --offline to install it.",
+                "icers {} -> {} is available (offline: last known, not verified)\n\
+                 Run `icers update` without --offline to install it.",
                 crate::VERSION,
                 latest
             ),
             Some(_) => println!(
-                "ice is up to date with the last known release ({})\n\
+                "icers is up to date with the last known release ({})\n\
                  Offline mode is enabled; the registry was not contacted.",
                 crate::VERSION
             ),
             None => println!(
-                "ice update skipped: offline mode is enabled and no cached release is known"
+                "icers update skipped: offline mode is enabled and no cached release is known"
             ),
         }
         return 0;
     }
 
-    // Without this gate `ice update` at the newest release still runs a full
+    // Without this gate `icers update` at the newest release still runs a full
     // `cargo install` and schedules a binary replacement for the version that
     // is already installed — which is exactly what makes a working update look
     // broken. `--force` keeps an explicit reinstall available.
@@ -726,7 +726,7 @@ pub fn run_self_update(args: &[String]) -> i32 {
             None => {
                 println!(
                     "could not reach crates.io to check the latest release\n\
-                     Retry later, or use `ice update --build --force` for an explicit Cargo build."
+                     Retry later, or use `icers update --build --force` for an explicit Cargo build."
                 );
                 return 1;
             }
@@ -743,19 +743,19 @@ pub fn run_self_update(args: &[String]) -> i32 {
         if !is_newer(crate::VERSION, &target) {
             if staged_wins.is_some() {
                 println!(
-                    "ice {target} is already staged; quit this ice and it will be applied\n\
-                     Run `ice update --force` to stage it again."
+                    "icers {target} is already staged; quit this icers and it will be applied\n\
+                     Run `icers update --force` to stage it again."
                 );
             } else if verified {
                 println!(
-                    "ice is up to date ({} is the latest release)\n\
-                     Run `ice update --force` to reinstall anyway.",
+                    "icers is up to date ({} is the latest release)\n\
+                     Run `icers update --force` to reinstall anyway.",
                     crate::VERSION
                 );
             } else {
                 println!(
-                    "ice is up to date ({}; last known release {latest}, unverified)\n\
-                     Run `ice update --force` to reinstall anyway.",
+                    "icers is up to date ({}; last known release {latest}, unverified)\n\
+                     Run `icers update --force` to reinstall anyway.",
                     crate::VERSION
                 );
             }
@@ -798,7 +798,7 @@ fn cached_latest_ice() -> Option<String> {
 
 /// A self-update just changed the binary on disk, so the cached release is the
 /// version being replaced. Dropping it stops the next startup (and the next
-/// `ice update`) from announcing an update that is already installed; the
+/// `icers update`) from announcing an update that is already installed; the
 /// following registry check refills it.
 fn clear_cached_latest_ice() {
     let Ok(agent_dir) = crate::config::agent_dir() else {
@@ -812,7 +812,7 @@ fn clear_cached_latest_ice() {
         return;
     };
     cache.ice_latest = None;
-    cache.freshness.ice = 0;
+    cache.freshness.icers = 0;
     let _ = write_cache(&path, &cache);
 }
 
@@ -879,10 +879,10 @@ pub(crate) fn validate_downloaded_ice(
     staging: &Path,
     expected: &str,
 ) -> Result<(), String> {
-    let found = validate_ice_executable_version(path, staging, crate::VERSION, "downloaded ice")?;
+    let found = validate_ice_executable_version(path, staging, crate::VERSION, "downloaded icers")?;
     if found.to_string() != expected {
         return Err(format!(
-            "downloaded ice version {found} does not match manifest {expected}"
+            "downloaded icers version {found} does not match manifest {expected}"
         ));
     }
     Ok(())
@@ -1064,7 +1064,7 @@ fn run_direct_self_update(build: bool, version: Option<&str>) -> i32 {
     let current_exe = match std::env::current_exe() {
         Ok(path) => path,
         Err(error) => {
-            eprintln!("error: could not resolve the current ice executable: {error}");
+            eprintln!("error: could not resolve the current icers executable: {error}");
             return 1;
         }
     };
@@ -1077,7 +1077,7 @@ fn run_direct_self_update(build: bool, version: Option<&str>) -> i32 {
     };
     match activate_direct_update(&plan) {
         Ok(version) => {
-            println!("ice updated successfully to {version}");
+            println!("icers updated successfully to {version}");
             0
         }
         Err(error) => {
@@ -1115,9 +1115,9 @@ fn build_direct_update_plan(
     let staging_dir = validated_real_directory(staging_dir, "self-update staging directory")?;
     let staged_exe = validated_regular_file(
         &staging_dir.join("bin").join(crate::APP_NAME),
-        "staged ice executable",
+        "staged icers executable",
     )?;
-    let target_exe = validated_regular_file(target_exe, "current ice executable")?;
+    let target_exe = validated_regular_file(target_exe, "current icers executable")?;
     let target_dir = validated_real_directory(
         target_exe
             .parent()
@@ -1148,52 +1148,52 @@ fn activate_direct_update(plan: &DirectUpdatePlan) -> Result<semver::Version, St
         &plan.staged_exe,
         &plan.staging_dir,
         crate::VERSION,
-        "staged ice",
+        "staged icers",
     )?;
     preflight_direct_replacement(plan)?;
 
     let result = (|| {
         std::fs::copy(&plan.staged_exe, &plan.replacement_temp).map_err(|error| {
-            format!("could not copy staged ice beside the current executable: {error}")
+            format!("could not copy staged icers beside the current executable: {error}")
         })?;
-        validated_regular_file(&plan.replacement_temp, "replacement ice executable")?;
+        validated_regular_file(&plan.replacement_temp, "replacement icers executable")?;
         let copied_version = validate_ice_executable_version(
             &plan.replacement_temp,
             plan.target_exe
                 .parent()
                 .ok_or_else(|| "current executable has no parent directory".to_string())?,
             crate::VERSION,
-            "replacement ice",
+            "replacement icers",
         )?;
         if copied_version != staged_version
             || !files_are_identical(&plan.staged_exe, &plan.replacement_temp)?
         {
             return Err(
-                "replacement ice does not match the validated staged executable".to_string(),
+                "replacement icers does not match the validated staged executable".to_string(),
             );
         }
 
         std::fs::hard_link(&plan.target_exe, &plan.backup_file)
-            .map_err(|error| format!("could not preserve the current ice executable: {error}"))?;
+            .map_err(|error| format!("could not preserve the current icers executable: {error}"))?;
         let installed_version = validate_ice_executable_version(
             &plan.backup_file,
             plan.target_exe
                 .parent()
                 .ok_or_else(|| "current executable has no parent directory".to_string())?,
             crate::VERSION,
-            "current ice",
+            "current icers",
         )?;
         if staged_version < installed_version {
             return Err(format!(
-                "refusing to replace ice {installed_version} with older version {staged_version}"
+                "refusing to replace icers {installed_version} with older version {staged_version}"
             ));
         }
         if !files_are_identical(&plan.target_exe, &plan.backup_file)? {
-            return Err("current ice executable changed while preparing the update".to_string());
+            return Err("current icers executable changed while preparing the update".to_string());
         }
 
         std::fs::rename(&plan.replacement_temp, &plan.target_exe).map_err(|error| {
-            format!("could not atomically replace the current ice executable: {error}")
+            format!("could not atomically replace the current icers executable: {error}")
         })?;
         Ok(())
     })();
@@ -1206,7 +1206,7 @@ fn activate_direct_update(plan: &DirectUpdatePlan) -> Result<semver::Version, St
 
     let validation = (|| {
         if !files_are_identical(&plan.staged_exe, &plan.target_exe)? {
-            return Err("updated ice executable does not match the staged executable".to_string());
+            return Err("updated icers executable does not match the staged executable".to_string());
         }
         let updated_version = validate_ice_executable_version(
             &plan.target_exe,
@@ -1214,11 +1214,11 @@ fn activate_direct_update(plan: &DirectUpdatePlan) -> Result<semver::Version, St
                 .parent()
                 .ok_or_else(|| "current executable has no parent directory".to_string())?,
             crate::VERSION,
-            "updated ice",
+            "updated icers",
         )?;
         if updated_version != staged_version {
             return Err(format!(
-                "updated ice reported version {updated_version}, expected {staged_version}"
+                "updated icers reported version {updated_version}, expected {staged_version}"
             ));
         }
         Ok(())
@@ -1256,7 +1256,7 @@ fn preflight_direct_replacement(plan: &DirectUpdatePlan) -> Result<(), String> {
 fn rollback_direct_update(plan: &DirectUpdatePlan, failure: &str) -> String {
     let _ = remove_file_if_exists(&plan.replacement_temp);
     match std::fs::rename(&plan.backup_file, &plan.target_exe) {
-        Ok(()) => format!("{failure}; restored the previous ice executable"),
+        Ok(()) => format!("{failure}; restored the previous icers executable"),
         Err(rollback) => format!(
             "{failure}; automatic rollback failed ({rollback}); the previous executable remains at {}",
             plan.backup_file.display()
@@ -1442,7 +1442,7 @@ try {
         throw 'replacement, backup, or rollback path already exists'
     }
 
-    Write-UpdateStatus -State 'waiting' -Message 'waiting for the current ice process to exit'
+    Write-UpdateStatus -State 'waiting' -Message 'waiting for the current icers process to exit'
     if ($ParentPid -lt 1 -or $ParentPid -gt [int]::MaxValue) {
         throw 'parent process id is outside the supported Windows range'
     }
@@ -1469,7 +1469,7 @@ try {
     if ($null -ne $parentProcess) {
         try {
             if (-not $parentProcess.WaitForExit(600000)) {
-                throw 'timed out waiting for the current ice process to exit'
+                throw 'timed out waiting for the current icers process to exit'
             }
         } finally {
             $parentProcess.Dispose()
@@ -1480,14 +1480,14 @@ try {
     Assert-WindowsExecutable -Path $stagedFull -Label 'staged executable'
     Assert-WindowsExecutable -Path $targetFull -Label 'current executable'
     if ((Get-FileSha256 -Path $stagedFull) -ne $expectedHash) {
-        throw 'staged executable changed while waiting for ice to exit'
+        throw 'staged executable changed while waiting for icers to exit'
     }
     if ((Get-FileSha256 -Path $targetFull) -ne $originalTargetHash) {
-        throw 'current executable changed while waiting for ice to exit'
+        throw 'current executable changed while waiting for icers to exit'
     }
     if ([IO.File]::Exists($tempFull) -or [IO.File]::Exists($backupFull) -or
         [IO.File]::Exists($rollbackDisplacedFull)) {
-        throw 'replacement, backup, or rollback path appeared while waiting for ice to exit'
+        throw 'replacement, backup, or rollback path appeared while waiting for icers to exit'
     }
 
     [IO.File]::Copy($stagedFull, $tempFull, $false)
@@ -1537,7 +1537,7 @@ try {
     exit 1
 }
 
-try { Write-UpdateStatus -State 'succeeded' -Message 'ice executable replaced successfully' } catch {}
+try { Write-UpdateStatus -State 'succeeded' -Message 'icers executable replaced successfully' } catch {}
 if ([IO.File]::Exists($BackupPath)) {
     try { Remove-Item -LiteralPath $BackupPath -Force } catch {}
 }
@@ -1565,7 +1565,7 @@ fn run_windows_self_update(build: bool, version: Option<&str>) -> i32 {
     let current_exe = match std::env::current_exe() {
         Ok(path) => path,
         Err(error) => {
-            let message = format!("could not resolve the current ice executable: {error}");
+            let message = format!("could not resolve the current icers executable: {error}");
             let _ = write_windows_update_status(&status_file, "failed", &message);
             eprintln!("error: {message}");
             return 1;
@@ -1622,7 +1622,7 @@ fn run_windows_self_update(build: bool, version: Option<&str>) -> i32 {
     let _ = write_windows_update_status(
         &plan.status_file,
         "scheduled",
-        &format!("validated ice {staged_version}; waiting to replace ice after this process exits"),
+        &format!("validated icers {staged_version}; waiting to replace icers after this process exits"),
     );
     let mut command = windows_update_helper_command(
         &powershell,
@@ -1636,7 +1636,7 @@ fn run_windows_self_update(build: bool, version: Option<&str>) -> i32 {
         Ok(_) => {
             let persisted_staging = staging.directory.keep();
             println!(
-                "ice {staged_version} staged; quit this ice and it will be applied.\n\
+                "icers {staged_version} staged; quit this icers and it will be applied.\n\
                  Status: {}",
                 plan.status_file.display()
             );
@@ -1698,10 +1698,10 @@ fn build_windows_update_plan(
         validated_regular_file(status_file, "self-update status file")?;
     }
     let staged_exe = validated_windows_executable(
-        &staging_dir.join("bin").join("ice.exe"),
-        "staged ice executable",
+        &staging_dir.join("bin").join("icers.exe"),
+        "staged icers executable",
     )?;
-    let target_exe = validated_windows_executable(target_exe, "current ice executable")?;
+    let target_exe = validated_windows_executable(target_exe, "current icers executable")?;
     let target_dir = validated_real_directory(
         target_exe
             .parent()
@@ -1762,7 +1762,7 @@ fn validate_staged_ice(plan: &WindowsUpdatePlan) -> Result<semver::Version, Stri
         .helper_script
         .parent()
         .ok_or_else(|| "self-update staging directory is missing".to_string())?;
-    validate_ice_executable_version(&plan.staged_exe, cwd, crate::VERSION, "staged ice")
+    validate_ice_executable_version(&plan.staged_exe, cwd, crate::VERSION, "staged icers")
 }
 
 /// Captured output of a bounded self-update probe.
@@ -1775,7 +1775,7 @@ struct BoundedProcessOutput {
 /// Run a short-lived probe under both a wall-clock and an output cap.
 ///
 /// The child runs on its own thread and current-thread runtime so this stays
-/// safe when `ice update` is entered from inside a Tokio runtime. The old
+/// safe when `icers update` is entered from inside a Tokio runtime. The old
 /// implementation reused the npm bridge's process runner, which went away with
 /// the Pi compatibility layer.
 fn run_bounded_process_blocking(
@@ -1831,7 +1831,7 @@ fn cap_bytes(bytes: Vec<u8>, limit: usize) -> Vec<u8> {
     }
 }
 
-/// Byte-for-byte comparison, used to prove a copied or replaced ice binary is
+/// Byte-for-byte comparison, used to prove a copied or replaced icers binary is
 /// the one that was validated.
 #[cfg(not(windows))]
 fn files_are_identical(left: &Path, right: &Path) -> Result<bool, String> {
@@ -1886,8 +1886,8 @@ fn validate_ice_executable_version(
         program,
         &args,
         cwd,
-        STAGED_ICE_CHECK_TIMEOUT,
-        MAX_STAGED_ICE_OUTPUT_BYTES,
+        STAGED_ICERS_CHECK_TIMEOUT,
+        MAX_STAGED_ICERS_OUTPUT_BYTES,
     )
     .map_err(|error| format!("{label} version check failed: {error}"))?;
     if !output.status.success() {
@@ -1902,15 +1902,15 @@ fn validate_staged_ice_version_output(
     current: &str,
 ) -> Result<semver::Version, String> {
     if !stderr.is_empty() {
-        return Err("staged ice --version wrote unexpected stderr output".to_string());
+        return Err("staged icers --version wrote unexpected stderr output".to_string());
     }
     let staged = parse_ice_version_output(stdout)
-        .ok_or_else(|| "staged ice returned an invalid --version response".to_string())?;
+        .ok_or_else(|| "staged icers returned an invalid --version response".to_string())?;
     let current = semver::Version::parse(current)
-        .map_err(|_| "the running ice version is not valid semantic versioning".to_string())?;
+        .map_err(|_| "the running icers version is not valid semantic versioning".to_string())?;
     if staged < current {
         return Err(format!(
-            "refusing to replace ice {current} with older version {staged}"
+            "refusing to replace icers {current} with older version {staged}"
         ));
     }
     Ok(staged)
@@ -1934,7 +1934,7 @@ fn parse_ice_version_output(output: &[u8]) -> Option<semver::Version> {
 
 /// A real directory *by its own entry*: the leaf is not a link, so the update
 /// is free to write into it. Links further up are resolved rather than
-/// refused — a launch path such as `C:\tools\current\ice.exe` where `current`
+/// refused — a launch path such as `C:\tools\current\icers.exe` where `current`
 /// is a junction names the real install directory, which is exactly what an
 /// update should rewrite.
 fn validated_real_directory(path: &Path, label: &str) -> Result<PathBuf, String> {
@@ -2134,7 +2134,7 @@ fn consume_self_update_statuses(agent_dir: &Path) -> Vec<UpdateWarning> {
 
         if status.state == "succeeded" {
             // Kept as the durable record of what was installed. The path is
-            // printed by `ice update`, so deleting the file on the next start
+            // printed by `icers update`, so deleting the file on the next start
             // made a finished update look like it had never run. It ages out
             // with the rest of the record set instead.
             let old = status.updated_at_ms > 0
@@ -2158,10 +2158,10 @@ fn consume_self_update_statuses(agent_dir: &Path) -> Vec<UpdateWarning> {
         }
         warnings.push(UpdateWarning {
             message: format!(
-                "The previously scheduled ice update failed: {}",
+                "The previously scheduled icers update failed: {}",
                 sanitized_self_update_status_message(&status.message)
             ),
-            command: "ice update".to_string(),
+            command: "icers update".to_string(),
         });
     }
 
@@ -2193,7 +2193,7 @@ fn consume_self_update_statuses(agent_dir: &Path) -> Vec<UpdateWarning> {
 /// directory stays behind forever: nothing else in the update path removes it,
 /// and because its status file was still `preparing` the next start never
 /// looked at it either. Those are the directories that pile up in
-/// `~/.ice/agent/self-update`.
+/// `~/.icers/agent/self-update`.
 ///
 /// A directory a status file already proved dead (`obsolete`) goes as soon as
 /// its name validates. Otherwise the evidence has to come from the directory
@@ -2433,7 +2433,7 @@ mod tests {
         assert_eq!(report.notices[0].latest, "2.0.0");
         assert_eq!(
             report.notices[0].command,
-            "ice install demo --github https://github.com/owner/repo"
+            "icers install demo --github https://github.com/owner/repo"
         );
         let mut other = record.clone();
         other.prebuilt.as_mut().unwrap().repository = "https://github.com/another/repo".into();
@@ -2462,8 +2462,8 @@ mod tests {
         cargo.source = None;
         cargo.prebuilt = None;
         for (package, command) in [
-            (other, "ice install demo"),
-            (cargo, "ice install demo --build"),
+            (other, "icers install demo"),
+            (cargo, "icers install demo --build"),
         ] {
             cache
                 .native_packages
@@ -2580,7 +2580,7 @@ mod tests {
         });
         std::fs::write(
             path,
-            format!("#!/bin/sh\n{failure}printf 'ice {version}\\n'\n"),
+            format!("#!/bin/sh\n{failure}printf 'icers {version}\\n'\n"),
         )
         .unwrap();
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
@@ -2713,7 +2713,7 @@ mod tests {
     fn direct_update_replaces_the_selected_target_and_rejects_downgrades() {
         let temp = real_tempdir();
         let staging = temp.path().join("staging");
-        let staged = staging.join("bin/ice");
+        let staged = staging.join("bin/icers");
         let target = temp.path().join("target/ice-current");
         fake_unix_ice(&staged, "9.9.9", None);
         fake_unix_ice(&target, crate::VERSION, None);
@@ -2737,7 +2737,7 @@ mod tests {
     fn direct_update_rolls_back_when_post_replace_validation_fails() {
         let temp = real_tempdir();
         let staging = temp.path().join("staging");
-        let staged = staging.join("bin/ice");
+        let staged = staging.join("bin/icers");
         let target = temp.path().join("target/ice-current");
         fake_unix_ice(&staged, "9.9.9", Some("ice-current"));
         fake_unix_ice(&target, crate::VERSION, None);
@@ -2807,15 +2807,15 @@ mod tests {
     #[test]
     fn self_update_honors_env_and_early_dispatched_offline_flag() {
         let _guard = crate::config::test_support::env_lock().lock().unwrap();
-        let _restore = RestoreEnv::capture(crate::args::ICE_OFFLINE_ENV);
+        let _restore = RestoreEnv::capture(crate::args::ICERS_OFFLINE_ENV);
 
-        std::env::set_var(crate::args::ICE_OFFLINE_ENV, "tRuE");
+        std::env::set_var(crate::args::ICERS_OFFLINE_ENV, "tRuE");
         assert_eq!(super::run_self_update(&[]), 0);
 
-        std::env::set_var(crate::args::ICE_OFFLINE_ENV, "0");
+        std::env::set_var(crate::args::ICERS_OFFLINE_ENV, "0");
         assert_eq!(super::run_self_update(&["--offline".into()]), 0);
         assert_eq!(
-            std::env::var(crate::args::ICE_OFFLINE_ENV).as_deref(),
+            std::env::var(crate::args::ICERS_OFFLINE_ENV).as_deref(),
             Ok("1")
         );
     }
@@ -2824,13 +2824,13 @@ mod tests {
     async fn offline_skips_ice_startup_checks_before_cache_io() {
         let _guard = crate::config::test_support::env_lock().lock().unwrap();
         let _restore_config = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
-        let _restore_offline = RestoreEnv::capture(crate::args::ICE_OFFLINE_ENV);
-        let _restore_disabled = RestoreEnv::capture("ICE_DISABLE_UPDATE_CHECK");
+        let _restore_offline = RestoreEnv::capture(crate::args::ICERS_OFFLINE_ENV);
+        let _restore_disabled = RestoreEnv::capture("ICERS_DISABLE_UPDATE_CHECK");
         let temp = real_tempdir();
         let agent = temp.path().join("offline-agent");
         std::env::set_var(crate::config::CONFIG_DIR_ENV, &agent);
-        std::env::set_var(crate::args::ICE_OFFLINE_ENV, "YES");
-        std::env::remove_var("ICE_DISABLE_UPDATE_CHECK");
+        std::env::set_var(crate::args::ICERS_OFFLINE_ENV, "YES");
+        std::env::remove_var("ICERS_DISABLE_UPDATE_CHECK");
 
         let report = super::check_ice_startup().await;
 
@@ -2865,12 +2865,12 @@ mod tests {
         assert_eq!(warnings.len(), 1);
         assert!(warnings[0]
             .message
-            .contains("ice update failed: permission [31m denied"));
+            .contains("icers update failed: permission [31m denied"));
         assert!(!warnings[0].message.chars().any(char::is_control));
-        assert_eq!(warnings[0].command, "ice update");
+        assert_eq!(warnings[0].command, "icers update");
         assert!(!failed.exists());
         // A `succeeded` record is the receipt for the version now installed —
-        // `ice update` prints its path — so it survives consumption instead of
+        // `icers update` prints its path — so it survives consumption instead of
         // being deleted the moment the next start looks at it.
         assert!(succeeded.exists());
         assert!(waiting.exists());
@@ -2905,7 +2905,7 @@ mod tests {
         let live_status = name('1');
         let live_staging = update_root.join("pending-Live001");
         std::fs::create_dir_all(live_staging.join("bin")).unwrap();
-        std::fs::write(live_staging.join("bin").join("ice.exe"), b"payload").unwrap();
+        std::fs::write(live_staging.join("bin").join("icers.exe"), b"payload").unwrap();
         std::fs::write(
             &live_status,
             serde_json::to_vec(&serde_json::json!({
@@ -2922,7 +2922,7 @@ mod tests {
         let dead_status = name('2');
         let dead_staging = update_root.join("pending-Dead002");
         std::fs::create_dir_all(dead_staging.join("bin")).unwrap();
-        std::fs::write(dead_staging.join("bin").join("ice.exe"), b"payload").unwrap();
+        std::fs::write(dead_staging.join("bin").join("icers.exe"), b"payload").unwrap();
         write_test_update_status_at(&dead_status, "preparing", "installing", stale_ms);
         // Name the staging directory in the stale record, the way the Windows
         // helper does: that is the evidence its payload is debris even though
@@ -2936,7 +2936,7 @@ mod tests {
         // Orphan: no status file ever named it, and it was created long ago.
         let orphan = update_root.join("pending-Orphan3");
         std::fs::create_dir_all(orphan.join("bin")).unwrap();
-        std::fs::write(orphan.join("bin").join("ice.exe"), b"payload").unwrap();
+        std::fs::write(orphan.join("bin").join("icers.exe"), b"payload").unwrap();
 
         // Debris that can never be serving an update: an empty staging
         // directory, even while it is brand new.
@@ -2972,7 +2972,7 @@ mod tests {
         let now = super::now_ms();
         let staging = update_root.join("pending-Done001");
         std::fs::create_dir_all(staging.join("bin")).unwrap();
-        std::fs::write(staging.join("bin").join("ice.exe"), b"payload").unwrap();
+        std::fs::write(staging.join("bin").join("icers.exe"), b"payload").unwrap();
 
         // A `waiting` leftover naming the same directory as a completed run.
         let leftover = update_root.join(format!("status-{}.json", "3".repeat(32)));
@@ -2992,7 +2992,7 @@ mod tests {
             &recent,
             serde_json::to_vec(&serde_json::json!({
                 "state": "succeeded",
-                "message": "ice executable replaced successfully",
+                "message": "icers executable replaced successfully",
                 "staging": staging,
                 "updatedAtMs": now,
             }))
@@ -3005,7 +3005,7 @@ mod tests {
             &aged,
             serde_json::to_vec(&serde_json::json!({
                 "state": "succeeded",
-                "message": "ice executable replaced successfully",
+                "message": "icers executable replaced successfully",
                 "updatedAtMs": now - super::COMPLETED_SELF_UPDATE_STATUS_TTL_MS - 60_000,
             }))
             .unwrap(),
@@ -3114,7 +3114,7 @@ mod tests {
     fn windows_update_helper_atomically_replaces_a_valid_target() {
         let temp = real_tempdir();
         let staging = temp.path().join("staging 'semi;& with spaces");
-        let staged = staging.join("bin/ice.exe");
+        let staged = staging.join("bin/icers.exe");
         let target = temp.path().join("target 'semi;& with spaces/ice-copy.exe");
         fake_windows_executable(&staged, b"new-version");
         fake_windows_executable(&target, b"old-version");
@@ -3176,7 +3176,7 @@ mod tests {
     fn windows_update_helper_failure_preserves_the_old_executable() {
         let temp = real_tempdir();
         let staging = temp.path().join("staging with spaces");
-        let staged = staging.join("bin/ice.exe");
+        let staged = staging.join("bin/icers.exe");
         let target = temp.path().join("target with spaces/ice-copy.exe");
         fake_windows_executable(&staged, b"new-version");
         fake_windows_executable(&target, b"old-version");
@@ -3224,7 +3224,7 @@ mod tests {
     fn windows_update_helper_rolls_back_after_post_replace_validation_failure() {
         let temp = real_tempdir();
         let staging = temp.path().join("staging");
-        let staged = staging.join("bin/ice.exe");
+        let staged = staging.join("bin/icers.exe");
         let target = temp.path().join("target/ice-copy.exe");
         fake_windows_executable(&staged, b"new-version");
         fake_windows_executable(&target, b"old-version");
@@ -3280,8 +3280,8 @@ mod tests {
     fn windows_update_plan_rejects_a_non_executable_staged_file() {
         let temp = real_tempdir();
         let staging = temp.path().join("staging");
-        let staged = staging.join("bin/ice.exe");
-        let target = temp.path().join("target/ice.exe");
+        let staged = staging.join("bin/icers.exe");
+        let target = temp.path().join("target/icers.exe");
         std::fs::create_dir_all(staged.parent().unwrap()).unwrap();
         std::fs::write(&staged, b"not-a-pe").unwrap();
         fake_windows_executable(&target, b"old-version");
@@ -3303,25 +3303,25 @@ mod tests {
     #[test]
     fn staged_ice_version_output_is_exact_and_cannot_downgrade() {
         assert_eq!(
-            parse_ice_version_output(b"ice 1.2.3\r\n").unwrap(),
+            parse_ice_version_output(b"icers 1.2.3\r\n").unwrap(),
             semver::Version::new(1, 2, 3)
         );
         assert_eq!(
-            validate_staged_ice_version_output(b"ice 1.2.3\n", b"", "1.2.3").unwrap(),
+            validate_staged_ice_version_output(b"icers 1.2.3\n", b"", "1.2.3").unwrap(),
             semver::Version::new(1, 2, 3)
         );
         assert!(
-            validate_staged_ice_version_output(b"ice 1.2.2\n", b"", "1.2.3")
+            validate_staged_ice_version_output(b"icers 1.2.2\n", b"", "1.2.3")
                 .unwrap_err()
                 .contains("older version")
         );
 
         for output in [
             &b"pi 1.2.3\n"[..],
-            &b"ice v1.2.3\n"[..],
-            &b"ice 1.2.3 extra\n"[..],
-            &b"ice 1.2.3\nsecond line\n"[..],
-            &b" ice 1.2.3\n"[..],
+            &b"icers v1.2.3\n"[..],
+            &b"icers 1.2.3 extra\n"[..],
+            &b"icers 1.2.3\nsecond line\n"[..],
+            &b" icers 1.2.3\n"[..],
         ] {
             assert!(
                 parse_ice_version_output(output).is_none(),
@@ -3329,7 +3329,7 @@ mod tests {
             );
         }
         assert!(
-            validate_staged_ice_version_output(b"ice 1.2.3\n", b"warning", "1.2.3")
+            validate_staged_ice_version_output(b"icers 1.2.3\n", b"warning", "1.2.3")
                 .unwrap_err()
                 .contains("stderr")
         );

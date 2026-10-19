@@ -5,7 +5,7 @@
 
 The provider-agnostic agent runtime: the agent loop, the `AgentTool` trait,
 events, hooks, queues and cancellation. This is the layer you embed when you
-want to build your own agent rather than use the `ice` CLI.
+want to build your own agent rather than use the `icers` CLI.
 
 ## Install
 
@@ -154,7 +154,7 @@ run (`AgentStart`/`AgentEnd`), each assistant message
 | [`ice-ai`](https://crates.io/crates/ice-ai) | Provider-agnostic message and streaming types |
 | [`ice-tools`](https://crates.io/crates/ice-tools) | `read`/`write`/`edit`/`bash` and friends |
 | [`ice-harness`](https://crates.io/crates/ice-harness) | Sessions, JSONL persistence, compaction |
-| [`ice-cli`](https://crates.io/crates/ice-cli) | The `ice` terminal agent built on all of the above |
+| [`ice-cli`](https://crates.io/crates/ice-cli) | The `icers` terminal agent built on all of the above |
 
 ## Documentation
 

@@ -27,7 +27,7 @@ def describe(archive, target, version, commit, repository=REPOSITORY):
     if repository.rstrip("/") != REPOSITORY:
         raise ValueError("unexpected CLI publisher")
     archive = Path(archive)
-    name = "ice.exe" if "windows" in target else "ice"
+    name = "icers.exe" if "windows" in target else "icers"
     archive_format = "zip" if archive.name.endswith(".zip") else "tar.gz"
     if archive_format == "zip":
         with zipfile.ZipFile(archive) as package:

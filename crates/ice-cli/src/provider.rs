@@ -27,7 +27,7 @@
 //! - `--base-url` overrides the selected `model.base_url` at resolve time;
 //!   `ANTHROPIC_BASE_URL` is the fallback for the built-in `anthropic` identity
 //!   only (the request URL is built from it per-request in ice-ai).
-//! - `~/.ice/models.json` (if present) merges/overrides the built-in catalog:
+//! - `~/.icers/models.json` (if present) merges/overrides the built-in catalog:
 //!   each `anthropic-messages` provider contributes its models, with
 //!   provider-level `base_url`/`headers`/`authHeader` folded in. The models.json
 //!   provider id (e.g. `gateway`) remains the routing and credential identity,
@@ -119,7 +119,7 @@ pub struct ResolvedModel {
     /// Retained for diagnostics and API compatibility. Published catalogs are
     /// already filtered when their execution bindings are constructed.
     pub has_provider_key: bool,
-    /// Saved theme name from `~/.ice/agent/settings.json`, if any. Best-effort:
+    /// Saved theme name from `~/.icers/agent/settings.json`, if any. Best-effort:
     /// the TUI applies it at startup when it matches a known preset
     /// (dark/light/monochrome); otherwise ignored.
     pub theme: Option<String>,
@@ -165,7 +165,7 @@ pub const OPENAI_API_KEY_ENV: &str = "OPENAI_API_KEY";
 /// Hint text surfaced when no credential source is available. Lists every
 /// accepted source so the user can pick the one that fits their setup.
 pub const NO_API_KEY_HINT: &str =
-    "models.json apiKey, OPENAI_API_KEY / ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN env, --api-key, or `ice auth login`";
+    "models.json apiKey, OPENAI_API_KEY / ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN env, --api-key, or `icers auth login`";
 
 /// A resolution error. The TS resolver returns `{ error, warning }`; v1 folds
 /// both into a single enum since the CLI treats them the same (print + non-zero
@@ -197,7 +197,7 @@ pub enum ResolveError {
 }
 
 /// Resolve the provider + model + thinking level from the CLI flags + env +
-/// `~/.ice/` config.
+/// `~/.icers/` config.
 ///
 /// `cli_provider` is the `--provider` value (optional). `cli_model` is the
 /// `--model` value (optional; may be `provider/id[:thinking]` or `id[:thinking]`).
@@ -333,7 +333,7 @@ fn resolve_with_factories(
         .ok()
         .filter(|value| !value.is_empty());
 
-    // ---- Catalog: built-in + ~/.ice/models.json (merged, reusing the
+    // ---- Catalog: built-in + ~/.icers/models.json (merged, reusing the
     // already-loaded config) ----
     let mut catalog = build_catalog(&models_cfg, &factories.manifests);
 
@@ -512,7 +512,7 @@ fn resolve_with_factories(
             // (3) Saved default from settings, when the provider is anthropic
             // (or absent — v1 is anthropic-only) OR names a configured
             // models.json gateway (config-namespacing: the saved
-            // `defaultProvider` id matches a `~/.ice/models.json` provider
+            // `defaultProvider` id matches a `~/.icers/models.json` provider
             // key), and the saved model is authed. Without the gateway arm a
             // copied pi settings.json (`defaultProvider:
             // "cc-switch-deep-seek-copy-2"`) is ignored and the default falls
@@ -878,7 +878,7 @@ fn build_catalog(
     catalog
 }
 
-/// Merge `~/.ice/models.json` providers into the built-in catalog. Models from
+/// Merge `~/.icers/models.json` providers into the built-in catalog. Models from
 /// the same runtime provider and API replace entries with the same id; models
 /// with the same id under different OpenAI-compatible providers remain
 /// distinct so `provider/id` can select the intended endpoint.
@@ -1571,7 +1571,7 @@ mod tests {
         // A copied pi `settings.json` carrying `defaultModel` (step 3 of pi's
         // `findInitialModel`) overrides the built-in Anthropic default
         // when that model is in the catalog and authed. Mirrors the on-disk-
-        // Drop an agent dir at `~/.ice/agent/` and the saved
+        // Drop an agent dir at `~/.icers/agent/` and the saved
         // default comes alive on launch (no `--model` needed).
         let _env = TestEnv::new();
         std::env::set_var(ANTHROPIC_API_KEY_ENV, "k");
@@ -2939,9 +2939,9 @@ mod tests {
         )
         .unwrap();
         let project = tempfile::tempdir().unwrap();
-        std::fs::create_dir_all(project.path().join(".ice")).unwrap();
+        std::fs::create_dir_all(project.path().join(".icers")).unwrap();
         std::fs::write(
-            project.path().join(".ice/settings.json"),
+            project.path().join(".icers/settings.json"),
             r#"{"defaultProvider":"project","defaultModel":"project-model"}"#,
         )
         .unwrap();
@@ -3028,7 +3028,7 @@ mod tests {
     /// `findInitialModel` step-4 fallback `availableModels[0]` over the
     /// auth-filtered snapshot. The built-in Anthropic models carry no auth in a
     /// gateway-only setup, so the gateway model is the first (and only)
-    /// authenticated model. This is the `ice -p hi` (no `--model`) case.
+    /// authenticated model. This is the `icers -p hi` (no `--model`) case.
     #[test]
     fn default_prefers_gateway_when_only_gateway_configured() {
         // TestEnv already holds the shared env_lock for its whole lifetime —
@@ -3146,7 +3146,7 @@ mod tests {
     /// the default selector must pick the gateway model (the only authed one),
     // NOT the built-in claude-sonnet-5 — which would carry a gateway x-api-key to
     // api.anthropic.com → 401, the same misrouting the Bearer fold guards
-    // against. This is the `ice -p hi` (no `--model`) case for a bare-apiKey
+    // against. This is the `icers -p hi` (no `--model`) case for a bare-apiKey
     /// gateway.
     #[test]
     fn default_prefers_gateway_when_only_bare_apikey_configured() {
@@ -3176,13 +3176,13 @@ mod tests {
 
     /// A bare `apiKey` that references an unset env var resolves to `None` and
     /// is skipped (mirrors pi `resolveConfigValue` semantics) — the auth gate
-    /// falls through to the env/`ice auth login` sources rather than partially
+    /// falls through to the env/`icers auth login` sources rather than partially
     /// authenticating with an empty key.
     #[test]
     fn models_json_bare_apikey_env_template_resolves() {
         let _env = TestEnv::new();
         // Prime the env var the apiKey references.
-        std::env::set_var("ICE_TEST_GATEWAY_KEY", "env-resolved-secret");
+        std::env::set_var("ICERS_TEST_GATEWAY_KEY", "env-resolved-secret");
         std::fs::write(
             config::models_path().unwrap(),
             r#"{
@@ -3190,7 +3190,7 @@ mod tests {
     "gateway": {
       "baseUrl": "https://gw.example.com",
       "api": "anthropic-messages",
-      "apiKey": "$ICE_TEST_GATEWAY_KEY",
+      "apiKey": "$ICERS_TEST_GATEWAY_KEY",
       "models": [
         { "id": "custom-claude", "contextWindow": 200000, "maxTokens": 8192 }
       ]
@@ -3209,7 +3209,7 @@ mod tests {
                 "env-resolved-secret".into()
             ))
         );
-        std::env::remove_var("ICE_TEST_GATEWAY_KEY");
+        std::env::remove_var("ICERS_TEST_GATEWAY_KEY");
     }
 
     /// `authHeader: true` takes precedence over a bare `apiKey` on the SAME or a

@@ -1,6 +1,6 @@
 //! P3 — JSONL event journal.
 //!
-//! Opt-in via `ICE_EVENT_LOG=1`. When enabled, every extension **event-handler
+//! Opt-in via `ICERS_EVENT_LOG=1`. When enabled, every extension **event-handler
 //! invocation** (the observe fan-out in [`dispatch_to_handlers`] and the
 //! veto-aware lifecycle dispatch in
 //! [`dispatch_lifecycle_event`](crate::dispatch_lifecycle_event)) is recorded as
@@ -9,8 +9,8 @@
 //!
 //! Off by default (zero disk writes / zero overhead when disabled — the global
 //! logger resolves to a no-op). One file, append-only:
-//! `$ICE_EVENT_LOG_PATH`, else `<root>/logs/events.jsonl`, where `<root>` is
-//! `$ICE_CODING_AGENT_DIR`'s parent (i.e. `~/.ice`) or `~/.ice`.
+//! `$ICERS_EVENT_LOG_PATH`, else `<root>/logs/events.jsonl`, where `<root>` is
+//! `$ICERS_CODING_AGENT_DIR`'s parent (i.e. `~/.icers`) or `~/.icers`.
 //!
 //! [`dispatch_to_handlers`]: crate::translate::dispatch_to_handlers
 
@@ -67,10 +67,10 @@ impl EventLogger {
         }
     }
 
-    /// Resolve the log from the environment (`ICE_EVENT_LOG=1`). Disabled when
+    /// Resolve the log from the environment (`ICERS_EVENT_LOG=1`). Disabled when
     /// the gate is off or no path can be resolved.
     pub fn from_env() -> Self {
-        if std::env::var("ICE_EVENT_LOG").ok().as_deref() != Some("1") {
+        if std::env::var("ICERS_EVENT_LOG").ok().as_deref() != Some("1") {
             return Self::disabled();
         }
         match log_path() {
@@ -123,21 +123,21 @@ fn now_ms() -> u64 {
         .unwrap_or(0)
 }
 
-/// Resolve the event-log path (`$ICE_EVENT_LOG_PATH`, else
-/// `<root>/logs/events.jsonl`, where `<root>` is `$ICE_CODING_AGENT_DIR`'s
-/// parent or `~/.ice`). Public so `ice events tail` can find the same file the
+/// Resolve the event-log path (`$ICERS_EVENT_LOG_PATH`, else
+/// `<root>/logs/events.jsonl`, where `<root>` is `$ICERS_CODING_AGENT_DIR`'s
+/// parent or `~/.icers`). Public so `icers events tail` can find the same file the
 /// logger writes.
 pub fn event_log_path() -> Option<PathBuf> {
-    if let Some(path) = std::env::var_os("ICE_EVENT_LOG_PATH") {
+    if let Some(path) = std::env::var_os("ICERS_EVENT_LOG_PATH") {
         return Some(PathBuf::from(path));
     }
-    let root = if let Some(agent) = std::env::var_os("ICE_CODING_AGENT_DIR") {
-        // The override is the *agent* dir (`~/.ice/agent`); logs live in the
-        // parent (`~/.ice/logs`). A parentless override falls back to itself.
+    let root = if let Some(agent) = std::env::var_os("ICERS_CODING_AGENT_DIR") {
+        // The override is the *agent* dir (`~/.icers/agent`); logs live in the
+        // parent (`~/.icers/logs`). A parentless override falls back to itself.
         let agent = PathBuf::from(agent);
         agent.parent().map(PathBuf::from).unwrap_or(agent)
     } else {
-        dirs::home_dir()?.join(".ice")
+        dirs::home_dir()?.join(".icers")
     };
     Some(root.join("logs").join("events.jsonl"))
 }

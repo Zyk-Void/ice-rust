@@ -24,7 +24,7 @@
 
 ## 来源与致谢
 
-ice 起步于对 Mario Zechner 的 [Pi TypeScript SDK](https://github.com/earendil-works/pi)
+icers 起步于对 Mario Zechner 的 [Pi TypeScript SDK](https://github.com/earendil-works/pi)
 的 Rust 重新实现，并在此基础上发展自己的运行时和原生扩展 ABI。项目来源、版权和
 许可说明见根目录 [README](../README.md#acknowledgements)、[NOTICE](../NOTICE)
 和 [LICENSE](../LICENSE)。Rust 原生实现不意味着未借鉴上游设计，也不意味着可以直接

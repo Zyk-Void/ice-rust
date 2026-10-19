@@ -68,7 +68,7 @@ struct ShellConfig {
 /// must not be handed to a shell it spawns.
 ///
 /// A spawned shell is a child process, so anything inherited reaches whatever
-/// that shell runs — including another `ice`. `ICE_SESSION_ID` names the session
+/// that shell runs — including another `icers`. `ICERS_SESSION_ID` names the session
 /// *this process* serves, which is meaningless (and actively misleading) in a
 /// descendant: the child would either report the parent's session or, seeing the
 /// variable already present, refuse to publish its own. Both are wrong answers,
@@ -87,7 +87,7 @@ pub const HOST_PRIVATE_ENV: &[&str] = &[ice_plugin_sdk::SESSION_ID_ENV];
 ///
 /// - [`HOST_PRIVATE_ENV`] — the host's own plumbing.
 /// - [`ice_plugin_sdk::SUBAGENT_PARENT_ENV`] — the family an *extension*
-///   declares for subagent nesting. An inherited copy makes a plain `ice` started
+///   declares for subagent nesting. An inherited copy makes a plain `icers` started
 ///   from inside `bash` adopt its ancestor's trace, hang its root off the
 ///   ancestor's root span, and call itself `Subagent Turn` instead of opening its
 ///   own trace. A launcher that sets these on the child *it* starts is the
@@ -844,7 +844,7 @@ impl Shell for OsExecutionEnv {
         // Environment: inherit + shell_env + per-call. The host's own private
         // plumbing (`HOST_PRIVATE_ENV`) is skipped: it describes *this* process,
         // not the shell or anything the shell runs, and inheriting it makes a
-        // nested `ice` misreport its session. A caller that genuinely wants a
+        // nested `icers` misreport its session. A caller that genuinely wants a
         // value passed down can still set it explicitly through `env`/`shell_env`
         // below (those are applied after this loop and win).
         if options.inherit_env {

@@ -117,10 +117,10 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 ### Changed
 
-- Allow `ice install` to upgrade an installed extension without `--force` and
+- Allow `icers install` to upgrade an installed extension without `--force` and
   skip an already-installed version. Require `--force` only to reinstall the
   same version or downgrade, consistently across prebuilt, source and local
-  installs; apply the same version policy to `ice package update`.
+  installs; apply the same version policy to `icers package update`.
 - Synchronize the 0.4.0 installation channels and website release metadata.
 
 ### Fixed
@@ -159,7 +159,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   free-form answers and editor submissions from deadlocking the TUI.
 - Restore enhanced keyboard input on compatible macOS terminals so Shift+Enter
   inserts a newline. Otty retains legacy input for CJK IME compatibility, with
-  `ICE_KITTY_KEYBOARD` available as an explicit override.
+  `ICERS_KITTY_KEYBOARD` available as an explicit override.
 - Wrap long Markdown code lines instead of clipping their tails with an ellipsis.
 - Keep different versions in separate publish queues and synchronize embedded
   release notes before the Release PR becomes ready.
@@ -288,7 +288,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 - Batch confirmed Windows console text pastes instead of dispatching each
   character separately, substantially reducing the delay before large pasted
   text folds. Preserve Unicode, tabs, line endings, shortcuts and trailing Enter.
-- Track ice release notes independently from imported Pi settings so updates
+- Track icers release notes independently from imported Pi settings so updates
   appear once on the next new interactive session. `/changelog` defaults to the
   latest release; `/changelog all` shows the complete history.
 - Read scroll position and follow-output state from the primary scroll view,
@@ -391,29 +391,29 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   real `delta` field once, so it no longer has to diff successive cumulative
   snapshots and stream size stays linear — matching the JSON/RPC contract the
   other Pi runtimes emit.
-- `ice update` no longer stages a brand new build of the version that is
+- `icers update` no longer stages a brand new build of the version that is
   already running. It now asks crates.io first and reports
-  `ice is up to date (0.3.13 is the latest release)` instead of compiling and
+  `icers is up to date (0.3.13 is the latest release)` instead of compiling and
   scheduling a replacement for the same version — the behaviour that made a
   working update look broken. `--force` keeps an explicit reinstall available,
   and an unverified answer (cached, or a registry that could not be reached) is
   labelled as such rather than asserted. A `pending-*` directory that already
   holds a validated binary counts as "about to happen", so re-running
-  `ice update` while an update is queued does not start a second compile.
-- `ice update` prunes the debris previous interrupted runs left in
-  `~/.ice/agent/self-update`. A Windows update persists its `pending-*` staging
+  `icers update` while an update is queued does not start a second compile.
+- `icers update` prunes the debris previous interrupted runs left in
+  `~/.icers/agent/self-update`. A Windows update persists its `pending-*` staging
   directory so the PowerShell helper can install from it after the parent exits;
   when the helper died first — a reboot at the wrong moment, a machine-wide
   `taskkill` — the directory stayed forever, because nothing in the update path
   removed it and its still-`preparing` status file meant the next start never
   looked at it either. Staging directories no live status file claims are now
   reclaimed, along with the `preparing`/`waiting` records that named them.
-- The status file `ice update` prints is readable by the time you go looking for
-  it. A `succeeded` record used to be deleted by the very next ice start, so the
+- The status file `icers update` prints is readable by the time you go looking for
+  it. A `succeeded` record used to be deleted by the very next icers start, so the
   path in that message was dead on arrival and a finished update read as one
   that never ran. Completed records now survive as the receipt for the installed
   version (aging out after a day), and the `staged` line names the version and
-  says what to do: `ice 0.3.13 staged; quit this ice and it will be applied.`
+  says what to do: `icers 0.3.13 staged; quit this icers and it will be applied.`
 
 ## [0.3.12] - 2026-10-01
 
@@ -421,7 +421,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 - Plugins can now replace the system prompt at runtime via
   `register_before_agent_start` — the mechanism pi's extensions use as a
-  `before_agent_start` handler returning `systemPrompt`. ice already broadcast
+  `before_agent_start` handler returning `systemPrompt`. icers already broadcast
   `BeforeAgentStart` so a plugin could watch a turn start, but the event handler
   ABI is fire-and-forget (`i32` only), so it could not influence one. The new
   slot carries an `out` pointer instead, which is the shape
@@ -444,12 +444,12 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 - A spawned shell no longer inherits ice-langfuse's subagent-nesting channel
   (`LANGFUSE_PI_PARENT_TRACE_ID` / `_SPAN_ID` / `_SESSION_ID` / `_DEPTH`). The
-  extension publishes those variables so a launcher can attach a nested `ice` to
+  extension publishes those variables so a launcher can attach a nested `icers` to
   the turn that spawned it, and decides it is a subagent by reading them back —
-  but a bash/powershell child inherits the environment, so a plain `ice` started
+  but a bash/powershell child inherits the environment, so a plain `icers` started
   from inside a shell adopted its ancestor's trace: it reused the parent trace
   id, hung its root off the parent's root span, and named it `Subagent Turn`
-  instead of opening its own trace. Only `ICE_SESSION_ID` was on the
+  instead of opening its own trace. Only `ICERS_SESSION_ID` was on the
   host-private exclusion list, because the prefix-based check could not see
   these. They are now excluded; a launcher that sets them deliberately still
   gets through, which is the supported nesting path. Two tests pin both halves.
@@ -469,14 +469,14 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 ### Added
 
 - The plugin contract now owns the host identity: `ice_plugin_sdk::HOST_NAME`
-  (`"ice"`) and `HOST_VERSION`, with `ice_cli::APP_NAME` / `VERSION` defined as
+  (`"icers"`) and `HOST_VERSION`, with `ice_cli::APP_NAME` / `VERSION` defined as
   aliases of them so the two cannot drift. `BeforeAgentStart`'s payload carries
   `host: {name, version}`, giving an extension a way to label its own output (a
   trace name, a tag, `service.name`) from the host instead of hardcoding a brand
   that a rename silently invalidates. `ice-langfuse` had been reporting the
   upstream TypeScript plugin's `"Pi Turn"` / `"pi"` for exactly that reason.
 - The host now publishes the session id twice, so an extension that observes a
-  run can name the session it is watching. `ICE_SESSION_ID` (constant:
+  run can name the session it is watching. `ICERS_SESSION_ID` (constant:
   `ice_plugin_sdk::SESSION_ID_ENV`) is written whenever a session becomes active,
   and `BeforeAgentStart`'s payload carries `sessionId` next to
   `prompt`/`imageCount`, recomputed each turn. Previously the only channel was
@@ -489,29 +489,29 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 - Switching sessions no longer leaves plugins naming the previous one. The
   session id reaches a plugin on two channels — the `ToolCallContext` (read per
-  plugin **tool** call) and `ICE_SESSION_ID` (read per turn by the provider
+  plugin **tool** call) and `ICERS_SESSION_ID` (read per turn by the provider
   hooks) — and only the startup build republished them. An in-process swap
   (`/import`, `/fork`, the `/session` selector, and the plugin
   `NewSession`/`Fork`/`SwitchSession` runtime actions) changed the session the
   harness serves without touching either, so a plugin keyed to the old id went
   on serving it. All of them now route through one funnel that republishes both.
-- `ICE_SESSION_ID` no longer leaks into the shell that `bash`/`powershell`
+- `ICERS_SESSION_ID` no longer leaks into the shell that `bash`/`powershell`
   spawn. The shell inherited the whole process environment, so the variable
-  reached anything the command ran — including another `ice`, which had no way
+  reached anything the command ran — including another `icers`, which had no way
   to tell its ancestor's session from its own. A small deny-list now keeps the
   host's own plumbing out of a spawned shell, while explicit per-call values
   still pass through.
-- `ice update` no longer refuses to run when the running `ice` was launched
+- `icers update` no longer refuses to run when the running `icers` was launched
   through a link, junction, or `subst` drive. The path validation demanded that
   `canonicalize()` reproduce the launch path byte for byte, so any link *above*
-  the executable — a `C:\tools\current\ice.exe` junction, a `subst`, scoop's
-  `current` directories — aborted the update with "current ice executable
+  the executable — a `C:\tools\current\icers.exe` junction, a `subst`, scoop's
+  `current` directories — aborted the update with "current icers executable
   resolves through a link or junction". The message named neither the path nor
   the link, and the check was the wrong shape: the leaf is what matters, so a
   linked *file* is still refused, now with both paths printed, while links
   *above* the executable resolve to the real install directory the update
   should rewrite.
-- `ice update` no longer tells you to add the staging directory to `PATH`.
+- `icers update` no longer tells you to add the staging directory to `PATH`.
   Cargo's install advice named `<agent>/self-update/pending-*/bin`, which the
   atomic replace consumes, so following it added a path that stopped existing a
   second later; the child `cargo install` now runs `--quiet` (errors still
@@ -521,7 +521,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 - `docs/README.md` is marked as a historical 0.1.13 release post,
   and its update-commands section now carries a correction. It still told
-  readers to run `ice pi-update` and `ice self-update`, neither of which exists
+  readers to run `icers pi-update` and `icers self-update`, neither of which exists
   any more — the article only documented 0.1.13-era behavior and was never
   revisited when the Pi layer was removed and the alias was dropped.
 
@@ -529,30 +529,30 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 ### Added
 
-- `ice update` performs a real self-update again. `a5506dd` had reduced it to a
-  bare `cargo install` that ignored its arguments, so `ice update --help`
+- `icers update` performs a real self-update again. `a5506dd` had reduced it to a
+  bare `cargo install` that ignored its arguments, so `icers update --help`
   reinstalled the crate instead of printing help and `--offline` did nothing.
   Restored: argument validation, `--help`, the `cargo binstall`/`cargo install`
   path, direct binary replacement on Unix, the staged PowerShell replacement on
   Windows (a running `.exe` cannot replace itself), staged-binary version
   validation, rollback, and the status report shown on the next start.
-- The startup update check covers the ice release and installed Rust extensions
+- The startup update check covers the icers release and installed Rust extensions
   again, with the 6-hour cache and per-item fallback that survived a registry
   outage.
 
 ### Changed
 
-- The Pi compatibility layer is *not* restored: `ice package`, `pi-package
+- The Pi compatibility layer is *not* restored: `icers package`, `pi-package
   update`, `install-pi`, `uninstall-pi` and `--enable-pi-packages` stay removed,
   along with the npm/Git package stores and the Node extension host.
 
 ### Fixed
 
-- Removed subcommands no longer fall through to the prompt path. `ice package
+- Removed subcommands no longer fall through to the prompt path. `icers package
   update` used to be sent to the model as the message "package update" and
-  appeared to hang; it now fails immediately with a pointer to `ice install` /
-  `ice uninstall` / `ice update`. `ice self-update` reports the same way and
-  points at `ice update`.
+  appeared to hang; it now fails immediately with a pointer to `icers install` /
+  `icers uninstall` / `icers update`. `icers self-update` reports the same way and
+  points at `icers update`.
 
 ## [0.3.8] - 2026-09-30
 
@@ -581,7 +581,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 ### Changed
 
 - **Transcript repaints are now O(1) per unchanged message, closing the
-  long-session lag against native pi.** ice re-parsed every finished message's
+  long-session lag against native pi.** icers re-parsed every finished message's
   markdown/layout on every frame, so a 400-message session cost ~18 ms per
   frame (over the 16 ms budget) and got slower as it grew. It now mirrors
   native pi's caching layers: `Markdown` and `Text` memoize
@@ -595,14 +595,14 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   stays under budget past 3000 messages; `crates/ice-tui/examples/bench_transcript.rs`
   reproduces the measurement.
 - **The terminal window/tab title now carries the startup mark.** An idle
-  session sets `▃ ▅ ▂ ice · 🦀` instead of `🦀π ice`, keeping the activity
+  session sets `▃ ▅ ▂ icers · 🦀` instead of `🦀π icers`, keeping the activity
   suffix it had before (`⟳` in flight, `↻` retrying), so the tab and the startup
   lockup read as one brand: the title's three eighth-blocks are the lockup's
   3:5:2 bar silhouette flattened into a single row, and a test reads the bar
   heights back out of the lockup so the two cannot drift apart. Each bar is one
   cell wide — the first cut used `██` per bar and read as three fat slabs in a
   tab strip. The title is built by `pi-cli`'s `brand` module, so it drops the
-  crab with `ICE_NO_EMOJI` exactly like the lockup — and it drops `π`, which is
+  crab with `ICERS_NO_EMOJI` exactly like the lockup — and it drops `π`, which is
   East-Asian *Ambiguous* and therefore measured differently under a CJK locale.
   Block elements share `█`'s width class, so the title is still single-width
   everywhere.
@@ -624,13 +624,13 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   comment that named the old key was updated with it.
 - **The last native-only keybindings are wired up.** `Ctrl+Z` suspends to the
   background on Unix (`app.suspend` — native binds no key on Windows, so neither
-  does ice): it stops the renderer, hands the terminal back to the shell, and
+  does icers): it stops the renderer, hands the terminal back to the shell, and
   re-enters the alternate screen when the process is resumed with `fg`. On
   Windows, `Ctrl+Q` joins `Alt+Enter` for follow-ups and `Alt+V` joins `Ctrl+V`
-  for image paste — native's Windows keys, added alongside ice's rather than
+  for image paste — native's Windows keys, added alongside icers's rather than
   replacing them, because the Windows clipboard-*text* fallback still rides
   `Ctrl+V`. The registry now matches native's defaults for every app-level
-  action ice implements.
+  action icers implements.
 
 ### Fixed
 
@@ -663,7 +663,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   documents the contract, including the one failure mode worth naming: a
   `#[serde(deny_unknown_fields)]` parameter struct will reject the injected key.
 - `cargo binstall ice-cli` works: `[package.metadata.binstall]` points at the
-  release assets, which are named after the binary (`ice`) rather than the crate,
+  release assets, which are named after the binary (`icers`) rather than the crate,
   so the URL template uses `{ bin }`.
 
 ### Changed
@@ -686,8 +686,8 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   (raw seqs untouched, so later appends stay consistent), and re-chains an entry
   onto the lane leaf; when it dropped anything the file is republished
   atomically.
-- A session already open in another `ice` process is refused with `session … is
-  already open in another ice process` instead of being written to by both. The
+- A session already open in another `icers` process is refused with `session … is
+  already open in another icers process` instead of being written to by both. The
   host holds an exclusive OS advisory lock per session (`<path>.lock`) for its
   lifetime.
 - `Could not open the saved session:` was printed twice when a session could not
@@ -697,7 +697,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 ### Added
 
-- Session pickers (`ice -r` and `/session`) show readable rows instead of a wall
+- Session pickers (`icers -r` and `/session`) show readable rows instead of a wall
   of near-identical timestamped file names. Each row comes from a cheap
   head/tail summary of the session file — display name, first user prompt
   (single-lined and truncated to a label), and on-disk size — so saved sessions
@@ -715,7 +715,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
   The old mark mixed an emoji with a box-drawing glyph, whose east-asian width is
   ambiguous, so the header rendered inconsistently depending on the terminal.
   The mark follows the active theme's accent colour for its middle bar.
-  `ICE_NO_EMOJI=1` renders the lockup without the crab (and without the
+  `ICERS_NO_EMOJI=1` renders the lockup without the crab (and without the
   separator that would otherwise dangle).
 - The workspace is now `rustfmt`-clean. The sweep is listed in
   `.git-blame-ignore-revs` so `git blame` skips it.
@@ -766,15 +766,15 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 
 - Added `docs/performance/benchmark-vs-pi.md` and `scripts/bench-vs-pi.mjs` — a reproducible,
   same-machine comparison against native Pi over the same JSONL command channel,
-  with isolated config directories and both tools offline. ice is 9.7× faster to
+  with isolated config directories and both tools offline. icers is 9.7× faster to
   start, 10.7× faster to cold start, 7.6× smaller in memory and ~18× smaller
   installed. **Corrected after release:** an earlier run set only pi's `PI_*`
-  isolation variables, so ice read the real `~/.ice/agent` and loaded the
+  isolation variables, so icers read the real `~/.icers/agent` and loaded the
   machine's global plugins (reported 103.6 ms / 1.7×); a second bug started the
-  cold-start stopwatch after `spawn()`. With both fixed, ice's `--version` (17.5 ms) and
+  cold-start stopwatch after `spawn()`. With both fixed, icers's `--version` (17.5 ms) and
   a cold start (17.7 ms) are effectively equal — the cost is process creation.
 - `crates/ice-cli/embedded-docs/` — the documentation snapshot compiled into the
-  `ice` binary for the `docs` tool — is refreshed and now guarded: CI runs
+  `icers` binary for the `docs` tool — is refreshed and now guarded: CI runs
   `scripts/sync-embedded-docs.sh` and fails if the snapshot drifts from the
   repository documents. It had fallen behind by several releases.
 
@@ -783,7 +783,7 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 ### Changed
 
 - **Breaking:** the plugin ABI is unified on a single `ice_plugin_register`
-  entrypoint (`ICE_PLUGIN_ABI_VERSION_UNIFIED`), with the version carried inside
+  entrypoint (`ICERS_PLUGIN_ABI_VERSION_UNIFIED`), with the version carried inside
   the `PluginApi` struct instead of the symbol name. `ice-extensions` still
   resolves `ice_plugin_register_v3` and then `ice_plugin_register_v2`, so plugins
   built against an older ABI keep loading; extension authors should rebuild
@@ -893,20 +893,20 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 
 ### Added
 
-- **Remote mode.** `ice --mode rpc` is a real JSONL command loop, `ice --server`
+- **Remote mode.** `icers --mode rpc` is a real JSONL command loop, `icers --server`
   runs the agent headless over TCP and prints a token at startup, and
-  `ice --connect <host:port>` attaches a terminal client that holds no local
+  `icers --connect <host:port>` attaches a terminal client that holds no local
   provider, tools, extensions or session files. Token auth is connection-level
   (`-32001` on missing/invalid token); `--no-token` disables it, and
-  `ICE_SERVER_TOKEN` is honoured. Shared wire types (`RemoteEvent` /
+  `ICERS_SERVER_TOKEN` is honoured. Shared wire types (`RemoteEvent` /
   `RemoteCommand` / `RemoteResponse`) live in one module so the two ends cannot
   drift.
 - **Extension lifecycle events (P0–P5) with veto support** — a handler can
   refuse startup by returning `EVENT_HANDLER_ABORT` (new `BeforeTuiStart` hook,
   exit code `3`).
 - **ABI v3** (`PluginApiVt3Ext.declare`) adds priority and platform declarations.
-- Optional JSONL event journal (`ICE_EVENT_LOG=1`) with `ice events tail` and
-  `ice events path`.
+- Optional JSONL event journal (`ICERS_EVENT_LOG=1`) with `icers events tail` and
+  `icers events path`.
 
 ### Docs
 
@@ -928,7 +928,7 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 
 ### Added
 
-- `ice dev-local` degrades gracefully to skills-only mode when no Cargo `cdylib`
+- `icers dev-local` degrades gracefully to skills-only mode when no Cargo `cdylib`
   is present.
 
 ### Fixed
@@ -1034,9 +1034,9 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 
 ### Added
 
-- `ice dev-local` and `ice dev --local-only` load only resources from the current
+- `icers dev-local` and `icers dev --local-only` load only resources from the current
   project and the active development extension, including project-local
-  `.ice/skills`, `.pi/skills`, configured project resource paths, and the
+  `.icers/skills`, `.pi/skills`, configured project resource paths, and the
   extension's own resources. `/reload` matches the local-only scope.
 
 ## [0.1.12] - 2026-09-14
@@ -1046,7 +1046,7 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 - Pi-compatible managed npm and Git package stores: structured `npmCommand`
   argv, npm aliases, trusted project settings, bounded subprocesses and
   conservative provenance checks.
-- Independent ice and package update checks at startup, with `PI_OFFLINE`
+- Independent icers and package update checks at startup, with `PI_OFFLINE`
   support across startup and manual update commands.
 - Resumable, clean-tree release workflow for the nine published crates.
 
@@ -1104,9 +1104,9 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 
 ### Added
 
-- `ice dev` builds and watches a local Rust extension; `/reload` forces a fresh
+- `icers dev` builds and watches a local Rust extension; `/reload` forces a fresh
   build without replacing a working extension when compilation fails.
-- `ice uninstall` and `ice uninstall-pi`.
+- `icers uninstall` and `icers uninstall-pi`.
 - Multiplexed Node extension transport allowing concurrent requests with
   out-of-order responses; tool and command cancellation propagates through
   `AbortSignal`.
@@ -1138,13 +1138,13 @@ on `main` and fixes how every crate presents itself on crates.io and docs.rs.
 - Session history, sharing and exports request entries in chronological order,
   matching the terminal transcript.
 - The package catalog distinguishes core Rust libraries (`cargo add ice-tools`)
-  from loadable `cdylib` extensions (`ice install ice-todo`).
+  from loadable `cdylib` extensions (`icers install ice-todo`).
 
 ## [0.1.7] - 2026-09-09
 
 ### Added
 
-- `ice install <crate>` for crates.io `cdylib` extensions, with `--version`,
+- `icers install <crate>` for crates.io `cdylib` extensions, with `--version`,
   `--path`, `--locked` and `--force`.
 - Nine published extensions added to the website catalog: `ice-mcp-adapter`,
   `ice-web-access`, `ice-subagents`, `ice-background-tasks`, `ice-lens`,

@@ -2,7 +2,7 @@ use super::*;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn dropping_a_plugin_bound_harness_releases_its_provider_and_tool_keepalives() {
-    let Some(path) = std::env::var_os("ICE_TEST_SUBAGENT_LIBRARY") else {
+    let Some(path) = std::env::var_os("ICERS_TEST_SUBAGENT_LIBRARY") else {
         return;
     };
     let provider = FauxProvider::new(FauxScript::new());

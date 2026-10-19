@@ -1055,7 +1055,7 @@ async fn run_budget_stops_a_looping_run_and_records_why() {
     );
 }
 
-/// Upstream parity: with no `ICE_MAX_TURNS_PER_RUN`, a run has **no** turn
+/// Upstream parity: with no `ICERS_MAX_TURNS_PER_RUN`, a run has **no** turn
 /// ceiling — it ends only because the model stopped asking for tools. This is
 /// the counterpart of the opt-in test above: it fails if anyone re-enables the
 /// guard by default.
@@ -1308,7 +1308,7 @@ async fn a_completed_run_leaves_no_frames_to_salvage() {
 
 /// Reopen an existing session in a fresh harness.
 ///
-/// This is what a user does after a crash (`ice` again on the same session), and
+/// This is what a user does after a crash (`icers` again on the same session), and
 /// opening the harness is what runs `finish_interrupted_operation`.
 async fn reopen_harness(session: ice_harness::session::session::Session) -> AgentHarness {
     let provider = FauxProvider::new(FauxScript::new().with_text("unused"));

@@ -1,24 +1,24 @@
 # 远程模式（`--server` / `--connect`）
 
-ice 支持把 agent 跑在**一个无头服务端**上，然后从**另一个进程**的 TUI 远程驱动它。
+icers 支持把 agent 跑在**一个无头服务端**上，然后从**另一个进程**的 TUI 远程驱动它。
 客户端是纯输入/显示——**没有任何本地 agent 资源**（无 provider、无工具、无扩展、无 session 文件）。
 
-> 设计取向：ice 是 TS `pi` 的 Rust 替代品。远程层**参考**了原生 pi
+> 设计取向：icers 是 TS `pi` 的 Rust 替代品。远程层**参考**了原生 pi
 > `packages/coding-agent/src/modes/rpc/` 与 `src/client/`（`RemoteSession` + transcript）
-> 的分层思想，但协议与会话模型都是 ice 自己的 Rust 实现，**不依赖任何 pi 运行时组件**。
+> 的分层思想，但协议与会话模型都是 icers 自己的 Rust 实现，**不依赖任何 pi 运行时组件**。
 
 ## 快速开始
 
 ```bash
 # 1) 服务端（无头）——启动时会打印 token
-ice --server --port 9899
+icers --server --port 9899
 
 # 2) 客户端（远程 TUI）
-ice --connect 127.0.0.1:9899 --token <token>
+icers --connect 127.0.0.1:9899 --token <token>
 ```
 
 服务端只监听 TCP、不启动 TUI；每个 `start_session` 会 fork 一个
-`ice --mode rpc` 子进程真正执行 agent 循环。
+`icers --mode rpc` 子进程真正执行 agent 循环。
 
 ### 服务端参数
 
@@ -42,11 +42,11 @@ token: 3592139afa7b77e43592139afa7b77e4
 | 参数 | 说明 |
 |---|---|
 | `--connect <host:port>` | 连接服务端并进入远程 TUI |
-| `--token <t>` | 认证 token；缺省时回退到环境变量 `ICE_SERVER_TOKEN` |
+| `--token <t>` | 认证 token；缺省时回退到环境变量 `ICERS_SERVER_TOKEN` |
 
 ```bash
-export ICE_SERVER_TOKEN=3592139afa7b77e43592139afa7b77e4
-ice --connect 127.0.0.1:9899        # 无需再传 --token
+export ICERS_SERVER_TOKEN=3592139afa7b77e43592139afa7b77e4
+icers --connect 127.0.0.1:9899        # 无需再传 --token
 ```
 
 `--token` 优先级高于环境变量；空/纯空白的环境变量会被忽略。
@@ -87,7 +87,7 @@ provider / harness / session / extension 的全部本地构建——这是“客
 | 方法 | 参数 | 结果 |
 |---|---|---|
 | `authenticate` | `{token}` | `{authenticated:true}`；失败 `-32001` |
-| `start_session` | `{}` | `{sessionId, session}`（fork 一个 `ice --mode rpc` 子进程） |
+| `start_session` | `{}` | `{sessionId, session}`（fork 一个 `icers --mode rpc` 子进程） |
 | `subscribe` | `{sessionId}` | `{subscriptionId, sessionId, status:"subscribed"}` |
 | `send` | `{sessionId, command}` | `{sessionId, status:"sent"}`（把 `command` 写进子进程 stdin） |
 | `stop_session` | `{sessionId}` | `{sessionId, status:"stopped"}` |
@@ -142,5 +142,5 @@ provider / harness / session / extension 的全部本地构建——这是“客
 - 单元测试：`crates/ice-cli/src/remote/protocol.rs`（线形往返）、`session.rs`（事件折叠）。
 - 集成测试：`crates/ice-cli/tests/remote_client_smoke.rs`
   - 自包含（假服务端）：握手 + transcript 折叠、事件泵忽略响应帧、**token 认证三态**；
-  - 真实服务端（env 门控）：`ICE_REMOTE_E2E_ADDR` + `ICE_REMOTE_E2E_TOKEN`
+  - 真实服务端（env 门控）：`ICERS_REMOTE_E2E_ADDR` + `ICERS_REMOTE_E2E_TOKEN`
     驱动真实客户端跑一轮真实模型调用。

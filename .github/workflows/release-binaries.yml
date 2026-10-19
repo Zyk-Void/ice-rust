@@ -1,6 +1,6 @@
 name: Release binaries
 
-# Builds prebuilt `ice` binaries and attaches them to the GitHub Release for a
+# Builds prebuilt `icers` binaries and attaches them to the GitHub Release for a
 # tag. This is what makes `curl -fsSL .../install.sh | sh` work and what removes
 # the "you need a Rust toolchain and a C linker" barrier to trying the CLI.
 #
@@ -92,14 +92,14 @@ jobs:
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
-          echo "Building ice ${version} for ${{ matrix.target }}"
+          echo "Building icers ${version} for ${{ matrix.target }}"
 
       - name: Build release binary
         run: cargo build -p ice-cli --release --locked --target ${{ matrix.target }}
 
       - name: Smoke test Intel macOS binary
         if: matrix.target == 'x86_64-apple-darwin'
-        run: target/${{ matrix.target }}/release/ice --version
+        run: target/${{ matrix.target }}/release/icers --version
 
       - name: Stage artifact
         id: stage
@@ -112,9 +112,9 @@ jobs:
           mkdir -p dist
 
           if [[ "${target}" == *windows* ]]; then
-            bin="target/${target}/release/ice.exe"
+            bin="target/${target}/release/icers.exe"
           else
-            bin="target/${target}/release/ice"
+            bin="target/${target}/release/icers"
           fi
 
           if [[ ! -f "${bin}" ]]; then
@@ -215,7 +215,7 @@ jobs:
             gh release upload "${TAG}" "${assets[@]}" --clobber
           else
             gh release create "${TAG}" "${assets[@]}" \
-              --title "ice ${TAG}" \
+              --title "icers ${TAG}" \
               --generate-notes
           fi
           # Upload last: a manifest means all five verified archives are ready.

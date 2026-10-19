@@ -46,14 +46,25 @@ is replayed automatically next time.
 
 ## What the rebrand changes
 
-`rpi`/`RPI`/`Rpi` become `ice`/`ICE`/`Ice` in paths and text: crates (`ice-ai`,
-`ice-agent`, ...), the `ice` binary, `~/.ice/agent`, `ICE_*` env vars. Repo URLs
-become `Zyk-Void/ice-rust`. Kept as-is: `@juicesharp/rpiv-todo` (external
-package), the `rpi.laofu.online` domain (no ice domain yet), and upstream
-PR/commit links in `CHANGELOG.md` and `NOTICE`.
+The runtime identity is `icers`, kept apart from the TypeScript `ice` so the two
+never share state:
 
-To change the mapping, edit `scripts/ice-rebrand.sh` on `rebrand`, reset
-`rebrand` to `base`, re-run the script, and merge `rebrand` into `main`.
+| Upstream | Becomes | Example |
+|---|---|---|
+| standalone `rpi` | `icers` | binary `icers`, `~/.icers/agent`, project `.icers/` |
+| `RPI` / `RPI_*` | `ICERS` / `ICERS_*` | `ICERS_CODING_AGENT_DIR`, `ICERS_OFFLINE` |
+| compound `rpi-x` / `rpi_x` | `ice-x` / `ice_x` | crates `ice-ai`, `ice-cli`; `ice_plugin_register` |
+| `Rpi` | `Ice` | Rust type names |
+| `CARGO_BIN_EXE_rpi` | `CARGO_BIN_EXE_icers` | integration tests |
+| `bigfish1913/pi-rust` | `Zyk-Void/ice-rust` (`zyk-void/ice-rust` in `.rs`, which compares canonical lowercase URLs) | |
+
+Kept as-is: `@juicesharp/rpiv-todo` (external package), the `rpi.laofu.online`
+domain, and upstream PR/commit links in `CHANGELOG.md` and `NOTICE`.
+
+To change the mapping, edit `scripts/ice-rebrand.sh` on `rebrand`, run
+`git read-tree -u --reset base`, restore `scripts/ice-*.sh` and `FORK.md`,
+re-run the script, commit, and merge `rebrand` into `main`. The result must be
+deterministic: two fresh runs from `base` give the same `git write-tree` hash.
 
 ## Caveats
 

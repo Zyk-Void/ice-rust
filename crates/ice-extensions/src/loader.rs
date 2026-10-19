@@ -15,7 +15,7 @@ use std::sync::Arc;
 use libloading::Library;
 use thiserror::Error;
 
-use ice_plugin_sdk::{IcePluginRegisterUnified, ICE_PLUGIN_ABI_VERSION_UNIFIED};
+use ice_plugin_sdk::{IcePluginRegisterUnified, ICERS_PLUGIN_ABI_VERSION_UNIFIED};
 
 use crate::registry::{ExtensionRegistry, RegistrySnapshot};
 use crate::{enter_current_api, ActionBridge, HostApi, NullDiagnostics, PluginDiagnostics};
@@ -61,7 +61,7 @@ pub struct LoadedPlugin {
     pub library: Library,
     /// Where it was loaded from (for diagnostics).
     pub path: PathBuf,
-    /// ABI version (always [`ICE_PLUGIN_ABI_VERSION_UNIFIED`] for plugins
+    /// ABI version (always [`ICERS_PLUGIN_ABI_VERSION_UNIFIED`] for plugins
     /// loaded by this version of the loader).
     pub abi_version: u32,
     /// The registry snapshot built from this plugin's registrations. The host
@@ -138,7 +138,7 @@ pub fn load_one(
         path: path.clone(),
         error: e.to_string(),
     })?;
-    let abi_version = ICE_PLUGIN_ABI_VERSION_UNIFIED;
+    let abi_version = ICERS_PLUGIN_ABI_VERSION_UNIFIED;
 
     // Plugin display name (file stem) — stamped onto every registration the
     // plugin makes so host diagnostics (e.g. lifecycle veto messages) can name
@@ -623,7 +623,7 @@ mod tests {
             ),
         );
         let loaded = load_one(&unified.path, Arc::clone(&diag), None).expect("load unified plugin");
-        assert_eq!(loaded.abi_version, ICE_PLUGIN_ABI_VERSION_UNIFIED);
+        assert_eq!(loaded.abi_version, ICERS_PLUGIN_ABI_VERSION_UNIFIED);
         drop(loaded);
         drop(unified);
     }

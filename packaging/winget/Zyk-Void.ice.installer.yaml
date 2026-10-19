@@ -1,4 +1,4 @@
-# Created by hand for ice; see packaging/README.md in Zyk-Void/ice-rust
+# Created by hand for icers; see packaging/README.md in Zyk-Void/ice-rust
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
 
 PackageIdentifier: Zyk-Void.ice
@@ -9,8 +9,8 @@ ReleaseDate: 2026-10-18
 Installers:
 - Architecture: x64
   NestedInstallerFiles:
-  - RelativeFilePath: ice.exe
-    PortableCommandAlias: ice
+  - RelativeFilePath: icers.exe
+    PortableCommandAlias: icers
   InstallerUrl: https://github.com/Zyk-Void/ice-rust/releases/download/v0.5.1/ice-v0.5.1-x86_64-pc-windows-msvc.zip
   InstallerSha256: 6C3140C30F92AF7CBB64CD0C115F0CE66233AB9B1541E3C6991563DD50BD0D9F
 ManifestType: installer
