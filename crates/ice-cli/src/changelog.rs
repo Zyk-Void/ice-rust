@@ -24,7 +24,7 @@ pub struct ChangelogEntry {
 
 /// Default remote changelog URL. Overridable via `ICE_CHANGELOG_URL`.
 pub const DEFAULT_CHANGELOG_URL: &str =
-    "https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/CHANGELOG.md";
+    "https://raw.githubusercontent.com/zyk-void/ice-rust/main/CHANGELOG.md";
 
 /// The remote changelog URL to use, honoring `ICE_CHANGELOG_URL`.
 pub fn changelog_url() -> String {

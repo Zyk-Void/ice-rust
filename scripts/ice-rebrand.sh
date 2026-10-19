@@ -34,6 +34,11 @@ done
     perl -pi -e "$protect"' s#bigfish1913/pi-rust#Zyk-Void/ice-rust#g; s/bigfish1913\.rpi/Zyk-Void.ice/g; s/\bpi-rust\b/ice-rust/g; '"$names $restore" "$f"
   fi
 done
+# Code compares repository URLs in canonical (lowercase) form, e.g.
+# prebuilt_extensions::canonical_repository; docs keep the display casing.
+{ git grep -Il 'Zyk-Void/ice-rust' -- '*.rs' || true; } | while read -r f; do
+  perl -pi -e 's#Zyk-Void/ice-rust#zyk-void/ice-rust#g' "$f"
+done
 # Renamed packages sort differently; let cargo rewrite Cargo.lock in its own order.
 cargo metadata --format-version 1 --offline >/dev/null 2>&1 || cargo metadata --format-version 1 >/dev/null
 git add -u
