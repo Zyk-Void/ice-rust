@@ -2,15 +2,15 @@
 # Provider-specific script is kept outside the repository and receives both domains.
 set -euo pipefail
 
-if [[ -z "${ICE_CDN_PURGE_SCRIPT:-}" ]]; then
-  echo 'CDN purge skipped: ICE_CDN_PURGE_SCRIPT is unset (edge content TTL: 60s, assets: 300s, images: 1d).'
+if [[ -z "${ICERS_CDN_PURGE_SCRIPT:-}" ]]; then
+  echo 'CDN purge skipped: ICERS_CDN_PURGE_SCRIPT is unset (edge content TTL: 60s, assets: 300s, images: 1d).'
   exit 0
 fi
 
-if [[ ! -f "$ICE_CDN_PURGE_SCRIPT" ]]; then
-  echo "CDN purge script not found: $ICE_CDN_PURGE_SCRIPT" >&2
+if [[ ! -f "$ICERS_CDN_PURGE_SCRIPT" ]]; then
+  echo "CDN purge script not found: $ICERS_CDN_PURGE_SCRIPT" >&2
   exit 1
 fi
 
 # The script must wait for purge completion and exit nonzero on any API failure.
-bash "$ICE_CDN_PURGE_SCRIPT" "$@"
+bash "$ICERS_CDN_PURGE_SCRIPT" "$@"

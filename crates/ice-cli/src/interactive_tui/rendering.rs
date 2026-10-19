@@ -109,7 +109,7 @@ pub(super) fn add_update_notices(
         add_update_panel(&group, "Update Failed", &body, colors.error);
     }
 
-    if let Some(notice) = report.notices.iter().find(|notice| notice.name == "ice") {
+    if let Some(notice) = report.notices.iter().find(|notice| notice.name == "icers") {
         let body = format!(
             "{} {}{}",
             colors
@@ -121,7 +121,7 @@ pub(super) fn add_update_notices(
         add_update_panel(&group, "Update Available", &body, colors.warning);
     }
 
-    for notice in report.notices.iter().filter(|notice| notice.name != "ice") {
+    for notice in report.notices.iter().filter(|notice| notice.name != "icers") {
         let body = format!(
             "{}\n{} {}",
             colors.muted.fg(&format!(
@@ -373,7 +373,7 @@ pub(super) fn collect_transcript_lines(chat_container: &Arc<Container>) -> Vec<S
 
 /// Build the shell command that resumes `session_id` in this project, or
 /// `None` when there is nothing to resume. Mirrors upstream's
-/// `formatResumeCommand`: `ice --session <id>`, prefixing
+/// `formatResumeCommand`: `icers --session <id>`, prefixing
 /// `--session-dir <dir>` only when a non-default directory was requested.
 pub(super) fn format_resume_command(
     session_id: &str,
@@ -512,7 +512,7 @@ pub(super) fn show_context_panel(
 
     if skills.is_empty() {
         lines.push(
-            "  Skills: (none discovered — create .ice/skills/ or ~/.ice/agent/skills/)".into(),
+            "  Skills: (none discovered — create .icers/skills/ or ~/.icers/agent/skills/)".into(),
         );
     } else {
         lines.push(format!("  Skills ({}):", skills.len()));
@@ -529,7 +529,7 @@ pub(super) fn show_context_panel(
 
     if templates.is_empty() {
         lines.push(
-            "  Prompt templates: (none — create .ice/prompts/ or ~/.ice/agent/prompts/)".into(),
+            "  Prompt templates: (none — create .icers/prompts/ or ~/.icers/agent/prompts/)".into(),
         );
     } else {
         lines.push(format!("  Prompt templates ({}):", templates.len()));

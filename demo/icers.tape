@@ -1,10 +1,10 @@
-# demo/ice.tape — record the interactive TUI.
+# demo/icers.tape — record the interactive TUI.
 #
-#   vhs demo/ice.tape        # -> docs/images/ice-demo.gif
+#   vhs demo/icers.tape        # -> docs/images/ice-demo.gif
 #
 # Unlike demo/sdk.tape, this one is NOT reproducible: an interactive session is
 # only worth watching with a real model, so it uses whatever provider is
-# configured (~/.ice/agent/models.json, or ANTHROPIC_API_KEY / OPENAI_API_KEY).
+# configured (~/.icers/agent/models.json, or ANTHROPIC_API_KEY / OPENAI_API_KEY).
 # That is why the README leads with the offline SDK GIF and keeps this as the
 # "here is the actual terminal" shot — pair it with the still
 # (docs/images/ice-interactive.png) rather than replacing it.
@@ -31,7 +31,7 @@ Set TypingSpeed 45ms
 Set CursorBlink false
 
 Sleep 700ms
-Type "ice"
+Type "icers"
 Enter
 Sleep 2500ms
 
@@ -45,6 +45,6 @@ Sleep 12000ms
 Type "exit"
 Enter
 Sleep 1500ms
-Type "ice -c"
+Type "icers -c"
 Enter
 Sleep 2500ms

@@ -95,7 +95,7 @@ every other test.
 `create_read_tool` and `create_bash_tool` additionally take an options argument
 (`None` for the defaults).
 
-The `ice` CLI loads `read`, `write`, `edit` and `bash` by default — the
+The `icers` CLI loads `read`, `write`, `edit` and `bash` by default — the
 Pi-compatible set — and exposes the rest through the `default_tools` setting.
 
 ## Related crates

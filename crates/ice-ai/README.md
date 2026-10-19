@@ -103,7 +103,7 @@ tool → result → follow-up cycle offline. See
 | ----- | ---- |
 | [`ice-agent`](https://crates.io/crates/ice-agent) | The agent loop built on this layer |
 | [`ice-harness`](https://crates.io/crates/ice-harness) | Sessions, persistence, compaction |
-| [`ice-cli`](https://crates.io/crates/ice-cli) | The `ice` terminal agent |
+| [`ice-cli`](https://crates.io/crates/ice-cli) | The `icers` terminal agent |
 
 ## Documentation
 

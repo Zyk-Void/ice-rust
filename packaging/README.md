@@ -1,6 +1,6 @@
 # Install channels
 
-ice reaches users six ways. Five are live today and the sixth is a manifest
+icers reaches users six ways. Five are live today and the sixth is a manifest
 sitting in review. The point of this directory is that every manifest points at
 a **real release asset** and carries that asset's **real checksum** — none of it
 is a template with placeholders.
@@ -12,7 +12,7 @@ is a template with placeholders.
 | `cargo install ice-cli` | crates.io | **live** | none |
 | `curl … install.sh \| sh` | [`scripts/install.sh`](../scripts/install.sh) | **live** | none |
 | `cargo binstall ice-cli` | [`crates/ice-cli/Cargo.toml`](../crates/ice-cli/Cargo.toml) | **configured** | none — takes effect with the next published crate version |
-| Homebrew | [`bigfish1913/homebrew-tap`](https://github.com/bigfish1913/homebrew-tap) | **live** | none — `brew tap bigfish1913/tap && brew install ice` |
+| Homebrew | [`bigfish1913/homebrew-tap`](https://github.com/bigfish1913/homebrew-tap) | **live** | none — `brew tap bigfish1913/tap && brew install icers` |
 | Scoop | [`bigfish1913/scoop-bucket`](https://github.com/bigfish1913/scoop-bucket) | **live** | none — `scoop bucket add bigfish1913 <bucket url>` |
 | winget | [0.4.0 PR #453448](https://github.com/microsoft/winget-pkgs/pull/453448) | **submitted** | Microsoft review is pending; this submission does not mean 0.4.0 is available through winget yet |
 
@@ -63,7 +63,7 @@ Two consequences worth knowing:
 - Intel Macs can use `scripts/install.sh` for releases containing that asset,
   or `cargo install ice-cli`. The Homebrew formula currently covers Apple
   silicon on macOS.
-- The assets are named after the **binary** (`ice`), while the crate is
+- The assets are named after the **binary** (`icers`), while the crate is
   `ice-cli`. Anything templating a URL from the crate name is wrong — which is
   why the binstall `pkg-url` uses `{ bin }` and not `{ name }`.
 
@@ -81,10 +81,10 @@ cat /tmp/ice-sha/*.sha256
 Then update, in this order:
 
 1. **binstall** — nothing to change; the URL is templated from `{ version }`.
-2. **Scoop** — `scoop/ice.json`: `version`, the `architecture.64bit.url`, and
+2. **Scoop** — `scoop/icers.json`: `version`, the `architecture.64bit.url`, and
    `architecture.64bit.hash`. `checkver`/`autoupdate` keep later releases
    automatic.
-3. **Homebrew** — `homebrew/ice.rb`: `version` and the three `url`/`sha256`
+3. **Homebrew** — `homebrew/icers.rb`: `version` and the three `url`/`sha256`
    pairs.
 4. **winget** — all three files' `PackageVersion`, the `InstallerUrl`, and the
    **uppercase** `InstallerSha256`.
@@ -111,7 +111,7 @@ gh repo fork microsoft/winget-pkgs --clone=false       # 2. server-side fork, no
 UP=$(gh api repos/microsoft/winget-pkgs/commits/master --jq .sha)
 gh api --method POST repos/<you>/winget-pkgs/git/refs \
   -f ref="refs/heads/ice-$V" -f sha="$UP"               # 3. branch off upstream master
-# 4. PUT each file to manifests/b/bigfish1913/ice/$V/ via the contents API.
+# 4. PUT each file to manifests/b/bigfish1913/icers/$V/ via the contents API.
 #    Use `--input` with a JSON body: the README-sized payloads blow past the
 #    ~32 KB command-line limit if you pass them with -f content=.
 gh pr create --repo microsoft/winget-pkgs --base master --head <you>:ice-$V \
@@ -135,12 +135,12 @@ Verified on this machine:
 - `winget validate packaging/winget` → **Manifest validation succeeded.**
 - Every URL and hash above was read back from the published v0.3.2 assets
   (`gh release download --pattern '*.sha256'`), not copied from a template.
-- `scoop/ice.json` parses, and its `bin` (`ice.exe`) matches the zip's root
+- `scoop/icers.json` parses, and its `bin` (`icers.exe`) matches the zip's root
   entry produced by the workflow's `7z a -tzip … .` step.
 - The published archives themselves were downloaded and hashed here, byte for
   byte: the Windows zip is `c5b572d7…0d7f` and the macOS tarball is
-  `92e1851f…1842`, matching `scoop/ice.json` and `homebrew/ice.rb` exactly. The
-  zip was listed to confirm `ice.exe` really is at the archive root — the thing
+  `92e1851f…1842`, matching `scoop/icers.json` and `homebrew/icers.rb` exactly. The
+  zip was listed to confirm `icers.exe` really is at the archive root — the thing
   `bin` claims and the only reason the Scoop manifest works.
 - Both taps are pushed and public (`bigfish1913/homebrew-tap`,
   `bigfish1913/scoop-bucket`), so their files are fetchable at the URLs the
@@ -150,7 +150,7 @@ Verified on this machine:
 
 - **Homebrew** — no `brew`/`ruby` on this machine, so the formula was never
   syntax-checked or installed, even though it is published. `brew audit
-  --new-formula ice` in the tap is the cheap check.
+  --new-formula icers` in the tap is the cheap check.
 - **binstall** — `cargo-binstall` is not installed here, so the metadata is
   written from the documented schema (`SUPPORT.md` in `cargo-bins/cargo-binstall`)
   but untested. `cargo binstall --no-confirm ice-cli` against the next published

@@ -1,4 +1,4 @@
-# Contributing to ice
+# Contributing to icers
 
 Thanks for taking the time to contribute. This document covers the practical
 details: how to build, what CI requires, and how to get a change merged.

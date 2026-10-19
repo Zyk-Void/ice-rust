@@ -18,7 +18,7 @@ other half.
 ice-extensions = "0.3"
 ```
 
-Most users never depend on this directly — the `ice` CLI uses it, and the
+Most users never depend on this directly — the `icers` CLI uses it, and the
 harness consumes its adapters through injection.
 
 ## What it does
@@ -59,16 +59,16 @@ the dependency graph stays acyclic.
 
 | Location | Scope |
 | -------- | ----- |
-| `.ice/extensions` | Project (preferred) |
-| `~/.ice/agent/extensions` | Global |
+| `.icers/extensions` | Project (preferred) |
+| `~/.icers/agent/extensions` | Global |
 | `--extensions-dir <path>` | Explicit, added by the CLI |
 
 ## Installing and developing
 
 ```bash
-ice install my-extension                  # build from crates.io and install
-ice install my-extension --path ../local  # local development
-ice dev                                   # build + watch + live reload
+icers install my-extension                  # build from crates.io and install
+icers install my-extension --path ../local  # local development
+icers dev                                   # build + watch + live reload
 ```
 
 ## Docs

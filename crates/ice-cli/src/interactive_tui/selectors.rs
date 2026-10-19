@@ -258,7 +258,7 @@ pub(super) fn cycle_prev_model(
 }
 
 /// Build + open the `/session` selector. Lists JSONL session files under the
-/// default session dir (`<cwd>/.ice/sessions`
+/// default session dir (`<cwd>/.icers/sessions`
 /// fallback), newest-first, labelled with the session name or first prompt so
 /// two sessions are distinguishable. Header-only sessions are skipped: there is
 /// nothing to switch to.
@@ -527,7 +527,7 @@ pub(super) fn open_provider_selector(
     if items.is_empty() {
         add_note_message(
             &state.chat_container,
-            "No providers available. Use \"Add new provider\" to configure one in ~/.ice/agent/models.json.",
+            "No providers available. Use \"Add new provider\" to configure one in ~/.icers/agent/models.json.",
         );
         tui.request_render(false);
         return;
@@ -535,7 +535,7 @@ pub(super) fn open_provider_selector(
     // The trailing actions turn the picker into a small management surface.
     items.push(
         SelectItem::new(ADD_PROVIDER_VALUE, "＋ Add new provider")
-            .with_description("Interactive form → writes ~/.ice/agent/models.json")
+            .with_description("Interactive form → writes ~/.icers/agent/models.json")
             .with_search_text("add new provider"),
     );
     items.push(
@@ -699,7 +699,7 @@ pub(super) fn open_provider_remove_selector(
     if items.is_empty() {
         add_note_message(
             &state.chat_container,
-            "No removable providers. Only providers defined in ~/.ice/agent/models.json can be removed.",
+            "No removable providers. Only providers defined in ~/.icers/agent/models.json can be removed.",
         );
         tui.request_render(false);
         return;

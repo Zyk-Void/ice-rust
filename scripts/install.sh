@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the prebuilt `ice` binary from GitHub Releases.
+# Install the prebuilt `icers` binary from GitHub Releases.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.sh | sh
 #
@@ -13,7 +13,7 @@
 set -eu
 
 REPO="Zyk-Void/ice-rust"
-BIN="ice"
+BIN="icers"
 VERSION=""
 INSTALL_DIR=""
 DRY_RUN=0

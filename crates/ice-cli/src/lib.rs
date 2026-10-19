@@ -1,4 +1,4 @@
-//! `pi-cli` — a terminal coding-agent CLI built on the ice library crates.
+//! `pi-cli` — a terminal coding-agent CLI built on the icers library crates.
 //!
 //! It provides the argument surface, provider/model resolution, harness
 //! construction, output modes, and the interactive TUI that a harness-backed
@@ -24,8 +24,8 @@
 //! - **`app`** ([`app`]) — argument dispatch, model resolution, harness build,
 //!   mode dispatch, exit codes.
 //!
-//! Resources load from `.ice/` and `~/.ice/agent/`; extensions are Rust
-//! `cdylib` plugins installed and developed with `ice install` / `ice dev`.
+//! Resources load from `.icers/` and `~/.icers/agent/`; extensions are Rust
+//! `cdylib` plugins installed and developed with `icers install` / `icers dev`.
 
 pub mod agent_session;
 pub mod app;
@@ -71,7 +71,7 @@ pub mod trust;
 pub mod tui_shell;
 pub mod updates;
 
-/// Crate version, surfaced by `ice --version`. Mirrors the TS `VERSION` export
+/// Crate version, surfaced by `icers --version`. Mirrors the TS `VERSION` export
 /// (sourced from `package.json`; here from `env!("CARGO_PKG_VERSION")`).
 ///
 /// Aliases [`ice_plugin_sdk::HOST_VERSION`] so the version the CLI prints and
@@ -81,7 +81,7 @@ pub const VERSION: &str = ice_plugin_sdk::HOST_VERSION;
 
 /// The application name used in help + version output. Mirrors TS `APP_NAME`
 /// (the TS bin is `"pi"`; the Rust crate publishes under the `ice-` namespace,
-/// so the binary + displayed name is `"ice"` to match).
+/// so the binary + displayed name is `"icers"` to match).
 ///
 /// Aliases [`ice_plugin_sdk::HOST_NAME`] — the plugin contract owns the
 /// identity, so an extension can label its output (a trace name, a tag) without

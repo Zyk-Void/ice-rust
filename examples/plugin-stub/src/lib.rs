@@ -1,4 +1,4 @@
-//! `plugin-stub` — a minimal **Rust cdylib** ice plugin.
+//! `plugin-stub` — a minimal **Rust cdylib** icers plugin.
 //!
 //! This is the Part B2 ABI smoke target. The host loads it via `ice-extensions`
 //! (`--extensions-dir examples/plugin-stub`'), which looks up
@@ -29,7 +29,7 @@
 //!
 //! ```sh
 //! cargo build -p plugin-stub
-//! ice --extensions-dir examples/plugin-stub/target/.../echo.dll -p 'echo "hi"'
+//! icers --extensions-dir examples/plugin-stub/target/.../echo.dll -p 'echo "hi"'
 //! ```
 //! (`echo.dll`/`libecho.so`/`libecho.dylib` depending on platform — the loader
 //! recognizes all of `.{dll,so,dylib,pyd}`.)

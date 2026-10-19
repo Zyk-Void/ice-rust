@@ -17,7 +17,7 @@ body:
       label: Area
       multiple: true
       options:
-        - ice-cli (the `ice` binary, CLI flags)
+        - ice-cli (the `icers` binary, CLI flags)
         - ice-tui (interactive terminal UI)
         - ice-agent (agent loop, events, hooks)
         - ice-ai (providers, streaming)
@@ -34,7 +34,7 @@ body:
     id: problem
     attributes:
       label: The problem
-      description: What are you trying to do, and where does ice get in the way today?
+      description: What are you trying to do, and where does icers get in the way today?
     validations:
       required: true
 
@@ -42,7 +42,7 @@ body:
     id: proposal
     attributes:
       label: Proposed solution
-      description: What should ice do instead? Include the interface you would like to use if you have one in mind.
+      description: What should icers do instead? Include the interface you would like to use if you have one in mind.
     validations:
       required: true
 

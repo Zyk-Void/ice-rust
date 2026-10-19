@@ -1,4 +1,4 @@
-//! TCP JSON-RPC client for the `ice --server` endpoint.
+//! TCP JSON-RPC client for the `icers --server` endpoint.
 //!
 //! Wire shape (one JSON object per line), spoken by `ice-package`'s
 //! `ice-server` extension:

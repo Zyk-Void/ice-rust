@@ -11,13 +11,13 @@
 **Title**
 
 ```
-Show HN: ice – A Rust-native coding-agent runtime that is usable as a library
+Show HN: icers – A Rust-native coding-agent runtime that is usable as a library
 ```
 
 **Body**
 
 ```
-ice is a coding-agent runtime in Rust. The part I care about is that the agent
+icers is a coding-agent runtime in Rust. The part I care about is that the agent
 loop is a library, not a CLI you shell out to and scrape: ice-agent + ice-ai is
 enough to run an agent inside your own process with your own event handling.
 
@@ -46,11 +46,11 @@ JSONL command channel, isolated config, both offline:
   install        21.8 MiB vs  ~385 MiB   (~18x)
 
 An earlier version of this post reported 103 ms and 1.7x; that was my bug. The
-harness set pi's `PI_OFFLINE` / `PI_CODING_AGENT_DIR`, which ice does not read —
-it uses `ICE_OFFLINE` / `ICE_CODING_AGENT_DIR` — so ice was silently loading the
-25 plugin DLLs in my real `~/.ice/agent` while pi ran clean. A second bug then
-under-reported ice: the cold-start stopwatch started *after* `spawn()`, hiding ~7 ms of
-process creation. With both fixed: ice's `--version` (17.5 ms) and its usable
+harness set pi's `PI_OFFLINE` / `PI_CODING_AGENT_DIR`, which icers does not read —
+it uses `ICERS_OFFLINE` / `ICERS_CODING_AGENT_DIR` — so icers was silently loading the
+25 plugin DLLs in my real `~/.icers/agent` while pi ran clean. A second bug then
+under-reported icers: the cold-start stopwatch started *after* `spawn()`, hiding ~7 ms of
+process creation. With both fixed: icers's `--version` (17.5 ms) and its usable
 agent (17.7 ms) are equal, so its initialisation is negligible; Pi's two numbers
 differ by ~20 ms, its own agent init on top of Node boot. I have not measured
 tool-loop throughput or long-session memory for either tool.
@@ -206,13 +206,13 @@ Repo: https://github.com/Zyk-Void/ice-rust (MIT)
 **Title**
 
 ```
-[Showcase] ice: a Rust coding-agent runtime split into nine composable crates
+[Showcase] icers: a Rust coding-agent runtime split into nine composable crates
 ```
 
 **Body**
 
 ```
-ice is a coding-agent runtime in Rust, published as nine crates with one-way
+icers is a coding-agent runtime in Rust, published as nine crates with one-way
 dependencies:
 
   ice-telemetry -> ice-ai -> ice-agent -> ice-tools -> ice-harness -> ice-cli
@@ -241,9 +241,9 @@ Design decisions that might be interesting here:
 I also measured startup against the TypeScript original it ports, same machine,
 same JSONL command channel, isolated config, both offline: 9.7x faster to start, 10.7x
 faster to cold start, 7.6x smaller RSS. An earlier run reported 1.7x; that
-was an isolation bug — I set pi's `PI_*` variables but ice reads `ICE_*`, so ice
-kept loading the 25 plugin DLLs in my real `~/.ice/agent` while pi ran clean. A
-second run reported 10 ms because the stopwatch started after `spawn()`; ice's
+was an isolation bug — I set pi's `PI_*` variables but icers reads `ICERS_*`, so icers
+kept loading the 25 plugin DLLs in my real `~/.icers/agent` while pi ran clean. A
+second run reported 10 ms because the stopwatch started after `spawn()`; icers's
 real number is 17.7 ms, essentially its process-creation cost.
 
 Honest gaps: the JS/TS extension bridge is opt-in and incomplete, and
@@ -258,7 +258,7 @@ especially welcome.
 **Title**
 
 ```
-ice: a Rust coding-agent runtime with pluggable providers and fully offline tests
+icers: a Rust coding-agent runtime with pluggable providers and fully offline tests
 ```
 
 **Body**
@@ -302,7 +302,7 @@ https://github.com/Zyk-Void/ice-rust (MIT)
 **Title**
 
 ```
-ice: a Rust-native, library-first coding-agent runtime
+icers: a Rust-native, library-first coding-agent runtime
 ```
 
 **Body** (keep it short; Lobsters rewards substance over marketing)

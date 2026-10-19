@@ -403,7 +403,7 @@ pub trait RuntimeActionHost: Send + Sync {
         _args: serde_json::Value,
         _sink: SideQuestionSink,
     ) -> Result<serde_json::Value, String> {
-        Err("SideQuestion is not supported by this host; upgrade ice".into())
+        Err("SideQuestion is not supported by this host; upgrade icers".into())
     }
 
     /// Refresh the host-side model selector after provider packages reload.
@@ -1358,7 +1358,7 @@ mod tests {
 
     #[test]
     fn runtime_action_from_a_tokio_worker_does_not_block_its_dispatch() {
-        const CHILD: &str = "ICE_RUNTIME_ACTION_WORKER_REGRESSION_CHILD";
+        const CHILD: &str = "ICERS_RUNTIME_ACTION_WORKER_REGRESSION_CHILD";
         if std::env::var_os(CHILD).is_some() {
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(1)

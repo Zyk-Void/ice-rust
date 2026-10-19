@@ -25,7 +25,7 @@ fn changelog_command_shows_current_release_and_all_is_explicit() {
 
 #[test]
 fn startup_changelog_foreign_profile_is_shown_once_and_persisted() {
-    const CHILD: &str = "ICE_CHANGELOG_REGRESSION_CHILD";
+    const CHILD: &str = "ICERS_CHANGELOG_REGRESSION_CHILD";
     if std::env::var_os(CHILD).is_none() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
@@ -190,7 +190,7 @@ fn pasted_images_accept_multiple_quoted_paths_without_consuming_normal_text() {
 }
 
 #[test]
-#[ignore = "set ICE_STATS_DLL to the monitor DLL"]
+#[ignore = "set ICERS_STATS_DLL to the monitor DLL"]
 fn monitor_function_key_works_with_a_draft_without_changing_text() {
     use ice_extensions::{
         dispatch_empty_event, load_session_mixed, NullDiagnostics, RegistrySnapshot,
@@ -206,7 +206,7 @@ fn monitor_function_key_works_with_a_draft_without_changing_text() {
     let session = load_session_mixed(
         &[],
         &[std::path::PathBuf::from(
-            std::env::var("ICE_STATS_DLL").unwrap(),
+            std::env::var("ICERS_STATS_DLL").unwrap(),
         )],
         Arc::new(NullDiagnostics),
         None,
@@ -802,19 +802,19 @@ fn resume_command_omits_the_default_session_dir() {
     assert_eq!(format_resume_command("", cwd, None), None);
     assert_eq!(
         format_resume_command("abc-123", cwd, None).as_deref(),
-        Some("ice --session abc-123")
+        Some("icers --session abc-123")
     );
     // The default dir carries no flag (mirrors upstream).
     let default = crate::session::default_session_dir(cwd);
     assert_eq!(
         format_resume_command("abc-123", cwd, Some(default.as_path())).as_deref(),
-        Some("ice --session abc-123")
+        Some("icers --session abc-123")
     );
     // A custom dir is echoed, quoting when needed.
     let custom = std::path::Path::new("/tmp/my sessions");
     assert_eq!(
         format_resume_command("abc-123", cwd, Some(custom)).as_deref(),
-        Some("ice --session-dir \"/tmp/my sessions\" --session abc-123")
+        Some("icers --session-dir \"/tmp/my sessions\" --session abc-123")
     );
 }
 
@@ -827,8 +827,8 @@ fn quote_shell_arg_quotes_only_when_needed() {
 
 #[test]
 fn trust_command_uses_the_session_cwd_after_process_chdir() {
-    const CHILD_ENV: &str = "ICE_TEST_TRUST_COMMAND_CHILD";
-    const SESSION_CWD_ENV: &str = "ICE_TEST_TRUST_COMMAND_SESSION_CWD";
+    const CHILD_ENV: &str = "ICERS_TEST_TRUST_COMMAND_CHILD";
+    const SESSION_CWD_ENV: &str = "ICERS_TEST_TRUST_COMMAND_SESSION_CWD";
     const TEST_NAME: &str =
         "interactive_tui::tests::trust_command_uses_the_session_cwd_after_process_chdir";
 
@@ -957,7 +957,7 @@ fn tui_startup_settings_use_global_values_without_project_fields() {
 
 #[test]
 fn tui_startup_settings_read_native_nested_terminal_block() {
-    // upstream nests these under `terminal`; ice's flat keys stay
+    // upstream nests these under `terminal`; icers's flat keys stay
     // compatible and the nested block is the fallback.
     let global = crate::settings::Settings {
         terminal: Some(crate::settings::TerminalSettings {
@@ -1100,7 +1100,7 @@ fn test_layout_renders_welcome_message() {
 
     let all: String = frame.lines.join("\n");
     assert!(
-        all.contains("ice"),
+        all.contains("icers"),
         "Welcome message not found. Rendered: {}",
         all
     );
@@ -1119,18 +1119,18 @@ fn test_chat_container_has_welcome_content() {
         &["read".into(), "bash".into(), "web_fetch".into()],
         &["rust-review".into(), "release".into()],
         &[
-            "/project/.ice/SYSTEM.md".into(),
+            "/project/.icers/SYSTEM.md".into(),
             "/project/AGENTS.md".into(),
         ],
     );
 
     let lines = chat.render(80);
     let all: String = lines.join("\n");
-    // Welcome title is "ice" (accent bold) + "interactive TUI" (muted),
+    // Welcome title is "icers" (accent bold) + "interactive TUI" (muted),
     // joined by an ANSI reset — strip ANSI before checking the substring.
     let plain = strip_ansi(&all);
     assert!(
-        plain.contains("ice"),
+        plain.contains("icers"),
         "Welcome message not in chat container: {:?}",
         lines
     );
@@ -1141,7 +1141,7 @@ fn test_chat_container_has_welcome_content() {
     );
     assert!(plain.contains("Skills (2)"), "Skill count missing: {plain}");
     assert!(plain.contains("Context (2)"));
-    assert!(plain.contains("/project/.ice/SYSTEM.md"));
+    assert!(plain.contains("/project/.icers/SYSTEM.md"));
     assert!(plain.contains("/project/AGENTS.md"));
     assert!(
         plain.contains("rust-review · release"),
@@ -1196,7 +1196,7 @@ fn welcome_header_renders_the_brand_mark() {
         "brand mark missing: {all}"
     );
     assert!(
-        all.contains("ice"),
+        all.contains("icers"),
         "the mark must carry the product name: {all}"
     );
 
@@ -1216,14 +1216,14 @@ fn update_notices_render_inside_the_transcript() {
     let chat = Arc::new(Container::new());
     let report = crate::updates::UpdateReport {
         notices: vec![crate::updates::UpdateNotice {
-            name: "ice".into(),
+            name: "icers".into(),
             current: "0.1.10".into(),
             latest: "0.1.11".into(),
-            command: "ice update".into(),
+            command: "icers update".into(),
         }],
         warnings: vec![crate::updates::UpdateWarning {
-            message: "The previously scheduled ice update failed: access denied".into(),
-            command: "ice update".into(),
+            message: "The previously scheduled icers update failed: access denied".into(),
+            command: "icers update".into(),
         }],
     };
 
@@ -1233,12 +1233,12 @@ fn update_notices_render_inside_the_transcript() {
     let plain = strip_ansi(&chat.render(80).join("\n"));
     assert!(plain.contains("Update Failed"), "{plain}");
     assert!(
-        plain.contains("ice update failed: access denied"),
+        plain.contains("icers update failed: access denied"),
         "{plain}"
     );
     assert!(plain.contains("Update Available"), "{plain}");
     assert!(plain.contains("New version 0.1.11 is available"), "{plain}");
-    assert!(plain.contains("ice update"), "{plain}");
+    assert!(plain.contains("icers update"), "{plain}");
 }
 
 #[test]
@@ -1257,7 +1257,7 @@ fn package_updates_render_without_an_ice_update() {
         name: "ice-im-message".into(),
         current: "0.1.9".into(),
         latest: "0.1.10".into(),
-        command: "ice install ice-im-message".into(),
+        command: "icers install ice-im-message".into(),
     };
 
     for include_ice in [false, true] {
@@ -1268,10 +1268,10 @@ fn package_updates_render_without_an_ice_update() {
         };
         if include_ice {
             report.notices.push(crate::updates::UpdateNotice {
-                name: "ice".into(),
+                name: "icers".into(),
                 current: "0.3.20".into(),
                 latest: "0.3.21".into(),
-                command: "ice update".into(),
+                command: "icers update".into(),
             });
         }
 
@@ -1286,7 +1286,7 @@ fn package_updates_render_without_an_ice_update() {
             !plain.contains(&format!("{}.", package_notice.command)),
             "{plain}"
         );
-        assert_eq!(plain.contains("ice update"), include_ice, "{plain}");
+        assert_eq!(plain.contains("icers update"), include_ice, "{plain}");
     }
 }
 
@@ -2304,7 +2304,7 @@ fn command_package_manifest(
             id,
             "http://localhost:8080/v1",
         )],
-        api_key_env: Some("ICE_TEST_PROVIDER_COMMAND_KEY".into()),
+        api_key_env: Some("ICERS_TEST_PROVIDER_COMMAND_KEY".into()),
         requires_auth,
     }
 }
@@ -2324,7 +2324,7 @@ fn login_provider_items_are_provider_scoped_and_exclude_anonymous_packages() {
         assert!(deepseek
             .description
             .as_deref()
-            .is_some_and(|text| text.contains("ICE_TEST_PROVIDER_COMMAND_KEY")));
+            .is_some_and(|text| text.contains("ICERS_TEST_PROVIDER_COMMAND_KEY")));
         assert!(!items.iter().any(|item| item.value == "llama-cpp"));
         assert!(items.iter().any(|item| item.value == "anthropic"));
         assert!(items.iter().any(|item| item.value == "openai"));
@@ -2430,7 +2430,7 @@ fn package_catalog_resolves_header_references_without_binding_credentials() {
     with_isolated_config_dir(|| {
         let manifests = vec![command_package_manifest("package-gateway", "model", true)];
         let cfg = serde_json::from_value(serde_json::json!({"providers":{"package-gateway":{
-            "apiKey":"secret-value", "headers":{"Authorization":"$ICE_TEST_MISSING_PACKAGE_HEADER"}, "models":[]
+            "apiKey":"secret-value", "headers":{"Authorization":"$ICERS_TEST_MISSING_PACKAGE_HEADER"}, "models":[]
         }}})).unwrap();
         crate::config::save_models_config(&cfg).unwrap();
         let catalog = crate::provider::catalog_with_manifests(&manifests).unwrap();
@@ -2446,12 +2446,12 @@ fn package_catalog_resolves_header_references_without_binding_credentials() {
 fn provider_package_key_status_uses_its_declared_environment() {
     with_isolated_config_dir(|| {
         let manifest = command_package_manifest("openrouter", "openrouter/auto", true);
-        let previous = std::env::var_os("ICE_TEST_PROVIDER_COMMAND_KEY");
-        std::env::set_var("ICE_TEST_PROVIDER_COMMAND_KEY", "package-key");
+        let previous = std::env::var_os("ICERS_TEST_PROVIDER_COMMAND_KEY");
+        std::env::set_var("ICERS_TEST_PROVIDER_COMMAND_KEY", "package-key");
         let items = provider_selector_items(&[manifest], None);
         match previous {
-            Some(value) => std::env::set_var("ICE_TEST_PROVIDER_COMMAND_KEY", value),
-            None => std::env::remove_var("ICE_TEST_PROVIDER_COMMAND_KEY"),
+            Some(value) => std::env::set_var("ICERS_TEST_PROVIDER_COMMAND_KEY", value),
+            None => std::env::remove_var("ICERS_TEST_PROVIDER_COMMAND_KEY"),
         }
         let router = items
             .iter()

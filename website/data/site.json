@@ -86,7 +86,7 @@
       "label": "Minimal agent",
       "file": "examples/minimal/src/main.rs",
       "note": "确定性的本地 provider，不需要 API key。",
-      "code": "use ice_agent::AgentBuilder;\nuse ice_ai::providers::faux::{FauxProvider, FauxScript};\n\n#[tokio::main]\nasync fn main() {\n    let script = FauxScript::new()\n        .with_text(\"Hello from ice!\");\n    let provider = FauxProvider::new(script);\n    let model = provider.default_model().clone();\n\n    let agent = AgentBuilder::new()\n        .model(model)\n        .stream_fn(make_stream_fn(provider))\n        .build()\n        .expect(\"agent builds\");\n\n    agent.prompt(\"hi\").await.expect(\"prompt completes\");\n}\n"
+      "code": "use ice_agent::AgentBuilder;\nuse ice_ai::providers::faux::{FauxProvider, FauxScript};\n\n#[tokio::main]\nasync fn main() {\n    let script = FauxScript::new()\n        .with_text(\"Hello from icers!\");\n    let provider = FauxProvider::new(script);\n    let model = provider.default_model().clone();\n\n    let agent = AgentBuilder::new()\n        .model(model)\n        .stream_fn(make_stream_fn(provider))\n        .build()\n        .expect(\"agent builds\");\n\n    agent.prompt(\"hi\").await.expect(\"prompt completes\");\n}\n"
     },
     {
       "id": "tools",
@@ -113,7 +113,7 @@
       "version": "future",
       "status": "exploring",
       "title": "你的想法",
-      "description": "把 ice 接进你的产品、工作流和自己的运行环境。"
+      "description": "把 icers 接进你的产品、工作流和自己的运行环境。"
     }
   ]
 }

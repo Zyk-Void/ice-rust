@@ -73,12 +73,12 @@ fn validate<'a>(
     }
     if distribution.binary.path
         != if target.contains("windows") {
-            "ice.exe"
+            "icers.exe"
         } else {
-            "ice"
+            "icers"
         }
     {
-        return Err("CLI manifest must declare the flat ice executable filename".into());
+        return Err("CLI manifest must declare the flat icers executable filename".into());
     }
     for sha in [&distribution.sha256, &distribution.binary.sha256] {
         if sha.len() != 64
@@ -98,11 +98,11 @@ pub(crate) async fn download_to(version: &str, staging: &Path) -> Result<(), Str
     let target = host_target()?;
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(180))
-        .user_agent(format!("ice/{}", crate::VERSION))
+        .user_agent(format!("icers/{}", crate::VERSION))
         .build()
         .map_err(|e| e.to_string())?;
     let url = format!("{REPOSITORY}/releases/download/v{version}/ice-release.json");
-    println!("downloading prebuilt ice {version} for {target}");
+    println!("downloading prebuilt icers {version} for {target}");
     let response = client
         .get(url)
         .timeout(std::time::Duration::from_secs(15))
@@ -234,9 +234,9 @@ mod tests {
     /// Opt-in network smoke uses a local manifest assembled from actual Release
     /// assets. It downloads/stages/executes --version, never replaces the host.
     #[tokio::test]
-    #[ignore = "requires ICE_RELEASE_SMOKE_MANIFEST and GitHub access"]
+    #[ignore = "requires ICERS_RELEASE_SMOKE_MANIFEST and GitHub access"]
     async fn live_github_release_download_and_exact_version_validation() {
-        let path = std::env::var("ICE_RELEASE_SMOKE_MANIFEST").unwrap();
+        let path = std::env::var("ICERS_RELEASE_SMOKE_MANIFEST").unwrap();
         let manifest: Manifest = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
         let staging = tempfile::tempdir().unwrap();
         let client = reqwest::Client::builder()
@@ -270,11 +270,11 @@ mod tests {
         executable[86] = 2;
         let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
         writer
-            .start_file("ice.exe", zip::write::SimpleFileOptions::default())
+            .start_file("icers.exe", zip::write::SimpleFileOptions::default())
             .unwrap();
         writer.write_all(&executable).unwrap();
         let archive = writer.finish().unwrap().into_inner();
-        let manifest = serde_json::json!({"schema_version":1,"name":"ice-cli","version":"1.2.3","repository":REPOSITORY,"tag":"v1.2.3","source_commit":"a".repeat(40),"targets":{"x86_64-pc-windows-msvc":{"url":format!("{REPOSITORY}/releases/download/v1.2.3/ice.zip"),"format":"zip","size":archive.len(),"sha256":hash(&archive),"binary":{"path":"ice.exe","sha256":hash(&executable)}}}});
+        let manifest = serde_json::json!({"schema_version":1,"name":"ice-cli","version":"1.2.3","repository":REPOSITORY,"tag":"v1.2.3","source_commit":"a".repeat(40),"targets":{"x86_64-pc-windows-msvc":{"url":format!("{REPOSITORY}/releases/download/v1.2.3/icers.zip"),"format":"zip","size":archive.len(),"sha256":hash(&archive),"binary":{"path":"icers.exe","sha256":hash(&executable)}}}});
         (manifest, archive)
     }
 
@@ -297,7 +297,7 @@ mod tests {
             ("/source_commit", serde_json::json!("short")),
             (
                 "/targets/x86_64-pc-windows-msvc/binary/path",
-                serde_json::json!("../ice.exe"),
+                serde_json::json!("../icers.exe"),
             ),
             (
                 "/targets/x86_64-pc-windows-msvc/sha256",

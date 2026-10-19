@@ -1,11 +1,11 @@
-# Homebrew formula for ice.
+# Homebrew formula for icers.
 #
-# Not in homebrew-core: that requires notability (stars/forks) ice does not have
-# yet. It works today from a tap — publish this file as `Formula/ice.rb` in a
+# Not in homebrew-core: that requires notability (stars/forks) icers does not have
+# yet. It works today from a tap — publish this file as `Formula/icers.rb` in a
 # repo named `homebrew-tap` under the same owner, then:
 #
 #   brew tap bigfish1913/tap
-#   brew install ice
+#   brew install icers
 #
 # Hashes below are for v0.5.1. See packaging/README.md for the refresh procedure.
 class Ice < Formula
@@ -35,10 +35,10 @@ class Ice < Formula
   end
 
   def install
-    bin.install "ice"
+    bin.install "icers"
   end
 
   test do
-    assert_match "ice", shell_output("#{bin}/ice --version")
+    assert_match "icers", shell_output("#{bin}/icers --version")
   end
 end

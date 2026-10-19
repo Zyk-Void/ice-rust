@@ -1,6 +1,6 @@
-# 从 Prompt 到 AgentEnd：拆解 ice 的流式 Agent Loop
+# 从 Prompt 到 AgentEnd：拆解 icers 的流式 Agent Loop
 
-> 很多 Agent CLI 把模型调用、工具执行和终端输出揉在一起。ice 把它们拆成 `ice-ai`、`ice-agent` 与上层 Harness，让同一套 loop 既能嵌入 Rust 服务，也能驱动终端 CLI。
+> 很多 Agent CLI 把模型调用、工具执行和终端输出揉在一起。icers 把它们拆成 `ice-ai`、`ice-agent` 与上层 Harness，让同一套 loop 既能嵌入 Rust 服务，也能驱动终端 CLI。
 
 ## 一次运行经过什么
 
@@ -48,7 +48,7 @@ use ice_ai::Provider;
 #[tokio::main]
 async fn main() {
     let provider = Arc::new(FauxProvider::new(
-        FauxScript::new().with_text("Hello from ice"),
+        FauxScript::new().with_text("Hello from icers"),
     ));
     let model = provider.default_model().clone();
     let agent = AgentBuilder::new()
@@ -81,11 +81,11 @@ async fn main() {
 
 ## English version
 
-# From a Prompt to `AgentEnd`: Reading ice’s Streaming Agent Loop
+# From a Prompt to `AgentEnd`: Reading icers’s Streaming Agent Loop
 
-A coding agent has to do more than call a model. It streams partial output, runs tools, accepts new input, and reports state changes. ice keeps these jobs in separate layers: `ice-ai` owns model-facing types, `ice-agent` runs the loop, and the CLI consumes the events.
+A coding agent has to do more than call a model. It streams partial output, runs tools, accepts new input, and reports state changes. icers keeps these jobs in separate layers: `ice-ai` owns model-facing types, `ice-agent` runs the loop, and the CLI consumes the events.
 
-The important boundary is `StreamFn`. It returns ice’s event stream instead of exposing an Anthropic or OpenAI response object. The loop stays the same when the provider changes. A tool call becomes a `ToolResult`, the result returns to context, and the loop requests the next turn.
+The important boundary is `StreamFn`. It returns icers’s event stream instead of exposing an Anthropic or OpenAI response object. The loop stays the same when the provider changes. A tool call becomes a `ToolResult`, the result returns to context, and the loop requests the next turn.
 
 The faux provider follows the same path without an API key or network. That makes examples and regression tests repeatable. Start with `examples/minimal`, then read `crates/ice-agent/src/agent.rs` and `stream_fn.rs`.
 

@@ -4,14 +4,14 @@
 #   sh scripts/bench.sh
 #
 # Reports the release binary size and the median wall-clock time of a short
-# no-network command (`ice --version`). Timing uses python3 when available,
+# no-network command (`icers --version`). Timing uses python3 when available,
 # because `date` has no sub-second precision that is portable across Linux,
 # macOS and MSYS.
 
 set -eu
 
 RUNS="${RUNS:-7}"
-BIN_NAME="ice"
+BIN_NAME="icers"
 
 log() { printf '%s\n' "$*"; }
 

@@ -62,8 +62,8 @@ def verify(base_url):
     check(base_url, '/favicon.svg', 200, IMAGE_CACHE, content_type='image/svg+xml')
     check(base_url, '/user-guide.md', 302, 'no-store', location='/guide.html?doc=user-guide')
     for path in (
-        '/.ice', '/.ice/todo.json', '/.deploy/website.tar.gz', '/.git/config',
-        '/nested/.ice/session.json', '/.ICE/todo.json', '/%2eice/todo.json',
+        '/.icers', '/.icers/todo.json', '/.deploy/website.tar.gz', '/.git/config',
+        '/nested/.icers/session.json', '/.ICERS/todo.json', '/%2eice/todo.json',
         '/__ice_missing__.css', '/data/__ice_missing__.json', '/__ice_missing__.html',
     ):
         check(base_url, path, 404, 'no-store')
@@ -71,7 +71,7 @@ def verify(base_url):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('base_urls', nargs='+', help='e.g. https://rpi.laofu.online https://ice.bigfisharc.cn')
+    parser.add_argument('base_urls', nargs='+', help='e.g. https://rpi.laofu.online https://icers.bigfisharc.cn')
     args = parser.parse_args()
     try:
         for base_url in args.base_urls:

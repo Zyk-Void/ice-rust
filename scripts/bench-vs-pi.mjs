@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Compare `ice` against the native TypeScript `pi` coding agent.
+ * Compare `icers` against the native TypeScript `pi` coding agent.
  *
  * Both tools are measured the same way, on the same machine, in the same shell:
  *
@@ -23,12 +23,12 @@
  * Fairness rules applied to both sides:
  *   - `PI_OFFLINE=1` and a fresh, empty `PI_CODING_AGENT_DIR` per run, so neither
  *     performs network work and neither reads machine-specific config,
- *     extensions or sessions. ice uses **its own** variable names
- *     (`ICE_OFFLINE` / `ICE_CODING_AGENT_DIR`), so the harness sets those too —
- *     setting only the `PI_*` names leaves ice pointed at the real
- *     `~/.ice/agent` and silently loads the machine's global plugin set, which
+ *     extensions or sessions. icers uses **its own** variable names
+ *     (`ICERS_OFFLINE` / `ICERS_CODING_AGENT_DIR`), so the harness sets those too —
+ *     setting only the `PI_*` names leaves icers pointed at the real
+ *     `~/.icers/agent` and silently loads the machine's global plugin set, which
  *     dominates startup and makes the comparison meaningless.
- *   - a placeholder `ANTHROPIC_API_KEY` for both tools. ice refuses to build a
+ *   - a placeholder `ANTHROPIC_API_KEY` for both tools. icers refuses to build a
  *     session in an empty config dir without some provider credential, so an
  *     isolated run needs one; it is never used because both tools run offline.
  *   - a neutral temporary working directory for both, so neither scans this
@@ -59,7 +59,7 @@ const IS_WINDOWS = process.platform === "win32";
 const MEMORY_RUNS = 3;
 
 function parseArgs(argv) {
-  const options = { pi: null, ice: null, runs: 7, warmup: 2, json: null };
+  const options = { pi: null, icers: null, runs: 7, warmup: 2, json: null };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -69,7 +69,7 @@ function parseArgs(argv) {
       return value;
     };
     if (arg === "--pi") options.pi = next();
-    else if (arg === "--ice") options.ice = next();
+    else if (arg === "--ice") options.icers = next();
     else if (arg === "--runs") options.runs = Number.parseInt(next(), 10);
     else if (arg === "--warmup") options.warmup = Number.parseInt(next(), 10);
     else if (arg === "--json") options.json = next();
@@ -113,13 +113,13 @@ function resolveInvocation(path) {
   return { command: path, args: [], display: path };
 }
 
-/** Locate the release build of `ice` through cargo's target directory. */
+/** Locate the release build of `icers` through cargo's target directory. */
 function resolveIce(explicit) {
   if (explicit) return resolve(explicit);
   const meta = spawnSync("cargo", ["metadata", "--no-deps", "--format-version", "1", "--locked"], { encoding: "utf8" });
-  if (meta.status !== 0) throw new Error("could not run `cargo metadata` to locate the ice binary");
+  if (meta.status !== 0) throw new Error("could not run `cargo metadata` to locate the icers binary");
   const targetDir = JSON.parse(meta.stdout).target_directory;
-  const candidate = join(targetDir, "release", IS_WINDOWS ? "ice.exe" : "ice");
+  const candidate = join(targetDir, "release", IS_WINDOWS ? "icers.exe" : "icers");
   if (existsSync(candidate)) return candidate;
   throw new Error(`no release build found at ${candidate}. Run: cargo build -p ice-cli --release`);
 }
@@ -164,11 +164,11 @@ function runEnvironment(agentDir) {
     PI_OFFLINE: "1",
     PI_SKIP_VERSION_CHECK: "1",
     PI_CODING_AGENT_DIR: agentDir,
-    // ice — same isolation, its own variable names. Without these ice ignores the
-    // PI_* vars above and loads the real ~/.ice/agent (global extensions included).
-    ICE_OFFLINE: "1",
-    ICE_CODING_AGENT_DIR: agentDir,
-    // Real credentials are cleared. The placeholder only lets ice resolve a
+    // icers — same isolation, its own variable names. Without these icers ignores the
+    // PI_* vars above and loads the real ~/.icers/agent (global extensions included).
+    ICERS_OFFLINE: "1",
+    ICERS_CODING_AGENT_DIR: agentDir,
+    // Real credentials are cleared. The placeholder only lets icers resolve a
     // default model in an otherwise empty config dir; offline, it is never sent.
     ANTHROPIC_API_KEY: "bench-placeholder",
     ANTHROPIC_AUTH_TOKEN: "",
@@ -292,10 +292,10 @@ async function main() {
 
   const piPath = resolve(options.pi);
   if (!existsSync(piPath)) throw new Error(`pi not found at ${piPath}`);
-  const icePath = resolveIce(options.ice);
+  const icePath = resolveIce(options.icers);
 
   const tools = [
-    { name: "ice", kind: "Rust", path: icePath },
+    { name: "icers", kind: "Rust", path: icePath },
     { name: "pi", kind: "TypeScript", path: piPath },
   ].map((tool) => ({ ...tool, invocation: resolveInvocation(tool.path) }));
 
@@ -379,17 +379,17 @@ async function main() {
     rmSync(scratch, { recursive: true, force: true });
   }
 
-  const ice = results.ice;
+  const icers = results.icers;
   const pi = results.pi;
   const rows = [
-    ["`--version` (median)", ms(ice.versionMs), ms(pi.versionMs), `${(pi.versionMs / ice.versionMs).toFixed(1)}× faster`],
-    ["Cold start (median)", ms(ice.coldStartMs), ms(pi.coldStartMs), `${(pi.coldStartMs / ice.coldStartMs).toFixed(1)}× faster`],
+    ["`--version` (median)", ms(icers.versionMs), ms(pi.versionMs), `${(pi.versionMs / icers.versionMs).toFixed(1)}× faster`],
+    ["Cold start (median)", ms(icers.coldStartMs), ms(pi.coldStartMs), `${(pi.coldStartMs / icers.coldStartMs).toFixed(1)}× faster`],
   ];
-  if (ice.rssAtReadyBytes && pi.rssAtReadyBytes) {
-    rows.push(["RSS at ready", mib(ice.rssAtReadyBytes), mib(pi.rssAtReadyBytes), `${(pi.rssAtReadyBytes / ice.rssAtReadyBytes).toFixed(1)}× smaller`]);
+  if (icers.rssAtReadyBytes && pi.rssAtReadyBytes) {
+    rows.push(["RSS at ready", mib(icers.rssAtReadyBytes), mib(pi.rssAtReadyBytes), `${(pi.rssAtReadyBytes / icers.rssAtReadyBytes).toFixed(1)}× smaller`]);
   }
 
-  console.log(`| Metric | ${ice.label} | ${pi.label} | Difference |`);
+  console.log(`| Metric | ${icers.label} | ${pi.label} | Difference |`);
   console.log("| ------ | ---------: | ----------: | ---------- |");
   for (const [metric, left, right, ratio] of rows) console.log(`| ${metric} | ${left} | ${right} | **${ratio}** |`);
 

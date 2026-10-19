@@ -1,11 +1,11 @@
-//! Rust-native (cdylib) plugin loader + `AgentTool` adapter for ice.
+//! Rust-native (cdylib) plugin loader + `AgentTool` adapter for icers.
 //!
-//! This is Part B1 of the extension-alignment plan. `ice` loads extensions as
+//! This is Part B1 of the extension-alignment plan. `icers` loads extensions as
 //! **compiled Rust cdylibs** (`.dll`/`.so`/`.dylib`) via `libloading` — **not**
 //! TS/jiti — because we control both sides and the plugin is Rust
 //! (`动态加载可以加载rs 的代码 没必要是 ts`). The ABI contract lives in
 //! [`ice_plugin_sdk`]; this crate is the **host side** that loads plugins and
-//! bridges their tools/events into ice's native async types.
+//! bridges their tools/events into icers's native async types.
 //!
 //! ## Crate DAG position
 //!
@@ -271,7 +271,7 @@ impl HostApi {
             ),
         };
         ice_plugin_sdk::PluginApi {
-            abi_version: ice_plugin_sdk::ICE_PLUGIN_ABI_VERSION_UNIFIED,
+            abi_version: ice_plugin_sdk::ICERS_PLUGIN_ABI_VERSION_UNIFIED,
             struct_size: std::mem::size_of::<ice_plugin_sdk::PluginApi>() as u32,
             free_string: host_free_string,
             register_tool: Some(trampoline_register_tool),

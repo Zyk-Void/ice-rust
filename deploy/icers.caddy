@@ -1,14 +1,14 @@
-# rpi.laofu.online - ice Rust Agent Toolkit static website
-# ice.bigfisharc.cn is generated from this block by the server's gen_bigfisharc.py.
+# rpi.laofu.online - icers Rust Agent Toolkit static website
+# icers.bigfisharc.cn is generated from this block by the server's gen_bigfisharc.py.
 rpi.laofu.online {
     encode gzip
-    root * /var/www/ice
+    root * /var/www/icers
 
     # Keep header ordering explicit: errors/redirects must not inherit a cache TTL.
     route {
         header Cache-Control "no-store"
 
-        @private path_regexp private (?i)(^|/)\.(ice|deploy|git)(/|$)
+        @private path_regexp private (?i)(^|/)\.(icers|deploy|git)(/|$)
         respond @private 404
 
         # Direct Markdown visits open the rendered guide (guide.js fetches content/*.html).
@@ -27,7 +27,7 @@ rpi.laofu.online {
         header @images Cache-Control "public, max-age=3600, s-maxage=86400"
 
         file_server {
-            hide .ice .deploy .git
+            hide .icers .deploy .git
         }
     }
 

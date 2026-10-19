@@ -1,4 +1,4 @@
-//! Build the independent ice-subagents DLL, then set ICE_TEST_SUBAGENT_LIBRARY.
+//! Build the independent ice-subagents DLL, then set ICERS_TEST_SUBAGENT_LIBRARY.
 //! Exercises the real ABI while all model responses and files remain local.
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -22,8 +22,8 @@ mod lifetime;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn real_subagent_plugin_inherits_project_tools_model_and_parent_approval_ui() {
-    let Some(path) = std::env::var_os("ICE_TEST_SUBAGENT_LIBRARY") else {
-        eprintln!("SKIP: build ice-subagents and set ICE_TEST_SUBAGENT_LIBRARY");
+    let Some(path) = std::env::var_os("ICERS_TEST_SUBAGENT_LIBRARY") else {
+        eprintln!("SKIP: build ice-subagents and set ICERS_TEST_SUBAGENT_LIBRARY");
         return;
     };
     let path = PathBuf::from(path);

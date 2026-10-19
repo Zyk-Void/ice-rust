@@ -5,7 +5,7 @@
 //! source checkout or network request. Optional remote fetching remains
 //! available to consumers, with the same versioned-entry parser.
 //!
-//! The remote URL is overridable with `ICE_CHANGELOG_URL` so a fork can point at
+//! The remote URL is overridable with `ICERS_CHANGELOG_URL` so a fork can point at
 //! its own changelog without a rebuild.
 
 use serde::{Deserialize, Serialize};
@@ -22,13 +22,13 @@ pub struct ChangelogEntry {
     pub content: String,
 }
 
-/// Default remote changelog URL. Overridable via `ICE_CHANGELOG_URL`.
+/// Default remote changelog URL. Overridable via `ICERS_CHANGELOG_URL`.
 pub const DEFAULT_CHANGELOG_URL: &str =
     "https://raw.githubusercontent.com/zyk-void/ice-rust/main/CHANGELOG.md";
 
-/// The remote changelog URL to use, honoring `ICE_CHANGELOG_URL`.
+/// The remote changelog URL to use, honoring `ICERS_CHANGELOG_URL`.
 pub fn changelog_url() -> String {
-    std::env::var("ICE_CHANGELOG_URL").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())
+    std::env::var("ICERS_CHANGELOG_URL").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())
 }
 
 /// Parse a semver-ish heading like `## 1.2.3` / `# 1.2.3` / `## v1.2.3`.
@@ -128,8 +128,8 @@ pub fn latest_release(entries: &[ChangelogEntry], current_version: &str) -> Vec<
         .collect()
 }
 
-/// Migrate only legacy markers that name a release in ice's bundled history.
-/// A foreign version (for example Pi 0.85.1) must not suppress ice updates.
+/// Migrate only legacy markers that name a release in icers's bundled history.
+/// A foreign version (for example Pi 0.85.1) must not suppress icers updates.
 pub fn ice_baseline<'a>(
     entries: &[ChangelogEntry],
     dedicated: Option<&'a str>,
@@ -164,7 +164,7 @@ pub fn startup_changelog(
     startup_changelog_for_profile(entries, last_version, current_version, has_messages, false)
 }
 
-/// Existing profiles without an ice baseline see the current release once;
+/// Existing profiles without an icers baseline see the current release once;
 /// genuinely fresh installs record a baseline without replaying old history.
 pub fn startup_changelog_for_profile(
     entries: &[ChangelogEntry],
@@ -224,7 +224,7 @@ pub async fn fetch_changelog(allow_network: bool) -> Result<Option<String>, Stri
     }
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(15))
-        .user_agent(format!("ice/{}", crate::VERSION))
+        .user_agent(format!("icers/{}", crate::VERSION))
         .build()
         .map_err(|e| e.to_string())?;
     let response = client

@@ -569,7 +569,7 @@ impl Drop for ActiveRunLease<'_> {
 /// restating their request.
 ///
 /// Upstream resumes the interrupted operation in place (`driveOperation`
-/// re-enters at `state.at`). ice's run has no durable re-entry point, so the
+/// re-enters at `state.at`). icers's run has no durable re-entry point, so the
 /// equivalent is to start a run with **no new prompt**: the branch already
 /// ends with the resolved tool results, so the next thing the loop does is
 /// exactly what the interrupted run would have done next — ask the provider
@@ -3813,7 +3813,7 @@ impl AgentHarness {
         // loop's only other exit is "the model stopped asking for tools", which
         // nothing bounds — one observed session ran 112 turns / 867s in a single
         // run (`docs/debugging/llm-repetition-forensics.md` §二). Upstream has no such
-        // ceiling either, so this is **off unless** `ICE_MAX_TURNS_PER_RUN=<n>`
+        // ceiling either, so this is **off unless** `ICERS_MAX_TURNS_PER_RUN=<n>`
         // asks for it; when off the hook stays `None` and the loop is unchanged.
         let run_budget = Arc::new(Mutex::new(match self.max_turns {
             Some(limit) => crate::run_budget::RunBudget::new(limit),

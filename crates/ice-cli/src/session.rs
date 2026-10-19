@@ -6,8 +6,8 @@
 //! v1 scope cuts vs the TS SDK (tracked in `docs/m6-cli-open-questions.md`):
 //! - **Skill / prompt-template / context-file discovery IS wired**
 //!   (`--no-skills`/`-ns`, `--no-prompt-templates`/`-np`, `--no-context-files`/
-//!   `-nc` each suppress one channel; project `.ice/<sub>` + legacy
-//!   `.ice/<sub>` + global
+//!   `-nc` each suppress one channel; project `.icers/<sub>` + legacy
+//!   `.icers/<sub>` + global
 //!   `agent_dir()<sub>` discovery with project-wins dedupe via
 //!   [`crate::resource_dirs`]; SYSTEM.md/APPEND_SYSTEM.md project-wins
 //!   precedence). **Extension `resources_discover` (B5b) feeds the SAME loaders:
@@ -93,7 +93,7 @@ pub fn default_system_prompt(cwd: &str, prior_reasoning_replayed: bool) -> Strin
     };
 
     format!(
-        "You are an expert coding assistant operating inside ice, a coding agent harness. \
+        "You are an expert coding assistant operating inside icers, a coding agent harness. \
 You help users by reading files, executing commands, editing code, and writing new files.
 
 Available tools:
@@ -101,7 +101,7 @@ Available tools:
 - bash  — Execute Bash commands using Bash/POSIX syntax, including on Windows
 - edit  — Find/replace edits to existing files
 - write — Create or overwrite files
-- docs  — Look up ice usage, extension, package, and compatibility documentation
+- docs  — Look up icers usage, extension, package, and compatibility documentation
 
 Guidelines:
 - Reply in the SAME language the user is writing in. Detect the language of the user's
@@ -121,7 +121,7 @@ Guidelines:
   a bug, not progress.
 - Read only what you need. If a file or search result was already shown earlier in this
   conversation, use it instead of fetching it again.
-- When unsure about ice commands, extensions, Pi package compatibility, or .ice configuration, consult the project documentation before guessing
+- When unsure about icers commands, extensions, Pi package compatibility, or .icers configuration, consult the project documentation before guessing
 
 Current working directory: {cwd}"
     )
@@ -186,9 +186,9 @@ pub fn select_session(args: &Args, cwd: &Path) -> SessionSelection {
     }
 }
 
-/// The default session directory is `<cwd>/.ice/sessions`.
+/// The default session directory is `<cwd>/.icers/sessions`.
 pub fn default_session_dir(cwd: &Path) -> PathBuf {
-    cwd.join(".ice").join("sessions")
+    cwd.join(".icers").join("sessions")
 }
 
 /// Extensions are loaded exactly once before model resolution. Their action
@@ -423,7 +423,7 @@ pub async fn build_prepared(
     // ---- System prompt base (precedence: --system-prompt > SYSTEM.md > default) ----
     // Mirrors pi `discoverSystemPromptFile` (`resource-loader.ts:1022-1034`):
     // an explicit `--system-prompt` flag wins; otherwise a discovered
-    // `<cwd>/.ice/SYSTEM.md` wins, then
+    // `<cwd>/.icers/SYSTEM.md` wins, then
     // `<agent_dir>/SYSTEM.md`.
     // (global); otherwise the built-in default. **Project-wins** — the same
     // direction as skills/prompts precedence.
@@ -476,16 +476,16 @@ pub async fn build_prepared(
     // global→ancestor(cwd→root), deepest-last (pi parity).
     //
     // **Trust gate (v1 divergence):** pi gates project config discovery on
-    // `isProjectTrusted()` (global resources are unconditional). ice v1 has no
+    // `isProjectTrusted()` (global resources are unconditional). icers v1 has no
     // trust prompt — project resources are discovered unconditionally (a copied
-    // `.ice/` dir drops in and works). Full trust gating is deferred.
+    // `.icers/` dir drops in and works). Full trust gating is deferred.
     let agent_dir = crate::config::agent_dir().ok();
 
     // ---- B5b: extension resources_discover ----
     // If any plugin registered a `resources_discover` handler, fan the event out
     // (reason "startup") and collect skill/prompt/theme paths. These plugin-
     // contributed paths merge WITH the static Part-A dirs (project
-    // `.ice/skills` +
+    // `.icers/skills` +
     // `agent_dir/skills`, etc.) and the loaders re-run over the union — the
     // coherence point: a plugin's discovered skills land through the SAME loaders
     // as static skills. Static dirs load FIRST so project skills keep winning name
@@ -710,7 +710,7 @@ pub async fn build_prepared(
     // default when its key is absent.
     let saved_settings = crate::settings::load_settings().unwrap_or_default();
 
-    // `httpProxy` applies to ice's own HTTP clients. Setting the environment is how
+    // `httpProxy` applies to icers's own HTTP clients. Setting the environment is how
     // they are configured (`pi-ai/src/http.rs`), and upstream does the same thing
     // with this key — an explicit environment variable still wins, so a shell-level
     // proxy override is not silently replaced by the setting.
@@ -1050,7 +1050,7 @@ pub struct ReloadContext {
     /// A detached mailbox makes `ask_user` fail with "requires an interactive
     /// UI" (headless contract).
     pub ui_dialog: ice_extensions::UiDialogMailbox,
-    /// Active `ice dev` extension builder. `/reload` rebuilds it before
+    /// Active `icers dev` extension builder. `/reload` rebuilds it before
     /// swapping plugin sessions; its watcher signals `mailbox` after a
     /// successful background build.
     pub dev_extension: Option<Arc<crate::dev_extension::DevExtension>>,
@@ -1178,7 +1178,7 @@ async fn reload_extension_resources_inner<F>(
 where
     F: FnOnce() + Send,
 {
-    // Resolve the arguments once for this reload. `ice dev` may append its
+    // Resolve the arguments once for this reload. `icers dev` may append its
     // freshly staged extension directory; every subsequent loader and policy
     // decision must observe that same effective set rather than falling back
     // to the pre-dev snapshot held in `ctx.args`.
@@ -1858,7 +1858,7 @@ pub(crate) fn resolve_project_trust(args: &Args, cwd: &Path) -> bool {
 
 /// Resolve the extension dirs to scan and load the cdylib plugins, returning
 /// the loaded session guard (keeps the `Library` handles alive for the harness
-/// lifetime). Scan order: configured project paths, project `.ice/extensions`,
+/// lifetime). Scan order: configured project paths, project `.icers/extensions`,
 /// configured/global conventional paths, then any
 /// `--extensions-dir` flags (scanned after the defaults — `args.rs`).
 /// Diagnostics are a no-op sink for now; load skips/ABI mismatches surface via
@@ -1934,10 +1934,10 @@ fn merge_extension_tools(
 /// resolution in `createAgentSession`.
 /// Default bash timeout: 120s when the model doesn't pass one (prevents a
 /// forgotten `timeout` from hanging the run forever — the "卡住" report).
-/// `ICE_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
+/// `ICERS_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
 pub fn bash_options() -> ice_tools::tools::bash::BashToolOptions {
     use ice_tools::tools::bash::BashToolOptions;
-    let default = std::env::var("ICE_BASH_TIMEOUT")
+    let default = std::env::var("ICERS_BASH_TIMEOUT")
         .ok()
         .and_then(|v| v.parse::<f64>().ok())
         .unwrap_or(120.0);
@@ -1958,7 +1958,7 @@ fn build_tools(ctx: &ExecutionToolContext, args: &Args) -> Vec<HarnessTool> {
     if args.no_tools {
         return Vec::new();
     }
-    // Keep the coding tools aligned with Pi and expose ice's read-only docs
+    // Keep the coding tools aligned with Pi and expose icers's read-only docs
     // lookup as a default assistant capability.
     //
     // Replay policy (native `ToolDeclaration.replay`): only tools that are
@@ -2527,12 +2527,12 @@ async fn open_session_by_id_in_dir(id: &str, cwd: &str, dir: &Path) -> Result<Se
 ///
 /// - `ToolCallContext` — read per plugin **tool** call, which is why a stale
 ///   value there made a plugin's `todo`-style state follow the wrong session.
-/// - `ICE_SESSION_ID` — read per **turn** by the provider hooks, which is the
+/// - `ICERS_SESSION_ID` — read per **turn** by the provider hooks, which is the
 ///   only channel an observer gets for a pure-chat run. Process-global, which is
 ///   exactly the scope of "the session this process is serving".
 ///
 /// The write overwrites unconditionally, deliberately. An inherited value is not
-/// an override: `ice` spawning `ice` would otherwise hand the child the parent's
+/// an override: `icers` spawning `icers` would otherwise hand the child the parent's
 /// session id, and the child — which is *serving its own* session — would report
 /// it forever. (Children no longer inherit the variable at all; see
 /// `ice_tools::HOST_PRIVATE_ENV`. This overwrite is the second line of defence,
@@ -2632,7 +2632,7 @@ static SESSION_LOCKS: OnceLock<Mutex<Vec<std::fs::File>>> = OnceLock::new();
 
 /// Claim the exclusive lock for a session log.
 ///
-/// Two ice processes appending to one JSONL diverge their `sequence` counters
+/// Two icers processes appending to one JSONL diverge their `sequence` counters
 /// (duplicate / gapped seqs) and corrupt it. The lock is an OS advisory lock on
 /// `<path>.lock`: the second process gets a clear "already open" error instead
 /// of corrupting the log, and the OS releases it automatically when the holder
@@ -2655,7 +2655,7 @@ fn claim_session_lock(session_path: &str) -> Result<(), String> {
         .map_err(|e| format!("open session lock {}: {e}", lock_path.display()))?;
     if fs2::FileExt::try_lock_exclusive(&file).is_err() {
         return Err(format!(
-            "session {session_path} is already open in another ice process"
+            "session {session_path} is already open in another icers process"
         ));
     }
     SESSION_LOCKS
@@ -2863,7 +2863,7 @@ mod tests {
 
     #[test]
     fn loaded_context_paths_track_precedence_and_reload() {
-        const CHILD: &str = "ICE_CONTEXT_PATHS_REGRESSION_CHILD";
+        const CHILD: &str = "ICERS_CONTEXT_PATHS_REGRESSION_CHILD";
         if std::env::var_os(CHILD).is_none() {
             let dir = tempfile::tempdir().unwrap();
             let output = std::process::Command::new(std::env::current_exe().unwrap())
@@ -2891,7 +2891,7 @@ mod tests {
             .block_on(async {
                 let agent = crate::config::agent_dir().unwrap();
                 let cwd = agent.join("project");
-                let project_config = cwd.join(".ice");
+                let project_config = cwd.join(".icers");
                 std::fs::create_dir_all(&project_config).unwrap();
                 for (path, content) in [
                     (agent.join("SYSTEM.md"), "GLOBAL_BASE"),
@@ -3133,14 +3133,14 @@ mod tests {
             "{\"kind\":\"header\",\"version\":4,\"id\":\"abc\",\"createdAt\":1,\"cwd\":\"x\"}\n",
             "{\"kind\":\"fact\",\"seq\":1,\"fact\":\"name\",\"name\":\"fix resume picker\"}\n",
             "{\"kind\":\"record\",\"type\":\"operation_started\",\"id\":\"r1\"}\n",
-            "{\"kind\":\"entry\",\"lane\":\"main\",\"type\":\"message\",\"id\":\"e1\",\"message\":{\"kind\":\"user\",\"role\":\"user\",\"content\":\"read the ice -r picker\"}}\n",
+            "{\"kind\":\"entry\",\"lane\":\"main\",\"type\":\"message\",\"id\":\"e1\",\"message\":{\"kind\":\"user\",\"role\":\"user\",\"content\":\"read the icers -r picker\"}}\n",
             "{\"kind\":\"entry\",\"lane\":\"main\",\"type\":\"message\",\"id\":\"e2\",\"message\":{\"kind\":\"assistant\",\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"second\"}]}}\n",
         );
         std::fs::write(&path, body).unwrap();
         let summary = summarize_session_file(&path);
         assert!(!summary.empty);
         assert_eq!(summary.name.as_deref(), Some("fix resume picker"));
-        assert_eq!(summary.preview.as_deref(), Some("read the ice -r picker"));
+        assert_eq!(summary.preview.as_deref(), Some("read the icers -r picker"));
         std::fs::remove_file(&path).ok();
     }
 
@@ -3393,9 +3393,9 @@ mod tests {
         let agent = tmp.path().join("agent");
         let cwd = tmp.path().join("project");
         std::fs::create_dir_all(&agent).unwrap();
-        std::fs::create_dir_all(cwd.join(".ice")).unwrap();
+        std::fs::create_dir_all(cwd.join(".icers")).unwrap();
         std::fs::write(agent.join("settings.json"), "{}").unwrap();
-        std::fs::write(cwd.join(".ice/settings.json"), "{ malformed").unwrap();
+        std::fs::write(cwd.join(".icers/settings.json"), "{ malformed").unwrap();
         std::env::set_var(crate::config::CONFIG_DIR_ENV, &agent);
         let args = Args::default();
 
@@ -3890,7 +3890,7 @@ mod tests {
         let cwd = Path::new("/proj");
         match select_session(&args, cwd) {
             SessionSelection::New { dir, .. } => {
-                assert_eq!(dir, Path::new("/proj/.ice/sessions"));
+                assert_eq!(dir, Path::new("/proj/.icers/sessions"));
             }
             other => panic!("expected New, got {other:?}"),
         }
@@ -3900,10 +3900,10 @@ mod tests {
     fn default_session_dir_only_uses_ice() {
         let tmp = tempfile::tempdir().unwrap();
         let cwd = tmp.path();
-        std::fs::create_dir_all(cwd.join(".ice/sessions")).unwrap();
-        assert_eq!(default_session_dir(cwd), cwd.join(".ice/sessions"));
-        std::fs::create_dir_all(cwd.join(".ice/sessions")).unwrap();
-        assert_eq!(default_session_dir(cwd), cwd.join(".ice/sessions"));
+        std::fs::create_dir_all(cwd.join(".icers/sessions")).unwrap();
+        assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
+        std::fs::create_dir_all(cwd.join(".icers/sessions")).unwrap();
+        assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -3936,7 +3936,7 @@ mod tests {
     #[test]
     fn host_private_env_matches_the_declared_contract() {
         // 1. The wire values. Pinned literally on purpose: see the doc comment.
-        assert_eq!(ice_plugin_sdk::SESSION_ID_ENV, "ICE_SESSION_ID");
+        assert_eq!(ice_plugin_sdk::SESSION_ID_ENV, "ICERS_SESSION_ID");
         assert_eq!(
             ice_plugin_sdk::SUBAGENT_PARENT_ENV,
             [
@@ -3965,7 +3965,7 @@ mod tests {
         // 3. Narrowness — these name how the *user* configured the run and are
         //    exactly what a command inside the shell should still see.
         for visible in [
-            crate::args::ICE_OFFLINE_ENV,
+            crate::args::ICERS_OFFLINE_ENV,
             crate::config::CONFIG_DIR_ENV,
             "PATH",
         ] {

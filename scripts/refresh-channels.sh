@@ -28,8 +28,8 @@ note() { echo "» $*"; }
 
 cd "$(git rev-parse --show-toplevel)"
 
-OLD=$(grep -m1 -oE '"version": "[0-9.]+"' packaging/scoop/ice.json | grep -oE '[0-9.]+')
-[[ -n "$OLD" ]] || die "could not read the current version from packaging/scoop/ice.json"
+OLD=$(grep -m1 -oE '"version": "[0-9.]+"' packaging/scoop/icers.json | grep -oE '[0-9.]+')
+[[ -n "$OLD" ]] || die "could not read the current version from packaging/scoop/icers.json"
 # Do not skip a same-version rebuild: CI retries must regenerate the checksums.
 
 tmp=$(mktemp -d)
@@ -72,21 +72,21 @@ SHA_WIN_X64=$(sha "$WIN_X64")
 # Homebrew: version + URLs + the three sha256 lines (order in file:
 # apple-darwin, linux aarch64, linux x86_64).
 # --------------------------------------------------------------------------
-note "packaging/homebrew/ice.rb"
-mapfile -t OLD_BREW < <(grep -oE 'sha256 "[0-9a-f]+"' packaging/homebrew/ice.rb | grep -oE '[0-9a-f]{64}')
+note "packaging/homebrew/icers.rb"
+mapfile -t OLD_BREW < <(grep -oE 'sha256 "[0-9a-f]+"' packaging/homebrew/icers.rb | grep -oE '[0-9a-f]{64}')
 [[ "${#OLD_BREW[@]}" -eq 3 ]] || die "expected 3 sha256 lines in the Homebrew formula"
-perl -pi -e "s/version \"$OLD\"/version \"$VERSION\"/; s/v$OLD/v$VERSION/g" packaging/homebrew/ice.rb
-perl -pi -e "s/${OLD_BREW[0]}/$SHA_MAC_ARM/" packaging/homebrew/ice.rb
-perl -pi -e "s/${OLD_BREW[1]}/$SHA_LINUX_ARM/" packaging/homebrew/ice.rb
-perl -pi -e "s/${OLD_BREW[2]}/$SHA_LINUX_X64/" packaging/homebrew/ice.rb
+perl -pi -e "s/version \"$OLD\"/version \"$VERSION\"/; s/v$OLD/v$VERSION/g" packaging/homebrew/icers.rb
+perl -pi -e "s/${OLD_BREW[0]}/$SHA_MAC_ARM/" packaging/homebrew/icers.rb
+perl -pi -e "s/${OLD_BREW[1]}/$SHA_LINUX_ARM/" packaging/homebrew/icers.rb
+perl -pi -e "s/${OLD_BREW[2]}/$SHA_LINUX_X64/" packaging/homebrew/icers.rb
 
 # --------------------------------------------------------------------------
 # Scoop
 # --------------------------------------------------------------------------
-note "packaging/scoop/ice.json"
-OLD_SCOOP=$(grep -m1 -oE '"hash": "[0-9a-fA-F]+"' packaging/scoop/ice.json | grep -oE '[0-9a-fA-F]{64}')
+note "packaging/scoop/icers.json"
+OLD_SCOOP=$(grep -m1 -oE '"hash": "[0-9a-fA-F]+"' packaging/scoop/icers.json | grep -oE '[0-9a-fA-F]{64}')
 [[ -n "$OLD_SCOOP" ]] || die "could not read the Scoop hash"
-perl -pi -e "s/\"version\": \"$OLD\"/\"version\": \"$VERSION\"/; s/v$OLD/v$VERSION/g; s/$OLD_SCOOP/$SHA_WIN_X64/" packaging/scoop/ice.json
+perl -pi -e "s/\"version\": \"$OLD\"/\"version\": \"$VERSION\"/; s/v$OLD/v$VERSION/g; s/$OLD_SCOOP/$SHA_WIN_X64/" packaging/scoop/icers.json
 
 # --------------------------------------------------------------------------
 # winget

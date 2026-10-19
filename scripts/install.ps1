@@ -1,11 +1,11 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-Install the prebuilt ice binary from GitHub Releases on Windows.
+Install the prebuilt icers binary from GitHub Releases on Windows.
 .EXAMPLE
 & .\install.ps1
 .EXAMPLE
-& .\install.ps1 -Version 0.3.19 -Dir "$env:LOCALAPPDATA\Programs\ice" -DryRun
+& .\install.ps1 -Version 0.3.19 -Dir "$env:LOCALAPPDATA\Programs\icers" -DryRun
 .NOTES
 No Rust toolchain or administrator privileges are required. To build from
 source instead, use 'cargo install ice-cli'.
@@ -42,7 +42,7 @@ try {
         if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
             throw 'LOCALAPPDATA is not set; pass -Dir to choose an installation directory.'
         }
-        $Dir = Join-Path $env:LOCALAPPDATA 'Programs\ice'
+        $Dir = Join-Path $env:LOCALAPPDATA 'Programs\icers'
     }
     $Dir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Dir)
 
@@ -108,15 +108,15 @@ try {
 
     $ExtractDir = Join-Path $TempDir 'extracted'
     Expand-Archive -LiteralPath $ArchivePath -DestinationPath $ExtractDir
-    $Source = Join-Path $ExtractDir 'ice.exe'
+    $Source = Join-Path $ExtractDir 'icers.exe'
     if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) {
-        throw 'Archive did not contain ice.exe.'
+        throw 'Archive did not contain icers.exe.'
     }
 
     New-Item -ItemType Directory -Path $Dir -Force | Out-Null
-    $Destination = Join-Path $Dir 'ice.exe'
+    $Destination = Join-Path $Dir 'icers.exe'
     Copy-Item -LiteralPath $Source -Destination $Destination -Force
-    Write-Host "Installed ice $Version to $Destination"
+    Write-Host "Installed icers $Version to $Destination"
 
     if (($env:PATH -split ';') -notcontains $Dir) {
         # Quote literal paths safely, including directories containing apostrophes.
@@ -127,7 +127,7 @@ try {
     }
     & $Destination --version
     if ($LASTEXITCODE -ne 0) {
-        throw "Installed ice could not run --version (exit code $LASTEXITCODE)."
+        throw "Installed icers could not run --version (exit code $LASTEXITCODE)."
     }
 }
 finally {

@@ -1,4 +1,4 @@
-//! Shared wire protocol for ice's headless RPC mode (`--mode rpc`, the server)
+//! Shared wire protocol for icers's headless RPC mode (`--mode rpc`, the server)
 //! and the remote client (`--connect`).
 //!
 //! Single source of truth: the server serializes these types and the client

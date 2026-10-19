@@ -1,8 +1,8 @@
 //! Env-gated key-event tracing for diagnosing terminal input problems
 //! (remote/mobile clients, "Enter inserted a newline", paste-vs-typed Enter…).
 //!
-//! Enable with `ICE_DEBUG_KEYS=1` (appends to `<temp>/ice-keys.log`) or
-//! `ICE_DEBUG_KEYS=<path>` to pick the file. Every key the TUI dispatches is
+//! Enable with `ICERS_DEBUG_KEYS=1` (appends to `<temp>/ice-keys.log`) or
+//! `ICERS_DEBUG_KEYS=<path>` to pick the file. Every key the TUI dispatches is
 //! appended as one line — wall clock, key code, modifiers, event kind, plus a
 //! caller-supplied note (the paste-burst decision, for example):
 //!
@@ -33,7 +33,7 @@ fn target() -> Option<&'static std::path::PathBuf> {
     static TARGET: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
     TARGET
         .get_or_init(|| {
-            let value = std::env::var("ICE_DEBUG_KEYS").ok()?;
+            let value = std::env::var("ICERS_DEBUG_KEYS").ok()?;
             let value = value.trim();
             if value.is_empty() || value == "0" {
                 return None;

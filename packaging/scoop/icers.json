@@ -9,7 +9,7 @@
       "hash": "6c3140c30f92af7cbb64cd0c115f0ce66233ab9b1541e3c6991563dd50bd0d9f"
     }
   },
-  "bin": "ice.exe",
+  "bin": "icers.exe",
   "checkver": {
     "github": "https://github.com/Zyk-Void/ice-rust"
   },

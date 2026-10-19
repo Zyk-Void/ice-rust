@@ -1,4 +1,4 @@
-# ice — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.
+# icers — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.
 [workspace]
 members = [
     "crates/ice-telemetry",
@@ -70,7 +70,7 @@ globset = "=0.4.15"
 dirs = "5"
 rpassword = "7"
 
-# ice internal crates (package names and directories both use the `ice-` prefix).
+# icers internal crates (package names and directories both use the `ice-` prefix).
 ice-telemetry = { path = "crates/ice-telemetry", version = "0.6.1" }
 ice-ai = { path = "crates/ice-ai", version = "0.6.1" }
 ice-agent = { path = "crates/ice-agent", version = "0.6.1" }

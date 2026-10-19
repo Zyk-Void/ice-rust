@@ -8,7 +8,7 @@ Current release: **0.3.0**. Install with `cargo install ice-cli`.
 
 ## Where the project is now
 
-`ice` is a Rust-native, library-first coding-agent runtime: nine published
+`icers` is a Rust-native, library-first coding-agent runtime: nine published
 crates (`ice-telemetry` → `ice-ai` → `ice-agent` → `ice-tools` →
 `ice-harness` → `ice-cli`, plus `ice-tui`, `ice-plugin-sdk` and
 `ice-extensions`) and a terminal CLI built on them.
@@ -24,7 +24,7 @@ What is solid today:
   veto support.
 - Remote mode: a headless `--server` and a zero-local-resource `--connect`
   client.
-- Resource layout: `.ice/` project resources and `settings.json` keys.
+- Resource layout: `.icers/` project resources and `settings.json` keys.
 
 ## Near term
 
@@ -67,14 +67,14 @@ The ABI and loader work; the ecosystem is thin. Concretely:
 
 ### 5. Startup initialisation (measured)
 
-The benchmark in [`docs/performance/benchmark-vs-pi.md`](docs/performance/benchmark-vs-pi.md) puts ice
+The benchmark in [`docs/performance/benchmark-vs-pi.md`](docs/performance/benchmark-vs-pi.md) puts icers
 at **17.7 ms** from spawn to cold start (native Pi: 189.5 ms). Core startup is
 essentially just process creation — config, session store, tool registry and the
-harness are negligible (ice's `--version` and its cold start differ by 0.2 ms).
+harness are negligible (icers's `--version` and its cold start differ by 0.2 ms).
 
 The one real startup cost is **plugin loading**, and it scales with what the user
 installed: the same measurement reads ~100 ms on a machine whose
-`~/.ice/agent/extensions` holds 25 plugin DLLs. So the work here is:
+`~/.icers/agent/extensions` holds 25 plugin DLLs. So the work here is:
 
 - make extension discovery and loading lazy (or parallel) so startup does not
   scale with the number of installed plugins;
@@ -82,7 +82,7 @@ installed: the same measurement reads ~100 ms on a machine whose
   accepted", not "the work was deferred somewhere later".
 
 Reproduce with `node scripts/bench-vs-pi.mjs`. Set **both** tools' isolation
-variables (`ICE_*` for ice, `PI_*` for pi) or the ice number will include your
+variables (`ICERS_*` for icers, `PI_*` for pi) or the icers number will include your
 global plugins.
 
 Still unmeasured and worth adding: tool-loop throughput, memory growth over a
@@ -117,7 +117,7 @@ catalog registration, credential isolation and migration details.
 
 ## Not planned
 
-- A hosted service. `ice` is a library and a local tool; there is no plan to
+- A hosted service. `icers` is a library and a local tool; there is no plan to
   run inference or store user sessions on project infrastructure.
 - A visual/GUI application. The TUI and the JSONL remote protocol are the
   supported interfaces.

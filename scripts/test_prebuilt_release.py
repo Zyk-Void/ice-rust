@@ -23,7 +23,7 @@ class ReleaseManifestTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         for target in prebuilt.TARGETS:
             windows = "windows" in target
-            filename = "ice.exe" if windows else "ice"
+            filename = "icers.exe" if windows else "icers"
             asset = self.root / f"ice-v1.2.3-{target}.{'zip' if windows else 'tar.gz'}"
             binary = b"test executable " + target.encode()
             if windows:
@@ -45,7 +45,7 @@ class ReleaseManifestTests(unittest.TestCase):
         self.assertEqual(manifest["name"], "ice-cli")
         self.assertEqual(manifest["tag"], "v1.2.3")
         for target, row in manifest["targets"].items():
-            self.assertEqual(row["binary"]["path"], "ice.exe" if "windows" in target else "ice")
+            self.assertEqual(row["binary"]["path"], "icers.exe" if "windows" in target else "icers")
             self.assertEqual(len(row["binary"]["sha256"]), 64)
 
     def test_missing_platform_is_not_a_ready_release(self):

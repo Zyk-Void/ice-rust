@@ -1,17 +1,17 @@
-//! `ice events …` — inspect the extension event journal (P3).
+//! `icers events …` — inspect the extension event journal (P3).
 //!
-//! The journal is written only when `ICE_EVENT_LOG=1` is set (see
+//! The journal is written only when `ICERS_EVENT_LOG=1` is set (see
 //! [`ice_extensions::event_log`]). This subcommand reads the same file:
 //!
-//! - `ice events path` — print the resolved log path.
-//! - `ice events tail` — print the log and follow new entries (Ctrl+C to stop).
+//! - `icers events path` — print the resolved log path.
+//! - `icers events tail` — print the log and follow new entries (Ctrl+C to stop).
 
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::time::Duration;
 
 use crate::app::{EXIT_RUNTIME, EXIT_USAGE};
 
-/// Dispatch `ice events <subcommand>`.
+/// Dispatch `icers events <subcommand>`.
 pub async fn run(args: &[String]) -> i32 {
     match args.first().map(String::as_str) {
         Some("tail") => tail().await,
@@ -21,7 +21,7 @@ pub async fn run(args: &[String]) -> i32 {
                 0
             }
             None => {
-                eprintln!("error: could not resolve the event log path (set ICE_EVENT_LOG_PATH)");
+                eprintln!("error: could not resolve the event log path (set ICERS_EVENT_LOG_PATH)");
                 EXIT_RUNTIME
             }
         },
@@ -38,13 +38,13 @@ pub async fn run(args: &[String]) -> i32 {
 }
 
 fn print_help() {
-    println!("Usage: ice events <command>");
+    println!("Usage: icers events <command>");
     println!();
     println!("Commands:");
     println!("  path    Print the event log path (JSONL)");
     println!("  tail    Print the log and follow new entries (Ctrl+C to stop)");
     println!();
-    println!("The journal is written only when ICE_EVENT_LOG=1 is set at run time.");
+    println!("The journal is written only when ICERS_EVENT_LOG=1 is set at run time.");
 }
 
 /// Follow the event log, printing complete lines as they appear. Never returns
@@ -52,7 +52,7 @@ fn print_help() {
 /// tick rather than emitted split.
 async fn tail() -> i32 {
     let Some(path) = ice_extensions::event_log_path() else {
-        eprintln!("error: could not resolve the event log path (set ICE_EVENT_LOG_PATH)");
+        eprintln!("error: could not resolve the event log path (set ICERS_EVENT_LOG_PATH)");
         return EXIT_RUNTIME;
     };
     eprintln!("tailing {} — Ctrl+C to stop", path.display());

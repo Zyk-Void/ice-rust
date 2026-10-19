@@ -24,7 +24,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 me=$(gh api user --jq .login) || die "gh is not authenticated"
 branch="ice-$VERSION"
-dir="manifests/b/bigfish1913/ice/$VERSION"
+dir="manifests/b/bigfish1913/icers/$VERSION"
 # Reuse submissions when a job is retried.
 if gh api "repos/microsoft/winget-pkgs/contents/$dir" >/dev/null 2>&1; then
   note "Zyk-Void.ice $VERSION is already in Microsoft winget"

@@ -1,4 +1,4 @@
-//! Real command ABI test. Build ice-btw, set ICE_TEST_BTW_LIBRARY, run this test.
+//! Real command ABI test. Build ice-btw, set ICERS_TEST_BTW_LIBRARY, run this test.
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -14,8 +14,8 @@ use serde_json::{json, Value};
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn real_btw_command_is_owner_bound_and_never_writes_parent_history() {
-    let Some(path) = std::env::var_os("ICE_TEST_BTW_LIBRARY") else {
-        eprintln!("SKIP: build ice-btw and set ICE_TEST_BTW_LIBRARY");
+    let Some(path) = std::env::var_os("ICERS_TEST_BTW_LIBRARY") else {
+        eprintln!("SKIP: build ice-btw and set ICERS_TEST_BTW_LIBRARY");
         return;
     };
     let path = PathBuf::from(path);

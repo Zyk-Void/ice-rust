@@ -58,7 +58,7 @@ cargo test -p ice-extensions --lib side_questions
 cargo test -p ice-harness --lib side_
 ```
 
-Build `ice-package/packages/ice-btw`, set `ICE_TEST_BTW_LIBRARY` to the actual DLL/so/dylib, then run:
+Build `ice-package/packages/ice-btw`, set `ICERS_TEST_BTW_LIBRARY` to the actual DLL/so/dylib, then run:
 
 ```sh
 cargo test -p ice-cli --test btw_package

@@ -1,6 +1,6 @@
-# ice 使用手册
+# icers 使用手册
 
-这是一份面向使用者和扩展作者的 ice 手册。ice 是基于 Pi agent 设计的 Rust 原生 coding-agent：核心能力以 crate 形式提供，`ice` 是开箱即用的 CLI。本文记录当前版本已经实现的命令和行为，随 `ice-cli` 一起发布。
+这是一份面向使用者和扩展作者的 icers 手册。icers 是基于 Pi agent 设计的 Rust 原生 coding-agent：核心能力以 crate 形式提供，`icers` 是开箱即用的 CLI。本文记录当前版本已经实现的命令和行为，随 `ice-cli` 一起发布。
 
 ## 1. 安装
 
@@ -10,8 +10,8 @@
 
 ```bash
 cargo install ice-cli
-ice --version
-ice --help
+icers --version
+icers --help
 ```
 
 从本仓库源码安装开发版本：
@@ -22,7 +22,7 @@ cd ice-rust
 cargo install --path crates/ice-cli --force
 ```
 
-`cargo install` 安装的是可执行文件；它不等同于 `ice install`。后者用于安装由 `ice-plugin-sdk` 构建的 Rust 动态库扩展。
+`cargo install` 安装的是可执行文件；它不等同于 `icers install`。后者用于安装由 `ice-plugin-sdk` 构建的 Rust 动态库扩展。
 
 ### 从源码启动与构建
 
@@ -32,7 +32,7 @@ cargo install --path crates/ice-cli --force
 # 直接启动 CLI
 cargo run -p ice-cli
 
-# 向 CLI 传递参数（`--` 后的内容属于 ice）
+# 向 CLI 传递参数（`--` 后的内容属于 icers）
 cargo run -p ice-cli -- -p "总结 README.md"
 cargo run -p ice-cli -- --mode json -p "列出项目中的 crates"
 
@@ -40,11 +40,11 @@ cargo run -p ice-cli -- --mode json -p "列出项目中的 crates"
 cargo build -p ice-cli --release
 ```
 
-构建完成后，Windows 可执行文件位于 `target/release/ice.exe`，Linux/macOS 下通常为 `target/release/ice`。也可以把本地 CLI 安装到 Cargo 的 bin 目录后直接使用：
+构建完成后，Windows 可执行文件位于 `target/release/icers.exe`，Linux/macOS 下通常为 `target/release/icers`。也可以把本地 CLI 安装到 Cargo 的 bin 目录后直接使用：
 
 ```bash
 cargo install --path crates/ice-cli --force
-ice
+icers
 ```
 
 离线示例（不需要 API Key 或网络）可以使用：
@@ -58,21 +58,21 @@ cargo run -p minimal
 交互模式：
 
 ```bash
-ice
-ice "解释当前项目的目录结构"
+icers
+icers "解释当前项目的目录结构"
 ```
 
 单次输出模式：
 
 ```bash
-ice -p "总结 README.md"
-ice --mode json -p "列出项目的风险"
+icers -p "总结 README.md"
+icers --mode json -p "列出项目的风险"
 ```
 
 通过 `@` 把文件放进第一条消息：
 
 ```bash
-ice @README.md "给出这个项目的改进建议"
+icers @README.md "给出这个项目的改进建议"
 ```
 
 ## 2. 模型和凭据
@@ -82,24 +82,24 @@ ice @README.md "给出这个项目的改进建议"
 当多个来源同时存在时，优先级为：
 
 1. `--api-key`
-2. `~/.ice/auth.json`（由 `ice auth login` 写入）
-3. `~/.ice/agent/models.json` 中对应 provider 的 `apiKey`
+2. `~/.icers/auth.json`（由 `icers auth login` 写入）
+3. `~/.icers/agent/models.json` 中对应 provider 的 `apiKey`
 4. 环境变量
 
 Anthropic 使用 `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN`；OpenAI-compatible provider 使用 `OPENAI_API_KEY`。检查凭据时不会发起网络请求：
 
 ```bash
-ice auth check
-ice auth check --provider gateway --json
-ice auth login
-ice auth logout
+icers auth check
+icers auth check --provider gateway --json
+icers auth login
+icers auth logout
 ```
 
 不要把密钥写入 Git 仓库或项目文档。
 
 ### 自定义 Provider
 
-配置文件默认是 `~/.ice/agent/models.json`，也可以通过 `ICE_CODING_AGENT_DIR` 指定 agent 配置目录：
+配置文件默认是 `~/.icers/agent/models.json`，也可以通过 `ICERS_CODING_AGENT_DIR` 指定 agent 配置目录：
 
 ```jsonc
 {
@@ -127,12 +127,12 @@ ice auth logout
 选择模型：
 
 ```bash
-ice --model gateway/custom-claude -p "hello"
-ice --model openai-gateway/custom-model -p "hello"
-ice --provider gateway --model custom-claude -p "hello"
+icers --model gateway/custom-claude -p "hello"
+icers --model openai-gateway/custom-model -p "hello"
+icers --provider gateway --model custom-claude -p "hello"
 ```
 
-不传 `--model` 时，ice 会优先选择已经认证的模型。标准 Anthropic 凭据存在时使用内置默认模型；只有自定义 gateway 已认证时，会选择该 gateway 的第一个可用模型。
+不传 `--model` 时，icers 会优先选择已经认证的模型。标准 Anthropic 凭据存在时使用内置默认模型；只有自定义 gateway 已认证时，会选择该 gateway 的第一个可用模型。
 
 Anthropic 的兼容网关还可以使用：
 
@@ -181,20 +181,20 @@ ANTHROPIC_AUTH_TOKEN=token
 --server [--port <n>] [--bind <ip>]
                         无头服务端（启动时打印 token）
 --connect <host:port>   远程客户端 TUI（零本地资源）
---token <token>         远程认证 token（也支持环境变量 ICE_SERVER_TOKEN）
+--token <token>         远程认证 token（也支持环境变量 ICERS_SERVER_TOKEN）
 ```
 
 子命令：
 
 ```text
-ice auth login|check|logout
-ice events path|tail    检查扩展事件日志（需 ICE_EVENT_LOG=1）
-ice install <crate>
-ice uninstall <crate>
-ice update                 # 更新 ice CLI 自身
-ice dev [options]          # 开发 Rust 扩展：编译、watch、热重载
-ice dev-local [options]    # 只调试当前 Rust 扩展（隔离模式）
-ice package link|list|unlink # 管理项目本地 Rust 扩展包
+icers auth login|check|logout
+icers events path|tail    检查扩展事件日志（需 ICERS_EVENT_LOG=1）
+icers install <crate>
+icers uninstall <crate>
+icers update                 # 更新 icers CLI 自身
+icers dev [options]          # 开发 Rust 扩展：编译、watch、热重载
+icers dev-local [options]    # 只调试当前 Rust 扩展（隔离模式）
+icers package link|list|unlink # 管理项目本地 Rust 扩展包
 ```
 
 ### 启动资源清单
@@ -212,8 +212,8 @@ ice package link|list|unlink # 管理项目本地 Rust 扩展包
 更新后第一次启动新交互会话，会展示自上次阅读以来的新版本说明，后续启动不再重复。
 恢复已有会话时，提示会延后到下一次新会话。
 
-ice 使用全局 `settings.json` 中的 `lastIceChangelogVersion` 记录已读版本，避免导入的
-`lastChangelogVersion` 干扰。已有配置缺少 ice 标记时，只补充展示当前版本一次；首次安装
+icers 使用全局 `settings.json` 中的 `lastIceChangelogVersion` 记录已读版本，避免导入的
+`lastChangelogVersion` 干扰。已有配置缺少 icers 标记时，只补充展示当前版本一次；首次安装
 直接建立基线。设置 `collapseChangelog: true` 可显示简短更新提示。
 
 ### 跳到最新消息
@@ -230,12 +230,12 @@ ice 使用全局 `settings.json` 中的 `lastIceChangelogVersion` 记录已读�
 把 agent 跑在无头服务端，另一个进程用 TUI 远程驱动。客户端**无任何本地 agent 资源**。
 
 ```bash
-ice --server --port 9899          # 服务端：启动时打印 token
-ice --connect 127.0.0.1:9899 --token <token>   # 客户端
+icers --server --port 9899          # 服务端：启动时打印 token
+icers --connect 127.0.0.1:9899 --token <token>   # 客户端
 
 # 或通过环境变量传递 token
-export ICE_SERVER_TOKEN=<token>
-ice --connect 127.0.0.1:9899
+export ICERS_SERVER_TOKEN=<token>
+icers --connect 127.0.0.1:9899
 ```
 
 服务端默认开启 token 认证（`--no-token` 可关闭）。客户端支持 `/state`、`/model`、
@@ -245,9 +245,9 @@ ice --connect 127.0.0.1:9899
 
 ## 4. 内置工具
 
-默认工具包含 Pi 的 `read`、`bash`、`edit`、`write`，以及 ice 自带的只读 `docs` 文档查询工具。Windows 上还会默认注册 `powershell`。`docs` 可以查询使用手册、扩展开发、Agent 项目结构、Rust 调试和架构说明；`grep`、`find`、`ls` 仍保留为库实现，但不由 CLI 默认注册。
+默认工具包含 Pi 的 `read`、`bash`、`edit`、`write`，以及 icers 自带的只读 `docs` 文档查询工具。Windows 上还会默认注册 `powershell`。`docs` 可以查询使用手册、扩展开发、Agent 项目结构、Rust 调试和架构说明；`grep`、`find`、`ls` 仍保留为库实现，但不由 CLI 默认注册。
 
-可以通过 `.ice/settings.json` 的 `defaultTools` 字段（或简写 `default_tools`）在未指定
+可以通过 `.icers/settings.json` 的 `defaultTools` 字段（或简写 `default_tools`）在未指定
 `--tools` 时限定启动工具集：
 
 ```json
@@ -259,16 +259,16 @@ ice --connect 127.0.0.1:9899
 需要限制工具范围时，显式列出 Pi 的四个工具：
 
 ```bash
-ice --tools read,bash,edit,write,docs -p "检查并修改项目文件"
+icers --tools read,bash,edit,write,docs -p "检查并修改项目文件"
 ```
 
 ## 5. 项目目录和资源优先级
 
-ice 使用自己的 `.ice` 目录：
+icers 使用自己的 `.icers` 目录：
 
 ```text
 项目/
-└── .ice/
+└── .icers/
     ├── settings.json
     ├── SYSTEM.md
     ├── APPEND_SYSTEM.md
@@ -278,9 +278,9 @@ ice 使用自己的 `.ice` 目录：
     └── extensions/
 ```
 
-全局资源默认位于 `~/.ice/agent/`，包括 `settings.json`、`models.json`、`skills/`、`prompts/`、`themes/` 和 `extensions/`。同名资源发生冲突时，项目资源优先于全局资源。
+全局资源默认位于 `~/.icers/agent/`，包括 `settings.json`、`models.json`、`skills/`、`prompts/`、`themes/` 和 `extensions/`。同名资源发生冲突时，项目资源优先于全局资源。
 
-项目级 `.ice/settings.json` 可以追加资源目录：
+项目级 `.icers/settings.json` 可以追加资源目录：
 
 ```json
 {
@@ -290,21 +290,21 @@ ice 使用自己的 `.ice` 目录：
 }
 ```
 
-路径相对于项目根目录；`skills`、`prompts`、`extensions` 是对应 `*Dirs` 字段的简写。自定义目录会与 `.ice` 和全局约定目录一起加载。全局 `~/.ice/agent/settings.json` 也支持这些字段，相对路径相对于 agent 目录。
+路径相对于项目根目录；`skills`、`prompts`、`extensions` 是对应 `*Dirs` 字段的简写。自定义目录会与 `.icers` 和全局约定目录一起加载。全局 `~/.icers/agent/settings.json` 也支持这些字段，相对路径相对于 agent 目录。
 
 只加载当前项目的 package/resource、排除全局资源时，使用以下任一等价参数：
 
 ```bash
-ice --package-only
-ice --project-only
+icers --package-only
+icers --project-only
 ```
 
-两者都会加载当前项目的 skills、prompts、themes、extensions 和 packages，并读取项目 `.ice/settings.json`；不会自动加载全局资源。`--local-only` 语义不同，只加载通过 `--extensions-dir` 或 `--extension` 显式指定的扩展。
+两者都会加载当前项目的 skills、prompts、themes、extensions 和 packages，并读取项目 `.icers/settings.json`；不会自动加载全局资源。`--local-only` 语义不同，只加载通过 `--extensions-dir` 或 `--extension` 显式指定的扩展。
 
 配置目录可以重定位：
 
 ```bash
-ICE_CODING_AGENT_DIR=/work/ice-agent ice
+ICERS_CODING_AGENT_DIR=/work/ice-agent icers
 ```
 
 会话默认保存到 agent 配置目录下的 sessions；`--no-session` 可使用临时会话。
@@ -315,46 +315,46 @@ Rust 原生插件是 `cdylib`，只依赖 `ice-plugin-sdk`，由 `ice-extensions
 
 ```bash
 cargo build -p plugin-stub
-ice --extensions-dir target/debug -p 'echo "hi"'
+icers --extensions-dir target/debug -p 'echo "hi"'
 ```
 
 从 crates.io 安装：
 
 ```bash
-ice install ice-extension-example
-ice install ice-extension-example --version 0.1.0
-ice install ice-extension-example --force
+icers install ice-extension-example
+icers install ice-extension-example --version 0.1.0
+icers install ice-extension-example --force
 ```
 
 本地开发：
 
 ```bash
-ice install my-extension --path ../my-ice-extension --force
+icers install my-extension --path ../my-ice-extension --force
 ```
 
 开发扩展项目时使用 watch 模式：
 
 ```bash
 cd ../my-ice-extension
-ice dev
-# 多扩展 workspace：ice dev --package my-extension
-# 只调试当前扩展：ice dev-local（隔离模式，不加载全局扩展）
+icers dev
+# 多扩展 workspace：icers dev --package my-extension
+# 只调试当前扩展：icers dev-local（隔离模式，不加载全局扩展）
 ```
 
-`ice dev` 会自动识别 Cargo `cdylib`、首次编译并从 `.ice/extensions/.dev` 加载版本化产物。源码变化会触发重新编译和热重载；手工执行 `/reload` 也会先重新编译。编译失败时继续保留当前已经加载的版本。
+`icers dev` 会自动识别 Cargo `cdylib`、首次编译并从 `.icers/extensions/.dev` 加载版本化产物。源码变化会触发重新编译和热重载；手工执行 `/reload` 也会先重新编译。编译失败时继续保留当前已经加载的版本。
 
 如果希望把开发好的扩展固定到某个项目，可使用项目包命令：
 
 ```bash
-ice package link --path ../my-extension --package my-extension
-ice package list
-# 之后在该项目目录直接运行 ice 即可加载
-ice package unlink my-extension
+icers package link --path ../my-extension --package my-extension
+icers package list
+# 之后在该项目目录直接运行 icers 即可加载
+icers package unlink my-extension
 ```
 
-项目包位于 `.ice/packages/<name>/`，是受信任的本机 Rust 动态库；它不是 npm/Node Pi package。全局安装仍使用 `ice install`。完整模板和边界规则见在线扩展作者指南：<https://rpi.laofu.online/extension-authoring.md>`，调试技巧见 `docs` 的 `debugging` 主题。
+项目包位于 `.icers/packages/<name>/`，是受信任的本机 Rust 动态库；它不是 npm/Node Pi package。全局安装仍使用 `icers install`。完整模板和边界规则见在线扩展作者指南：<https://rpi.laofu.online/extension-authoring.md>`，调试技巧见 `docs` 的 `debugging` 主题。
 
-安装后的动态库位于 `~/.ice/agent/extensions`（或 `ICE_CODING_AGENT_DIR` 指定的目录），下次启动 ice 时加载。插件通过稳定 ABI 注册工具、Provider、事件处理器和资源处理器；不要直接依赖 `ice-cli` 的私有模块。
+安装后的动态库位于 `~/.icers/agent/extensions`（或 `ICERS_CODING_AGENT_DIR` 指定的目录），下次启动 icers 时加载。插件通过稳定 ABI 注册工具、Provider、事件处理器和资源处理器；不要直接依赖 `ice-cli` 的私有模块。
 
 ## 7. SDK 集成
 
@@ -370,7 +370,7 @@ let mut agent = Agent::builder(model)
     .build();
 
 let mut events = agent.subscribe();
-agent.prompt("Hello from ice").await?;
+agent.prompt("Hello from icers").await?;
 while let Some(event) = events.recv().await {
     if matches!(event, AgentEvent::AgentEnd { .. }) {
         break;
@@ -384,7 +384,7 @@ while let Some(event) = events.recv().await {
 
 ### 找不到模型或接口报错
 
-运行 `ice auth check`，确认 provider、`models.json`、环境变量和 `baseUrl`。使用 `--provider` 和完整的 `provider/model` 避免同名模型歧义。接口错误会保留 provider 返回的诊断文本；先检查 endpoint、认证头和模型 ID。
+运行 `icers auth check`，确认 provider、`models.json`、环境变量和 `baseUrl`。使用 `--provider` 和完整的 `provider/model` 避免同名模型歧义。接口错误会保留 provider 返回的诊断文本；先检查 endpoint、认证头和模型 ID。
 
 ### 扩展加载失败
 
@@ -393,23 +393,23 @@ while let Some(event) = events.recv().await {
 ### 扩展事件处理器没触发或启动被中止
 
 ```bash
-export ICE_EVENT_LOG=1
-ice            # 记录所有扩展事件处理器调用
-ice events tail   # 跟踪日志；看 result 是 Continue 还是 Error/Abort/Panic/Timeout
+export ICERS_EVENT_LOG=1
+icers            # 记录所有扩展事件处理器调用
+icers events tail   # 跟踪日志；看 result 是 Continue 还是 Error/Abort/Panic/Timeout
 ```
 
-日志默认在 `~/.ice/logs/events.jsonl`（可用 `ICE_EVENT_LOG_PATH` 覆盖）。如果
+日志默认在 `~/.icers/logs/events.jsonl`（可用 `ICERS_EVENT_LOG_PATH` 覆盖）。如果
 `BeforeTuiStart` 阶段有扩展返回 veto（`EVENT_HANDLER_ABORT`），CLI 以退出码 `3`
 中止启动并打印原因。
 
 ### 资源没有出现在欢迎页
 
-确认文件位于 `.ice`（或兼容的 `.pi`）或全局 `~/.ice/agent`。使用 `ice --debug-system-prompt` 查看最终系统提示词、skills 和资源计数；同名资源优先检查 `.ice` 是否覆盖了 `.pi`。
+确认文件位于 `.icers`（或兼容的 `.pi`）或全局 `~/.icers/agent`。使用 `icers --debug-system-prompt` 查看最终系统提示词、skills 和资源计数；同名资源优先检查 `.icers` 是否覆盖了 `.pi`。
 
 ### 远程模式连不上
 
-确认服务端已用 `ice --server --port <port>` 启动且 token 正确（或通过
-`ICE_SERVER_TOKEN` 提供）。客户端是纯显示端，不加载任何本地 provider/工具/扩展；
+确认服务端已用 `icers --server --port <port>` 启动且 token 正确（或通过
+`ICERS_SERVER_TOKEN` 提供）。客户端是纯显示端，不加载任何本地 provider/工具/扩展；
 会话文件在服务端。
 
 ## 9. 开发、测试和发布
@@ -439,6 +439,6 @@ ice-plugin-sdk → ice-extensions → ice-tui → ice-cli
 
 - Package 与扩展作者指南：<https://rpi.laofu.online/extension-authoring.md>
 - 远程模式：<docs/remote/user-guide.md>
-- Rust 扩展与 agent 调试：`ice` 内 `docs` 工具的 `debugging` 主题
+- Rust 扩展与 agent 调试：`icers` 内 `docs` 工具的 `debugging` 主题
 
 当在线文档和已安装版本不一致时，以对应版本的 Git tag 和仓库内文档为准。

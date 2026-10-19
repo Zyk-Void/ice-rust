@@ -14,47 +14,47 @@ pr_draft = true
 [[package]]
 name = "ice-telemetry"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-ai"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-agent"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-plugin-sdk"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-extensions"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-tools"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-harness"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-tui"
 release = true
-version_group = "ice"
+version_group = "icers"
 
 [[package]]
 name = "ice-cli"
 release = true
-version_group = "ice"
+version_group = "icers"
 changelog_update = true
 changelog_path = "CHANGELOG.md"
 changelog_include = ["ice-telemetry", "ice-ai", "ice-agent", "ice-plugin-sdk", "ice-extensions", "ice-tools", "ice-harness", "ice-tui"]

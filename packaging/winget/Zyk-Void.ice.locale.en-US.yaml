@@ -1,4 +1,4 @@
-# Created by hand for ice; see packaging/README.md in Zyk-Void/ice-rust
+# Created by hand for icers; see packaging/README.md in Zyk-Void/ice-rust
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
 
 PackageIdentifier: Zyk-Void.ice
@@ -8,20 +8,20 @@ Publisher: bigfish1913
 PublisherUrl: https://github.com/bigfish1913
 PublisherSupportUrl: https://github.com/Zyk-Void/ice-rust/issues
 Author: BigFish
-PackageName: ice
+PackageName: icers
 PackageUrl: https://rpi.laofu.online/
 License: MIT
 LicenseUrl: https://github.com/Zyk-Void/ice-rust/blob/main/LICENSE
 Copyright: Copyright (c) bigfish1913
 ShortDescription: Rust-native, library-first coding-agent runtime and terminal CLI
 Description: |-
-  ice is a library-first coding-agent runtime written in Rust, plus a terminal
+  icers is a library-first coding-agent runtime written in Rust, plus a terminal
   agent built on it. Nine composable crates take you from provider adapters to a
   durable, crash-resumable agent loop with a stable plugin ABI. Sessions persist
   as JSONL and resume after a crash, and the session log self-heals when it was
   written by two processes at once. It can be used as an embedded SDK or as a
-  ready-to-run `ice` command.
-Moniker: ice
+  ready-to-run `icers` command.
+Moniker: icers
 Tags:
 - ai
 - agent

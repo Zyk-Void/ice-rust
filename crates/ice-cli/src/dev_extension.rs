@@ -1,7 +1,7 @@
-//! Development workflow for Rust-native ice extensions.
+//! Development workflow for Rust-native icers extensions.
 //!
-//! `ice dev` detects a Cargo `cdylib`, builds it, stages a uniquely named copy
-//! under `.ice/extensions/.dev`, and optionally watches its source tree. Unique
+//! `icers dev` detects a Cargo `cdylib`, builds it, stages a uniquely named copy
+//! under `.icers/extensions/.dev`, and optionally watches its source tree. Unique
 //! staging directories are required on Windows because a loaded DLL cannot be
 //! overwritten until the old `Library` handle is released by `/reload`.
 
@@ -50,7 +50,7 @@ pub fn parse_args(args: &[String]) -> Result<DevOptions, String> {
                     let package = args
                         .get(index)
                         .filter(|value| !value.trim().is_empty())
-                        .ok_or("ice dev --package requires a package name")?;
+                        .ok_or("icers dev --package requires a package name")?;
                     options.package = Some(package.clone());
                 }
                 _ => options.passthrough.push(value.clone()),
@@ -63,8 +63,8 @@ pub fn parse_args(args: &[String]) -> Result<DevOptions, String> {
 
 pub fn print_help() {
     println!(
-        "Usage: ice dev [dev options] [--] [ice options/messages...]\n       ice dev-local [dev options] [--] [ice options/messages...]\n\n\
-Build the current Rust ice extension, load it, and watch for changes.\n\n\
+        "Usage: icers dev [dev options] [--] [icers options/messages...]\n       icers dev-local [dev options] [--] [icers options/messages...]\n\n\
+Build the current Rust icers extension, load it, and watch for changes.\n\n\
 Dev options:\n  \
 --package, -P <name>  Select a cdylib package in a multi-package workspace\n  \
 --release              Build with Cargo's release profile\n  \
@@ -72,10 +72,10 @@ Dev options:\n  \
 --local-only           Load only this extension and its discovered resources\n  \
 --help, -h             Show this help\n\n\
 Examples:\n  \
-ice dev\n  \
-ice dev-local\n  \
-ice dev --package my-extension\n  \
-ice dev --release -- --model gateway/model\n"
+icers dev\n  \
+icers dev-local\n  \
+icers dev --package my-extension\n  \
+icers dev --release -- --model gateway/model\n"
     );
 }
 
@@ -124,7 +124,7 @@ impl DevExtension {
         let project = detect_project(cwd, options.package.as_deref())?;
         let stage_root = project
             .workspace_root
-            .join(".ice/extensions/.dev")
+            .join(".icers/extensions/.dev")
             .join(format!(
                 "{}-{}",
                 safe_name(&project.package),
@@ -249,7 +249,7 @@ impl DevExtension {
             return;
         }
         // A host-side keepalive can retain the mapped DLL until process exit.
-        // A detached copy of ice retries after this process releases the file.
+        // A detached copy of icers retries after this process releases the file.
         if let Ok(exe) = std::env::current_exe() {
             let _ = Command::new(exe)
                 .arg("__ice_dev_cleanup")
@@ -329,7 +329,7 @@ fn detect_project(cwd: &Path, requested: Option<&str>) -> Result<ExtensionProjec
         return Ok(candidates.remove(0));
     }
     Err(format!(
-        "multiple cdylib extensions found: {}. Select one with `ice dev --package <name>`",
+        "multiple cdylib extensions found: {}. Select one with `icers dev --package <name>`",
         candidates
             .iter()
             .map(|project| project.package.as_str())
@@ -507,7 +507,7 @@ fn is_dev_stage_root(path: &Path) -> bool {
             .and_then(Path::parent)
             .and_then(Path::file_name)
             .and_then(|v| v.to_str())
-            == Some(".ice")
+            == Some(".icers")
 }
 
 fn remove_empty_dev_dir(stage_root: &Path) {
@@ -556,7 +556,7 @@ mod tests {
 
     #[test]
     fn local_only_apply_keeps_only_the_current_stage() {
-        let stage_root = PathBuf::from("workspace/.ice/extensions/.dev/demo-123");
+        let stage_root = PathBuf::from("workspace/.icers/extensions/.dev/demo-123");
         let current_stage = stage_root.join("1");
         let dev = DevExtension {
             project: ExtensionProject {
@@ -596,7 +596,7 @@ mod tests {
     fn cleanup_helper_rejects_non_dev_paths() {
         assert!(!is_dev_stage_root(Path::new("target/debug")));
         assert!(is_dev_stage_root(Path::new(
-            "workspace/.ice/extensions/.dev/example-123"
+            "workspace/.icers/extensions/.dev/example-123"
         )));
     }
 }

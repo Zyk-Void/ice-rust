@@ -17,7 +17,7 @@
 #     bigfish1913/scoop-bucket
 #   * `gh` authenticated (release assets, taps, fork + PR to winget-pkgs)
 #   * `cargo login` for the crates.io publish phase
-#   * SSH to the ice web host for the site phase
+#   * SSH to the icers web host for the site phase
 #
 # The winget phase only *opens* a PR: a winget-team moderator merges it, which
 # no command here can do.
@@ -247,7 +247,7 @@ phase_crates() {
 
 phase_site() {
   note "deploy the site"
-  confirm "Deploy the site (SSH to the ice host)?" || { note "  skipped"; return; }
+  confirm "Deploy the site (SSH to the icers host)?" || { note "  skipped"; return; }
   step task ice-deploy
 }
 
