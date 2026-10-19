@@ -8,7 +8,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-const REPOSITORY: &str = "https://github.com/Zyk-Void/ice-rust";
+const REPOSITORY: &str = "https://github.com/zyk-void/ice-rust";
 const MAX_MANIFEST: u64 = 256 * 1024;
 const MAX_ARCHIVE: u64 = 256 * 1024 * 1024;
 
