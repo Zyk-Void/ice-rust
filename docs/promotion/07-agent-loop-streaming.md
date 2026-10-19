@@ -1,14 +1,14 @@
-# 从 Prompt 到 AgentEnd：拆解 rpi 的流式 Agent Loop
+# 从 Prompt 到 AgentEnd：拆解 ice 的流式 Agent Loop
 
-> 很多 Agent CLI 把模型调用、工具执行和终端输出揉在一起。rpi 把它们拆成 `rpi-ai`、`rpi-agent` 与上层 Harness，让同一套 loop 既能嵌入 Rust 服务，也能驱动终端 CLI。
+> 很多 Agent CLI 把模型调用、工具执行和终端输出揉在一起。ice 把它们拆成 `ice-ai`、`ice-agent` 与上层 Harness，让同一套 loop 既能嵌入 Rust 服务，也能驱动终端 CLI。
 
 ## 一次运行经过什么
 
 ```mermaid
 sequenceDiagram
     participant App as 应用
-    participant Agent as rpi-agent
-    participant Provider as rpi-ai Provider
+    participant Agent as ice-agent
+    participant Provider as ice-ai Provider
     participant Tool as AgentTool
     App->>Agent: prompt("...")
     Agent->>Provider: StreamFn(model, context, options)
@@ -24,13 +24,13 @@ sequenceDiagram
 `StreamFn` 是唯一的模型边界：
 
 ```rust
-// crates/rpi-agent/src/stream_fn.rs
+// crates/ice-agent/src/stream_fn.rs
 pub type StreamFn = std::sync::Arc<
     dyn Fn(
-        &rpi_ai::Model,
-        &rpi_ai::types::Context,
-        &rpi_ai::provider::SimpleStreamOptions,
-    ) -> rpi_ai::AssistantMessageEventStream
+        &ice_ai::Model,
+        &ice_ai::types::Context,
+        &ice_ai::provider::SimpleStreamOptions,
+    ) -> ice_ai::AssistantMessageEventStream
         + Send + Sync,
 >;
 ```
@@ -41,19 +41,19 @@ Agent loop 不关心 HTTP、SSE 或具体厂商，只消费统一事件。模型
 
 ```rust
 use std::sync::Arc;
-use rpi_agent::AgentBuilder;
-use rpi_ai::providers::faux::{FauxProvider, FauxScript};
-use rpi_ai::Provider;
+use ice_agent::AgentBuilder;
+use ice_ai::providers::faux::{FauxProvider, FauxScript};
+use ice_ai::Provider;
 
 #[tokio::main]
 async fn main() {
     let provider = Arc::new(FauxProvider::new(
-        FauxScript::new().with_text("Hello from rpi"),
+        FauxScript::new().with_text("Hello from ice"),
     ));
     let model = provider.default_model().clone();
     let agent = AgentBuilder::new()
         .model(model)
-        .stream_fn(rpi_agent::stream_fn::stream_fn(move |model, ctx, opts| {
+        .stream_fn(ice_agent::stream_fn::stream_fn(move |model, ctx, opts| {
             provider.stream_simple(model, ctx, opts)
         }))
         .build()
@@ -75,18 +75,18 @@ async fn main() {
 - **可观察**：事件先归约到内部状态，再广播给多个订阅者。
 - **可替换**：Provider、工具和 UI 都是边界，不需要修改 loop。
 
-可以把这篇发到掘金、知乎或 Rust 中文社区；项目地址：<https://github.com/bigfish1913/pi-rust>。
+可以把这篇发到掘金、知乎或 Rust 中文社区；项目地址：<https://github.com/Zyk-Void/ice-rust>。
 
 ---
 
 ## English version
 
-# From a Prompt to `AgentEnd`: Reading rpi’s Streaming Agent Loop
+# From a Prompt to `AgentEnd`: Reading ice’s Streaming Agent Loop
 
-A coding agent has to do more than call a model. It streams partial output, runs tools, accepts new input, and reports state changes. rpi keeps these jobs in separate layers: `rpi-ai` owns model-facing types, `rpi-agent` runs the loop, and the CLI consumes the events.
+A coding agent has to do more than call a model. It streams partial output, runs tools, accepts new input, and reports state changes. ice keeps these jobs in separate layers: `ice-ai` owns model-facing types, `ice-agent` runs the loop, and the CLI consumes the events.
 
-The important boundary is `StreamFn`. It returns rpi’s event stream instead of exposing an Anthropic or OpenAI response object. The loop stays the same when the provider changes. A tool call becomes a `ToolResult`, the result returns to context, and the loop requests the next turn.
+The important boundary is `StreamFn`. It returns ice’s event stream instead of exposing an Anthropic or OpenAI response object. The loop stays the same when the provider changes. A tool call becomes a `ToolResult`, the result returns to context, and the loop requests the next turn.
 
-The faux provider follows the same path without an API key or network. That makes examples and regression tests repeatable. Start with `examples/minimal`, then read `crates/rpi-agent/src/agent.rs` and `stream_fn.rs`.
+The faux provider follows the same path without an API key or network. That makes examples and regression tests repeatable. Start with `examples/minimal`, then read `crates/ice-agent/src/agent.rs` and `stream_fn.rs`.
 
-Project: <https://github.com/bigfish1913/pi-rust>
+Project: <https://github.com/Zyk-Void/ice-rust>

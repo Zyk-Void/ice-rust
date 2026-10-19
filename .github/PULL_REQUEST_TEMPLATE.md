@@ -13,15 +13,15 @@ the shared workspace version and release changelog.
 
 <!-- Tick everything the diff touches. -->
 
-- [ ] `rpi-telemetry`
-- [ ] `rpi-ai`
-- [ ] `rpi-agent`
-- [ ] `rpi-tools`
-- [ ] `rpi-harness`
-- [ ] `rpi-tui`
-- [ ] `rpi-cli`
-- [ ] `rpi-plugin-sdk`
-- [ ] `rpi-extensions`
+- [ ] `ice-telemetry`
+- [ ] `ice-ai`
+- [ ] `ice-agent`
+- [ ] `ice-tools`
+- [ ] `ice-harness`
+- [ ] `ice-tui`
+- [ ] `ice-cli`
+- [ ] `ice-plugin-sdk`
+- [ ] `ice-extensions`
 - [ ] docs / website / CI only
 
 ## Type of change
@@ -57,7 +57,7 @@ API addition, a change to session persistence, the plugin ABI, or the security
 boundary described in SECURITY.md.
 -->
 
-- [ ] I kept the `rpi-telemetry → rpi-ai → rpi-agent → rpi-tools → rpi-harness → rpi-cli`
+- [ ] I kept the `ice-telemetry → ice-ai → ice-agent → ice-tools → ice-harness → ice-cli`
       dependency direction (no new backwards edges).
 - [ ] Compilation is warning-free (CI checks Linux and Windows with `-D warnings`).
 - [ ] New behaviour has a test that runs offline (no live provider, no network).

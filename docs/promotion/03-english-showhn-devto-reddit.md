@@ -11,14 +11,14 @@
 **Title**
 
 ```
-Show HN: rpi – A Rust-native coding-agent runtime that is usable as a library
+Show HN: ice – A Rust-native coding-agent runtime that is usable as a library
 ```
 
 **Body**
 
 ```
-rpi is a coding-agent runtime in Rust. The part I care about is that the agent
-loop is a library, not a CLI you shell out to and scrape: rpi-agent + rpi-ai is
+ice is a coding-agent runtime in Rust. The part I care about is that the agent
+loop is a library, not a CLI you shell out to and scrape: ice-agent + ice-ai is
 enough to run an agent inside your own process with your own event handling.
 
 Highlights:
@@ -46,11 +46,11 @@ JSONL command channel, isolated config, both offline:
   install        21.8 MiB vs  ~385 MiB   (~18x)
 
 An earlier version of this post reported 103 ms and 1.7x; that was my bug. The
-harness set pi's `PI_OFFLINE` / `PI_CODING_AGENT_DIR`, which rpi does not read —
-it uses `RPI_OFFLINE` / `RPI_CODING_AGENT_DIR` — so rpi was silently loading the
-25 plugin DLLs in my real `~/.rpi/agent` while pi ran clean. A second bug then
-under-reported rpi: the cold-start stopwatch started *after* `spawn()`, hiding ~7 ms of
-process creation. With both fixed: rpi's `--version` (17.5 ms) and its usable
+harness set pi's `PI_OFFLINE` / `PI_CODING_AGENT_DIR`, which ice does not read —
+it uses `ICE_OFFLINE` / `ICE_CODING_AGENT_DIR` — so ice was silently loading the
+25 plugin DLLs in my real `~/.ice/agent` while pi ran clean. A second bug then
+under-reported ice: the cold-start stopwatch started *after* `spawn()`, hiding ~7 ms of
+process creation. With both fixed: ice's `--version` (17.5 ms) and its usable
 agent (17.7 ms) are equal, so its initialisation is negligible; Pi's two numbers
 differ by ~20 ms, its own agent init on top of Node boot. I have not measured
 tool-loop throughput or long-session memory for either tool.
@@ -60,10 +60,10 @@ incomplete, Intel macOS prebuilt binaries are not built yet, and
 docs/native-pi-missing-features.md tracks the compatibility gaps rather than
 hiding them.
 
-  curl -fsSL https://raw.githubusercontent.com/bigfish1913/pi-rust/main/scripts/install.sh | sh
-  # or: cargo install rpi-cli
+  curl -fsSL https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.sh | sh
+  # or: cargo install ice-cli
 
-https://github.com/bigfish1913/pi-rust
+https://github.com/Zyk-Void/ice-rust
 
 MIT licensed. Happy to answer questions about the crate split, the plugin ABI, or
 the crash-recovery model.
@@ -107,8 +107,8 @@ shipping a fake implementation of it. Every example and every test starts like
 this:
 
 ```rust
-use rpi_ai::providers::faux::{FauxProvider, FauxScript};
-use rpi_ai::Provider;
+use ice_ai::providers::faux::{FauxProvider, FauxScript};
+use ice_ai::Provider;
 
 let provider = FauxProvider::new(
     FauxScript::new()
@@ -130,12 +130,12 @@ mocking it.
 The tools do not touch the real filesystem. They go through `ExecutionEnv`:
 
 ```rust
-use rpi_tools::{create_read_tool, ExecutionToolContext, InMemoryExecutionEnv};
+use ice_tools::{create_read_tool, ExecutionToolContext, InMemoryExecutionEnv};
 
 let env = Arc::new(InMemoryExecutionEnv::new());
 let ctx = ExecutionToolContext::new(
-    env.clone() as Arc<dyn rpi_tools::ExecutionEnv>,
-    Some(env as Arc<dyn rpi_tools::MutatingEnv>),
+    env.clone() as Arc<dyn ice_tools::ExecutionEnv>,
+    Some(env as Arc<dyn ice_tools::MutatingEnv>),
 );
 let read = create_read_tool(&ctx, None);
 ```
@@ -188,13 +188,13 @@ back a CLI, a server and an embedded agent.
 If you want to try the finished version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bigfish1913/pi-rust/main/scripts/install.sh | sh
-# or: cargo install rpi-cli
+curl -fsSL https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.sh | sh
+# or: cargo install ice-cli
 ```
 
 Runnable offline example: `cargo run -p minimal`.
 
-Repo: https://github.com/bigfish1913/pi-rust (MIT)
+Repo: https://github.com/Zyk-Void/ice-rust (MIT)
 ```
 
 ---
@@ -206,18 +206,18 @@ Repo: https://github.com/bigfish1913/pi-rust (MIT)
 **Title**
 
 ```
-[Showcase] rpi: a Rust coding-agent runtime split into nine composable crates
+[Showcase] ice: a Rust coding-agent runtime split into nine composable crates
 ```
 
 **Body**
 
 ```
-rpi is a coding-agent runtime in Rust, published as nine crates with one-way
+ice is a coding-agent runtime in Rust, published as nine crates with one-way
 dependencies:
 
-  rpi-telemetry -> rpi-ai -> rpi-agent -> rpi-tools -> rpi-harness -> rpi-cli
+  ice-telemetry -> ice-ai -> ice-agent -> ice-tools -> ice-harness -> ice-cli
                     ^                                        ^
-              rpi-tui                          rpi-plugin-sdk -> rpi-extensions
+              ice-tui                          ice-plugin-sdk -> ice-extensions
 
 Design decisions that might be interesting here:
 
@@ -225,7 +225,7 @@ Design decisions that might be interesting here:
   providers, a test double and a recorded transcript are interchangeable. Provider
   failures are reported as `Error` events in the stream rather than `Err`, so the
   loop has a single failure path.
-- `rpi-ai`'s HTTP providers are behind a feature flag, so the default build
+- `ice-ai`'s HTTP providers are behind a feature flag, so the default build
   contains no network stack and the test suite cannot accidentally depend on one.
 - The plugin SDK is a **zero-dependency leaf**. Plugins are cdylibs the host loads
   with libloading, so if the SDK depended on the runtime the plugin would link the
@@ -241,15 +241,15 @@ Design decisions that might be interesting here:
 I also measured startup against the TypeScript original it ports, same machine,
 same JSONL command channel, isolated config, both offline: 9.7x faster to start, 10.7x
 faster to cold start, 7.6x smaller RSS. An earlier run reported 1.7x; that
-was an isolation bug — I set pi's `PI_*` variables but rpi reads `RPI_*`, so rpi
-kept loading the 25 plugin DLLs in my real `~/.rpi/agent` while pi ran clean. A
-second run reported 10 ms because the stopwatch started after `spawn()`; rpi's
+was an isolation bug — I set pi's `PI_*` variables but ice reads `ICE_*`, so ice
+kept loading the 25 plugin DLLs in my real `~/.ice/agent` while pi ran clean. A
+second run reported 10 ms because the stopwatch started after `spawn()`; ice's
 real number is 17.7 ms, essentially its process-creation cost.
 
 Honest gaps: the JS/TS extension bridge is opt-in and incomplete, and
 `cargo fmt --all` does not currently pass across the workspace (tracked in #15).
 
-Repo: https://github.com/bigfish1913/pi-rust (MIT). Feedback on the crate split
+Repo: https://github.com/Zyk-Void/ice-rust (MIT). Feedback on the crate split
 especially welcome.
 ```
 
@@ -258,7 +258,7 @@ especially welcome.
 **Title**
 
 ```
-rpi: a Rust coding-agent runtime with pluggable providers and fully offline tests
+ice: a Rust coding-agent runtime with pluggable providers and fully offline tests
 ```
 
 **Body**
@@ -282,9 +282,9 @@ models behind an OpenAI-compatible endpoint.
 Not measured: real token throughput or latency, since that is a property of the
 provider and your hardware, not the agent.
 
-https://github.com/bigfish1913/pi-rust (MIT)
+https://github.com/Zyk-Void/ice-rust (MIT)
 
-  curl -fsSL https://raw.githubusercontent.com/bigfish1913/pi-rust/main/scripts/install.sh | sh
+  curl -fsSL https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.sh | sh
 ```
 
 **Notes**
@@ -302,7 +302,7 @@ https://github.com/bigfish1913/pi-rust (MIT)
 **Title**
 
 ```
-rpi: a Rust-native, library-first coding-agent runtime
+ice: a Rust-native, library-first coding-agent runtime
 ```
 
 **Body** (keep it short; Lobsters rewards substance over marketing)
@@ -323,7 +323,7 @@ type may cross the boundary: strings cross as ptr+len with an explicit free
 function, structured data crosses as JSON, and both sides contain panics with
 `catch_unwind` because unwinding across `extern "C"` aborts the process.
 
-https://github.com/bigfish1913/pi-rust
+https://github.com/Zyk-Void/ice-rust
 
 (Disclosure: this is my project.)
 ```

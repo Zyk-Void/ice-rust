@@ -1,4 +1,4 @@
-# Taskfile for the rpi-* crate family release.
+# Taskfile for the ice-* crate family release.
 #
 # `task publish` is the one-command release: it computes the next version
 # automatically (scripts/next-version.sh), then hands the whole bump -> tag ->
@@ -43,12 +43,12 @@
 version: '3'
 
 vars:
-  RPI_SERVICE_NAME: rpi
-  RPI_DOMAIN: rpi.laofu.online
-  RPI_DOMAINS: '{{.RPI_DOMAIN}} rpi.bigfisharc.cn'
-  RPI_DEPLOY_DIR: .deploy/rpi
-  RPI_RELEASE_HELPER:
-    sh: git rev-parse --git-path rpi-release-helper.exe
+  ICE_SERVICE_NAME: ice
+  ICE_DOMAIN: rpi.laofu.online
+  ICE_DOMAINS: '{{.ICE_DOMAIN}} ice.bigfisharc.cn'
+  ICE_DEPLOY_DIR: .deploy/ice
+  ICE_RELEASE_HELPER:
+    sh: git rev-parse --git-path ice-release-helper.exe
 
   # 自动版本递增的默认部分（patch|minor|major|none）。CLI 传 RELEASE_BUMP 覆盖。
   RELEASE_BUMP: patch
@@ -60,7 +60,7 @@ tasks:
       - task --list
 
   dry-run:
-    desc: Package all rpi-* crates in release order without uploading
+    desc: Package all ice-* crates in release order without uploading
     vars:
       PREPARED_VERSION:
         sh: bash scripts/next-version.sh none
@@ -131,7 +131,7 @@ tasks:
     deps:
       - release:build-helper
     cmds:
-      - '"{{.RPI_RELEASE_HELPER}}" validate "{{.RELEASE_VERSION}}"'
+      - '"{{.ICE_RELEASE_HELPER}}" validate "{{.RELEASE_VERSION}}"'
 
   release:validate-dirty:
     desc: Validate the release state while the version bump is still uncommitted (pre-commit)
@@ -140,19 +140,19 @@ tasks:
     deps:
       - release:build-helper
     cmds:
-      - '"{{.RPI_RELEASE_HELPER}}" validate "{{.RELEASE_VERSION}}" --allow-dirty'
+      - '"{{.ICE_RELEASE_HELPER}}" validate "{{.RELEASE_VERSION}}" --allow-dirty'
 
   release:build-helper:
     internal: true
     cmds:
-      - rustc --edition=2021 release-helper.rs -o "{{.RPI_RELEASE_HELPER}}"
+      - rustc --edition=2021 release-helper.rs -o "{{.ICE_RELEASE_HELPER}}"
 
   release:dry-run-crates:
     internal: true
     deps:
       - release:build-helper
     cmds:
-      - '"{{.RPI_RELEASE_HELPER}}" dry-run'
+      - '"{{.ICE_RELEASE_HELPER}}" dry-run'
 
   release:publish-crates:
     internal: true
@@ -161,7 +161,7 @@ tasks:
     deps:
       - release:build-helper
     cmds:
-      - '"{{.RPI_RELEASE_HELPER}}" publish "{{.RELEASE_VERSION}}"'
+      - '"{{.ICE_RELEASE_HELPER}}" publish "{{.RELEASE_VERSION}}"'
 
   docs:sync:
     desc: 同步仓库文档到 pi-cli 的 embedded-docs（include_str! 快照，CI 会校验）
@@ -194,100 +194,100 @@ tasks:
       - cargo build -p minimal -p tools-example
       - vhs demo/sdk.tape
 
-  rpi-pack-frontend:
-    desc: 打包 rpi 静态官网（tar.gz；zip 在 Linux 侧解压会因反斜杠分隔符报错）
+  ice-pack-frontend:
+    desc: 打包 ice 静态官网（tar.gz；zip 在 Linux 侧解压会因反斜杠分隔符报错）
     cmds:
       - >-
-        powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '{{.RPI_DEPLOY_DIR}}' | Out-Null; tar -czf '{{.RPI_DEPLOY_DIR}}\frontend.tar.gz' -C website --exclude=./.rpi --exclude=./.deploy ."
+        powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '{{.ICE_DEPLOY_DIR}}' | Out-Null; tar -czf '{{.ICE_DEPLOY_DIR}}\frontend.tar.gz' -C website --exclude=./.ice --exclude=./.deploy ."
       - >-
-        echo "前端包已生成: {{.RPI_DEPLOY_DIR}}/frontend.tar.gz"
+        echo "前端包已生成: {{.ICE_DEPLOY_DIR}}/frontend.tar.gz"
 
-  rpi-upload-frontend:
-    desc: 上传 rpi 静态官网到公网服务器
+  ice-upload-frontend:
+    desc: 上传 ice 静态官网到公网服务器
     deps:
-      - rpi-pack-frontend
+      - ice-pack-frontend
     cmds:
-      - ssh root@139.196.85.175 "mkdir -p /var/www/{{.RPI_SERVICE_NAME}} /tmp/deploy"
-      - scp "{{.RPI_DEPLOY_DIR}}/frontend.tar.gz" root@139.196.85.175:/tmp/deploy/{{.RPI_SERVICE_NAME}}-frontend.tar.gz
-      - ssh root@139.196.85.175 "tar -xzf /tmp/deploy/{{.RPI_SERVICE_NAME}}-frontend.tar.gz -C /var/www/{{.RPI_SERVICE_NAME}} && rm /tmp/deploy/{{.RPI_SERVICE_NAME}}-frontend.tar.gz"
+      - ssh root@139.196.85.175 "mkdir -p /var/www/{{.ICE_SERVICE_NAME}} /tmp/deploy"
+      - scp "{{.ICE_DEPLOY_DIR}}/frontend.tar.gz" root@139.196.85.175:/tmp/deploy/{{.ICE_SERVICE_NAME}}-frontend.tar.gz
+      - ssh root@139.196.85.175 "tar -xzf /tmp/deploy/{{.ICE_SERVICE_NAME}}-frontend.tar.gz -C /var/www/{{.ICE_SERVICE_NAME}} && rm /tmp/deploy/{{.ICE_SERVICE_NAME}}-frontend.tar.gz"
       # The web root is public and Caddy does not hide dotfiles, so local state
-      # that ever gets packaged (.rpi holds session transcripts, .deploy holds
+      # that ever gets packaged (.ice holds session transcripts, .deploy holds
       # build tarballs) would be served over HTTP. Remove it on every deploy
       # instead of relying on the packer's excludes alone.
-      - ssh root@139.196.85.175 "rm -rf /var/www/{{.RPI_SERVICE_NAME}}/.rpi /var/www/{{.RPI_SERVICE_NAME}}/.deploy"
+      - ssh root@139.196.85.175 "rm -rf /var/www/{{.ICE_SERVICE_NAME}}/.ice /var/www/{{.ICE_SERVICE_NAME}}/.deploy"
       - >-
-        echo "前端文件已上传到 /var/www/{{.RPI_SERVICE_NAME}}/"
+        echo "前端文件已上传到 /var/www/{{.ICE_SERVICE_NAME}}/"
 
-  rpi-upload-guide:
-    desc: 上传 rpi 完整使用手册、扩展作者指南和调试指引
+  ice-upload-guide:
+    desc: 上传 ice 完整使用手册、扩展作者指南和调试指引
     cmds:
-      - ssh root@139.196.85.175 "mkdir -p /var/www/{{.RPI_SERVICE_NAME}}"
-      - scp docs/guides/user-guide.md root@139.196.85.175:/var/www/{{.RPI_SERVICE_NAME}}/user-guide.md
-      - scp docs/extensions/authoring.md root@139.196.85.175:/var/www/{{.RPI_SERVICE_NAME}}/extension-authoring.md
-      - scp docs/debugging/rust-debugging.md root@139.196.85.175:/var/www/{{.RPI_SERVICE_NAME}}/rust-debugging.md
+      - ssh root@139.196.85.175 "mkdir -p /var/www/{{.ICE_SERVICE_NAME}}"
+      - scp docs/guides/user-guide.md root@139.196.85.175:/var/www/{{.ICE_SERVICE_NAME}}/user-guide.md
+      - scp docs/extensions/authoring.md root@139.196.85.175:/var/www/{{.ICE_SERVICE_NAME}}/extension-authoring.md
+      - scp docs/debugging/rust-debugging.md root@139.196.85.175:/var/www/{{.ICE_SERVICE_NAME}}/rust-debugging.md
       - >-
         echo "使用手册、扩展作者指南和调试指引已上传"
 
-  rpi-caddy-upload:
-    desc: 上传 rpi Caddy 配置、同步新域名镜像并校验重载
+  ice-caddy-upload:
+    desc: 上传 ice Caddy 配置、同步新域名镜像并校验重载
     cmds:
-      - scp deploy/rpi.caddy root@139.196.85.175:/root/work/ai-infr/config/caddy/sites/{{.RPI_SERVICE_NAME}}.caddy
+      - scp deploy/ice.caddy root@139.196.85.175:/root/work/ai-infr/config/caddy/sites/{{.ICE_SERVICE_NAME}}.caddy
       - ssh root@139.196.85.175 "docker exec app-caddy sh -c 'mkdir -p /data/caddy && chmod 755 /data/caddy'"
       # Do not use sync-bigfisharc.sh: it currently masks validation/reload failures.
       # The mirror is generated, never edited or independently declared here.
       - ssh root@139.196.85.175 "cd /root/work/ai-infr/config/caddy && python3 gen_bigfisharc.py sites sites-bigfisharc/mirror.caddy && docker exec app-caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && docker exec app-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile"
       - >-
-        echo "Caddy 配置已生效: {{.RPI_DOMAINS}}"
+        echo "Caddy 配置已生效: {{.ICE_DOMAINS}}"
 
-  rpi-caddy-mount:
-    desc: 将 rpi 静态目录挂载到现有 Caddy 容器
+  ice-caddy-mount:
+    desc: 将 ice 静态目录挂载到现有 Caddy 容器
     cmds:
-      - scp deploy/caddy-rpi.override.yml root@139.196.85.175:/root/work/ai-infr/docker-compose.rpi.override.yml
-      - ssh root@139.196.85.175 "cd /root/work/ai-infr && docker compose -f docker-compose.yml -f docker-compose.rpi.override.yml config >/dev/null"
+      - scp deploy/caddy-ice.override.yml root@139.196.85.175:/root/work/ai-infr/docker-compose.ice.override.yml
+      - ssh root@139.196.85.175 "cd /root/work/ai-infr && docker compose -f docker-compose.yml -f docker-compose.ice.override.yml config >/dev/null"
       - ssh root@139.196.85.175 "docker rm -f app-caddy 2>/dev/null || true"
-      - ssh root@139.196.85.175 "cd /root/work/ai-infr && docker compose -f docker-compose.yml -f docker-compose.rpi.override.yml up -d caddy"
+      - ssh root@139.196.85.175 "cd /root/work/ai-infr && docker compose -f docker-compose.yml -f docker-compose.ice.override.yml up -d caddy"
       - powershell -NoProfile -Command "Start-Sleep -Seconds 5"
 
-  rpi-caddy-storage-repair:
+  ice-caddy-storage-repair:
     desc: 恢复 Caddy 缺失的绑定存储目录并重启容器
     cmds:
       - ssh root@139.196.85.175 "mkdir -p /var/lib/docker/volumes/app-caddy-data/_data /var/lib/docker/volumes/app-caddy-config/_data"
       - ssh root@139.196.85.175 "docker restart app-caddy"
       - powershell -NoProfile -Command "Start-Sleep -Seconds 5"
 
-  rpi-deploy:
-    desc: 打包、上传并发布 rpi 静态官网
+  ice-deploy:
+    desc: 打包、上传并发布 ice 静态官网
     cmds:
-      - task: rpi-upload-frontend
-      - task: rpi-upload-guide
-      - task: rpi-caddy-mount
-      - task: rpi-caddy-upload
-      - task: rpi-cdn-purge
-      - task: rpi-verify
+      - task: ice-upload-frontend
+      - task: ice-upload-guide
+      - task: ice-caddy-mount
+      - task: ice-caddy-upload
+      - task: ice-cdn-purge
+      - task: ice-verify
 
-  rpi-cdn-purge:
-    desc: 可选的双域名 CDN 刷新（RPI_CDN_PURGE_SCRIPT 指向供应商脚本）
+  ice-cdn-purge:
+    desc: 可选的双域名 CDN 刷新（ICE_CDN_PURGE_SCRIPT 指向供应商脚本）
     cmds:
-      - bash scripts/website-cdn-purge.sh {{.RPI_DOMAINS}}
+      - bash scripts/website-cdn-purge.sh {{.ICE_DOMAINS}}
 
-  rpi-verify:
+  ice-verify:
     desc: 验证两个域名的官网内容、缓存策略与内部路径保护
     cmds:
-      - python scripts/verify-website.py {{range splitList " " .RPI_DOMAINS}}https://{{.}} {{end}}
+      - python scripts/verify-website.py {{range splitList " " .ICE_DOMAINS}}https://{{.}} {{end}}
 
-  rpi-diagnose:
-    desc: 诊断 rpi 公网 HTTP 与 Caddy 状态
+  ice-diagnose:
+    desc: 诊断 ice 公网 HTTP 与 Caddy 状态
     cmds:
-      - ssh root@139.196.85.175 "curl --max-time 15 --silent --show-error --head http://{{.RPI_DOMAIN}}/"
-      - ssh root@139.196.85.175 "docker logs app-caddy --tail 80 2>&1 | grep -i '{{.RPI_DOMAIN}}' || true"
+      - ssh root@139.196.85.175 "curl --max-time 15 --silent --show-error --head http://{{.ICE_DOMAIN}}/"
+      - ssh root@139.196.85.175 "docker logs app-caddy --tail 80 2>&1 | grep -i '{{.ICE_DOMAIN}}' || true"
       - ssh root@139.196.85.175 "docker inspect app-caddy | head -c 5000"
       - ssh root@139.196.85.175 "docker exec app-caddy sh -c 'ls -ld /data /config /etc/caddy 2>&1 || true'"
       - ssh root@139.196.85.175 "docker exec app-caddy sh -c 'id; stat /data /config; test -w /config && echo config-writable || echo config-not-writable'"
       - ssh root@139.196.85.175 "docker volume inspect app-caddy-data app-caddy-config || true"
       - ssh root@139.196.85.175 "ls -ld /var/lib/docker/volumes/app-caddy-data/_data /var/lib/docker/volumes/app-caddy-config/_data 2>&1 || true; ls -la /var/lib/docker/volumes/app-caddy-data/_data /var/lib/docker/volumes/app-caddy-config/_data 2>&1 || true"
       - ssh root@139.196.85.175 "docker info | grep -E 'Docker Root Dir|Storage Driver'; ls -ld /var/lib/docker /var/lib/docker/volumes"
-      - ssh root@139.196.85.175 "find /var/www/rpi -maxdepth 2 -type f -printf '%P\\n' | sort | head -80"
-      - ssh root@139.196.85.175 "curl --insecure --silent --show-error --head https://{{.RPI_DOMAIN}}/index.html; curl --insecure --silent --show-error https://{{.RPI_DOMAIN}}/data/packages.json"
+      - ssh root@139.196.85.175 "find /var/www/ice -maxdepth 2 -type f -printf '%P\\n' | sort | head -80"
+      - ssh root@139.196.85.175 "curl --insecure --silent --show-error --head https://{{.ICE_DOMAIN}}/index.html; curl --insecure --silent --show-error https://{{.ICE_DOMAIN}}/data/packages.json"
       - ssh root@139.196.85.175 "find /root/work/ai-infr -maxdepth 4 -type f \( -name 'docker-compose*.yml' -o -name 'compose*.yml' \) -print"
       - ssh root@139.196.85.175 "grep -R -n 'app-caddy' /root/work/ai-infr --include='*.yml' --include='*.yaml' 2>/dev/null | head -40"
       - ssh root@139.196.85.175 "sed -n '170,230p' /root/work/ai-infr/docker-compose.yml"

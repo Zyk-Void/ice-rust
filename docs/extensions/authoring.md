@@ -1,18 +1,18 @@
-# rpi Rust 扩展开发最佳实践
+# ice Rust 扩展开发最佳实践
 
-本文是 rpi 创建 Rust `cdylib` 扩展的模型可读规范。扩展是 Rust 原生动态库，
-通过稳定 C ABI（`rpi-plugin-sdk`）注册工具、事件处理器、资源发现、Provider
-与渲染器，宿主（`rpi` CLI）负责加载与生命周期。创建完整 Agent 项目的默认结构见
+本文是 ice 创建 Rust `cdylib` 扩展的模型可读规范。扩展是 Rust 原生动态库，
+通过稳定 C ABI（`ice-plugin-sdk`）注册工具、事件处理器、资源发现、Provider
+与渲染器，宿主（`ice` CLI）负责加载与生命周期。创建完整 Agent 项目的默认结构见
 `docs` 的 `agent` 主题；本指南聚焦扩展本身的 ABI 与生命周期。
 
 ## 1. 扩展模型总览
 
 | 项目 | Rust 原生扩展 |
 | --- | --- |
-| 安装 | `rpi install crate-name`（预编译协议）；`--build` / `--path`（源码） |
-| 入口 | `rpi_plugin_register` C ABI 符号 |
-| 开发反馈 | `rpi dev` watch + 热重载；`rpi dev-local` 隔离调试 |
-| 静态资源 | `resources_discover` 或随项目放入 `.rpi` |
+| 安装 | `ice install crate-name`（预编译协议）；`--build` / `--path`（源码） |
+| 入口 | `ice_plugin_register` C ABI 符号 |
+| 开发反馈 | `ice dev` watch + 热重载；`ice dev-local` 隔离调试 |
+| 静态资源 | `resources_discover` 或随项目放入 `.ice` |
 | 运行环境 | 本机动态库，当前用户权限 |
 | 适用场景 | 本地工具、系统集成、性能敏感或纯 Rust 项目 |
 
@@ -23,7 +23,7 @@
 ## 2. 推荐结构
 
 ```text
-my-rpi-extension/
+my-ice-extension/
 ├── Cargo.toml
 ├── README.md
 ├── src/
@@ -38,35 +38,35 @@ my-rpi-extension/
 
 ```toml
 [package]
-name = "my-rpi-extension"
+name = "my-ice-extension"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/example/my-rpi-extension"
+repository = "https://github.com/example/my-ice-extension"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-rpi-plugin-sdk = "0.1"
+ice-plugin-sdk = "0.1"
 serde_json = "1"
 ```
 
 `cdylib` 是宿主加载的产物；同时保留 `rlib` 便于 Rust 集成测试。扩展边界只依赖
-`rpi-plugin-sdk`，不要依赖 `rpi-cli`、`rpi-extensions` 或 harness 内部模块，
+`ice-plugin-sdk`，不要依赖 `ice-cli`、`ice-extensions` 或 harness 内部模块，
 否则插件会和宿主实现耦合。
 
 ## 3. ABI 入口
 
-宿主只加载统一 C ABI 符号 `rpi_plugin_register`。扩展使用 `export_plugin!`，
+宿主只加载统一 C ABI 符号 `ice_plugin_register`。扩展使用 `export_plugin!`，
 通过同一个 `PluginApi` 注册能力并调用 `api.declare` 声明优先级/平台。
 SDK 在注册前检查 `abi_version` 和 `struct_size`；旧宿主缺少的尾部可选槽位补成
 `None`，插件可据此降级。版本不兼容或必需字段不完整时返回非零状态，宿主报告加载失败。
 
 ```rust
-rpi_plugin_sdk::export_plugin!(|api| {
+ice_plugin_sdk::export_plugin!(|api| {
     if let Some(declare) = api.declare {
-        let status = declare(rpi_plugin_sdk::StbStringRef::from_str(
+        let status = declare(ice_plugin_sdk::StbStringRef::from_str(
             r#"{"priority":60,"platforms":["linux"]}"#,
         ));
         if status != 0 {
@@ -126,11 +126,11 @@ rpi_plugin_sdk::export_plugin!(|api| {
 ### 注入到工具参数里的宿主上下文
 
 宿主在把参数交给插件**之前**，会往这次调用的 JSON 参数里加一个保留键
-`__rpi`（`rpi_plugin_sdk::HOST_CONTEXT_KEY`）：
+`__ice`（`ice_plugin_sdk::HOST_CONTEXT_KEY`）：
 
 ```json
 { "action": "add", "text": "…",
-  "__rpi": { "cwd": "D:\\Projects\\pi-rust",
+  "__ice": { "cwd": "D:\\Projects\\ice-rust",
              "sessionId": "01adb026-7230-708b-855b-91eab6b056b8" } }
 ```
 
@@ -143,8 +143,8 @@ rpi_plugin_sdk::export_plugin!(|api| {
   取值天然满足；给参数定义 `#[serde(deny_unknown_fields)]` 的结构体会直接失败。
 - 内置工具不走这条路——它们从 harness 直接拿到 `ExecutionToolContext`。
 
-需要"每个会话一份状态"的插件就用 `sessionId` 做键（`rpi-todo` 存
-`.rpi/todos/<sessionId>.json`，一条会话一个文件），取不到时退回项目级并**在
+需要"每个会话一份状态"的插件就用 `sessionId` 做键（`ice-todo` 存
+`.ice/todos/<sessionId>.json`，一条会话一个文件），取不到时退回项目级并**在
 回复里说明**，不要编一个共享的伪会话——那正是它要解决的问题。
 
 ## 5. 事件处理器、资源发现与 Provider
@@ -158,14 +158,14 @@ rpi_plugin_sdk::export_plugin!(|api| {
 - **Agent 循环**：`BeforeAgentStart`、`AgentStart`、`AgentEnd`、`AgentSettled`、
   `TurnStart`、`TurnEnd`、`MessageStart`/`MessageUpdate`/`MessageEnd`、
   `ToolExecutionStart`/`Update`/`End`、`ToolCall`、`ToolResult`、`UserBash`、`Input`。
-- **rpi 特有 / UI**：`BeforeTuiStart`（TUI 初始化前）、`UiPromptStart`/`UiPromptEnd`。
+- **ice 特有 / UI**：`BeforeTuiStart`（TUI 初始化前）、`UiPromptStart`/`UiPromptEnd`。
 
 处理器收到 `StablePluginEvent`，不得释放事件里的字符串（宿主 fan-out 后统一释放）。
 返回 `0` 成功；返回 `EVENT_HANDLER_ABORT` 表示 veto。
 
 ### 生命周期 veto
 
-`BeforeTuiStart` 是带 veto 语义的 rpi 专有钩子：第一个返回 `EVENT_HANDLER_ABORT`
+`BeforeTuiStart` 是带 veto 语义的 ice 专有钩子：第一个返回 `EVENT_HANDLER_ABORT`
 的处理器中止启动，CLI 以退出码 `3` 退出（用于"进入 TUI 前必须先建立外部连接"）。
 `SessionStart`/`SessionShutdown` 的 veto 只是 advisory。分发带超时，慢处理器不会
 无限阻塞主流程。
@@ -265,43 +265,43 @@ if (control.is_cancelled)(control.user_data, ProviderChunkKind::Content as u32) 
 7. 插件注册失败返回非零；单个工具执行失败返回结构化错误，不要让整个宿主退出。
 8. README 记录工具 schema、权限边界、持久化文件、网络访问、支持平台和卸载方式。
 
-## 7. 使用 rpi dev 开发
+## 7. 使用 ice dev 开发
 
 在扩展 crate 目录运行：
 
 ```bash
-rpi dev
+ice dev
 ```
 
-rpi 会通过 Cargo metadata 识别当前 `cdylib`，首次编译后把版本化副本放在工作区
-`.rpi/extensions/.dev/`，启动正常 TUI，并监控 `src/`、`build.rs`、package/workspace
+ice 会通过 Cargo metadata 识别当前 `cdylib`，首次编译后把版本化副本放在工作区
+`.ice/extensions/.dev/`，启动正常 TUI，并监控 `src/`、`build.rs`、package/workspace
 `Cargo.toml` 和 `Cargo.lock`。源文件变化后会自动编译并走现有 reload 流程；编译失败
 会保留当前已加载版本。
 
 多扩展 workspace 必须明确选择 package：
 
 ```bash
-rpi dev --package rpi-todo
-rpi dev -P rpi-webfetch
+ice dev --package ice-todo
+ice dev -P ice-webfetch
 ```
 
 其他模式：
 
 ```bash
-rpi dev --release
-rpi dev --no-watch
-rpi dev-local
-rpi dev --package rpi-todo -- --model gateway/model
+ice dev --release
+ice dev --no-watch
+ice dev-local
+ice dev --package ice-todo -- --model gateway/model
 ```
 
-调试单个扩展时使用 `rpi dev-local`（等价于 `rpi dev --local-only`）。它只加载当前
+调试单个扩展时使用 `ice dev-local`（等价于 `ice dev --local-only`）。它只加载当前
 编译的扩展、当前项目目录的 skill/prompt，以及该扩展发现的 skill/prompt；不会扫描
 全局扩展、已安装 Pi 包或其他项目资源，避免同名命令和无关命令干扰调试。内置命令
 （包括 `/reload`）仍然可用。没有 Cargo cdylib 时优雅降级为 skills-only 模式。
 
 TUI 中执行 `/reload` 会强制重新运行 Cargo build，再加载新阶段产物。Windows 上
 已加载 DLL 无法原地覆盖，因此不要手工把 Cargo target DLL 复制到固定文件名；
-`rpi dev` 的版本化 staging 会安全地完成切换，并在会话退出、loader 释放后清理。
+`ice dev` 的版本化 staging 会安全地完成切换，并在会话退出、loader 释放后清理。
 
 ## 8. 项目本地扩展包
 
@@ -309,30 +309,30 @@ TUI 中执行 `/reload` 会强制重新运行 Cargo build，再加载新阶段�
 
 ```bash
 # 在目标项目目录执行；--path 可指向另一个扩展源码目录
-rpi package link --path ../my-rpi-extension --package my-rpi-extension
-rpi package list
+ice package link --path ../my-ice-extension --package my-ice-extension
+ice package list
 
-# 之后在目标项目目录直接启动 rpi 即可加载
-rpi
+# 之后在目标项目目录直接启动 ice 即可加载
+ice
 
 # 删除项目包
-rpi package unlink my-rpi-extension
+ice package unlink my-ice-extension
 ```
 
-项目包保存在 `.rpi/packages/<name>/`，动态库位于其 `extensions/` 子目录；同一目录
+项目包保存在 `.ice/packages/<name>/`，动态库位于其 `extensions/` 子目录；同一目录
 还可以提供 `skills/`、`prompts/` 和 `themes/`。多个包可以重复执行 `link` 登记。
 
-`rpi package` 是 rpi 的项目级 Rust 扩展包机制，不执行 npm/Node package。全局扩展
-仍使用 `rpi install`，开发热重载仍使用 `rpi dev` 或 `rpi dev-local`。项目包会随普通
-`rpi` 启动自动发现；包内动态库属于本机可信代码，请只登记可信源码。
+`ice package` 是 ice 的项目级 Rust 扩展包机制，不执行 npm/Node package。全局扩展
+仍使用 `ice install`，开发热重载仍使用 `ice dev` 或 `ice dev-local`。项目包会随普通
+`ice` 启动自动发现；包内动态库属于本机可信代码，请只登记可信源码。
 
 ## 9. 资源与配置约定
 
-项目级资源放在 `.rpi/`。同名资源优先级是项目内定义优先
+项目级资源放在 `.ice/`。同名资源优先级是项目内定义优先
 高于 `.pi`，项目高于全局，package 最后：
 
 ```text
-.rpi/
+.ice/
 ├── SYSTEM.md
 ├── APPEND_SYSTEM.md
 ├── settings.json
@@ -347,7 +347,7 @@ rpi package unlink my-rpi-extension
 
 ### 自定义加载路径
 
-项目级 `.rpi/settings.json` 可以声明额外资源路径；无需其他兼容
+项目级 `.ice/settings.json` 可以声明额外资源路径；无需其他兼容
 回退。路径相对于项目根目录，配置路径会排在约定目录前面：
 
 ```json
@@ -360,48 +360,48 @@ rpi package unlink my-rpi-extension
 ```
 
 `skills`、`prompts`、`extensions` 也可分别作为三个路径数组的简写。全局
-`~/.rpi/agent/settings.json` 支持相同的 `skillDirs`、`promptDirs`、`extensionDirs`，
-其中相对路径相对于全局 agent 目录。项目配置优先于全局配置；`.rpi` 资源和设置排在
+`~/.ice/agent/settings.json` 支持相同的 `skillDirs`、`promptDirs`、`extensionDirs`，
+其中相对路径相对于全局 agent 目录。项目配置优先于全局配置；`.ice` 资源和设置排在
 `.pi` 之前。
 
 单次运行可以显式追加路径：
 
 ```bash
-rpi --skill ./extra-skills
-rpi --prompt-template ./extra-prompts
-rpi --extension ./target/debug/my_extension.dll
-rpi --extensions-dir ./target/debug
+ice --skill ./extra-skills
+ice --prompt-template ./extra-prompts
+ice --extension ./target/debug/my_extension.dll
+ice --extensions-dir ./target/debug
 ```
 
 `--skill`、`--prompt-template`、`--extension` 和 `--extensions-dir` 都可以重复使用。
-额外的 Rust 扩展目录也可通过 `RPI_EXTENSIONS_DIR` 配置；Windows 使用分号分隔，
+额外的 Rust 扩展目录也可通过 `ICE_EXTENSIONS_DIR` 配置；Windows 使用分号分隔，
 Linux/macOS 使用冒号分隔。命令行和环境变量适合本机开发、CI 与排错；团队共享配置
-使用项目 `.rpi/settings.json`。
+使用项目 `.ice/settings.json`。
 
 ## 9. 发布检查清单
 
 - `cargo fmt --check`、`cargo clippy --all-targets`、`cargo test` 通过。
 - `crate-type` 包含 `cdylib`，使用 `export_plugin!` 导出
-  `rpi_plugin_register`。
-- 依赖已发布的 `rpi-plugin-sdk` 兼容版本，不链接宿主私有 crate。
-- `rpi dev --no-watch` 能编译、加载并注册预期工具。
-- `rpi install <crate> --build --force` 的干净安装路径通过。
+  `ice_plugin_register`。
+- 依赖已发布的 `ice-plugin-sdk` 兼容版本，不链接宿主私有 crate。
+- `ice dev --no-watch` 能编译、加载并注册预期工具。
+- `ice install <crate> --build --force` 的干净安装路径通过。
 - Linux/macOS/Windows 构建由 CI 验证，README 标明支持矩阵。
 
 ## 10. 模型执行规则
 
-模型收到"创建 rpi Rust 插件、扩展工具"任务时：
+模型收到"创建 ice Rust 插件、扩展工具"任务时：
 
 1. 先调用 `docs` 查询 `authoring`（扩展开发）或 `debugging`（调试）。
 2. 阅读当前仓库现有 manifest、SDK 版本和相邻扩展约定，不猜 API。
 3. 优先复制 `examples/plugin-stub` 的最小骨架。
 4. 实现领域逻辑与边界测试，再连接 loader/ABI。
-5. 使用 `rpi dev --no-watch` 与 `rpi install <crate> --build --force` 做真实 smoke test。
+5. 使用 `ice dev --no-watch` 与 `ice install <crate> --build --force` 做真实 smoke test。
 6. 不声称未验证的 Pi capability 已完全兼容；明确记录降级行为。
 
 ## 11. OAuth 扩展接口（统一标准，实验阶段）
 
-rpi 的 OAuth 方向是“轻量核心 + 平台插件”：平台差异由扩展实现，宿主负责统一
+ice 的 OAuth 方向是“轻量核心 + 平台插件”：平台差异由扩展实现，宿主负责统一
 发现、生命周期和后续的凭证存储。当前统一 ABI 已提供可选的
 `register_oauth_provider` 槽位；旧插件不需要重新编译即可继续加载。
 
@@ -421,7 +421,7 @@ OAuth callback 使用版本化 JSON action envelope。支持的动作是 `begin`
 `refresh` 和 `revoke`，但 action input 和平台流程完全由扩展定义。OAuth token 属于
 敏感信息：不得写入普通事件、模型消息、工具结果、调试日志或错误文本。插件拥有
 自己产生的输出字符串，宿主通过注册时提供的 `plugin_free_string` 回收。插件应使用
-RPI 的 provider-scoped credential bridge，而不是自行把 token 写入项目目录。
+ICE 的 provider-scoped credential bridge，而不是自行把 token 写入项目目录。
 
 宿主只实现标准 interaction/credential/success/error response；浏览器、device-code、
 PKCE、state、callback 解析和平台 token 映射全部属于扩展。API key fallback 继续保留，
@@ -459,7 +459,7 @@ PKCE、state、callback 解析和平台 token 映射全部属于扩展。API key
 都属于扩展实现。非零返回码会被宿主转换为结构化错误，token 不能进入 agent
 transcript、普通插件事件或日志。
 
-`rpi-extensions` 提供 `list_oauth_providers` 和 `request_oauth` 两个宿主侧入口。
+`ice-extensions` 提供 `list_oauth_providers` 和 `request_oauth` 两个宿主侧入口。
 它们只允许调用已经注册且 manifest `id` 匹配的 provider，并在读取插件输出后立即
 调用插件提供的 `plugin_free_string`。宿主只做 opaque input 转发和标准 response
 校验，不包含任何平台 provider 特判。
@@ -467,25 +467,25 @@ transcript、普通插件事件或日志。
 已接入通用 CLI 流程：
 
 ```text
-rpi auth login --provider <id>
+ice auth login --provider <id>
   begin → interaction（由扩展决定展示内容和输入）
   exchange → credential（标准 access/refresh/expires_at）
 ```
 
 宿主只展示标准 interaction payload，并将用户输入作为 opaque `input` 原样传回扩展。
-浏览器回调、device-code、PKCE/state 等由扩展自行实现。`rpi auth refresh
+浏览器回调、device-code、PKCE/state 等由扩展自行实现。`ice auth refresh
 --provider <id>` 会传递标准 credential context 并调用 provider 的 `refresh` action；
-`rpi auth logout --provider <id>` 会先调用 `revoke`，成功后才删除本地凭证。插件不得
+`ice auth logout --provider <id>` 会先调用 `revoke`，成功后才删除本地凭证。插件不得
 把 token 写入普通事件、模型消息或日志。
 
 ## Provider 接入规范
 
-统一生产包为 `rpi-providers`，一个安装入口包含 DeepSeek、OpenRouter、llama.cpp 和 Proxy。
+统一生产包为 `ice-providers`，一个安装入口包含 DeepSeek、OpenRouter、llama.cpp 和 Proxy。
 新增供应商优先在包内添加模块；只有根模块导出一次 `export_plugin!`，各模块共用注册桥接。
 provider ID、目录与凭据继续独立。单 provider 教学样例才使用 `export_provider!`。
 
 完整规范：[Provider 接入规范](provider-integration.md)。创建推理扩展时优先复制
-正式 provider package 示例见 [rpi-providers](https://github.com/pi-rust/rpi-package/tree/feature-1014/packages/rpi-providers)，通用工具扩展再使用 `plugin-stub`。当前接入约定如下。
+正式 provider package 示例见 [ice-providers](https://github.com/ice-rust/ice-package/tree/feature-1014/packages/ice-providers)，通用工具扩展再使用 `plugin-stub`。当前接入约定如下。
 
 ### 方式与目录
 
@@ -493,7 +493,7 @@ provider ID、目录与凭据继续独立。单 provider 教学样例才使用 `
 认证策略或供应商逻辑时，使用独立 package。新供应商不添加为 CLI 的默认依赖。
 Provider 负责推理，auth 负责凭据和登录流程，两者独立注册。
 
-通过 `declare` 的 `providers` 数组声明 `id`、完整 `rpi_ai::Model` 数组 `models`、
+通过 `declare` 的 `providers` 数组声明 `id`、完整 `ice_ai::Model` 数组 `models`、
 可选 `apiKeyEnv` 和默认 `true` 的 `requiresAuth`。用 `Model::new` 构造后序列化，
 不能使用 models.json 的简写对象。provider ID、每个模型的 `provider`、实际注册 ID
 必须一致；model ID 是发送给服务端的名称。匿名服务必须显式设置 `requiresAuth: false`，
@@ -506,11 +506,11 @@ Provider 负责推理，auth 负责凭据和登录流程，两者独立注册。
 ### Factory 与私有执行绑定
 
 统一包内复用 `crate::registration::register_provider!`；单 provider 教学包可使用
-`rpi-provider-runtime::export_provider!`。模块提供
+`ice-provider-runtime::export_provider!`。模块提供
 `fn(&Model, &SimpleStreamOptions) -> Arc<dyn Provider>`。OpenAI-compatible 接入可复用
-`rpi_provider_runtime::completions(model, options, anonymous)`，无需复制 SSE 解析器。
+`ice_provider_runtime::completions(model, options, anonymous)`，无需复制 SSE 解析器。
 宿主私有 `ProviderFactory` 统一选择扩展 / 内置协议，不是插件需要实现的接口。
-运行时依赖使用 `rpi-ai`、`rpi-plugin-sdk` 与桥接库，不依赖 `rpi-cli`；宿主加载器
+运行时依赖使用 `ice-ai`、`ice-plugin-sdk` 与桥接库，不依赖 `ice-cli`；宿主加载器
 可以作为测试依赖。
 
 公开目录、当前模型及配置后 `Provider::models()` 返回的描述不携带请求头。
@@ -531,7 +531,7 @@ OAuth 供应商流程另外通过 `register_oauth_provider` 接入，宿主负�
 不访问服务端或刷新 token；退出码为就绪 0、缺少凭据 1、配置错误 2。
 `/provider <id>` 与列表选择会即时切换当前会话并保存默认模型；缺少认证或切换失败时
 保留原会话与默认值。`/model` 选择具体模型；`/provider remove` 删除配置，
-卸载 package 使用 `rpi package unlink`。API-key logout 不会清除环境变量或 models.json。
+卸载 package 使用 `ice package unlink`。API-key logout 不会清除环境变量或 models.json。
 
 涉及 provider package 的 `/reload` 会重新绑定 runtime、凭据、端点与公开目录；
 当前 package 消失或无法重新解析时返回错误并保留旧会话。仅内置 provider 的会话仍使用
@@ -547,23 +547,23 @@ OAuth 供应商流程另外通过 `register_oauth_provider` 接入，宿主负�
 UTF-8 跨块、usage、唯一终态、响应未结束时取消与 HTTP 401；认证隔离、端点 / 请求头
 覆盖、公开目录无认证头、命令与重载也要验证。工具和 OAuth 只声明已完成验证的能力。
 真实 API 测试默认 ignored，显式运行时从环境注入 key 并限制超时、重试和用量。
-正式统一包位于独立的 [rpi-package 项目](https://github.com/pi-rust/rpi-package/tree/feature-1014/packages/rpi-providers)，
+正式统一包位于独立的 [ice-package 项目](https://github.com/ice-rust/ice-package/tree/feature-1014/packages/ice-providers)，
 保留 `deepseek` ID，声明 `DEEPSEEK_API_KEY`，并通过 `requiresReasoningContent` 支持工具续轮。
 
-在 rpi-package 仓库运行正式 package 的离线验证：
+在 ice-package 仓库运行正式 package 的离线验证：
 
 ```sh
-cd /path/to/rpi-package
-cargo build -p rpi-providers
-cargo test -p rpi-providers --test streaming
-cargo test -p rpi-providers --test host
+cd /path/to/ice-package
+cargo build -p ice-providers
+cargo test -p ice-providers --test streaming
+cargo test -p ice-providers --test host
 ```
 
-在 pi-rust 仓库运行 CLI 集成测试时设置 `RPI_TEST_PROVIDER_LIBRARY` 和
-`RPI_TEST_PROVIDER_PACKAGE`，再执行：
+在 ice-rust 仓库运行 CLI 集成测试时设置 `ICE_TEST_PROVIDER_LIBRARY` 和
+`ICE_TEST_PROVIDER_PACKAGE`，再执行：
 
 ```sh
-cargo test -p rpi-cli --test provider_packages
+cargo test -p ice-cli --test provider_packages
 ```
 
 新增 package 还必须构建并测试自身动态库，不能仅凭宿主测试通过就声称接入完成。

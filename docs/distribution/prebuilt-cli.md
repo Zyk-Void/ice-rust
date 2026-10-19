@@ -1,31 +1,31 @@
 # Prebuilt CLI distribution protocol v1
 
-`rpi update` resolves the released `rpi-cli` version through crates.io and
+`ice update` resolves the released `ice-cli` version through crates.io and
 downloads its prebuilt executable from the official GitHub repository. Cargo
-compilation is an explicit alternative: `rpi update --build`.
+compilation is an explicit alternative: `ice update --build`.
 
 This uses the same envelope and integrity rules as the extension package
 protocol. CLI Releases retain their existing `v<version>` tags. They publish
-`rpi-release.json`, and each target declares `binary` instead of `library`.
+`ice-release.json`, and each target declares `binary` instead of `library`.
 An executable is self-contained, so it does not require the running host's
-plugin SDK ABI to match. The updater validates its exact `rpi --version` output.
+plugin SDK ABI to match. The updater validates its exact `ice --version` output.
 
 ```json
 {
   "schema_version": 1,
-  "name": "rpi-cli",
+  "name": "ice-cli",
   "version": "0.3.24",
-  "repository": "https://github.com/bigfish1913/pi-rust",
+  "repository": "https://github.com/Zyk-Void/ice-rust",
   "tag": "v0.3.24",
   "source_commit": "0123456789abcdef0123456789abcdef01234567",
   "targets": {
     "x86_64-pc-windows-msvc": {
-      "url": "https://github.com/bigfish1913/pi-rust/releases/download/v0.3.24/rpi-v0.3.24-x86_64-pc-windows-msvc.zip",
+      "url": "https://github.com/Zyk-Void/ice-rust/releases/download/v0.3.24/ice-v0.3.24-x86_64-pc-windows-msvc.zip",
       "format": "zip",
       "size": 123456,
       "sha256": "<64 lowercase hexadecimal characters>",
       "binary": {
-        "path": "rpi.exe",
+        "path": "ice.exe",
         "sha256": "<64 lowercase hexadecimal characters>"
       }
     }
@@ -40,7 +40,7 @@ repository and versioned Release. Unknown fields may be ignored; unknown schema
 versions are rejected.
 
 The updater verifies the compressed archive's byte length and SHA-256, extracts
-only the declared flat `rpi`/`rpi.exe` file, and verifies its SHA-256 and native
+only the declared flat `ice`/`ice.exe` file, and verifies its SHA-256 and native
 object architecture. Archive traversal, links, duplicate executable entries and
 oversized payloads are rejected using the extension installer's shared checks.
 The downloaded executable must report exactly the requested version and must
@@ -55,13 +55,13 @@ executable and rolls back if post-replacement validation fails.
 `scripts/prebuilt-release.py` records each target's archive and executable hashes
 and source commit. The release job verifies all five artifacts refer to the same
 version and commit, preserves the existing archive names and `.sha256` files,
-uploads archives first, and uploads `rpi-release.json` last. The release driver
+uploads archives first, and uploads `ice-release.json` last. The release driver
 waits for this manifest before declaring the binaries ready.
 
 A missing manifest means the prebuilt release is not ready. This includes older
 Releases created before this protocol. The command reports the error without
 falling back to source compilation or replacing the installed executable. Retry
-after the assets are published, or explicitly use `rpi update --build`.
+after the assets are published, or explicitly use `ice update --build`.
 
 `--force` permits reinstalling the resolved version; `--offline` only reports
 cached update information and performs no downloads or builds.

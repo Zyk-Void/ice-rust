@@ -1,6 +1,6 @@
 # Agent 工具系统：用 ExecutionEnv 把副作用隔离出来
 
-> Agent 真正危险的部分往往不是生成文本，而是读文件、改文件和执行命令。rpi 用 `AgentTool` 描述工具，用 `ExecutionEnv` 抽象文件系统与 Shell，让同一套工具既能运行在操作系统，也能在内存环境测试。
+> Agent 真正危险的部分往往不是生成文本，而是读文件、改文件和执行命令。ice 用 `AgentTool` 描述工具，用 `ExecutionEnv` 抽象文件系统与 Shell，让同一套工具既能运行在操作系统，也能在内存环境测试。
 
 ## 一次工具调用
 
@@ -21,7 +21,7 @@ sequenceDiagram
 `pi-tools` 暴露的创建函数包括：
 
 ```rust
-use rpi_tools::{
+use ice_tools::{
     create_read_tool, create_write_tool, create_edit_tool,
     create_bash_tool, ExecutionEnv, InMemoryExecutionEnv,
 };
@@ -52,7 +52,7 @@ async fn write_then_read_in_memory() {
 }
 ```
 
-真实的工具集成测试位于 `crates/rpi-tools/tests`。推广时应强调：这是“可替换执行环境”，不是自动提供安全沙箱；如果要执行不可信代码，仍需额外容器、权限和网络隔离。
+真实的工具集成测试位于 `crates/ice-tools/tests`。推广时应强调：这是“可替换执行环境”，不是自动提供安全沙箱；如果要执行不可信代码，仍需额外容器、权限和网络隔离。
 
 ## 读者可能会关心什么
 
@@ -60,7 +60,7 @@ async fn write_then_read_in_memory() {
 - 测试不依赖开发者机器上的文件和 Shell。
 - 错误、截断和输出限制集中在工具层管理。
 
-代码入口：`crates/rpi-tools/src/env.rs`、`crates/rpi-tools/src/tools`。可以作为 Rust 工程实践或 Agent 工具链主题的技术文章。
+代码入口：`crates/ice-tools/src/env.rs`、`crates/ice-tools/src/tools`。可以作为 Rust 工程实践或 Agent 工具链主题的技术文章。
 
 ---
 
@@ -68,10 +68,10 @@ async fn write_then_read_in_memory() {
 
 # Agent Tools Need an Execution Boundary
 
-Reading a file is easy to demo. Running model-generated shell commands in a real workspace is where the engineering starts. rpi treats tools as `AgentTool` implementations and puts filesystem and shell access behind `ExecutionEnv`.
+Reading a file is easy to demo. Running model-generated shell commands in a real workspace is where the engineering starts. ice treats tools as `AgentTool` implementations and puts filesystem and shell access behind `ExecutionEnv`.
 
 `OsExecutionEnv` can work with the host system. `InMemoryExecutionEnv` can exercise the same tool without touching a developer’s files. Arguments are checked first, and failures return as tool results instead of crashing the loop.
 
 This is not a security sandbox by itself. Untrusted code still needs containers, restricted credentials, and network policy. The narrower benefit is practical: tool behavior is isolated and testable.
 
-Start with `crates/rpi-tools/src/env.rs` and `crates/rpi-tools/src/tools`.
+Start with `crates/ice-tools/src/env.rs` and `crates/ice-tools/src/tools`.

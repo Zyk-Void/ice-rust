@@ -12,18 +12,18 @@ from pathlib import Path
 import re
 import tomllib
 version = tomllib.loads(Path('Cargo.toml').read_text(encoding='utf-8'))['workspace']['package']['version']
-for name in ('README.md', 'docs/rpi-tool/README.md'):
+for name in ('README.md', 'docs/ice-tool/README.md'):
     path = Path(name)
     text = re.sub(r'(Current release[^\n]*?)\b\d+\.\d+\.\d+',
                   lambda match: match[1] + version, path.read_text(encoding='utf-8'))
     path.write_text(text, encoding='utf-8', newline='\n')
 PY
 sh scripts/sync-embedded-docs.sh
-rustc --edition=2021 release-helper.rs -o .git/rpi-release-helper
-.git/rpi-release-helper validate "$(python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])")" --allow-dirty
+rustc --edition=2021 release-helper.rs -o .git/ice-release-helper
+.git/ice-release-helper validate "$(python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])")" --allow-dirty
 git config user.name 'github-actions[bot]'
 git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-git add README.md docs/rpi-tool/README.md crates/rpi-cli/embedded-docs
+git add README.md docs/ice-tool/README.md crates/ice-cli/embedded-docs
 if ! git diff --cached --quiet; then
   git commit -m 'chore(release): sync bundled release documentation'
   gh auth setup-git

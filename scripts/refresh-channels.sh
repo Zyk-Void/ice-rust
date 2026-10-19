@@ -20,7 +20,7 @@ set -euo pipefail
 
 VERSION="${1:?usage: refresh-channels.sh X.Y.Z}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'invalid version' >&2; exit 1; }
-REPO="bigfish1913/pi-rust"
+REPO="Zyk-Void/ice-rust"
 TAG="v$VERSION"
 
 die() { echo "error: $*" >&2; exit 1; }
@@ -28,8 +28,8 @@ note() { echo "» $*"; }
 
 cd "$(git rev-parse --show-toplevel)"
 
-OLD=$(grep -m1 -oE '"version": "[0-9.]+"' packaging/scoop/rpi.json | grep -oE '[0-9.]+')
-[[ -n "$OLD" ]] || die "could not read the current version from packaging/scoop/rpi.json"
+OLD=$(grep -m1 -oE '"version": "[0-9.]+"' packaging/scoop/ice.json | grep -oE '[0-9.]+')
+[[ -n "$OLD" ]] || die "could not read the current version from packaging/scoop/ice.json"
 # Do not skip a same-version rebuild: CI retries must regenerate the checksums.
 
 tmp=$(mktemp -d)
@@ -58,10 +58,10 @@ sha() {
   awk '{print $1}' "$file" | tr 'A-F' 'a-f'
 }
 
-LINUX_X64="rpi-$TAG-x86_64-unknown-linux-gnu.tar.gz"
-LINUX_ARM="rpi-$TAG-aarch64-unknown-linux-gnu.tar.gz"
-MAC_ARM="rpi-$TAG-aarch64-apple-darwin.tar.gz"
-WIN_X64="rpi-$TAG-x86_64-pc-windows-msvc.zip"
+LINUX_X64="ice-$TAG-x86_64-unknown-linux-gnu.tar.gz"
+LINUX_ARM="ice-$TAG-aarch64-unknown-linux-gnu.tar.gz"
+MAC_ARM="ice-$TAG-aarch64-apple-darwin.tar.gz"
+WIN_X64="ice-$TAG-x86_64-pc-windows-msvc.zip"
 
 SHA_LINUX_X64=$(sha "$LINUX_X64")
 SHA_LINUX_ARM=$(sha "$LINUX_ARM")
@@ -72,21 +72,21 @@ SHA_WIN_X64=$(sha "$WIN_X64")
 # Homebrew: version + URLs + the three sha256 lines (order in file:
 # apple-darwin, linux aarch64, linux x86_64).
 # --------------------------------------------------------------------------
-note "packaging/homebrew/rpi.rb"
-mapfile -t OLD_BREW < <(grep -oE 'sha256 "[0-9a-f]+"' packaging/homebrew/rpi.rb | grep -oE '[0-9a-f]{64}')
+note "packaging/homebrew/ice.rb"
+mapfile -t OLD_BREW < <(grep -oE 'sha256 "[0-9a-f]+"' packaging/homebrew/ice.rb | grep -oE '[0-9a-f]{64}')
 [[ "${#OLD_BREW[@]}" -eq 3 ]] || die "expected 3 sha256 lines in the Homebrew formula"
-perl -pi -e "s/version \"$OLD\"/version \"$VERSION\"/; s/v$OLD/v$VERSION/g" packaging/homebrew/rpi.rb
-perl -pi -e "s/${OLD_BREW[0]}/$SHA_MAC_ARM/" packaging/homebrew/rpi.rb
-perl -pi -e "s/${OLD_BREW[1]}/$SHA_LINUX_ARM/" packaging/homebrew/rpi.rb
-perl -pi -e "s/${OLD_BREW[2]}/$SHA_LINUX_X64/" packaging/homebrew/rpi.rb
+perl -pi -e "s/version \"$OLD\"/version \"$VERSION\"/; s/v$OLD/v$VERSION/g" packaging/homebrew/ice.rb
+perl -pi -e "s/${OLD_BREW[0]}/$SHA_MAC_ARM/" packaging/homebrew/ice.rb
+perl -pi -e "s/${OLD_BREW[1]}/$SHA_LINUX_ARM/" packaging/homebrew/ice.rb
+perl -pi -e "s/${OLD_BREW[2]}/$SHA_LINUX_X64/" packaging/homebrew/ice.rb
 
 # --------------------------------------------------------------------------
 # Scoop
 # --------------------------------------------------------------------------
-note "packaging/scoop/rpi.json"
-OLD_SCOOP=$(grep -m1 -oE '"hash": "[0-9a-fA-F]+"' packaging/scoop/rpi.json | grep -oE '[0-9a-fA-F]{64}')
+note "packaging/scoop/ice.json"
+OLD_SCOOP=$(grep -m1 -oE '"hash": "[0-9a-fA-F]+"' packaging/scoop/ice.json | grep -oE '[0-9a-fA-F]{64}')
 [[ -n "$OLD_SCOOP" ]] || die "could not read the Scoop hash"
-perl -pi -e "s/\"version\": \"$OLD\"/\"version\": \"$VERSION\"/; s/v$OLD/v$VERSION/g; s/$OLD_SCOOP/$SHA_WIN_X64/" packaging/scoop/rpi.json
+perl -pi -e "s/\"version\": \"$OLD\"/\"version\": \"$VERSION\"/; s/v$OLD/v$VERSION/g; s/$OLD_SCOOP/$SHA_WIN_X64/" packaging/scoop/ice.json
 
 # --------------------------------------------------------------------------
 # winget
@@ -94,15 +94,15 @@ perl -pi -e "s/\"version\": \"$OLD\"/\"version\": \"$VERSION\"/; s/v$OLD/v$VERSI
 note "packaging/winget/*.yaml"
 DATE=$(gh api "repos/$REPO/releases/tags/$TAG" --jq '.published_at // .created_at | split("T")[0]')
 [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "could not read the release date"
-OLD_WINGET=$(grep -m1 -oE 'InstallerSha256: [0-9A-Fa-f]+' packaging/winget/bigfish1913.rpi.installer.yaml | grep -oE '[0-9A-Fa-f]{64}')
+OLD_WINGET=$(grep -m1 -oE 'InstallerSha256: [0-9A-Fa-f]+' packaging/winget/Zyk-Void.ice.installer.yaml | grep -oE '[0-9A-Fa-f]{64}')
 [[ -n "$OLD_WINGET" ]] || die "could not read the winget InstallerSha256"
 WIN_UPPER=$(printf '%s' "$SHA_WIN_X64" | tr 'a-f' 'A-F')
 perl -pi -e "s/PackageVersion: $OLD/PackageVersion: $VERSION/; s/v$OLD/v$VERSION/g; s/$OLD_WINGET/$WIN_UPPER/; s/ReleaseDate: [0-9-]+/ReleaseDate: $DATE/" \
-  packaging/winget/bigfish1913.rpi.installer.yaml
+  packaging/winget/Zyk-Void.ice.installer.yaml
 perl -pi -e "s/PackageVersion: $OLD/PackageVersion: $VERSION/; s/v$OLD/v$VERSION/g" \
-  packaging/winget/bigfish1913.rpi.locale.en-US.yaml
+  packaging/winget/Zyk-Void.ice.locale.en-US.yaml
 perl -pi -e "s/PackageVersion: $OLD/PackageVersion: $VERSION/" \
-  packaging/winget/bigfish1913.rpi.yaml
+  packaging/winget/Zyk-Void.ice.yaml
 
 # --------------------------------------------------------------------------
 # Site data: both current-release cards and the nine core crate snapshots.
@@ -119,8 +119,8 @@ version, published = sys.argv[1:]
 root = Path('website/data')
 paths = [root / f'{name}.json' for name in ('packages', 'site', 'locales')]
 packages, site, locales = [json.loads(path.read_text(encoding='utf-8')) for path in paths]
-core = {'rpi-cli', 'rpi-tui', 'rpi-harness', 'rpi-tools', 'rpi-extensions',
-        'rpi-plugin-sdk', 'rpi-agent', 'rpi-ai', 'rpi-telemetry'}
+core = {'ice-cli', 'ice-tui', 'ice-harness', 'ice-tools', 'ice-extensions',
+        'ice-plugin-sdk', 'ice-agent', 'ice-ai', 'ice-telemetry'}
 age = max(0, (datetime.datetime.now(datetime.timezone.utc).date()
               - datetime.date.fromisoformat(published)).days)
 for package in packages:

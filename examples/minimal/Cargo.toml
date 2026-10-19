@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-rpi-agent = { workspace = true }
-rpi-ai = { workspace = true }
+ice-agent = { workspace = true }
+ice-ai = { workspace = true }
 tokio = { workspace = true }
 futures = { workspace = true }

@@ -1,15 +1,15 @@
-# rpi — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.
+# ice — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.
 [workspace]
 members = [
-    "crates/rpi-telemetry",
-    "crates/rpi-ai",
-    "crates/rpi-agent",
-    "crates/rpi-tools",
-    "crates/rpi-harness",
-    "crates/rpi-cli",
-    "crates/rpi-tui",
-    "crates/rpi-plugin-sdk",
-    "crates/rpi-extensions",
+    "crates/ice-telemetry",
+    "crates/ice-ai",
+    "crates/ice-agent",
+    "crates/ice-tools",
+    "crates/ice-harness",
+    "crates/ice-cli",
+    "crates/ice-tui",
+    "crates/ice-plugin-sdk",
+    "crates/ice-extensions",
     "examples/minimal",
     "examples/tools",
     "examples/tui",
@@ -17,10 +17,10 @@ members = [
     "packages/provider-runtime",
 ]
 default-members = [
-    "crates/rpi-agent",
-    "crates/rpi-tools",
-    "crates/rpi-harness",
-    "crates/rpi-cli",
+    "crates/ice-agent",
+    "crates/ice-tools",
+    "crates/ice-harness",
+    "crates/ice-cli",
 ]
 resolver = "2"
 
@@ -28,7 +28,7 @@ resolver = "2"
 edition = "2021"
 rust-version = "1.78"
 license = "MIT"
-repository = "https://github.com/bigfish1913/pi-rust"
+repository = "https://github.com/Zyk-Void/ice-rust"
 homepage = "https://rpi.laofu.online/"
 version = "0.6.1"
 authors = ["BigFish <fuwei201473@gmail.com>"]
@@ -70,17 +70,17 @@ globset = "=0.4.15"
 dirs = "5"
 rpassword = "7"
 
-# rpi internal crates (package names and directories both use the `rpi-` prefix).
-rpi-telemetry = { path = "crates/rpi-telemetry", version = "0.6.1" }
-rpi-ai = { path = "crates/rpi-ai", version = "0.6.1" }
-rpi-agent = { path = "crates/rpi-agent", version = "0.6.1" }
-rpi-tools = { path = "crates/rpi-tools", version = "0.6.1" }
-rpi-harness = { path = "crates/rpi-harness", version = "0.6.1" }
+# ice internal crates (package names and directories both use the `ice-` prefix).
+ice-telemetry = { path = "crates/ice-telemetry", version = "0.6.1" }
+ice-ai = { path = "crates/ice-ai", version = "0.6.1" }
+ice-agent = { path = "crates/ice-agent", version = "0.6.1" }
+ice-tools = { path = "crates/ice-tools", version = "0.6.1" }
+ice-harness = { path = "crates/ice-harness", version = "0.6.1" }
 
-rpi-tui = { path = "crates/rpi-tui", version = "0.6.1" }
+ice-tui = { path = "crates/ice-tui", version = "0.6.1" }
 
-rpi-plugin-sdk = { path = "crates/rpi-plugin-sdk", version = "0.6.1" }
-rpi-extensions = { path = "crates/rpi-extensions", version = "0.6.1" }
+ice-plugin-sdk = { path = "crates/ice-plugin-sdk", version = "0.6.1" }
+ice-extensions = { path = "crates/ice-extensions", version = "0.6.1" }
 
 [profile.release]
 lto = "thin"

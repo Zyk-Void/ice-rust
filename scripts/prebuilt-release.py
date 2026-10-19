@@ -12,7 +12,7 @@ TARGETS = {
     "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu",
     "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin",
 }
-REPOSITORY = "https://github.com/bigfish1913/pi-rust"
+REPOSITORY = "https://github.com/Zyk-Void/ice-rust"
 
 
 def sha(data):
@@ -27,7 +27,7 @@ def describe(archive, target, version, commit, repository=REPOSITORY):
     if repository.rstrip("/") != REPOSITORY:
         raise ValueError("unexpected CLI publisher")
     archive = Path(archive)
-    name = "rpi.exe" if "windows" in target else "rpi"
+    name = "ice.exe" if "windows" in target else "ice"
     archive_format = "zip" if archive.name.endswith(".zip") else "tar.gz"
     if archive_format == "zip":
         with zipfile.ZipFile(archive) as package:
@@ -70,7 +70,7 @@ def assemble(directory, tag, commit):
             raise ValueError("legacy installer checksum differs from manifest")
     if tag != f"v{version}":
         raise ValueError("invalid CLI release tag")
-    return {"schema_version": 1, "name": "rpi-cli", "version": version, "repository": REPOSITORY,
+    return {"schema_version": 1, "name": "ice-cli", "version": version, "repository": REPOSITORY,
             "tag": tag, "source_commit": commit,
             "targets": {row["target"]: row["distribution"] for row in sorted(rows, key=lambda r: r["target"])}}
 

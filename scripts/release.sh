@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command release for the rpi-* crate family.
+# One-command release for the ice-* crate family.
 #
 #   task release RELEASE_VERSION=0.3.4
 #   bash scripts/release.sh 0.3.4 --dry-run
@@ -13,18 +13,18 @@
 # first. Phases are individually selectable (--only / --from / --skip).
 #
 # Credentials this expects (all optional until the phase that needs them):
-#   * git push access to bigfish1913/pi-rust, bigfish1913/homebrew-tap,
+#   * git push access to Zyk-Void/ice-rust, bigfish1913/homebrew-tap,
 #     bigfish1913/scoop-bucket
 #   * `gh` authenticated (release assets, taps, fork + PR to winget-pkgs)
 #   * `cargo login` for the crates.io publish phase
-#   * SSH to the rpi web host for the site phase
+#   * SSH to the ice web host for the site phase
 #
 # The winget phase only *opens* a PR: a winget-team moderator merges it, which
 # no command here can do.
 
 set -euo pipefail
 
-REPO="bigfish1913/pi-rust"
+REPO="Zyk-Void/ice-rust"
 # `<target>:<archive extension>` — must mirror the `archive:` column of the
 # release-binaries matrix. Each target publishes exactly ONE archive (plus its
 # `.sha256` sidecar), so requiring both formats here waits forever.
@@ -186,15 +186,15 @@ phase_push() {
 
 phase_wait() {
   note "wait for the release binaries and verified manifest (release-binaries.yml)"
-  local needed=("rpi-release.json")
+  local needed=("ice-release.json")
   local entry target ext
   for entry in "${ASSET_TARGETS[@]}"; do
     target="${entry%%:*}"
     ext="${entry##*:}"
-    needed+=("rpi-$release_tag-$target.$ext" "rpi-$release_tag-$target.$ext.sha256")
+    needed+=("ice-$release_tag-$target.$ext" "ice-$release_tag-$target.$ext.sha256")
   done
   if [[ "$DRY_RUN" == "1" ]]; then
-    echo "  \$ poll: gh release view $release_tag --json assets until all archives + .sha256 + rpi-release.json exist"
+    echo "  \$ poll: gh release view $release_tag --json assets until all archives + .sha256 + ice-release.json exist"
     return
   fi
   local attempt
@@ -247,8 +247,8 @@ phase_crates() {
 
 phase_site() {
   note "deploy the site"
-  confirm "Deploy the site (SSH to the rpi host)?" || { note "  skipped"; return; }
-  step task rpi-deploy
+  confirm "Deploy the site (SSH to the ice host)?" || { note "  skipped"; return; }
+  step task ice-deploy
 }
 
 # --------------------------------------------------------------------------

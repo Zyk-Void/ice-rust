@@ -37,7 +37,7 @@ class VerifierTests(unittest.TestCase):
 
     def test_wrong_content_fails(self):
         with self.assertRaisesRegex(AssertionError, 'expected content'):
-            self.check_response((200, {'Cache-Control': website.CONTENT_CACHE}, b'wrong'), marker=b'rpi-cli')
+            self.check_response((200, {'Cache-Control': website.CONTENT_CACHE}, b'wrong'), marker=b'ice-cli')
 
     def test_wrong_redirect_fails(self):
         with self.assertRaisesRegex(AssertionError, 'unexpected redirect'):
@@ -66,12 +66,12 @@ class CaddyIntegrationTests(unittest.TestCase):
 
     @classmethod
     def start_server(cls):
-        temp = cls.cleanup.enter_context(tempfile.TemporaryDirectory(prefix='rpi-website-test-'))
+        temp = cls.cleanup.enter_context(tempfile.TemporaryDirectory(prefix='ice-website-test-'))
         directory = Path(temp)
         site = directory / 'website'
-        shutil.copytree(ROOT / 'website', site, ignore=shutil.ignore_patterns('.rpi', '.deploy', '.git'))
+        shutil.copytree(ROOT / 'website', site, ignore=shutil.ignore_patterns('.ice', '.deploy', '.git'))
         # Prove that the server denies real files, not just paths that happen to be absent.
-        for path in ('.rpi/todo.json', '.deploy/website.tar.gz', '.git/config', 'nested/.rpi/session.json', '.RPI/todo.json'):
+        for path in ('.ice/todo.json', '.deploy/website.tar.gz', '.git/config', 'nested/.ice/session.json', '.ICE/todo.json'):
             target = site / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text('PRIVATE_SENTINEL', encoding='utf-8')
@@ -79,10 +79,10 @@ class CaddyIntegrationTests(unittest.TestCase):
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
         cls.base_url = f'http://127.0.0.1:{port}'
-        config = (ROOT / 'deploy/rpi.caddy').read_text(encoding='utf-8')
+        config = (ROOT / 'deploy/ice.caddy').read_text(encoding='utf-8')
         config = config.split('\nhttp://rpi.laofu.online {')[0]
         config = config.replace('rpi.laofu.online {', f'http://127.0.0.1:{port} {{', 1)
-        config = config.replace('root * /var/www/rpi', f'root * "{site.as_posix()}"')
+        config = config.replace('root * /var/www/ice', f'root * "{site.as_posix()}"')
         config = config.replace('    tls {\n        issuer acme\n    }', '')
         config = '{\n    admin off\n    auto_https off\n    persist_config off\n}\n' + config
         config_path = directory / 'Caddyfile'
@@ -117,7 +117,7 @@ class CaddyIntegrationTests(unittest.TestCase):
             website.verify(self.base_url)
 
     def test_private_contents_are_never_served(self):
-        for path in ('/.rpi/todo.json', '/nested/.rpi/session.json', '/.RPI/todo.json', '/%2erpi/todo.json'):
+        for path in ('/.ice/todo.json', '/nested/.ice/session.json', '/.ICE/todo.json', '/%2eice/todo.json'):
             with self.subTest(path=path):
                 status, headers, body = website.fetch(self.base_url, path)
                 self.assertEqual(status, 404)

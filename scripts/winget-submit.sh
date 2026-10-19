@@ -23,11 +23,11 @@ note() { echo "» $*"; }
 cd "$(git rev-parse --show-toplevel)"
 
 me=$(gh api user --jq .login) || die "gh is not authenticated"
-branch="rpi-$VERSION"
-dir="manifests/b/bigfish1913/rpi/$VERSION"
+branch="ice-$VERSION"
+dir="manifests/b/bigfish1913/ice/$VERSION"
 # Reuse submissions when a job is retried.
 if gh api "repos/microsoft/winget-pkgs/contents/$dir" >/dev/null 2>&1; then
-  note "bigfish1913.rpi $VERSION is already in Microsoft winget"
+  note "Zyk-Void.ice $VERSION is already in Microsoft winget"
   exit 0
 fi
 # `gh pr list --head` accepts a bare branch, not owner:branch. Filter the
@@ -59,9 +59,9 @@ if ! gh api "repos/$me/winget-pkgs/git/ref/heads/$branch" >/dev/null 2>&1; then
 fi
 
 for f in \
-  packaging/winget/bigfish1913.rpi.yaml \
-  packaging/winget/bigfish1913.rpi.installer.yaml \
-  packaging/winget/bigfish1913.rpi.locale.en-US.yaml; do
+  packaging/winget/Zyk-Void.ice.yaml \
+  packaging/winget/Zyk-Void.ice.installer.yaml \
+  packaging/winget/Zyk-Void.ice.locale.en-US.yaml; do
   name=$(basename "$f")
   [[ -f "$f" ]] || die "missing $f"
   grep -q "^PackageVersion: $VERSION$" "$f" || die "wrong manifest version: $f"
@@ -76,7 +76,7 @@ for f in \
   fi
   note "put $dir/$name"
   gh api --method PUT "repos/$me/winget-pkgs/contents/$dir/$name" \
-    -f message="New version: bigfish1913.rpi version $VERSION" \
+    -f message="New version: Zyk-Void.ice version $VERSION" \
     -f content="$content" -f branch="$branch" "${sha_args[@]}" >/dev/null
 done
 
@@ -85,8 +85,8 @@ if [[ -n "$existing" ]]; then
 else
   note "open PR"
   gh pr create --repo microsoft/winget-pkgs --base master --head "$me:$branch" \
-    --title "New version: bigfish1913.rpi version $VERSION" \
-    --body "Adds bigfish1913.rpi $VERSION from bigfish1913/pi-rust (tag v$VERSION). The installer is the portable Windows zip."
+    --title "New version: Zyk-Void.ice version $VERSION" \
+    --body "Adds Zyk-Void.ice $VERSION from Zyk-Void/ice-rust (tag v$VERSION). The installer is the portable Windows zip."
 fi
 note "Submitted for Microsoft review; this does not mean the package is live."
 note "If the policy bot requests a CLA, the maintainer must review and sign it."

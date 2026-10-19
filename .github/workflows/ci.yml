@@ -81,8 +81,8 @@ jobs:
       - name: Verify embedded docs are in sync
         run: |
           sh scripts/sync-embedded-docs.sh
-          if ! git diff --exit-code -- crates/rpi-cli/embedded-docs; then
-            echo "::error::crates/rpi-cli/embedded-docs is out of sync with the repository documents. Run 'sh scripts/sync-embedded-docs.sh' and commit the result."
+          if ! git diff --exit-code -- crates/ice-cli/embedded-docs; then
+            echo "::error::crates/ice-cli/embedded-docs is out of sync with the repository documents. Run 'sh scripts/sync-embedded-docs.sh' and commit the result."
             exit 1
           fi
 
@@ -99,7 +99,7 @@ jobs:
 
   release:
     name: Release automation
-    if: github.repository == 'bigfish1913/pi-rust' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.repository == 'Zyk-Void/ice-rust' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: [check, test, windows-installer]
     permissions:
       contents: write

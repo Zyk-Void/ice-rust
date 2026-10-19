@@ -23,8 +23,8 @@ class ReleaseManifestTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         for target in prebuilt.TARGETS:
             windows = "windows" in target
-            filename = "rpi.exe" if windows else "rpi"
-            asset = self.root / f"rpi-v1.2.3-{target}.{'zip' if windows else 'tar.gz'}"
+            filename = "ice.exe" if windows else "ice"
+            asset = self.root / f"ice-v1.2.3-{target}.{'zip' if windows else 'tar.gz'}"
             binary = b"test executable " + target.encode()
             if windows:
                 with zipfile.ZipFile(asset, "w") as package:
@@ -42,10 +42,10 @@ class ReleaseManifestTests(unittest.TestCase):
     def test_five_targets_have_archive_and_executable_checksums(self):
         manifest = prebuilt.assemble(self.root, "v1.2.3", "a" * 40)
         self.assertEqual(set(manifest["targets"]), prebuilt.TARGETS)
-        self.assertEqual(manifest["name"], "rpi-cli")
+        self.assertEqual(manifest["name"], "ice-cli")
         self.assertEqual(manifest["tag"], "v1.2.3")
         for target, row in manifest["targets"].items():
-            self.assertEqual(row["binary"]["path"], "rpi.exe" if "windows" in target else "rpi")
+            self.assertEqual(row["binary"]["path"], "ice.exe" if "windows" in target else "ice")
             self.assertEqual(len(row["binary"]["sha256"]), 64)
 
     def test_missing_platform_is_not_a_ready_release(self):

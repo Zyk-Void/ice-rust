@@ -1,7 +1,7 @@
 # 「LLM 一直在重复思考」问题复盘
 
 审计日期：2026-09-25
-涉及仓库：`pi-rust`（`crates/rpi-agent`、`crates/rpi-ai`、`crates/rpi-harness`、`crates/rpi-cli`、`crates/rpi-tui`）
+涉及仓库：`ice-rust`（`crates/ice-agent`、`crates/ice-ai`、`crates/ice-harness`、`crates/ice-cli`、`crates/ice-tui`）
 
 本文记录一次「模型看起来卡在重复思考 / 第二轮不回复」的排查过程、证据、完整代码链路，
 以及哪些断点被确认、哪些被排除。目的不是给结论，而是给一份**可复核的调用链**，
@@ -21,8 +21,8 @@
 
 ## 二、症状 1 的证据：不是复读，是 re-plan
 
-被观察的会话：`.pi/sessions/--D--Projects-pi-rust--/2026-09-24T16-04-18-236Z_01a0d429-*.jsonl`
-（271 行 / 662 KB，cwd = `D:\Projects\pi-rust`）
+被观察的会话：`.pi/sessions/--D--Projects-ice-rust--/2026-09-24T16-04-18-236Z_01a0d429-*.jsonl`
+（271 行 / 662 KB，cwd = `D:\Projects\ice-rust`）
 
 | 指标 | 值 |
 |---|---|
@@ -51,7 +51,7 @@
 
 ```
 用户按 Enter
-└─ crates/rpi-cli/src/interactive_tui.rs:5956   editor.on_submit 闭包（阻塞在 key 线程）
+└─ crates/ice-cli/src/interactive_tui.rs:5956   editor.on_submit 闭包（阻塞在 key 线程）
    ├─ text.starts_with('/')                 → dispatch_slash(..)
    ├─ parse_user_bash(text)                 → start_user_bash(..)     【! / !! 直连 shell】
    ├─ RunStatus != Idle                     → lane.steer(msg)
@@ -67,7 +67,7 @@
             └─ lane.prompt_text(prompt, images)      ──────────────┐
                                                                    │
 harness 层                                                         │
-└─ crates/rpi-harness/src/agent_harness.rs:1799  run_core(prompts) ◄──┘
+└─ crates/ice-harness/src/agent_harness.rs:1799  run_core(prompts) ◄──┘
    ├─ :1805  next_run_queue 取出排队 prompt，接到本次 prompts 前面
    ├─ :1812  finish_interrupted_operation(..)
    │          把上一次没写 operation_finished 的 run 记成 aborted/interrupted
@@ -84,7 +84,7 @@ harness 层                                                         │
 ### 3.2 agent loop
 
 ```
-crates/rpi-agent/src/agent_loop.rs:72  run_agent_loop(prompts, context, config, emit, stream_fn)
+crates/ice-agent/src/agent_loop.rs:72  run_agent_loop(prompts, context, config, emit, stream_fn)
   ├─ :79   new_messages = prompts.clone()            ← ★ 这里传入的是空 vec
   ├─ :80   current_context.messages = context.messages + prompts
   ├─ :90   emit AgentStart
@@ -112,7 +112,7 @@ crates/rpi-agent/src/agent_loop.rs:72  run_agent_loop(prompts, context, config, 
 ### 3.3 单次 provider 请求
 
 ```
-crates/rpi-agent/src/agent_loop.rs:383  stream_assistant_response(&mut context, ..)
+crates/ice-agent/src/agent_loop.rs:383  stream_assistant_response(&mut context, ..)
   ├─ :390  transform_context(context.messages.clone())
   ├─ :397  convert_to_llm(messages)                      ← AgentMessage[] → Message[]
   ├─ :399  llm_context = { system_prompt, messages, tools }
@@ -126,12 +126,12 @@ crates/rpi-agent/src/agent_loop.rs:383  stream_assistant_response(&mut context, 
 ### 3.4 provider 流式解码（以 openai-completions 为例）
 
 ```
-crates/rpi-ai/src/providers/openai_completions.rs
+crates/ice-ai/src/providers/openai_completions.rs
   ├─ :145  body = build_request(model, ctx, opts)     ← max_tokens / system / tools 在此成型
   ├─ :156  retry_provider_request(..)                 ← 可重试错误在此重试
-  │          crates/rpi-ai/src/providers/anthropic/retry.rs:160
+  │          crates/ice-ai/src/providers/anthropic/retry.rs:160
   ├─ :158  http.post(url).timeout(opts.request_timeout())
-  │          DEFAULT_LLM_API_TIMEOUT = 600s（crates/rpi-ai/src/provider.rs:14）
+  │          DEFAULT_LLM_API_TIMEOUT = 600s（crates/ice-ai/src/provider.rs:14）
   │          reqwest 语义：覆盖「连接 + 响应体读完」全程 ⇒ 整个流必须 10 分钟内结束
   ├─ :201  SseEventStream::new(response, signal)
   └─ :202  loop { events.next_event().await
@@ -150,7 +150,7 @@ crates/rpi-ai/src/providers/openai_completions.rs
 SSE 解码器本体：
 
 ```
-crates/rpi-ai/src/providers/anthropic/sse.rs
+crates/ice-ai/src/providers/anthropic/sse.rs
   :213  next_event
     ├─ :221  while let Some((line, rest)) = consume_line(&leftover, self.done)
     ├─ :234  if self.done { …最后半行…; self.state.flush() }
@@ -168,7 +168,7 @@ crates/rpi-ai/src/providers/anthropic/sse.rs
 ### 3.5 回到 TUI
 
 ```
-crates/rpi-cli/src/interactive_tui.rs:8084  handle_agent_event（drain 任务，独立于主循环）
+crates/ice-cli/src/interactive_tui.rs:8084  handle_agent_event（drain 任务，独立于主循环）
   ├─ :8092  AgentStart        → set_status(Working)
   ├─ :8097  AgentEnd          → set_status(Idle)
   │                            + flush pending_bash_messages
@@ -185,8 +185,8 @@ crates/rpi-cli/src/interactive_tui.rs:8084  handle_agent_event（drain 任务，
 ### 3.6 动画与耗时（与 §六、§七 相关）
 
 ```
-crates/rpi-cli/src/interactive_tui.rs  render-tick 任务
-  interval = rpi_tui::loader::SPINNER_FRAME_MS (= 80ms，对齐原生 DEFAULT_INTERVAL_MS)
+crates/ice-cli/src/interactive_tui.rs  render-tick 任务
+  interval = ice_tui::loader::SPINNER_FRAME_MS (= 80ms，对齐原生 DEFAULT_INTERVAL_MS)
   只 request_render(..)，不推帧
         └─ TuiAltScreen::do_render(:689)
              └─ Editor::render  ← 在这里推帧（镜像 Loader::render）
@@ -194,8 +194,8 @@ crates/rpi-cli/src/interactive_tui.rs  render-tick 任务
                   · idle:   80ms tick 一帧 ⇒ 与原生 pi 同频
 
 工具/bash 耗时：
-  crates/rpi-tui/src/tool_execution.rs   started_at / finished_at + format_elapsed
-  crates/rpi-tui/src/bash_execution.rs   started_at / finished_at + format_elapsed
+  crates/ice-tui/src/tool_execution.rs   started_at / finished_at + format_elapsed
+  crates/ice-tui/src/bash_execution.rs   started_at / finished_at + format_elapsed
 ```
 
 ---
@@ -240,13 +240,13 @@ crates/rpi-cli/src/interactive_tui.rs  render-tick 任务
 （`interactive_tui.rs` 提交处理器、Alt+Enter 空闲分支、启动 `-p` 循环）；
 排队（steer / follow-up）仍由 `agent_loop.rs:201` drain 时的 `MessageStart` 回显 —— 两者各渲染一次，不会重叠。
 
-回归保护：`crates/rpi-harness/tests/harness_run_e2e.rs::directly_sent_prompt_emits_no_user_message_start`
+回归保护：`crates/ice-harness/tests/harness_run_e2e.rs::directly_sent_prompt_emits_no_user_message_start`
 把这个「harness 不发用户 message_start」的契约钉住：如果哪天 harness 改成发，这个测试会红，
 提醒必须同时去掉 TUI 的提交时渲染，否则会出现两条气泡。
 
 ### 4.5 `now_ms()` 是不是真时钟？——**确认为真 bug（已修）**
 
-原实现（`crates/rpi-agent/src/agent_loop.rs` 与 `crates/rpi-agent/src/agent.rs` 各一份）：
+原实现（`crates/ice-agent/src/agent_loop.rs` 与 `crates/ice-agent/src/agent.rs` 各一份）：
 
 ```rust
 fn now_ms() -> i64 {
@@ -263,7 +263,7 @@ fn now_ms() -> i64 {
 影响面：目前排序用插入顺序（`EntryOrder::OldestFirst` 直接迭代数组，见 `session/state.rs:295`），
 所以上下文没被搞乱；但 JSONL 落盘的时间是垃圾，任何按时间戳的逻辑（cache idle 判定、导出、第三方读日志）都会错。
 
-**修复**：新增 `crates/rpi-agent/src/clock.rs::now_ms()` —— 真实 `SystemTime` + 单调下限（CAS 保证严格递增），
+**修复**：新增 `crates/ice-agent/src/clock.rs::now_ms()` —— 真实 `SystemTime` + 单调下限（CAS 保证严格递增），
 两处调用点改为 `crate::clock::now_ms()`。
 
 ### 4.6 一次 run 的消息何时落盘？——**确认为设计缺陷（未改，已展开为 §十一）**
@@ -281,7 +281,7 @@ fn now_ms() -> i64 {
 若失败尝试的消息已落盘，重试会产生重复条目。要改需要先把 retry 改成从落盘后的 tip 重建上下文。
 
 **§十一 展开了这一条的完整证据链**（逐时间线 + 真实会话 + 与原生 pi 的逐项对照）。
-展开后最重要的修正是：这**不是**「flush 得不够勤」，而是 rpi 的 run 路径
+展开后最重要的修正是：这**不是**「flush 得不够勤」，而是 ice 的 run 路径
 **从不写入任何进度记录**（`StepAttempt`/`ToolStarted`/`WriteDeferred` 有类型、reducer 能读，
 但生产路径一次都没 append），而原生 pi 是**每帧 `appendList` 提交**并能在崩溃后按帧前缀重建。
 
@@ -296,7 +296,7 @@ fn now_ms() -> i64 {
 | `01a0d44a` run 1 | `hi`，`operation_started` 之后什么都没有 |
 | **assistant 消息** | **一条都没有**（连 error 的都没有）⇒ run 从未返回 |
 | 进程状态 | **烧 CPU（约 1 核），不是阻塞** |
-| 端点本身 | 直接 curl → HTTP 200 / 5.4 s；00:48 之后 `rpi -p` 3 秒返回 |
+| 端点本身 | 直接 curl → HTTP 200 / 5.4 s；00:48 之后 `ice -p` 3 秒返回 |
 | 多轮复现 | 单轮 `-p` 与 `--continue` 双轮、临时目录与项目目录，**全部正常** |
 
 ⇒ 是 00:27–00:46 一段 provider 侧慢/抽风窗口（`models.json` 在 00:20 被重写过），**不是第二轮逻辑坏了**。
@@ -328,11 +328,11 @@ deltas= 8000  elapsed=105ms     (4× 增量 → 7.8× 时间)
 - 已做：方案 B（provider 内按字节+时间窗合并 delta），见 §9.4；
 - 未做：方案 A（`partial` 改为共享，或让 `MessageUpdate` 只带 delta + index），
   这是唯一能去掉指数项的做法，需要动事件契约。
-- 参考：`crates/rpi-ai/src/types.rs:1015` 已有 `AssistantMessageEvent::partial()` 辅助函数，可作为收敛点。
+- 参考：`crates/ice-ai/src/types.rs:1015` 已有 `AssistantMessageEvent::partial()` 辅助函数，可作为收敛点。
 
 ### 4.8 todo 工具为什么会重复登记？——**确认为真 bug（已修）**
 
-`.rpi/todo.json` 原始字节显示一个合法数组后面跟着残渣：
+`.ice/todo.json` 原始字节显示一个合法数组后面跟着残渣：
 
 ```
 [ {id:1 …}, {id:2 …} ]
@@ -348,12 +348,12 @@ deltas= 8000  elapsed=105ms     (4× 增量 → 7.8× 时间)
 —— 模型把**带编号的计划行原文**当 todo 项传了进来。全会话 6 次 `todo` 调用只建出 2 个真实条目，
 5 项计划从未被完整登记，这正是 re-plan 的直接燃料。
 
-**修复**（`rpi-package/packages/rpi-todo/src/lib.rs`）：
+**修复**（`ice-package/packages/ice-todo/src/lib.rs`）：
 - `save` 改为 temp 文件 + `rename`（Unix / Windows 均原子替换），消灭整类「非截断覆盖」损坏；
 - `normalize_text` 去掉 `1.` / `12)` / `-` / `*` / `•` / `·` 前缀并折叠空白（`1.5x` 这类小数不误伤）；
 - `add` 对**已 pending** 的同名任务返回既有 id，不再重复登记；
-- 检测发现 `rpi-goal` / `rpi-memory` / `rpi-permissions` 有完全相同的非原子写，已一并改为 `write_store_atomically`。
-- 已损坏的 `D:\Projects\pi-rust\.rpi\todo.json` 已就地修复：用容错解析器取出全部 3 条（含尾部残渣里的 #3），
+- 检测发现 `ice-goal` / `ice-memory` / `ice-permissions` 有完全相同的非原子写，已一并改为 `write_store_atomically`。
+- 已损坏的 `D:\Projects\ice-rust\.ice\todo.json` 已就地修复：用容错解析器取出全部 3 条（含尾部残渣里的 #3），
   丢掉与 #1 重复的 #2，剥掉 #3 的 `2. ` 前缀，用 `ensure_ascii=False` 重写成严格合法 JSON
   （#1 保留 `done: true`）。修前该文件让插件的 `load` 直接报错，todo 工具整个不可用。
 
@@ -369,7 +369,7 @@ deltas= 8000  elapsed=105ms     (4× 增量 → 7.8× 时间)
 - tick 只 `request_render(..)`，推帧统一由 `Editor::render` 负责（先取快照再前进，
   首帧渲染 0，与原生 `start()` 行为一致）⇒ 空闲 **80ms/帧、10 帧 800ms 一轮**，与原生同频；
   有 token 时每次重绘都推一帧，仍保留「按 token 输出加速」的特性。
-- 帧集收敛为 `crates/rpi-tui/src/loader.rs::SPINNER_FRAMES`（+ `SPINNER_FRAME_MS = 80`），
+- 帧集收敛为 `crates/ice-tui/src/loader.rs::SPINNER_FRAMES`（+ `SPINNER_FRAME_MS = 80`），
   `Loader` 与编辑器顶栏共用，不再各抄一份。
 - 确认 `request_render_reusing_scroll_content()` 只缓存 transcript（`layout.rs:346` 的
   `sv.render_with_cached_content`），编辑器在 dock 中每帧都会真的走 `render`，空闲动画不会被缓存冻住。
@@ -431,7 +431,7 @@ PY <session.jsonl>
 #    两者严重脱节 ⇒ 该批 entry 是在之后一次性 append 的
 
 # 4) 是阻塞还是空转
-powershell -NoProfile -Command "Get-Process rpi | Select Id,CPU,WS"
+powershell -NoProfile -Command "Get-Process ice | Select Id,CPU,WS"
 
 # 5) provider 流形状（是否 reasoning_content、是否发 [DONE]）
 curl -sS -N -X POST "$BASE_URL/chat/completions" \
@@ -447,7 +447,7 @@ curl -sS -N -X POST "$BASE_URL/chat/completions" \
 |---|---|---|
 | 4.4 直发用户消息回显 | 已修 | `interactive_tui.rs` 三处提交时渲染 + harness 回归测试 |
 | 4.5 `now_ms()` 计数器 | 已修 | `pi-agent/src/clock.rs`（新增），`agent_loop.rs` / `agent.rs` 调用点 |
-| 4.8 todo 非原子写 + 重复登记 | 已修 | `rpi-package/packages/rpi-todo/src/lib.rs`（含 3 个兄弟包） |
+| 4.8 todo 非原子写 + 重复登记 | 已修 | `ice-package/packages/ice-todo/src/lib.rs`（含 3 个兄弟包） |
 | 4.9 working 动画频率 / 帧序 | 已修 | `pi-tui/src/editor.rs`、`loader.rs`、`interactive_tui.rs` tick |
 | 4.10 Ctrl+C 无法退出 | 已修 | `interactive_tui.rs::emergency_exit` |
 | 4.7 O(n²) per-delta 深拷贝 | **未修**（需改事件契约） | `pi-ai/providers/openai_completions.rs`、`pi-agent/agent_loop.rs:426,441` |
@@ -472,7 +472,7 @@ curl -sS -N -X POST "$BASE_URL/chat/completions" \
 
 ### 8.2 第 1 层：openai-compat 组请求时丢弃 `thinking`（根因）
 
-`crates/rpi-ai/src/providers/openai_completions.rs:272`：
+`crates/ice-ai/src/providers/openai_completions.rs:272`：
 
 ```rust
 let assistant_content = if requires_thinking_as_text(model) {
@@ -483,7 +483,7 @@ let assistant_content = if requires_thinking_as_text(model) {
 };
 ```
 
-`Content::text_only`（`crates/rpi-ai/src/types.rs:244`）只 filter `Content::Text`，
+`Content::text_only`（`crates/ice-ai/src/types.rs:244`）只 filter `Content::Text`，
 `Content::Thinking` **整块丢弃**。开关 `requires_thinking_as_text`（同文件 `:545`）读
 `compat.requires_thinking_as_text`，**默认 `false`**。
 
@@ -499,7 +499,7 @@ qwen3.7-plus keys        : [id, name, reasoning, input, contextWindow, maxTokens
 它上一轮推导出的 5 条计划，对它自己不存在。
 
 **对照（同一仓库的另一条 provider 路径）**：Anthropic 路径**保留** thinking ——
-`crates/rpi-ai/src/providers/anthropic/build_params.rs:771` 会把 `Content::Thinking`
+`crates/ice-ai/src/providers/anthropic/build_params.rs:771` 会把 `Content::Thinking`
 连同 signature 一起发回去。
 
 ⇒ **这是 provider-specific 的**。用 Anthropic 模型时模型能看到自己上一轮推理，
@@ -531,20 +531,20 @@ tool_execution_end   agent_start
 做的事全是 `updateTodoOverlay()` / `setWidget(KEY, …)` —— **纯 UI overlay**。
 没有 `before_agent_start` 注入、没有 system prompt 增强、没有任何往 context 塞 todo 的 hook。
 
-**Rust 插件 `rpi-todo`**：只在**工具调用的返回值**里带完整列表（`display_list(&items)`）。
+**Rust 插件 `ice-todo`**：只在**工具调用的返回值**里带完整列表（`display_list(&items)`）。
 
 ⇒ 计划只在模型主动调用 todo 的那一瞬间进入上下文。而那 114 轮里它只调了 **6 次**，
 于是从第 7 轮到第 113 轮之间的大段区间，上下文里**没有任何「我计划做什么 / 做到哪」的记录**。
 
 ### 8.5 第 4 层：循环没有刹车
 
-`crates/rpi-agent/src/agent_loop.rs:190`：
+`crates/ice-agent/src/agent_loop.rs:190`：
 
 ```rust
 while has_more_tool_calls || !pending_messages.is_empty()
 ```
 
-配上 `crates/rpi-harness/src/agent_harness.rs:1993-1994`：
+配上 `crates/ice-harness/src/agent_harness.rs:1993-1994`：
 
 ```rust
 should_stop_after_turn: None,
@@ -591,7 +591,7 @@ prepare_next_turn: None,
 | Σ input tokens | 32,595 | **8,802** |
 | Σ output tokens | 2,513 | 1,864 |
 | 墙钟 | 60 s | 43 s |
-| 工具报错 | **2**（`cd D:\Projects\pi-rust` 被 bash 吃成 `cd D:Projectspi-rust`） | **0** |
+| 工具报错 | **2**（`cd D:\Projects\ice-rust` 被 bash 吃成 `cd D:Projectspi-rust`） | **0** |
 
 **必须说明的混淆变量**：A 多出的那 2 轮正是被反斜杠转义搞坏的那两次 `cd` 重试，
 不是 re-plan。把这两次剔掉，A 的有效下限约 5 次调用 vs B 的 4 次 —— **落在单样本噪声范围内**。
@@ -619,9 +619,9 @@ prepare_next_turn: None,
 | 3 | **加护栏**：run 级轮数/token 上限 + 无进展检测（连续 N 轮只有只读工具、未改任何文件就停） | 把「14 分钟 112 轮」变成一次可解释的停止；并提供可观测的验证指标 | 需设计阈值 |
 | 4 | 修 §4.7 的 O(n²) per-delta 深拷贝 | 长 run 不再满核空转 | 需改事件契约 |
 
-**已做的配置改动**：`~/.rpi/agent/models.json` 的 `alicoding.qwen3.7-plus` 已加上
+**已做的配置改动**：`~/.ice/agent/models.json` 的 `alicoding.qwen3.7-plus` 已加上
 `"compat": { "requiresThinkingAsText": true }`，原文件备份在
-`~/.rpi/agent/models.json.ab-backup-1790269893`。要回退就覆盖回去。
+`~/.ice/agent/models.json.ab-backup-1790269893`。要回退就覆盖回去。
 
 ---
 
@@ -632,7 +632,7 @@ prepare_next_turn: None,
 
 ### 9.1 修：把工作状态放进可见通道（§8.8 第 1 项）
 
-`crates/rpi-cli/src/session.rs::default_system_prompt` 新增三条规则：
+`crates/ice-cli/src/session.rs::default_system_prompt` 新增三条规则：
 
 ```
 - Keep your working state in your VISIBLE replies, not only in reasoning. Reasoning is not
@@ -654,26 +654,26 @@ prepare_next_turn: None,
 > 这两条原生回传 thinking 的通道），reasoning **是**会带回来的 —— 此时再告诉模型
 > "reasoning 不会带到下一轮 + 每轮都要重述计划"，等于让它做无用功，正是本文要治的
 > 重复/空转的来源。因此 `default_system_prompt(cwd, prior_reasoning_replayed)` 现在按
-> `rpi_ai::model::prior_reasoning_is_replayed(model)` 两套措辞：
+> `ice_ai::model::prior_reasoning_is_replayed(model)` 两套措辞：
 >
 > | 场景 | 文案 |
 > |---|---|
 > | 会回传（openai-completions + 该 flag、openai-responses、anthropic-messages） | "Your own reasoning is carried back… do not re-derive it or restate the whole plan" |
 > | 不回传（openai-completions 默认） | 原文案："Reasoning is not carried into your next turn…" |
 >
-> 验证：`rpi --debug-system-prompt -p x`（alicoding/qwen3.7-plus 走前者，routeryo-copy/gpt-5.6-sol
+> 验证：`ice --debug-system-prompt -p x`（alicoding/qwen3.7-plus 走前者，routeryo-copy/gpt-5.6-sol
 > 走后者），另有单测 `default_prompt_does_not_claim_reasoning_is_lost_when_it_is_replayed`。
 
 验证（确定性）：
-- `cargo test -p rpi-cli --lib default_prompt` —— 新增
+- `cargo test -p ice-cli --lib default_prompt` —— 新增
   `default_prompt_keeps_working_state_in_the_visible_channel`，逐条断言机制、补救手段、
   反重复规则、反重读规则都在提示词里。
-- 上到真实链路：`rpi --debug-system-prompt -p x` 的输出里能 grep 到这三条
+- 上到真实链路：`ice --debug-system-prompt -p x` 的输出里能 grep 到这三条
   （说明它们确实进了最终发给 provider 的 system prompt，而不是只存在于源码）。
 
 ### 9.2 修：run 级轮数护栏（§8.8 第 3 项）
 
-新增 `crates/rpi-harness/src/run_budget.rs`：
+新增 `crates/ice-harness/src/run_budget.rs`：
 
 | 项 | 值 / 说明 |
 |---|---|
@@ -689,10 +689,10 @@ prepare_next_turn: None,
 
 **默认关闭（与原生 pi 对齐）**：原生 pi 的 loop 没有任何 turn/token 上限
 （`for(;;){ while(hasMoreToolCalls || pendingMessages>0){…} }`，只靠「模型不再要工具」/abort/报错退出），
-所以 rpi 也**默认不设上限**，闸门改为 per-process 显式开启：
+所以 ice 也**默认不设上限**，闸门改为 per-process 显式开启：
 
 ```bash
-RPI_MAX_TURNS_PER_RUN=120 rpi     # 单次 run 超过 120 轮就停，并追一条 runBudget 通知
+ICE_MAX_TURNS_PER_RUN=120 ice     # 单次 run 超过 120 轮就停，并追一条 runBudget 通知
 # 不设 / 空 / 非数字 / 0  →  无上限（= 原生行为）
 ```
 
@@ -759,7 +759,7 @@ RPI_MAX_TURNS_PER_RUN=120 rpi     # 单次 run 超过 120 轮就停，并追一�
 
 ### 10.2 修了什么：共享的 delta 合并策略
 
-新增共享策略（`crates/rpi-ai/src/providers/mod.rs`）：
+新增共享策略（`crates/ice-ai/src/providers/mod.rs`）：
 
 | 常量 | 值 | 作用 |
 |---|---|---|
@@ -848,10 +848,10 @@ payload 必须变成共享可变状态（`Arc<Mutex<..>>`），代价是语义�
 
 ### 10.6 顺带修掉的一个既有红测试
 
-`crates/rpi-ai/src/providers/proxy.rs` 的文档示例本来就编译不过（`use rpi_ai::proxy::…`
+`crates/ice-ai/src/providers/proxy.rs` 的文档示例本来就编译不过（`use ice_ai::proxy::…`
 路径错误 + 缺 `headers` 字段 + 悬空的 `model`/`ctx`/`opts`），让 `cargo test --workspace`
 常年为红。已改为 `no_run` 且补全可见字段与正确的
-`rpi_ai::providers::proxy` 路径。该文件其余 11 处 rustfmt 差异是既有债，未动。
+`ice_ai::providers::proxy` 路径。该文件其余 11 处 rustfmt 差异是既有债，未动。
 
 ---
 
@@ -859,7 +859,7 @@ payload 必须变成共享可变状态（`Arc<Mutex<..>>`），代价是语义�
 
 §4.6 当时只写了「run 结束才落盘，中途崩溃会丢」，并把它归为「设计缺陷」。
 展开查证后发现真正的差距比那句话大得多 —— 不是「少了几次 flush」，而是
-**rpi 缺少原生 pi 那套逐帧持久化的 run 状态机**。下面是完整证据链。
+**ice 缺少原生 pi 那套逐帧持久化的 run 状态机**。下面是完整证据链。
 
 > **§11.1–§11.6 描述的是修复前的状态**（问题诊断），§11.7–§11.8 是取舍与实现记录。
 > 帧级进度已在 §11.7.1 落地；`StepAttempt` / `ToolStarted` / `WriteDeferred` 的写侧仍是缺口。
@@ -875,7 +875,7 @@ payload 必须变成共享可变状态（`Arc<Mutex<..>>`），代价是语义�
 
 ### 11.2 现在到底在什么时刻落盘（逐时间线）
 
-`crates/rpi-harness/src/agent_harness.rs::run_core`（`:1799` 起）：
+`crates/ice-harness/src/agent_harness.rs::run_core`（`:1799` 起）：
 
 ```
 :1799  run_core(prompts)
@@ -909,7 +909,7 @@ payload 必须变成共享可变状态（`Arc<Mutex<..>>`），代价是语义�
 
 ### 11.3 真实会话证据
 
-`.pi/sessions/--D--Projects-pi-rust--/2026-09-24T16-27-30-919Z_01a0d43e-*.jsonl` 全文只有 4 条：
+`.pi/sessions/--D--Projects-ice-rust--/2026-09-24T16-27-30-919Z_01a0d43e-*.jsonl` 全文只有 4 条：
 
 ```
 header
@@ -992,9 +992,9 @@ Esc / Ctrl+C 中止走的是 `run_loop` 的
 `assistant.effect_pending`、`deferred.suspended` / `deferred.effect_pending`。
 也就是说**重试等待和 deferred 挂起都是可跨进程恢复的状态**，不是内存里的循环。
 
-**对照 rpi**
+**对照 ice**
 
-| 能力 | 原生 pi | rpi |
+| 能力 | 原生 pi | ice |
 |---|---|---|
 | run 进行中把产物持久化 | 每帧 `appendList` 提交 | **不写**；只在 `:2179` 批量写 |
 | 崩溃后保留已产出的内容 | 读帧前缀重建，标为 interrupted | **全丢**，只剩 prompt |
@@ -1002,7 +1002,7 @@ Esc / Ctrl+C 中止走的是 `run_loop` 的
 | 恢复动作 | 重建 + 标 interrupted（`recovery: true`） | 只有 **Abort** |
 | deferred 挂起 | `deferred.suspended` 可恢复 | `WriteDeferred` 有类型，run 路径不写 |
 
-**rpi 有一半脚手架，但没接上**（这点值得单独记）：
+**ice 有一半脚手架，但没接上**（这点值得单独记）：
 
 - 记录类型已定义：`session/types.rs:911-919` 有
   `OperationStarted / AbortRequested / OperationFinished / StepAttempt / ToolStarted / QueueEnqueued / QueueCancelled / WriteDeferred / Usage`。
@@ -1070,7 +1070,7 @@ A/B 都会改重试语义或持久化不变量，值得单独一轮评审。
 ### 11.7.1 实际实现：走了 D 的第一阶段（已完成）
 
 最终没有走 C，而是直接做了 **D 里最便宜、也最关键的那一半**：帧级进度落盘 +
-崩溃时按已提交前缀重建。理由是 C 的「按轮 flush」在 rpi 里并不比帧级更便宜 ——
+崩溃时按已提交前缀重建。理由是 C 的「按轮 flush」在 ice 里并不比帧级更便宜 ——
 反正都要往会话里写东西，写**一帧**和写**一整轮**的机制完全一样；而写帧顺带把
 「重试时已提交产物」的问题一起解决了（失败尝试的帧会被 `ClearRun` 退掉，见下）。
 
@@ -1078,7 +1078,7 @@ A/B 都会改重试语义或持久化不变量，值得单独一轮评审。
 这是实现中唯一一处**推翻原设计**的地方，值得记下来：
 
 - 原生用 session 级 **list** 存储（`pendingAssistantFrames(operationId, responseEntryId)`），
-  与分支彻底隔离；rpi 没有 list 原语。
+  与分支彻底隔离；ice 没有 list 原语。
 - 第一版按 `values.rs` 的老办法把帧写成 **custom entry**。结果 `harness_run_e2e` 立刻红：
   `run_with_no_tool_calls_completes_in_single_turn` 断言「user + assistant reply only = 2 条」，
   实际 7 条 —— 每帧一条 entry，全进了分支路径。
@@ -1086,7 +1086,7 @@ A/B 都会改重试语义或持久化不变量，值得单独一轮评审。
   模型上下文永远看不到它。这跟 §11.4 的判断是同一条：问题在写侧，而写侧的
   「写哪儿」决定了它会不会污染上下文。
 
-**写侧**（`crates/rpi-harness/src/frame_progress.rs`）：
+**写侧**（`crates/ice-harness/src/frame_progress.rs`）：
 
 - `FrameRecordingEmitter` 包住原来的 emitter，在 `MessageStart` / `MessageUpdate` 时把
   帧追加成 `LaneRecord::AssistantFrame { run_id, stream_index, op: Append, frame }`；
@@ -1114,7 +1114,7 @@ A/B 都会改重试语义或持久化不变量，值得单独一轮评审。
    以 interrupted assistant 消息形式追加到分支。这是**用户重开会话**时走的路径。
 2. `run_core` 的 `Err` 分支：该路径本来什么都不落盘，现在也打捞一次。
 
-**验证**（`crates/rpi-harness/tests/harness_run_e2e.rs` 新增 3 条）：
+**验证**（`crates/ice-harness/tests/harness_run_e2e.rs` 新增 3 条）：
 
 - `a_crashed_run_can_be_salvaged_from_its_committed_frames`：慢速流跑到一半 `abort`
   任务（等价于 kill -9 对 run future 的影响），断言帧已落盘、分支里**只有 prompt**、
@@ -1163,7 +1163,7 @@ OpenAI 同理。而 `default_convert_to_llm`（`pi-agent/src/hooks.rs`）**不�
    所以这条 error 面板会**自动**出现在恢复后的转录里，不需要任何 TUI 改动。
 
 判定「哪个 tool call 没落盘」用的是 **`tool_call_id`**，不是预留的 `result_entry_id`：
-因为 rpi 是在 run 结束时才生成 id 落盘，工具真正跑的时候那个 id 还不存在。
+因为 ice 是在 run 结束时才生成 id 落盘，工具真正跑的时候那个 id 还不存在。
 `tool_call_id` 才是实际存在的持久链接。
 
 回归测试 `crashing_during_a_tool_call_leaves_a_valid_transcript`
@@ -1205,7 +1205,7 @@ OpenAI 同理。而 `default_convert_to_llm`（`pi-agent/src/hooks.rs`）**不�
 1. `reducer.rs::validate_tool_start` 要求 `ToolStartedRecord.assistant_entry_id`
    **必须已经存在于 entries 里**，而且该 assistant entry 的第 `tool_index` 个 tool call
    的 `id`/`name` 必须与 record 一致（否则 `ToolCallMismatch` / 记录日志被判损坏）。
-2. rpi 的 run 路径**只在 run 结束时**才落盘消息（`persist_new_messages`，run_core 的 `Ok` 分支），
+2. ice 的 run 路径**只在 run 结束时**才落盘消息（`persist_new_messages`，run_core 的 `Ok` 分支），
    工具执行发生在循环内部、**远早于**落盘。
 3. 所以在 `ToolExecutionStart` 那一刻，被引用的 assistant entry **还不存在** →
    任何 `ToolStarted` 写入都会被 reducer 判成损坏。
@@ -1249,7 +1249,7 @@ OpenAI 同理。而 `default_convert_to_llm`（`pi-agent/src/hooks.rs`）**不�
 - run 路径的预检 / 轮后钩子 → `Threshold`（跨过配置阈值，主动触发，不是响应 provider overflow）；
 - `compact_core`（`/compact`、compaction 命令）→ `Manual`。
 
-（`Overflow` 在 rpi 里没有对应的响应式路径，因此未使用。）
+（`Overflow` 在 ice 里没有对应的响应式路径，因此未使用。）
 
 **验证**：`runtime.rs` 新增 `compaction_intent_records_validate_against_the_reducer` ——
 用手工构造的 compaction provisioned entry 写出这两个记录，然后调
@@ -1268,7 +1268,7 @@ assistant 步定稿时刻**。原因：
   记录就只是一个永远对不上的空引用（reducer 允许缺席，但恢复时核不了）；
 - `tool_started` 更硬：它要求 `assistant_entry_id` **已经存在**。
 
-而 rpi 现在的 retry 循环在 **harness 层**（`run_core` 里重新调用整个 `run_agent_loop`），
+而 ice 现在的 retry 循环在 **harness 层**（`run_core` 里重新调用整个 `run_agent_loop`），
 所以「一次 attempt」产生的是**多条** assistant 消息，与「一个 assistant 步」不对应。
 正确的粒度是**每条 assistant 消息定稿时（`MessageEnd`）就提交**，此时：
 
@@ -1287,7 +1287,7 @@ assistant 步定稿时刻**。原因：
 
 ### 11.7.7 已落地：commit-on-settle（把落盘时刻提前到消息定稿）
 
-§11.7.6 说的那一步已经做了。新增 `crates/rpi-harness/src/settle.rs`：
+§11.7.6 说的那一步已经做了。新增 `crates/ice-harness/src/settle.rs`：
 
 - `SettlingEmitter` 包在帧记录器**外面**（所以每个 delta 的帧仍然先落盘，
   「已定稿但未提交」这个窗口仍然可用帧恢复）；
@@ -1316,7 +1316,7 @@ assistant 步定稿时刻**。原因：
 已经被 settle 提交的消息无法再被 `post_compaction_cut` 跳过，
 所以**被中等压缩摘要掉的那段消息现在会留在日志里**。这与原生一致
 （原生压缩只追加一条 summary entry，旧 entry 仍在，上下文构建靠 cut-point 扫描
-从最后一次 compaction 之后开始），但确实与 rpi 之前的「干脆不落盘」不同 ——
+从最后一次 compaction 之后开始），但确实与 ice 之前的「干脆不落盘」不同 ——
 这是有意取舍。
 
 #### 验证
@@ -1358,7 +1358,7 @@ tool.replay ?? "never"            // 默认 never
 readonly replay?: "safe" | "unsafe"; // default unsafe
 ```
 
-rpi：
+ice：
 
 ```rust
 pub enum ToolReplay {
@@ -1390,7 +1390,7 @@ const checkpoint = await readCheckpoint(...);
 return publishToolOutcome(..., interruptedOutcome(toolCall, checkpoint), true);
 ```
 
-rpi 侧新增 `AgentHarness::resolve_interrupted_run` / `resolve_tool_call`：
+ice 侧新增 `AgentHarness::resolve_interrupted_run` / `resolve_tool_call`：
 每个未落盘的 tool call ——
 
 - **双重确认**同时成立（`tool_started.replay == Safe` **且**当前工具声明 == Safe）
@@ -1414,7 +1414,7 @@ recovery 需要的这两样只在 `tool_started` 记录里，帧里没有。
 只有**真正不确定的副作用**才标 "unknown"。
 
 **这一步没做到什么**（重要）：**run 仍然不会继续跑**。
-rpi 的 run 是直线函数，状态在栈帧里，崩溃后没有可重入的落点
+ice 的 run 是直线函数，状态在栈帧里，崩溃后没有可重入的落点
 （原生 `driveOperation` 从 `state.at` 重入）。变的是「留下的转录完整且正确」，
 不是「带着状态继续执行」。要后者仍需 §11.7.6 / §11.7.4 说的可重入状态机。
 
@@ -1423,7 +1423,7 @@ rpi 的 run 是直线函数，状态在栈帧里，崩溃后没有可重入的�
 复查时把整个 `.reference/pi` 搜了一遗，必须更正之前文档里不准的表述：
 
 1. **`step_attempt` / `write_deferred` / `danglingWrite` 在原生里根本不存在。**
-   它们不是原生特性，是 rpi 自己那套「持久化意图记录」的设计。有真实用途
+   它们不是原生特性，是 ice 自己那套「持久化意图记录」的设计。有真实用途
    （让 `recover_lane` 能指名哪个工具结果未知），但不是 parity 缺口。
 2. **原生没有 `RecoveryDecision` 这个类型，也没有 `Resume` 变体。**
    它的恢复不是「决策」，是可重入状态机（`driveOperation` + `OperationState`）。
@@ -1432,7 +1432,7 @@ rpi 的 run 是直线函数，状态在栈帧里，崩溃后没有可重入的�
    「内容已确定、只差提交」，reducer 会用 `validate_exact_provisioned_entry` 把最终 entry
    与 target **深度比对**；assistant 消息的内容在流式结束前根本不存在，硬填只会判损坏。
    原生对应的做法就是**纯 id 预留**（状态叶里的 `responseEntryId`）——
-   也就是 rpi 现在用 `step_attempt` + 预留 id 做的事。**这条不是欠账，反而已经比原方案更接近原生。**
+   也就是 ice 现在用 `step_attempt` + 预留 id 做的事。**这条不是欠账，反而已经比原方案更接近原生。**
 
 
 ### 11.7.10 启动时自动续跑（对齐原生的 resume）
@@ -1453,7 +1453,7 @@ export async function driveOperation(lane, drive) {
 }
 ```
 
-rpi 的 `run_core` 是直线 `async fn`，状态全在栈帧；而 `run_agent_loop`
+ice 的 `run_core` 是直线 `async fn`，状态全在栈帧；而 `run_agent_loop`
 （`pi-agent/src/agent_loop.rs:72`）**一次调用就拥有整个多轮循环**，
 所以崩溃后手上只有「日志里有什么」，没有「跑到哪一步」。
 
@@ -1526,8 +1526,8 @@ prompt 是单独落盘的。所以**一次没有新 prompt 的 run，就是「�
 ### 11.7.12 两处需要更正的说法（第三轮复查）
 
 1. **「崩在 `deferred.suspended` 里不能接着轮询」是错的说法。**
-   rpi 的 `resume_deferred` 直接返回 `HarnessError::not_implemented`
-   （`agent_harness.rs:1281`）——当时 rpi **根本没有 deferred operation 这个功能**。
+   ice 的 `resume_deferred` 直接返回 `HarnessError::not_implemented`
+   （`agent_harness.rs:1281`）——当时 ice **根本没有 deferred operation 这个功能**。
    所以那不是「恢复路径缺失」，而是「功能本身不存在」；恢复不会丢一个从未实现的特性。
    （**这条现在已经过时了**：deferred 已实现，见 §11.7.18 —— 保留是因为它当时的推理是对的。）
 2. **崩在流式中不续跑不是漏洞，是正确行为**（见 §11.7.11）。
@@ -1744,9 +1744,9 @@ steer 在 run 开始**之前**入队（于是它会在循环第一个边界被�
 
 我前几轮一直把 R2（移植原生那套可重入的 13 状态机）当作「剩下的架构工作」。
 在补完前面那些之后，我把它逐 state 对了一遍 —— **对照的是每个状态的「结果」，
-不是实现方式**。结论是：在 rpi 已建模的每个状态上，结果都已经一致。
+不是实现方式**。结论是：在 ice 已建模的每个状态上，结果都已经一致。
 
-| 原生 `state.at` | 崩在这里时 rpi 的结果 | 测试 |
+| 原生 `state.at` | 崩在这里时 ice 的结果 | 测试 |
 |---|---|---|
 | `starting` | 操作已开、prompt 已落盘、还没请求 → 重启**续跑**（§11.7.17 新增） | `a_crash_before_the_first_request_still_continues` |
 | `checkpoint` | 无显式对应状态；「下一步要做什么」由**分支末尾**决定（tool result / user message） → 恢复后重新走到同一决策 | 同上 / `a_multi_turn_run_resumes_...` |
@@ -1761,8 +1761,8 @@ steer 在 run 开始**之前**入队（于是它会在循环第一个边界被�
 | `navigation.ready_to_commit` | 导航是用户动作；崩在提交前则未生效，用户重做一次（**唯一一处结果略有差异**，见下） | —— |
 
 **所以 R2 的价值不是「多一层保证」，而是原生**实现**这些保证的方式。** 原生的可重入状态机与
-rpi 的「从分支推导状态 + 把进度写进记录流」在已建模的状态上给出**相同的可观察结果**。
-差别只在实现：原生存「我在哪一步」，rpi 存「已经产出什么」并从它推出「下一步」。
+ice 的「从分支推导状态 + 把进度写进记录流」在已建模的状态上给出**相同的可观察结果**。
+差别只在实现：原生存「我在哪一步」，ice 存「已经产出什么」并从它推出「下一步」。
 
 因此**不做那个重写**：它会动 `run_agent_loop`（拆出持久 turn 边界）、
 `persist_new_messages`、压缩 cut 逻辑与一批断言当前语义的测试，而换不来行为差异。
@@ -1771,7 +1771,7 @@ rpi 的「从分支推导状态 + 把进度写进记录流」在已建模的状�
 
 两处**确实**的差异，都不值得为它们重写：
 
-1. **`navigation.ready_to_commit`**：崩在导航提交前，rpi 不会自动补提交（用户重做 `/tree`）。
+1. **`navigation.ready_to_commit`**：崩在导航提交前，ice 不会自动补提交（用户重做 `/tree`）。
    但导航是**用户当场发起的动作**，在用户不在时替他把分支移走，弊大于利。
 2. **`deferred.*`**：见 §11.7.18 —— 那是**功能未实现**，不是恢复缺口。
 
@@ -1862,7 +1862,7 @@ rpi 的「从分支推导状态 + 把进度写进记录流」在已建模的状�
 
 ### 11.9 最终小结
 
-这个缺口从头到尾只有一个根因：**rpi 的 run 写侧不持久化进度，而原生把「操作状态」
+这个缺口从头到尾只有一个根因：**ice 的 run 写侧不持久化进度，而原生把「操作状态」
 本身当成持久对象**。修的过程是把这个根因拆成能分别验证的几层：
 
 | 层 | 做了什么 | 关键实现 |
@@ -1882,7 +1882,7 @@ rpi 的「从分支推导状态 + 把进度写进记录流」在已建模的状�
 三处我中途说错、后来自己推翻并更正的（都留在文档里，不抹掉）：
 
 1. `step_attempt` / `write_deferred` / `danglingWrite` **在原生里不存在** ——
-   它们是 rpi 自己的设计，不是 parity 缺口；
+   它们是 ice 自己的设计，不是 parity 缺口；
 2. 原生**没有** `RecoveryDecision::Resume`（它的恢复是可重入状态机）；
 3. 「消息路径应该用 `write_deferred`」是错的 —— 流式消息的内容无法提前钉死，
    原生用的也是纯 id 预留。
@@ -1894,8 +1894,8 @@ rpi 的「从分支推导状态 + 把进度写进记录流」在已建模的状�
 
 **不做的事**（§11.7.17 有逐 state 对照的证据）：
 
-- **可重入状态机（R2）不做。** 逐 state 对照原生后，rpi 在已建模的每个状态上
-  **可观察结果一致** —— 那两个机制（原生存「我在哪一步」、rpi 存「已产出什么」
+- **可重入状态机（R2）不做。** 逐 state 对照原生后，ice 在已建模的每个状态上
+  **可观察结果一致** —— 那两个机制（原生存「我在哪一步」、ice 存「已产出什么」
   并推出下一步）是同一组保证的两种实现。为此重写 `run_agent_loop` 与持久化主干
   换不来行为差异。
 - **deferred operation 已实现**（§11.7.18）：补上了 provider 能力

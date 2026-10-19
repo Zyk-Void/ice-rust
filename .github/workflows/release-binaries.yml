@@ -1,6 +1,6 @@
 name: Release binaries
 
-# Builds prebuilt `rpi` binaries and attaches them to the GitHub Release for a
+# Builds prebuilt `ice` binaries and attaches them to the GitHub Release for a
 # tag. This is what makes `curl -fsSL .../install.sh | sh` work and what removes
 # the "you need a Rust toolchain and a C linker" barrier to trying the CLI.
 #
@@ -34,7 +34,7 @@ env:
 
 jobs:
   build:
-    if: github.repository == 'bigfish1913/pi-rust'
+    if: github.repository == 'Zyk-Void/ice-rust'
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -86,20 +86,20 @@ jobs:
         shell: bash
         run: |
           version="$(cargo metadata --no-deps --format-version 1 --locked \
-            | jq -r '.packages[] | select(.name == "rpi-cli") | .version' | head -n 1)"
+            | jq -r '.packages[] | select(.name == "ice-cli") | .version' | head -n 1)"
           if [[ -z "${version}" || "${version}" == "null" ]]; then
-            echo "Could not determine the rpi-cli workspace version." >&2
+            echo "Could not determine the ice-cli workspace version." >&2
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
-          echo "Building rpi ${version} for ${{ matrix.target }}"
+          echo "Building ice ${version} for ${{ matrix.target }}"
 
       - name: Build release binary
-        run: cargo build -p rpi-cli --release --locked --target ${{ matrix.target }}
+        run: cargo build -p ice-cli --release --locked --target ${{ matrix.target }}
 
       - name: Smoke test Intel macOS binary
         if: matrix.target == 'x86_64-apple-darwin'
-        run: target/${{ matrix.target }}/release/rpi --version
+        run: target/${{ matrix.target }}/release/ice --version
 
       - name: Stage artifact
         id: stage
@@ -108,13 +108,13 @@ jobs:
           set -euo pipefail
           version="${{ steps.version.outputs.version }}"
           target="${{ matrix.target }}"
-          name="rpi-v${version}-${target}"
+          name="ice-v${version}-${target}"
           mkdir -p dist
 
           if [[ "${target}" == *windows* ]]; then
-            bin="target/${target}/release/rpi.exe"
+            bin="target/${target}/release/ice.exe"
           else
-            bin="target/${target}/release/rpi"
+            bin="target/${target}/release/ice"
           fi
 
           if [[ ! -f "${bin}" ]]; then
@@ -197,7 +197,7 @@ jobs:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           python scripts/prebuilt-release.py assemble --directory dist \
-            --tag "${TAG}" --commit "$(git rev-parse HEAD)" --output rpi-release.json
+            --tag "${TAG}" --commit "$(git rev-parse HEAD)" --output ice-release.json
 
       - name: Publish to GitHub Release
         env:
@@ -209,17 +209,17 @@ jobs:
           assets=(dist/*.tar.gz dist/*.zip dist/*.sha256)
           if gh release view "${TAG}" >/dev/null 2>&1; then
             # Discovery must not advertise archives while they are being replaced.
-            if gh release view "${TAG}" --json assets --jq '.assets[].name' | grep -qx rpi-release.json; then
-              gh release delete-asset "${TAG}" rpi-release.json --yes
+            if gh release view "${TAG}" --json assets --jq '.assets[].name' | grep -qx ice-release.json; then
+              gh release delete-asset "${TAG}" ice-release.json --yes
             fi
             gh release upload "${TAG}" "${assets[@]}" --clobber
           else
             gh release create "${TAG}" "${assets[@]}" \
-              --title "rpi ${TAG}" \
+              --title "ice ${TAG}" \
               --generate-notes
           fi
           # Upload last: a manifest means all five verified archives are ready.
-          gh release upload "${TAG}" rpi-release.json --clobber
+          gh release upload "${TAG}" ice-release.json --clobber
 
   channels:
     needs: release

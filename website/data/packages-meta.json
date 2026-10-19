@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-10-13T14:46:19.6068769+00:00",
-  "sourceRepository": "https://github.com/pi-rust/rpi-package",
+  "sourceRepository": "https://github.com/ice-rust/ice-package",
   "sourceCommit": "5c4083118bcf50fdcaa6ab68694da2d3f194e6a8",
   "registry": "https://crates.io",
   "downloadsPeriodDays": 90,

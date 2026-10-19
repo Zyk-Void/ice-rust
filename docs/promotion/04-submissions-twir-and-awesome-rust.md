@@ -3,7 +3,7 @@
 > Both entries below were checked against each project's own current rules on
 > 2026-09-25, because the obvious route for each one **no longer works**.
 > Re-read their docs before submitting — these gate on participation and on
-> popularity thresholds that rpi does not currently meet.
+> popularity thresholds that ice does not currently meet.
 
 ---
 
@@ -51,7 +51,7 @@ Crates are nominated and voted on in a forum thread, not in the issue tracker:
 
 A nomination is a short forum post, not an article. Draft:
 
-> I'd like to nominate **rpi-agent** for Crate of the Week.
+> I'd like to nominate **ice-agent** for Crate of the Week.
 >
 > It is the agent-loop layer of a coding-agent runtime, provider-agnostic by
 > construction: the only model boundary is a `StreamFn` that returns a streaming
@@ -66,8 +66,8 @@ A nomination is a short forum post, not an article. Draft:
 > after the run settled; and a truncated tool call never leaves a call without a
 > result — because no provider will accept that conversation.
 >
-> It is MIT licensed and part of the `rpi` family
-> (<https://github.com/bigfish1913/pi-rust>), but the crate stands on its own as
+> It is MIT licensed and part of the `ice` family
+> (<https://github.com/Zyk-Void/ice-rust>), but the crate stands on its own as
 > an embeddable loop.
 
 Nominate it once. Repeatedly nominating the same crate is the fastest way to get
@@ -112,12 +112,12 @@ Measured on 2026-09-25:
 | Metric | Current | Threshold | Eligible? |
 | --- | --: | --: | --- |
 | GitHub stars | 32 | > 50 | ❌ |
-| Best crate downloads (`rpi-telemetry`) | 1,112 | > 2,000 | ❌ |
-| `rpi-cli` downloads | 469 | > 2,000 | ❌ |
+| Best crate downloads (`ice-telemetry`) | 1,112 | > 2,000 | ❌ |
+| `ice-cli` downloads | 469 | > 2,000 | ❌ |
 
 **Do not submit yet.** A PR that ignores a stated numeric gate is a bad first
 impression, and the maintainers explicitly say they will not make exceptions.
-Revisit when `rpi-cli` (the crate a user would actually install) passes 2,000
+Revisit when `ice-cli` (the crate a user would actually install) passes 2,000
 downloads, or when the repository passes 50 stars — whichever comes first.
 
 Their TL;DR also asks for "mostly projects that are stable and useful to many
@@ -134,7 +134,7 @@ Exact template, from their CONTRIBUTING.md:
 Entry to paste (with the CI badge, which they also ask for):
 
 ```markdown
-* [bigfish1913/pi-rust](https://github.com/bigfish1913/pi-rust) [[rpi-agent](https://crates.io/crates/rpi-agent)] - Library-first coding-agent runtime: composable provider, agent-loop, tool and session crates, plus a terminal agent and a stable `#[repr(C)]` plugin ABI. [![CI](https://github.com/bigfish1913/pi-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/bigfish1913/pi-rust/actions/workflows/ci.yml)
+* [Zyk-Void/ice-rust](https://github.com/Zyk-Void/ice-rust) [[ice-agent](https://crates.io/crates/ice-agent)] - Library-first coding-agent runtime: composable provider, agent-loop, tool and session crates, plus a terminal agent and a stable `#[repr(C)]` plugin ABI. [![CI](https://github.com/Zyk-Void/ice-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/Zyk-Void/ice-rust/actions/workflows/ci.yml)
 ```
 
 **Where it goes:** `README.md` → `### Artificial Intelligence`. That section has

@@ -1,12 +1,12 @@
 # Provider packages
 
-供应商策略统一放在独立 rpi-package 项目的
-[`rpi-providers`](https://github.com/pi-rust/rpi-package/tree/feature-1014/packages/rpi-providers)。
+供应商策略统一放在独立 ice-package 项目的
+[`ice-providers`](https://github.com/ice-rust/ice-package/tree/feature-1014/packages/ice-providers)。
 一个 Cargo package、一个动态库、一个安装 / 升级入口，内部按供应商分模块。
 新增接入遵循 [Provider 接入规范](../extensions/provider-integration.md)。
 
 核心保留 Anthropic Messages、OpenAI Chat Completions / Responses，以及离线测试用的 Faux。
-CLI 不依赖供应商实现。`rpi-provider-runtime` 留在核心仓库作为通用 ABI / 异步协议桥接库，
+CLI 不依赖供应商实现。`ice-provider-runtime` 留在核心仓库作为通用 ABI / 异步协议桥接库，
 不会登记供应商或解析宿主凭据。
 
 ## 统一包中的 provider
@@ -24,33 +24,33 @@ CLI 不依赖供应商实现。`rpi-provider-runtime` 留在核心仓库作为�
 
 ## 安装、使用与迁移
 
-在 rpi-package 仓库根目录，使用本分支构建的宿主安装一次：
+在 ice-package 仓库根目录，使用本分支构建的宿主安装一次：
 
 ```sh
-rpi package link providers --path packages/rpi-providers --debug
-rpi --list-models
-rpi auth login --provider deepseek
-rpi --provider deepseek --model deepseek-flash
+ice package link providers --path packages/ice-providers --debug
+ice --list-models
+ice auth login --provider deepseek
+ice --provider deepseek --model deepseek-flash
 # 配置 OPENROUTER_API_KEY 后
-rpi --provider openrouter --model openrouter/auto
+ice --provider openrouter --model openrouter/auto
 # 本地服务已运行时
-rpi --provider llama-cpp --model local --base-url http://localhost:8080/v1
+ice --provider llama-cpp --model local --base-url http://localhost:8080/v1
 ```
 
 `local` 与 Proxy 的 `default` 是目录预设；服务器使用其他模型名、上下文或输出上限时，
 在 models.json 中覆盖对应 provider。用户端点与请求头同样覆盖包的默认值。
 匿名目录就绪不代表服务已运行，使用时指定需要的 provider。
 
-若已分别安装旧包，先 `rpi package unlink <旧安装名>`，再 link `providers`，避免旧实现
+若已分别安装旧包，先 `ice package unlink <旧安装名>`，再 link `providers`，避免旧实现
 按加载顺序占用同名 ID。原有 provider ID、models.json 与 auth.json 保持兼容，不合并供应商凭据。
-之后升级只更新统一包，卸载使用 `rpi package unlink providers`；会一起移除四份目录和实现。
+之后升级只更新统一包，卸载使用 `ice package unlink providers`；会一起移除四份目录和实现。
 本包尚未发布 crates.io，固定依赖兼容的核心提交，当前使用源码 link。
 
-Rust 调用方改用 `rpi_providers::{deepseek,openrouter,llama_cpp,proxy}` 中的类型。
+Rust 调用方改用 `ice_providers::{deepseek,openrouter,llama_cpp,proxy}` 中的类型。
 llama.cpp 管理程序仍在包内，入口改为：
 
 ```sh
-cargo run -p rpi-providers --bin rpi-llama -- status
+cargo run -p ice-providers --bin ice-llama -- status
 ```
 
 已有 models.json 可以继续使用通用协议；但只配置通用协议不会自动提供统一包中的
@@ -64,7 +64,7 @@ cargo run -p rpi-providers --bin rpi-llama -- status
 serde_json::json!({
     "providers": [{
         "id": "openrouter",
-        "models": [model], // 完整 rpi_ai::Model
+        "models": [model], // 完整 ice_ai::Model
         "apiKeyEnv": "OPENROUTER_API_KEY",
         "requiresAuth": true
     }]
@@ -102,8 +102,8 @@ factory 负责提供协议实现，不读取环境变量、不决定凭据优先
 当前 package 被移除时，重载会在切换前失败并保留旧会话，避免把同名配置静默转交给另一个协议实现。
 完整重载仍包含多个对象的更新，单一代次快照的原子切换属于后续生命周期改进。
 
-`rpi_ai::providers::deepseek::DeepSeekProvider` 已移除。Rust 调用方改用独立
-`rpi_providers::deepseek::DeepSeekProvider::new`；CLI 用户安装 package 后仍使用 `deepseek` ID，
+`ice_ai::providers::deepseek::DeepSeekProvider` 已移除。Rust 调用方改用独立
+`ice_providers::deepseek::DeepSeekProvider::new`；CLI 用户安装 package 后仍使用 `deepseek` ID，
 已有同 ID 的 auth.json / models.json 配置可以复用。package 顺序提供默认模型，核心不再保留 DeepSeek 默认项。
 通用 Chat Completions 的 `requiresReasoningContent` 兼容选项支持独立回传历史思考；DeepSeek package
 启用该能力并处理思考开关与 effort 映射，核心协议不判断 DeepSeek 身份。
@@ -115,7 +115,7 @@ TUI 的 `/provider` 同样显示已加载的 package、模型数和认证状态�
 `/provider <id>` 与菜单选择即时更新当前 lane 和底部模型显示，成功后保存默认 provider / model。
 缺少可用认证、未知 ID 或 lane 切换失败时，保留原模型与默认值，并显示错误。
 `/model` 选择具体模型；正在生成时的 provider 切换按输入顺序在当前回复结束后处理。
-`/provider remove <id>` 只移除 `models.json` 配置，不卸载 package；卸载使用 `rpi package unlink <name>`。
+`/provider remove <id>` 只移除 `models.json` 配置，不卸载 package；卸载使用 `ice package unlink <name>`。
 `/model openrouter/auto` 和完整的 `openrouter/openrouter/auto` 均可定位该模型，跨 provider 重名时需完整限定。
 扩展目录仍遵守项目信任、`--project-only` 和显式扩展路径规则。
 
@@ -127,11 +127,11 @@ TUI 的 `/provider` 同样显示已加载的 package、模型数和认证状态�
 有效的 OAuth access token 按 Bearer 注入请求。`auth check` 不刷新 token，也不发起服务端认证验证。
 
 ```sh
-rpi auth login --provider openrouter
-rpi auth check --provider openrouter --json
-rpi auth logout --provider openrouter
+ice auth login --provider openrouter
+ice auth check --provider openrouter --json
+ice auth logout --provider openrouter
 # 未安装时也可显式加载（扩展路径在 auth 子命令后）
-rpi auth check --provider openrouter --extension /path/to/provider.dll --json
+ice auth check --provider openrouter --extension /path/to/provider.dll --json
 ```
 
 `auth check --json` 的 `source` 返回 `auth.json`、`oauth`、`models.json`、专属环境变量名、`headers`、`anonymous` 或 `none`，
@@ -139,7 +139,7 @@ rpi auth check --provider openrouter --extension /path/to/provider.dll --json
 退出码为：就绪 `0`，缺少凭据 `1`，配置读取失败 `2`。API-key logout 只删除存储的 key，不清除环境变量或 models.json。
 
 核心只保留 Anthropic、OpenAI 的环境变量回退和默认模型优先项。DeepSeek 等供应商不再隐式识别
-环境变量：安装统一的 `rpi-providers`（其中分别声明 `apiKeyEnv`），或在 models.json 显式填写 `apiKey: "$VENDOR_API_KEY"`。
+环境变量：安装统一的 `ice-providers`（其中分别声明 `apiKeyEnv`），或在 models.json 显式填写 `apiKey: "$VENDOR_API_KEY"`。
 已有 auth.json 和显式 apiKey 配置无需迁移，package 默认模型由其目录提供。
 
 涉及 provider package 的 `/reload` 重新绑定 fresh plugin runtime、私有执行配置和公开模型目录，同时更新 `/model` 选择器和插件的 `set_model`。
@@ -149,33 +149,33 @@ rpi auth check --provider openrouter --extension /path/to/provider.dll --json
 
 ## 验证
 
-可运行的 DeepSeek 流式实现和测试位于独立的 `rpi-providers` package，provider ID 为 `deepseek`。
+可运行的 DeepSeek 流式实现和测试位于独立的 `ice-providers` package，provider ID 为 `deepseek`。
 
 ```sh
-cd /path/to/rpi-package
-cargo build -p rpi-providers
-cargo test -p rpi-providers --test streaming
-cargo test -p rpi-providers --test host
+cd /path/to/ice-package
+cargo build -p ice-providers
+cargo test -p ice-providers --test streaming
+cargo test -p ice-providers --test host
 ```
 
-在 `pi-rust` 中运行 CLI 集成测试前，将 `RPI_TEST_PROVIDER_LIBRARY` 指向构建出的
-`rpi_providers.dll` / `librpi_providers.so` / `librpi_providers.dylib`。
+在 `ice-rust` 中运行 CLI 集成测试前，将 `ICE_TEST_PROVIDER_LIBRARY` 指向构建出的
+`ice_providers.dll` / `libice_providers.so` / `libice_providers.dylib`。
 
 端到端测试用真实 DLL、CLI 子进程和本机 SSE 服务，覆盖无凭据目录、禁用扩展、认证隔离、带认证的
 OpenRouter、匿名 llama.cpp / Proxy，以及实际流式输出。其他协议可以沿同样的声明和 factory 边界接入。
 
-生产统一包在 rpi-package 仓库根目录运行 `cargo build -p rpi-providers` 与
-`cargo test -p rpi-providers`。包的单 DLL 测试覆盖四份目录与认证策略，以及并发请求的
+生产统一包在 ice-package 仓库根目录运行 `cargo build -p ice-providers` 与
+`cargo test -p ice-providers`。包的单 DLL 测试覆盖四份目录与认证策略，以及并发请求的
 factory / key 隔离；DeepSeek 思考工具续轮、取消与错误测试也在包内。
 
 本仓库的跨项目 CLI / reload / link 集成测试使用同一份动态库，无需 CLI 依赖供应商 crate：
 
 ```powershell
-$env:RPI_TEST_PROVIDER_LIBRARY = 'C:\path\to\target\debug\rpi_providers.dll'
-$env:RPI_TEST_PROVIDER_PACKAGE = 'C:\path\to\rpi-package\packages\rpi-providers'
-cargo test -p rpi-cli --test provider_packages
+$env:ICE_TEST_PROVIDER_LIBRARY = 'C:\path\to\target\debug\ice_providers.dll'
+$env:ICE_TEST_PROVIDER_PACKAGE = 'C:\path\to\ice-package\packages\ice-providers'
+cargo test -p ice-cli --test provider_packages
 ```
 
-Linux / macOS 改用对应的 `librpi_providers.so` / `librpi_providers.dylib` 路径。
+Linux / macOS 改用对应的 `libice_providers.so` / `libice_providers.dylib` 路径。
 未设置路径时跳过外部包集成用例；显式提供无效路径会报错。跨项目验收应同时构建两个项目，
 显式设置路径运行，不能把跳过当作已验证。

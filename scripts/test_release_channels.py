@@ -37,7 +37,7 @@ elif args[0] == 'api':
         if 'homebrew-tap' in path:
             data = b'version "9.0.0"\n'
         elif 'scoop-bucket' in path:
-            data = Path('packaging/scoop/rpi.json').read_bytes()
+            data = Path('packaging/scoop/ice.json').read_bytes()
         else:
             data = b'old manifest'
         print(json.dumps({'sha': 'existing-file-sha', 'content': base64.b64encode(data).decode()}))
@@ -80,7 +80,7 @@ class ChannelScriptTests(unittest.TestCase):
         return result, calls
 
     def version(self):
-        return json.loads((self.root / "packaging/scoop/rpi.json").read_text())["version"]
+        return json.loads((self.root / "packaging/scoop/ice.json").read_text())["version"]
 
     def test_winget_retry_updates_existing_files_with_sha_without_duplicate_pr(self):
         result, calls = self.execute("winget-submit.sh", "existing", self.version())
@@ -90,7 +90,7 @@ class ChannelScriptTests(unittest.TestCase):
         self.assertTrue(all("sha=existing-file-sha" in call for call in uploads))
         self.assertFalse(any(call[:2] == ["pr", "create"] for call in calls))
         lookup = next(call for call in calls if call[:2] == ["pr", "list"])
-        self.assertEqual(lookup[lookup.index("--head") + 1], "rpi-" + self.version())
+        self.assertEqual(lookup[lookup.index("--head") + 1], "ice-" + self.version())
         self.assertIn("Updated existing PR", result.stdout)
 
     def test_new_winget_submission_syncs_fork_before_creating_branch(self):

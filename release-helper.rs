@@ -6,29 +6,29 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 const RELEASE_CRATES: &[(&str, &str)] = &[
-    ("rpi-telemetry", "crates/rpi-telemetry/Cargo.toml"),
-    ("rpi-ai", "crates/rpi-ai/Cargo.toml"),
-    ("rpi-agent", "crates/rpi-agent/Cargo.toml"),
-    ("rpi-plugin-sdk", "crates/rpi-plugin-sdk/Cargo.toml"),
-    ("rpi-extensions", "crates/rpi-extensions/Cargo.toml"),
-    ("rpi-tools", "crates/rpi-tools/Cargo.toml"),
-    ("rpi-harness", "crates/rpi-harness/Cargo.toml"),
-    ("rpi-tui", "crates/rpi-tui/Cargo.toml"),
-    ("rpi-cli", "crates/rpi-cli/Cargo.toml"),
+    ("ice-telemetry", "crates/ice-telemetry/Cargo.toml"),
+    ("ice-ai", "crates/ice-ai/Cargo.toml"),
+    ("ice-agent", "crates/ice-agent/Cargo.toml"),
+    ("ice-plugin-sdk", "crates/ice-plugin-sdk/Cargo.toml"),
+    ("ice-extensions", "crates/ice-extensions/Cargo.toml"),
+    ("ice-tools", "crates/ice-tools/Cargo.toml"),
+    ("ice-harness", "crates/ice-harness/Cargo.toml"),
+    ("ice-tui", "crates/ice-tui/Cargo.toml"),
+    ("ice-cli", "crates/ice-cli/Cargo.toml"),
 ];
 
 const INTERNAL_DEPENDENCIES: &[&str] = &[
-    "rpi-telemetry",
-    "rpi-ai",
-    "rpi-agent",
-    "rpi-plugin-sdk",
-    "rpi-extensions",
-    "rpi-tools",
-    "rpi-harness",
-    "rpi-tui",
+    "ice-telemetry",
+    "ice-ai",
+    "ice-agent",
+    "ice-plugin-sdk",
+    "ice-extensions",
+    "ice-tools",
+    "ice-harness",
+    "ice-tui",
 ];
 
-const USER_AGENT: &str = "pi-rust Taskfile release workflow";
+const USER_AGENT: &str = "ice-rust Taskfile release workflow";
 
 fn main() {
     if let Err(error) = run() {
@@ -135,7 +135,7 @@ fn validate(expected: &str, allow_dirty: bool) -> Result<(), String> {
         validate_publish_field(crate_name, package)?;
     }
 
-    println!("Validated clean release state for rpi-* {expected}.");
+    println!("Validated clean release state for ice-* {expected}.");
     Ok(())
 }
 
@@ -149,7 +149,7 @@ fn validate_internal_dependencies(
             continue;
         };
         let dependency = key.trim();
-        if !INTERNAL_DEPENDENCIES.contains(&dependency) && dependency != "rpi-cli" {
+        if !INTERNAL_DEPENDENCIES.contains(&dependency) && dependency != "ice-cli" {
             continue;
         }
         if line.contains("workspace = true")
@@ -546,7 +546,7 @@ mod tests {
         assert_eq!(sparse_index_path("a"), "1/a");
         assert_eq!(sparse_index_path("ab"), "2/ab");
         assert_eq!(sparse_index_path("abc"), "3/a/abc");
-        assert_eq!(sparse_index_path("rpi-cli"), "rp/i-/rpi-cli");
+        assert_eq!(sparse_index_path("ice-cli"), "rp/i-/ice-cli");
     }
 
     #[test]
@@ -563,11 +563,11 @@ mod tests {
 
     #[test]
     fn parses_release_toml_shapes() {
-        let toml = "[workspace.package]\nversion = \"0.1.12\"\n\n[workspace.dependencies]\nrpi-ai = { path = \"crates/rpi-ai\", version = \"0.1.12\" }\n";
+        let toml = "[workspace.package]\nversion = \"0.1.12\"\n\n[workspace.dependencies]\nice-ai = { path = \"crates/ice-ai\", version = \"0.1.12\" }\n";
         let package = toml_section(toml, "workspace.package").unwrap();
         assert_eq!(toml_string(package, "version"), Some("0.1.12"));
         let dependencies = toml_section(toml, "workspace.dependencies").unwrap();
-        let line = toml_assignment(dependencies, "rpi-ai").unwrap();
+        let line = toml_assignment(dependencies, "ice-ai").unwrap();
         assert_eq!(inline_table_string(line, "version"), Some("0.1.12"));
     }
 
@@ -575,11 +575,11 @@ mod tests {
     fn dry_run_uses_full_verification_with_only_declared_local_dependencies() {
         let manifest = r#"
 [dependencies]
-rpi-telemetry = { workspace = true }
-rpi-plugin-sdk = { version = "0.1.12" }
+ice-telemetry = { workspace = true }
+ice-plugin-sdk = { version = "0.1.12" }
 serde = { version = "1" }
 "#;
-        let args = dry_run_args("rpi-ai", manifest, Path::new("workspace")).unwrap();
+        let args = dry_run_args("ice-ai", manifest, Path::new("workspace")).unwrap();
         assert!(!args.iter().any(|arg| arg == "--no-verify"));
         assert_eq!(args.iter().filter(|arg| *arg == "--config").count(), 2);
         assert_eq!(
@@ -591,11 +591,11 @@ serde = { version = "1" }
                 "--registry",
                 "crates-io",
                 "-p",
-                "rpi-ai",
+                "ice-ai",
                 "--config",
-                "patch.crates-io.rpi-telemetry.path=\"workspace/crates/rpi-telemetry\"",
+                "patch.crates-io.ice-telemetry.path=\"workspace/crates/ice-telemetry\"",
                 "--config",
-                "patch.crates-io.rpi-plugin-sdk.path=\"workspace/crates/rpi-plugin-sdk\"",
+                "patch.crates-io.ice-plugin-sdk.path=\"workspace/crates/ice-plugin-sdk\"",
             ]
         );
     }

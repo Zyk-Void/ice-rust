@@ -1,4 +1,4 @@
-const LOCALE_KEY = 'rpi-locale';
+const LOCALE_KEY = 'ice-locale';
 const FALLBACK_LOCALE = 'zh';
 const listeners = new Set();
 let dictionary = null;

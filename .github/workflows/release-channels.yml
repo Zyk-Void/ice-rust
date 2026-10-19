@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   manifests:
-    if: github.repository == 'bigfish1913/pi-rust'
+    if: github.repository == 'Zyk-Void/ice-rust'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,8 +36,8 @@ jobs:
           TAG: ${{ inputs.tag }}
         run: |
           [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-          gh release download "$TAG" --repo bigfish1913/pi-rust --pattern rpi-release.json --dir "$RUNNER_TEMP"
-          python3 scripts/verify-channel-release.py "$TAG" "$RUNNER_TEMP/rpi-release.json"
+          gh release download "$TAG" --repo Zyk-Void/ice-rust --pattern ice-release.json --dir "$RUNNER_TEMP"
+          python3 scripts/verify-channel-release.py "$TAG" "$RUNNER_TEMP/ice-release.json"
           bash scripts/refresh-channels.sh "${TAG#v}"
       - uses: actions/upload-artifact@v4
         with:

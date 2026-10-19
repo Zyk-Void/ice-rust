@@ -2,8 +2,8 @@
 
 本文约定当前 provider package 的实现、认证与验收要求。架构背景见
 [Provider packages](../architecture/provider-packages.md)，底层 ABI 见
-[扩展开发](authoring.md)。生产统一包 `rpi-providers`（含 DeepSeek / OpenRouter / llama.cpp / Proxy）见
-[独立 package 项目](https://github.com/pi-rust/rpi-package/tree/feature-1014/packages/rpi-providers)。正式 provider 的源码、流式测试和宿主集成测试均维护在该 package；本仓库不再保留 DeepSeek 示例实现。
+[扩展开发](authoring.md)。生产统一包 `ice-providers`（含 DeepSeek / OpenRouter / llama.cpp / Proxy）见
+[独立 package 项目](https://github.com/ice-rust/ice-package/tree/feature-1014/packages/ice-providers)。正式 provider 的源码、流式测试和宿主集成测试均维护在该 package；本仓库不再保留 DeepSeek 示例实现。
 
 ## 1. 选择接入方式
 
@@ -11,10 +11,10 @@
 | --- | --- |
 | 已支持的 Anthropic Messages、OpenAI Chat Completions / Responses 协议，只改端点、模型和 key | 优先使用 `models.json`，无需新 package |
 | 提供可安装的模型目录、供应商默认值、专属请求头、匿名策略或管理命令 | 独立 provider package，优先复用已有协议 |
-| 新协议或现有协议无法表达的请求 / 响应差异 | package 实现 `rpi_ai::Provider`，经统一 ABI 接入 |
+| 新协议或现有协议无法表达的请求 / 响应差异 | package 实现 `ice_ai::Provider`，经统一 ABI 接入 |
 | 浏览器登录、device-code、token 刷新或撤销 | 另外注册 OAuth provider；推理与认证是两项独立能力 |
 
-核心保留 OpenAI、Anthropic 与离线测试用的 Faux；DeepSeek 已迁到独立 `rpi-package` 项目。新增供应商适配默认放入
+核心保留 OpenAI、Anthropic 与离线测试用的 Faux；DeepSeek 已迁到独立 `ice-package` 项目。新增供应商适配默认放入
 独立 package，不给 CLI 增加供应商分支或默认依赖。协议兼容不等于支持该供应商的所有
 功能；README 必须列出已验证能力和限制。
 
@@ -24,12 +24,12 @@
 | --- | --- | --- |
 | 宿主 | 扩展发现、模型配置合并、凭据解析与存储、factory 选择、执行绑定、会话切换 | package 复用这些能力，不重新实现一套凭据优先级 |
 | package | provider ID、默认目录、认证策略、协议适配、供应商命令 / OAuth 流程 | 不将供应商特判写回 CLI |
-| `rpi-provider-runtime` | 同步 C ABI 与异步 Provider 桥接、流式事件、请求取消 | 使用普通 Rust factory 即可导出 package |
-| `rpi-ai` | `Model`、`Provider`、流式事件和可复用协议 | 优先复用现有协议解析、错误、用量与重试实现 |
-| `rpi-plugin-sdk` | 动态库入口、能力检测、跨 ABI 类型与字符串释放 | ABI 边界只传 SDK 类型及约定 JSON |
+| `ice-provider-runtime` | 同步 C ABI 与异步 Provider 桥接、流式事件、请求取消 | 使用普通 Rust factory 即可导出 package |
+| `ice-ai` | `Model`、`Provider`、流式事件和可复用协议 | 优先复用现有协议解析、错误、用量与重试实现 |
+| `ice-plugin-sdk` | 动态库入口、能力检测、跨 ABI 类型与字符串释放 | ABI 边界只传 SDK 类型及约定 JSON |
 
-package 运行时依赖可使用 `rpi-ai`、`rpi-plugin-sdk`、`rpi-provider-runtime`，不得依赖
-`rpi-cli` 或宿主私有 factory / binding。真实加载测试可把 `rpi-extensions` 放在
+package 运行时依赖可使用 `ice-ai`、`ice-plugin-sdk`、`ice-provider-runtime`，不得依赖
+`ice-cli` 或宿主私有 factory / binding。真实加载测试可把 `ice-extensions` 放在
 `dev-dependencies`。依赖版本按当前仓库模板保持兼容，不根据示例假定 crate 已发布。
 
 宿主的私有 `ProviderFactory` 和 package 的 `fn(&Model, &SimpleStreamOptions)
@@ -42,13 +42,13 @@ package 运行时依赖可使用 `rpi-ai`、`rpi-plugin-sdk`、`rpi-provider-run
 
 | 概念 | DeepSeek 正式 package | 用途 |
 | --- | --- | --- |
-| Cargo package | `rpi-providers` | 构建与分发统一 provider 动态库 |
+| Cargo package | `ice-providers` | 构建与分发统一 provider 动态库 |
 | provider ID | `deepseek` | 注册、配置、凭据隔离和 `--provider` |
 | model ID | `deepseek-flash` | 服务端接收的模型名，不能随意加 provider 前缀 |
 | API | `openai-completions` | 选择请求 / 响应协议，不用于推断认证环境变量 |
 
 推荐用 `Model::new` 构造模型，再通过 `serde_json::json!` 序列化；`models` 的元素是
-完整 `rpi_ai::Model`，不能照抄 `models.json` 中允许省略字段的简写对象。
+完整 `ice_ai::Model`，不能照抄 `models.json` 中允许省略字段的简写对象。
 
 目录声明通过现有 `declare` 提交：
 
@@ -77,11 +77,11 @@ serde_json::json!({
 `--list-models` 展示完整目录，不要求凭据；`--no-extensions` 同时禁用扩展实现和声明。
 `/provider` 展示完整目录与认证状态，选择或 `/provider <id>` 会即时切换当前会话并保存默认值。
 切换只使用会话中已认证的模型；失败时保留当前模型与原默认值。`/model` 用于选择具体模型。
-`/provider remove <id>` 删除配置；卸载 package 使用 `rpi package unlink <name>`。
+`/provider remove <id>` 删除配置；卸载 package 使用 `ice package unlink <name>`。
 
 ## 4. 推荐实现骨架
 
-生产供应商统一维护在 `rpi-providers`，新增供应商优先增加包内模块，不新增独立 crate。
+生产供应商统一维护在 `ice-providers`，新增供应商优先增加包内模块，不新增独立 crate。
 根 `src/lib.rs` 只导出一次 `export_plugin!`，遍历各模块的注册函数；每个模块仍有独立的
 provider ID、目录、认证策略与 factory。安装 / 卸载 / 升级一次作用于整个包。
 
@@ -89,10 +89,10 @@ provider ID、目录、认证策略与 factory。安装 / 卸载 / 升级一次�
 `crate::registration::register_provider!` 生成注册函数，并在根模块登记；不要在各模块
 重复调用 `export_provider!`，否则会重复导出原生插件入口。
 
-生产 package 的实现位于 [rpi-providers](https://github.com/pi-rust/rpi-package/tree/feature-1014/packages/rpi-providers)。新增 provider 应从该 package 的注册宏和测试结构开始，而不是复制本仓库已删除的 DeepSeek 示例。
+生产 package 的实现位于 [ice-providers](https://github.com/ice-rust/ice-package/tree/feature-1014/packages/ice-providers)。新增 provider 应从该 package 的注册宏和测试结构开始，而不是复制本仓库已删除的 DeepSeek 示例。
 
 ```rust,ignore
-use rpi_ai::{Api, Model, Provider, SimpleStreamOptions};
+use ice_ai::{Api, Model, Provider, SimpleStreamOptions};
 use std::sync::Arc;
 
 const ID: &str = "vendor-example";
@@ -109,10 +109,10 @@ fn models() -> Vec<Model> {
 
 fn create(model: &Model, options: &SimpleStreamOptions) -> Arc<dyn Provider> {
     // 使用本次请求的端点与凭据，不读取 OPENAI_API_KEY 等进程变量。
-    rpi_provider_runtime::completions(model, options, false)
+    ice_provider_runtime::completions(model, options, false)
 }
 
-rpi_provider_runtime::export_provider!(
+ice_provider_runtime::export_provider!(
     ID, BASE_URL, "openai-completions",
     serde_json::json!({
         "id": ID, "models": models(),
@@ -155,12 +155,12 @@ OAuth package 另外使用 `register_oauth_provider`，认证 ID 应与推理 pr
 命令留在宿主。完整 action / response 契约见 [OAuth 扩展接口](authoring.md#11-oauth-扩展接口统一标准实验阶段)。
 
 ```sh
-rpi auth login --provider vendor-example
-rpi auth check --provider vendor-example --json
-rpi auth refresh --provider vendor-example
-rpi auth logout --provider vendor-example
+ice auth login --provider vendor-example
+ice auth check --provider vendor-example --json
+ice auth refresh --provider vendor-example
+ice auth logout --provider vendor-example
 # 尚未安装的动态库：显式路径写在 auth 子命令后
-rpi auth check --provider vendor-example --extension /path/to/provider.dll --json
+ice auth check --provider vendor-example --extension /path/to/provider.dll --json
 ```
 
 `refresh` 需要对应 OAuth 实现；API key 不通过它刷新。`auth check` 只检查本地就绪状态，
@@ -224,13 +224,13 @@ factory 优先于内置 API factory，两者使用同一 `ConfiguredProvider` �
 在仓库根目录运行正式 package 的离线验证：
 
 ```sh
-cd /path/to/rpi-package
-cargo build -p rpi-providers
-cargo test -p rpi-providers --test streaming
-cargo test -p rpi-providers --test host
+cd /path/to/ice-package
+cargo build -p ice-providers
+cargo test -p ice-providers --test streaming
+cargo test -p ice-providers --test host
 ```
 
-在 `pi-rust` 仓库运行：
+在 `ice-rust` 仓库运行：
 
 ```sh
 cargo fmt --all -- --check
@@ -238,13 +238,13 @@ cargo check --workspace
 cargo test --workspace
 ```
 
-这些命令验证正式 `rpi-providers` package；新增 package 必须加入自身的动态库加载与协议测试，不能只依赖宿主测试。
+这些命令验证正式 `ice-providers` package；新增 package 必须加入自身的动态库加载与协议测试，不能只依赖宿主测试。
 真实 API 测试应默认 ignored，通过环境变量注入 key 后显式运行，并限制超时、重试与用量；具体命令见
-`rpi-package/packages/rpi-providers/README.md`。
-本仓库不再提供 DeepSeek 的重复教学实现；CLI 跨项目测试使用正式 `rpi_providers` 动态库。
+`ice-package/packages/ice-providers/README.md`。
+本仓库不再提供 DeepSeek 的重复教学实现；CLI 跨项目测试使用正式 `ice_providers` 动态库。
 
-统一包验证在 rpi-package 仓库运行 `cargo build -p rpi-providers`、`cargo test -p rpi-providers`。
-本仓库 CLI 测试通过 `RPI_TEST_PROVIDER_LIBRARY` 指定该包的 DLL / so / dylib，
-通过 `RPI_TEST_PROVIDER_PACKAGE` 指定 `packages/rpi-providers` 源码目录，覆盖 link / unlink。
+统一包验证在 ice-package 仓库运行 `cargo build -p ice-providers`、`cargo test -p ice-providers`。
+本仓库 CLI 测试通过 `ICE_TEST_PROVIDER_LIBRARY` 指定该包的 DLL / so / dylib，
+通过 `ICE_TEST_PROVIDER_PACKAGE` 指定 `packages/ice-providers` 源码目录，覆盖 link / unlink。
 不设置路径的跳过结果不能作为跨项目验收；具体命令见 [Provider packages](../architecture/provider-packages.md#验证)。
 同一动态库必须注册全部预期 provider，并验证并发请求不会串用 factory 或 key。

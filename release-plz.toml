@@ -12,52 +12,52 @@ pr_name = "chore(release): prepare {{ version }}"
 pr_draft = true
 
 [[package]]
-name = "rpi-telemetry"
+name = "ice-telemetry"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-ai"
+name = "ice-ai"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-agent"
+name = "ice-agent"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-plugin-sdk"
+name = "ice-plugin-sdk"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-extensions"
+name = "ice-extensions"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-tools"
+name = "ice-tools"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-harness"
+name = "ice-harness"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-tui"
+name = "ice-tui"
 release = true
-version_group = "rpi"
+version_group = "ice"
 
 [[package]]
-name = "rpi-cli"
+name = "ice-cli"
 release = true
-version_group = "rpi"
+version_group = "ice"
 changelog_update = true
 changelog_path = "CHANGELOG.md"
-changelog_include = ["rpi-telemetry", "rpi-ai", "rpi-agent", "rpi-plugin-sdk", "rpi-extensions", "rpi-tools", "rpi-harness", "rpi-tui"]
+changelog_include = ["ice-telemetry", "ice-ai", "ice-agent", "ice-plugin-sdk", "ice-extensions", "ice-tools", "ice-harness", "ice-tui"]
 git_tag_enable = true
 git_tag_name = "v{{ version }}"
 git_release_enable = true

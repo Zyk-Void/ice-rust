@@ -1,4 +1,4 @@
-# Releasing rpi
+# Releasing ice
 
 ## Normal releases: merge the Release PR
 
@@ -6,7 +6,7 @@ Contributors, including fork contributors, submit code and tests without changin
 versions. After an ordinary PR lands on `main` and all CI checks pass,
 `release-plz` creates or updates a draft Release PR. It prepares the version and
 root changelog, synchronizes the embedded documentation, validates the nine
-crates, and marks the PR ready. The shared workspace version and `rpi` version
+crates, and marks the PR ready. The shared workspace version and `ice` version
 group keep the nine core crates together; examples are excluded.
 
 Merge that Release PR when ready to ship. After its main-branch CI passes:
@@ -15,7 +15,7 @@ Merge that Release PR when ready to ship. After its main-branch CI passes:
 2. Automation creates `vX.Y.Z` at the tested main commit. Existing tags are never
    moved; retrying the same release commit is supported.
 3. A reusable workflow builds all five platforms, verifies the archives, uploads
-   their checksums and publishes `rpi-release.json` last.
+   their checksums and publishes `ice-release.json` last.
 4. Homebrew and Scoop are updated independently; a new-version PR is submitted
    to `microsoft/winget-pkgs`. Microsoft review/CLA completion remains external.
 
@@ -29,7 +29,7 @@ Do not use `pull_request_target` to execute contribution code with release secre
 A documentation update does not require a version bump. Keep `Cargo.toml`,
 `Cargo.lock`, existing tags and install-channel manifests unchanged, and do not
 run `task publish` or merge a Release PR solely to publish documentation. Update
-the relevant `docs/rpi-tool/` sources and run `sh scripts/sync-embedded-docs.sh`
+the relevant `docs/ice-tool/` sources and run `sh scripts/sync-embedded-docs.sh`
 when the bundled documentation changes.
 
 An ordinary merge runs CI and may prepare or update a Release PR; it does not
@@ -52,7 +52,7 @@ The repository already uses `CARGO_REGISTRY_TOKEN` for crates.io. Add one secret
 Use a maintainer or dedicated bot **classic PAT with `public_repo`**, with access
 to these public repositories:
 
-- `bigfish1913/pi-rust`: create/update Release PRs. Using a user token also lets
+- `Zyk-Void/ice-rust`: create/update Release PRs. Using a user token also lets
   those PRs and the documentation follow-up commit trigger their normal CI.
 - `bigfish1913/homebrew-tap` and `bigfish1913/scoop-bucket`: update channel files.
 - The token owner's fork of `microsoft/winget-pkgs`: create/sync the fork, push
@@ -61,7 +61,7 @@ to these public repositories:
   for this public contribution permission. See [GitHub's token limitations](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens-limitations).
 
 Set it in repository Settings → Secrets and variables → Actions, or locally with
-`gh secret set RELEASE_AUTOMATION_TOKEN --repo bigfish1913/pi-rust` (interactive
+`gh secret set RELEASE_AUTOMATION_TOKEN --repo Zyk-Void/ice-rust` (interactive
 input). Never put the token in a commit or PR description. The publishing jobs
 use the built-in `GITHUB_TOKEN` for this repository and the Cargo secret only in
 the crates publishing step. The automation token is only supplied to the steps
@@ -81,7 +81,7 @@ the built-in `GITHUB_TOKEN` does not start another push-triggered workflow.
 - Each run saves `channel-manifests-vX.Y.Z` as an artifact. The checked-in
   `packaging/` files are the baseline; generated manifests carry the actual
   published version/checksums. No bot commits directly to protected `main`.
-- Website deployment remains the separate `task rpi-deploy` operation.
+- Website deployment remains the separate `task ice-deploy` operation.
 
 ## Manual release and recovery tools
 
@@ -132,7 +132,7 @@ below are available through `task publish` too.
 | `preflight` | clean tree, tag unused, version differs |
 | `bump` | `Cargo.toml` workspace version + internal pins → `cargo update --workspace` |
 | `changelog` | cuts `## [Unreleased]` into `## [X.Y.Z] - <date>` |
-| `docs` | re-syncs `crates/rpi-cli/embedded-docs` (CI enforces it) |
+| `docs` | re-syncs `crates/ice-cli/embedded-docs` (CI enforces it) |
 | `validate` | `task release:validate` (version consistency across the nine crates) |
 | `commit` | `chore(release): X.Y.Z` |
 | `tag` | `git tag vX.Y.Z` |
@@ -143,7 +143,7 @@ below are available through `task publish` too.
 | `taps` | pushes the formula/manifest into `homebrew-tap` + `scoop-bucket` |
 | `winget` | opens the `microsoft/winget-pkgs` PR (`scripts/winget-submit.sh`) |
 | `crates` | `task publish:crates RELEASE_VERSION=X.Y.Z` (nine crates, dependency order) |
-| `site` | `task rpi-deploy` |
+| `site` | `task ice-deploy` |
 
 ## Flags
 
@@ -178,11 +178,11 @@ task publish:crates RELEASE_VERSION=0.3.4
 
 | Phase | Needs |
 | --- | --- |
-| `push`, `taps` | git/`gh` write access to `pi-rust`, `homebrew-tap`, `scoop-bucket` |
+| `push`, `taps` | git/`gh` write access to `ice-rust`, `homebrew-tap`, `scoop-bucket` |
 | `wait`, `channels` | `gh` authenticated (reads release assets) |
 | `winget` | `gh` authenticated (forks `winget-pkgs`, opens the PR) |
 | `crates` | `cargo login` (a publish-scoped token) |
-| `site` | SSH to the rpi web host |
+| `site` | SSH to the ice web host |
 
 ## What no command can finish
 

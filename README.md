@@ -1,31 +1,31 @@
-# rpi — a Rust-native coding-agent runtime
+# ice — a Rust-native coding-agent runtime
 
-[![crates.io](https://img.shields.io/crates/v/rpi-cli.svg)](https://crates.io/crates/rpi-cli)
-[![downloads](https://img.shields.io/crates/d/rpi-cli.svg)](https://crates.io/crates/rpi-cli)
-[![docs.rs](https://docs.rs/rpi-cli/badge.svg)](https://docs.rs/rpi-cli)
-[![license](https://img.shields.io/crates/l/rpi-cli.svg)](#license)
+[![crates.io](https://img.shields.io/crates/v/ice-cli.svg)](https://crates.io/crates/ice-cli)
+[![downloads](https://img.shields.io/crates/d/ice-cli.svg)](https://crates.io/crates/ice-cli)
+[![docs.rs](https://docs.rs/ice-cli/badge.svg)](https://docs.rs/ice-cli)
+[![license](https://img.shields.io/crates/l/ice-cli.svg)](#license)
 [![MSRV](https://img.shields.io/badge/MSRV-1.78-blue.svg)](#install)
-[![CI](https://github.com/bigfish1913/pi-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/bigfish1913/pi-rust/actions/workflows/ci.yml)
-[![GitHub stars](https://img.shields.io/github/stars/bigfish1913/pi-rust?style=flat)](https://github.com/bigfish1913/pi-rust/stargazers)
-[![Latest release](https://img.shields.io/github/v/release/bigfish1913/pi-rust)](https://github.com/bigfish1913/pi-rust/releases/latest)
+[![CI](https://github.com/Zyk-Void/ice-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/Zyk-Void/ice-rust/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/Zyk-Void/ice-rust?style=flat)](https://github.com/Zyk-Void/ice-rust/stargazers)
+[![Latest release](https://img.shields.io/github/v/release/Zyk-Void/ice-rust)](https://github.com/Zyk-Void/ice-rust/releases/latest)
 
-`rpi` is a library-first coding-agent runtime written in Rust, plus a terminal
+`ice` is a library-first coding-agent runtime written in Rust, plus a terminal
 agent built on top of it. Nine composable crates span provider adapters, a
 durable crash-resumable agent loop, a terminal UI, and a stable plugin ABI — so
-the same code works as an embedded SDK or as a ready-to-run `rpi` command.
+the same code works as an embedded SDK or as a ready-to-run `ice` command.
 
-rpi began as a Rust reimplementation of the [Pi TypeScript SDK](https://github.com/earendil-works/pi)
+ice began as a Rust reimplementation of the [Pi TypeScript SDK](https://github.com/earendil-works/pi)
 by Mario Zechner. It now includes its own Rust-native plugin ABI and execution
 infrastructure. See [Acknowledgements](#acknowledgements) and [NOTICE](NOTICE)
 for upstream attribution.
 
 Website: <https://rpi.laofu.online/> · Docs: <https://rpi.laofu.online/docs.html>
 
-![rpi interactive session](docs/images/rpi-interactive.png)
+![ice interactive session](docs/images/ice-interactive.png)
 
 <sub>Interactive TUI. See [`docs/guides/user-guide.md`](docs/guides/user-guide.md) for the full command surface.</sub>
 
-![rpi SDK demo — an agent loop and a real tool round-trip, offline with the faux provider](docs/images/rpi-sdk-demo.gif)
+![ice SDK demo — an agent loop and a real tool round-trip, offline with the faux provider](docs/images/ice-sdk-demo.gif)
 
 <sub>The agent loop and a real `write` tool round-trip, recorded with no API key and no network — the same path the tests take. Source of truth is [`demo/sdk.tape`](demo/sdk.tape); regenerate with `task demo`.</sub>
 
@@ -33,12 +33,12 @@ Website: <https://rpi.laofu.online/> · Docs: <https://rpi.laofu.online/docs.htm
 
 | You want | Depend on | Start at |
 | -------- | --------- | -------- |
-| A working terminal coding agent | nothing | `cargo install rpi-cli` |
-| Your own agent inside your process | `rpi-agent` (+ `rpi-ai`, `rpi-tools`) | [`examples/minimal`](examples/minimal) |
-| A tool/provider that extends every session | `rpi-plugin-sdk` | [`examples/plugin-stub`](examples/plugin-stub) |
+| A working terminal coding agent | nothing | `cargo install ice-cli` |
+| Your own agent inside your process | `ice-agent` (+ `ice-ai`, `ice-tools`) | [`examples/minimal`](examples/minimal) |
+| A tool/provider that extends every session | `ice-plugin-sdk` | [`examples/plugin-stub`](examples/plugin-stub) |
 
 The three share one implementation. Build your tools once, debug them inside an
-embedded agent, and ship the same code as a `cdylib` plugin that the global `rpi`
+embedded agent, and ship the same code as a `cdylib` plugin that the global `ice`
 loads. See [`docs/agent/project-structure.md`](docs/agent/project-structure.md) for the recommended
 project layout.
 
@@ -47,7 +47,7 @@ project layout.
 **Prebuilt binary** (no Rust toolchain needed):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bigfish1913/pi-rust/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.sh | sh
 ```
 
 Verifies the published SHA-256 checksum and installs to `/usr/local/bin` or
@@ -56,39 +56,39 @@ Verifies the published SHA-256 checksum and installs to `/usr/local/bin` or
 On **Windows (x64)**, run in PowerShell 5.1 or later:
 
 ```powershell
-& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/bigfish1913/pi-rust/main/scripts/install.ps1).Content))
+& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.ps1).Content))
 ```
 
 Verifies the published SHA-256 checksum and installs to
-`$env:LOCALAPPDATA\Programs\rpi`. Follow the printed instructions to add it to
-PATH, then run `rpi --version`. Append `-DryRun` to preview, or use
-`-Version 0.3.22` and `-Dir 'C:\Tools\rpi'` to select a version and directory.
+`$env:LOCALAPPDATA\Programs\ice`. Follow the printed instructions to add it to
+PATH, then run `ice --version`. Append `-DryRun` to preview, or use
+`-Version 0.3.22` and `-Dir 'C:\Tools\ice'` to select a version and directory.
 
 **From crates.io** (requires Rust 1.78+):
 
 ```bash
-cargo install rpi-cli
-rpi --version
+cargo install ice-cli
+ice --version
 ```
 
 **Package managers:**
 
 ```bash
-brew tap bigfish1913/tap && brew install rpi          # macOS (Apple silicon), Linux
+brew tap bigfish1913/tap && brew install ice          # macOS (Apple silicon), Linux
 scoop bucket add bigfish1913 https://github.com/bigfish1913/scoop-bucket
-scoop install rpi                                     # Windows
+scoop install ice                                     # Windows
 ```
 
 The Homebrew formula currently supports Apple silicon on macOS. Intel Macs can
 use the prebuilt installer for releases with an `x86_64-apple-darwin` asset, or
-`cargo install rpi-cli`. A winget manifest is [open for
+`cargo install ice-cli`. A winget manifest is [open for
 review](https://github.com/microsoft/winget-pkgs/pull/444745).
 
 **From source:**
 
 ```bash
-git clone https://github.com/bigfish1913/pi-rust.git
-cd pi-rust && cargo run -p minimal   # offline agent, no API key required
+git clone https://github.com/Zyk-Void/ice-rust.git
+cd ice-rust && cargo run -p minimal   # offline agent, no API key required
 ```
 
 Real output of the two offline examples — no credentials, no network, identical
@@ -113,15 +113,15 @@ AgentEnd observed; tool ran against OsExecutionEnv.
 ### The CLI
 
 ```bash
-export ANTHROPIC_API_KEY=...          # or OPENAI_API_KEY, or ~/.rpi/agent/models.json
-rpi                                   # interactive TUI
-rpi -p "summarize the README"         # one-shot
-rpi --mode json -p "list the crates"  # machine-readable event stream
+export ANTHROPIC_API_KEY=...          # or OPENAI_API_KEY, or ~/.ice/agent/models.json
+ice                                   # interactive TUI
+ice -p "summarize the README"         # one-shot
+ice --mode json -p "list the crates"  # machine-readable event stream
 ```
 
-Sessions persist as JSONL and survive a crash mid-run; `rpi` resumes from the
+Sessions persist as JSONL and survive a crash mid-run; `ice` resumes from the
 last committed frame rather than replaying the turn. Custom Anthropic or
-OpenAI-compatible gateways are declared in `~/.rpi/agent/models.json` and
+OpenAI-compatible gateways are declared in `~/.ice/agent/models.json` and
 selected with `--model <provider>/<model>`.
 
 ### The SDK
@@ -130,9 +130,9 @@ Build an agent against a deterministic in-process provider — no API key, no
 network, no flakiness:
 
 ```rust
-use rpi_agent::AgentBuilder;
-use rpi_ai::providers::faux::{FauxProvider, FauxScript};
-use rpi_ai::Provider;
+use ice_agent::AgentBuilder;
+use ice_ai::providers::faux::{FauxProvider, FauxScript};
+use ice_ai::Provider;
 
 #[tokio::main]
 async fn main() {
@@ -167,46 +167,46 @@ Nine crates, one version, published together. Dependency direction is one-way
 and enforced in review:
 
 ```
-rpi-telemetry → rpi-ai → rpi-agent → rpi-tools → rpi-harness
+ice-telemetry → ice-ai → ice-agent → ice-tools → ice-harness
 ```
 
 Four crates sit outside that chain:
 
-- `rpi-tui` depends on no other `rpi-*` crate.
-- `rpi-plugin-sdk` is a leaf too (it has no `rpi-*` deps), but it is not only
-  the host's plugin contract: `rpi-tools` also reads its env-var names, so the
+- `ice-tui` depends on no other `ice-*` crate.
+- `ice-plugin-sdk` is a leaf too (it has no `ice-*` deps), but it is not only
+  the host's plugin contract: `ice-tools` also reads its env-var names, so the
   host and its plugins cannot disagree about the strings they exchange across
   the ABI. That edge is names-only — nothing is linked or called.
-- `rpi-extensions` is `rpi-plugin-sdk` plus `rpi-ai`/`rpi-agent`, since it hosts
+- `ice-extensions` is `ice-plugin-sdk` plus `ice-ai`/`ice-agent`, since it hosts
   plugins that run tools.
-- `rpi-cli` depends on all eight of the others, which is how the `rpi` binary
+- `ice-cli` depends on all eight of the others, which is how the `ice` binary
 gets the TUI, the harness and the plugin loader at once.
 
 | Crate | What it is |
 | ----- | ---------- |
-| [`rpi-telemetry`](https://crates.io/crates/rpi-telemetry) | Span/event contracts with a no-op default — instrumentation is opt-in, and pulls in no tracing or OpenTelemetry backend |
-| [`rpi-ai`](https://crates.io/crates/rpi-ai) | Provider-agnostic message, streaming and tool-schema types; Anthropic + OpenAI-compatible + `faux` providers |
-| [`rpi-agent`](https://crates.io/crates/rpi-agent) | The agent loop: `AgentTool`, events, hooks, queues, cancellation |
-| [`rpi-tools`](https://crates.io/crates/rpi-tools) | `read`/`write`/`edit`/`bash` (+ `grep`, `find`, `ls`, `powershell`) and the `ExecutionEnv` seam |
-| [`rpi-harness`](https://crates.io/crates/rpi-harness) | Session tree, JSONL persistence, compaction, crash recovery, the run loop |
-| [`rpi-tui`](https://crates.io/crates/rpi-tui) | Terminal UI primitives: components, layout, editor, transcript rendering |
-| [`rpi-cli`](https://crates.io/crates/rpi-cli) | The `rpi` binary: TUI, one-shot and JSON modes, config, plugin loading |
-| [`rpi-plugin-sdk`](https://crates.io/crates/rpi-plugin-sdk) | The stable `#[repr(C)]` ABI contract for plugins. No `rpi-*` deps; only `serde_json`, behind a default `json` feature that can be turned off |
-| [`rpi-extensions`](https://crates.io/crates/rpi-extensions) | Host-side plugin loader and the async-across-ABI tool bridge |
+| [`ice-telemetry`](https://crates.io/crates/ice-telemetry) | Span/event contracts with a no-op default — instrumentation is opt-in, and pulls in no tracing or OpenTelemetry backend |
+| [`ice-ai`](https://crates.io/crates/ice-ai) | Provider-agnostic message, streaming and tool-schema types; Anthropic + OpenAI-compatible + `faux` providers |
+| [`ice-agent`](https://crates.io/crates/ice-agent) | The agent loop: `AgentTool`, events, hooks, queues, cancellation |
+| [`ice-tools`](https://crates.io/crates/ice-tools) | `read`/`write`/`edit`/`bash` (+ `grep`, `find`, `ls`, `powershell`) and the `ExecutionEnv` seam |
+| [`ice-harness`](https://crates.io/crates/ice-harness) | Session tree, JSONL persistence, compaction, crash recovery, the run loop |
+| [`ice-tui`](https://crates.io/crates/ice-tui) | Terminal UI primitives: components, layout, editor, transcript rendering |
+| [`ice-cli`](https://crates.io/crates/ice-cli) | The `ice` binary: TUI, one-shot and JSON modes, config, plugin loading |
+| [`ice-plugin-sdk`](https://crates.io/crates/ice-plugin-sdk) | The stable `#[repr(C)]` ABI contract for plugins. No `ice-*` deps; only `serde_json`, behind a default `json` feature that can be turned off |
+| [`ice-extensions`](https://crates.io/crates/ice-extensions) | Host-side plugin loader and the async-across-ABI tool bridge |
 
-Every crate has its own README and docs.rs page. The `crates/rpi-*`
-directories and the published crate names use the same `rpi-` prefix.
+Every crate has its own README and docs.rs page. The `crates/ice-*`
+directories and the published crate names use the same `ice-` prefix.
 
-## Why rpi
+## Why ice
 
-Most coding agents are CLIs. `rpi` is a **runtime with a CLI attached**, which
+Most coding agents are CLIs. `ice` is a **runtime with a CLI attached**, which
 changes what you can build with it:
 
-- **Embeddable.** The agent loop is a library. `rpi-agent` + `rpi-ai` is enough
+- **Embeddable.** The agent loop is a library. `ice-agent` + `ice-ai` is enough
   to run an agent inside your own process, with your own event handling and
   output — no shelling out to a tool and scraping stdout.
 - **Testable offline.** A deterministic `faux` provider and an in-memory
-  execution environment are first-class, not mocks bolted on. `rpi-ai` puts its
+  execution environment are first-class, not mocks bolted on. `ice-ai` puts its
   real HTTP providers behind a `providers` feature flag, so your test suite
   cannot silently depend on the network for the paths you exercise.
 - **Durable.** Sessions are a tree with JSONL persistence and per-frame
@@ -223,9 +223,9 @@ changes what you can build with it:
 
 Structural differences against other terminal coding agents. Facts about other
 tools are as of 2026-09 and change often — check their documentation; only the
-`rpi` column is maintained here.
+`ice` column is maintained here.
 
-| | rpi | Claude Code | Codex CLI | opencode | aider |
+| | ice | Claude Code | Codex CLI | opencode | aider |
 | --- | --- | --- | --- | --- | --- |
 | Language | Rust | TypeScript | Rust | TypeScript/Go | Python |
 | Source available | ✅ MIT | ❌ | ✅ | ✅ | ✅ |
@@ -235,7 +235,7 @@ tools are as of 2026-09 and change often — check their documentation; only the
 | Provider-agnostic gateways | ✅ | ❌ | ❌ | ✅ | ✅ |
 
 If you want the most polished single-vendor experience, use the vendor's tool.
-`rpi` is for people who want to own the loop.
+`ice` is for people who want to own the loop.
 
 ## Performance
 
@@ -247,13 +247,13 @@ rebuild and re-measure on your own machine.
 | Metric | Value |
 | ------ | ----- |
 | Release binary size | **21.8 MiB** |
-| `rpi --version` wall time | **~17 ms** median |
+| `ice --version` wall time | **~17 ms** median |
 | RSS once the agent is ready | **12.0 MiB** |
 
 `node scripts/bench-vs-pi.mjs --pi <path-to-pi>` — against native Pi on the same
 machine, both offline, each with a fresh isolated config directory:
 
-| Metric | rpi (Rust) | pi (TypeScript) | Difference |
+| Metric | ice (Rust) | pi (TypeScript) | Difference |
 | ------ | ---------: | --------------: | ---------- |
 | `--version` | **17.5 ms** | 169.5 ms | **9.7× faster** |
 | Cold start | **17.7 ms** | 189.5 ms | **10.7× faster** |
@@ -261,12 +261,12 @@ machine, both offline, each with a fresh isolated config directory:
 | Install footprint | **21.8 MiB** (one binary) | ~385 MiB (+ ~91 MiB Node) | **~18–22× smaller** |
 
 **Cold start** is spawn → the agent answering its first command: process creation
-plus full initialisation, excluding teardown and any LLM work. rpi's `--version`
+plus full initialisation, excluding teardown and any LLM work. ice's `--version`
 (17.5 ms) and cold start (17.7 ms) are effectively equal, so startup is process
 creation, not initialisation; Pi is dominated by Node boot.
 
-Isolation caveat: rpi reads `RPI_CODING_AGENT_DIR` / `RPI_OFFLINE`, native Pi reads
-`PI_CODING_AGENT_DIR` / `PI_OFFLINE`. Set the matching pair for each, or rpi
+Isolation caveat: ice reads `ICE_CODING_AGENT_DIR` / `ICE_OFFLINE`, native Pi reads
+`PI_CODING_AGENT_DIR` / `PI_OFFLINE`. Set the matching pair for each, or ice
 silently loads the machine's global plugins.
 
 Method, raw per-run numbers, and what is *not* measured (LLM latency, tool-loop
@@ -280,16 +280,16 @@ can register tools, providers, slash commands, event handlers, markdown
 renderers and discovered resources.
 
 ```bash
-rpi install rpi-todo                    # prebuilt extension; no Rust toolchain needed
-rpi install my-ext --path ../my-ext     # local, for development
-rpi dev                                 # build + watch + live reload
+ice install ice-todo                    # prebuilt extension; no Rust toolchain needed
+ice install my-ext --path ../my-ext     # local, for development
+ice dev                                 # build + watch + live reload
 ```
 
-The host loads project `.rpi/extensions`, then global
-`~/.rpi/agent/extensions`, then any `--extensions-dir`.
+The host loads project `.ice/extensions`, then global
+`~/.ice/agent/extensions`, then any `--extensions-dir`.
 
 Ready-to-install extensions live in the companion
-[`pi-rust/rpi-package`](https://github.com/pi-rust/rpi-package) repository, with
+[`ice-rust/ice-package`](https://github.com/ice-rust/ice-package) repository, with
 an [online catalog](https://rpi.laofu.online/packages.html).
 
 ### Web access
@@ -297,20 +297,20 @@ an [online catalog](https://rpi.laofu.online/packages.html).
 Web access is optional, not part of the CLI's default tool set:
 
 ```bash
-rpi install rpi-websearch                # websearch: titles, URLs and snippets
-rpi install rpi-webfetch                 # webfetch: readable text from public pages
+ice install ice-websearch                # websearch: titles, URLs and snippets
+ice install ice-webfetch                 # webfetch: readable text from public pages
 ```
 
-Restart rpi after installation to load the tools. These extensions do not
+Restart ice after installation to load the tools. These extensions do not
 provide an interactive browser: clicking, login flows and page JavaScript
 execution require separate browser tooling.
 
 ### Subagents with inherited configuration
 
-Install the companion `rpi-subagents` extension to expose `delegate_task`:
+Install the companion `ice-subagents` extension to expose `delegate_task`:
 
 ```bash
-rpi install rpi-subagents
+ice install ice-subagents
 ```
 
 The host snapshots the parent's effective model/provider binding, thinking
@@ -333,7 +333,7 @@ for lifecycle, limits and compatibility details.
 ### Authoring an extension
 
 ```rust
-use rpi_plugin_sdk::{export_plugin, StbStringRef};
+use ice_plugin_sdk::{export_plugin, StbStringRef};
 
 export_plugin!(|api| {
     if let Some(declare) = api.declare {
@@ -352,8 +352,8 @@ rules, which are load-bearing rather than stylistic.
 ## Remote mode
 
 ```bash
-rpi --server                        # headless agent over TCP, prints an auth token
-rpi --connect host:port --token T   # TUI client with zero local agent resources
+ice --server                        # headless agent over TCP, prints an auth token
+ice --connect host:port --token T   # TUI client with zero local agent resources
 ```
 
 The client holds no provider, tools, extensions or session files — all agent
@@ -364,13 +364,13 @@ machine. See [`docs/remote/user-guide.md`](docs/remote/user-guide.md).
 
 | | |
 | --- | --- |
-| Current release | **[0.6.1](https://github.com/bigfish1913/pi-rust/releases)** (nine crates, published together) |
-| Stability | `rpi-ai`, `rpi-agent`, `rpi-tools`, `rpi-harness`, `rpi-plugin-sdk` are the intended stable surface |
+| Current release | **[0.6.1](https://github.com/Zyk-Void/ice-rust/releases)** (nine crates, published together) |
+| Stability | `ice-ai`, `ice-agent`, `ice-tools`, `ice-harness`, `ice-plugin-sdk` are the intended stable surface |
 | MSRV | 1.78 |
 | Platforms | Linux, macOS, Windows (CI runs the suite on Linux) |
 | Binary release targets | Linux (x86_64/aarch64), macOS (Intel/Apple silicon), Windows (x86_64) |
 
-`rpi` is a self-contained Rust coding-agent stack. No Node component is
+`ice` is a self-contained Rust coding-agent stack. No Node component is
 required and none is loaded.
 
 ## Documentation
@@ -384,7 +384,7 @@ Start with the [documentation index](docs/README.md), grouped by feature.
 - [Subagents](docs/extensions/subagents.md) — configuration inheritance, permissions and lifecycle
 - [Remote mode](docs/remote/user-guide.md) — protocol, tokens, limitations
 - [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
-- [docs.rs](https://docs.rs/rpi-cli) for per-crate API docs
+- [docs.rs](https://docs.rs/ice-cli) for per-crate API docs
 
 ## Contributing
 
@@ -397,9 +397,9 @@ The whole test suite runs offline: `cargo test --workspace --locked`.
 
 ## Support / 赞赏支持
 
-If rpi helps you, consider buying the author a coffee. Tips and donations support continued development and maintenance. Thank you!
+If ice helps you, consider buying the author a coffee. Tips and donations support continued development and maintenance. Thank you!
 
-如果 rpi 帮到了你，欢迎请作者喝杯咖啡，赞赏或捐助支持持续开发与维护。感谢每一份支持！
+如果 ice 帮到了你，欢迎请作者喝杯咖啡，赞赏或捐助支持持续开发与维护。感谢每一份支持！
 
 | 微信支付 / WeChat Pay | 支付宝 / Alipay | Binance Pay |
 | :---: | :---: | :---: |
@@ -430,7 +430,7 @@ Questions, ideas and early builds are welcome in either group:
 
 Thank you to Mario Zechner and the [Pi contributors](https://github.com/earendil-works/pi)
 for the original TypeScript SDK and the agent, tool and session designs that
-formed rpi's starting point. rpi reimplements that foundation in Rust and adds
+formed ice's starting point. ice reimplements that foundation in Rust and adds
 its own runtime and extension infrastructure; it does not load the TypeScript
 SDK or its npm extensions. Upstream copyright and MIT license notices are
 retained in [LICENSE](LICENSE) and [NOTICE](NOTICE).
@@ -439,8 +439,8 @@ retained in [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-The `rpi-*` crates are a Rust-native coding-agent stack.
+The `ice-*` crates are a Rust-native coding-agent stack.
 
 ## Star history
 
-[![Star History Chart](https://api.star-history.com/svg?repos=bigfish1913/pi-rust,pi-rust/rpi-package&type=Date)](https://www.star-history.com/#bigfish1913/pi-rust&pi-rust/rpi-package&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Zyk-Void/ice-rust,ice-rust/ice-package&type=Date)](https://www.star-history.com/#Zyk-Void/ice-rust&ice-rust/ice-package&Date)

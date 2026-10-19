@@ -11,7 +11,7 @@ set -euo pipefail
 VERSION="${1:?usage: push-taps.sh X.Y.Z}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'invalid version' >&2; exit 1; }
 CHANNEL="${2:-all}"
-MSG="rpi $VERSION"
+MSG="ice $VERSION"
 
 die() { echo "error: $*" >&2; exit 1; }
 note() { echo "» $*"; }
@@ -59,10 +59,10 @@ case "$CHANNEL" in
   *) die "unknown channel: $CHANNEL" ;;
 esac
 if [[ "$CHANNEL" == all || "$CHANNEL" == homebrew ]]; then
-  put "bigfish1913/homebrew-tap" "Formula/rpi.rb" "packaging/homebrew/rpi.rb"
+  put "bigfish1913/homebrew-tap" "Formula/ice.rb" "packaging/homebrew/ice.rb"
 fi
 if [[ "$CHANNEL" == all || "$CHANNEL" == scoop ]]; then
-  put "bigfish1913/scoop-bucket" "bucket/rpi.json" "packaging/scoop/rpi.json"
+  put "bigfish1913/scoop-bucket" "bucket/ice.json" "packaging/scoop/ice.json"
 fi
 
 note "taps pushed"

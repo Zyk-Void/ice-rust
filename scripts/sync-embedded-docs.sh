@@ -1,8 +1,8 @@
 #!/bin/sh
-# Refresh the documentation snapshot that is compiled into the `rpi` binary.
+# Refresh the documentation snapshot that is compiled into the `ice` binary.
 #
-# crates/rpi-cli/src/docs_tool.rs pulls these files in with include_str!, so they
-# must be byte-copies of the dedicated docs/rpi-tool/ sources. Keep these
+# crates/ice-cli/src/docs_tool.rs pulls these files in with include_str!, so they
+# must be byte-copies of the dedicated docs/ice-tool/ sources. Keep these
 # sources separate from docs/ ordinary user/developer documentation: the latter
 # may contain release notes, website-oriented pages, or implementation notes
 # that should not become part of the model-facing docs tool.
@@ -14,15 +14,15 @@
 
 set -eu
 
-DEST="crates/rpi-cli/embedded-docs"
+DEST="crates/ice-cli/embedded-docs"
 
 # source -> destination file name
-FILES="docs/rpi-tool/README.md:README.md \
-docs/rpi-tool/agent-project.md:agent-project.md \
-docs/rpi-tool/architecture.md:architecture.md \
-docs/rpi-tool/extension-authoring.md:extension-authoring.md \
-docs/rpi-tool/rust-debugging.md:rust-debugging.md \
-docs/rpi-tool/user-guide.md:user-guide.md \
+FILES="docs/ice-tool/README.md:README.md \
+docs/ice-tool/agent-project.md:agent-project.md \
+docs/ice-tool/architecture.md:architecture.md \
+docs/ice-tool/extension-authoring.md:extension-authoring.md \
+docs/ice-tool/rust-debugging.md:rust-debugging.md \
+docs/ice-tool/user-guide.md:user-guide.md \
 CHANGELOG.md:changelog.md"
 
 for entry in $FILES; do

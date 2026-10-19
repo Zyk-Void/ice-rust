@@ -64,7 +64,7 @@ async function loadGuide(guideId) {
   const file = typeof guide.file === 'string' ? guide.file : (guide.file[locale] || guide.file.zh);
   const title = guide.title[locale] || guide.title.zh;
   $$('[data-guide-title]').forEach((element) => { element.textContent = title; });
-  document.title = `${title} · rpi`;
+  document.title = `${title} · ice`;
 
   const selector = $('[data-guide-selector]');
   selector.innerHTML = GUIDES.map((item) => `<button type="button" data-guide-id="${item.id}" class="${item.id === guide.id ? 'is-active' : ''}">${item.title[locale] || item.title.zh}</button>`).join('');

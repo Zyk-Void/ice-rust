@@ -6,7 +6,7 @@ import re
 import subprocess
 import sys
 
-REPOSITORY = "https://github.com/bigfish1913/pi-rust"
+REPOSITORY = "https://github.com/Zyk-Void/ice-rust"
 TARGETS = {"x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu",
            "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin"}
 
@@ -14,7 +14,7 @@ TARGETS = {"x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu",
 def verify(tag, manifest, release):
     if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag):
         raise ValueError("invalid release tag")
-    if (manifest.get("schema_version") != 1 or manifest.get("name") != "rpi-cli"
+    if (manifest.get("schema_version") != 1 or manifest.get("name") != "ice-cli"
             or manifest.get("repository") != REPOSITORY or manifest.get("tag") != tag
             or manifest.get("version") != tag[1:]
             or not re.fullmatch(r"[0-9a-f]{40}", manifest.get("source_commit", ""))
@@ -23,11 +23,11 @@ def verify(tag, manifest, release):
     if release.get("draft") or release.get("prerelease") or release.get("tag_name") != tag:
         raise ValueError("install channels require a published stable release")
     assets = {asset["name"]: asset for asset in release["assets"]}
-    if "rpi-release.json" not in assets:
+    if "ice-release.json" not in assets:
         raise ValueError("release is missing its readiness manifest")
     for target, row in manifest["targets"].items():
         extension = "zip" if "windows" in target else "tar.gz"
-        name = f"rpi-{tag}-{target}.{extension}"
+        name = f"ice-{tag}-{target}.{extension}"
         asset = assets.get(name, {})
         if (row.get("url") != f"{REPOSITORY}/releases/download/{tag}/{name}"
                 or row.get("format") != extension
@@ -41,10 +41,10 @@ def verify(tag, manifest, release):
 if __name__ == "__main__":
     tag, filename = sys.argv[1:]
     release = json.loads(subprocess.check_output([
-        "gh", "api", f"repos/bigfish1913/pi-rust/releases/tags/{tag}"], text=True, encoding="utf-8"))
+        "gh", "api", f"repos/Zyk-Void/ice-rust/releases/tags/{tag}"], text=True, encoding="utf-8"))
     manifest = json.loads(Path(filename).read_text(encoding="utf-8"))
     commit = json.loads(subprocess.check_output([
-        "gh", "api", f"repos/bigfish1913/pi-rust/commits/{tag}"], text=True, encoding="utf-8"))
+        "gh", "api", f"repos/Zyk-Void/ice-rust/commits/{tag}"], text=True, encoding="utf-8"))
     if manifest.get("source_commit") != commit["sha"]:
         raise ValueError("release manifest source does not match the tag")
     verify(tag, manifest, release)

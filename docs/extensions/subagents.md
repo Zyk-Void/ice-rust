@@ -33,13 +33,13 @@
 
 `PluginApi.user_data` 是宿主注册表中的 opaque handle，不是可解引用地址；
 失效 handle 返回错误，ID 不复用。宿主为每次工具调用创建 invocation，
-在 `__rpi` 中注入 `runtimeHandle`（整数）和随机 `runtimeKey`（字符串）。
+在 `__ice` 中注入 `runtimeHandle`（整数）和随机 `runtimeKey`（字符串）。
 这些值不属于公开执行上下文，不能写入模型输出、持久化参数或跨调用缓存。
 
 - 同步 execute/poll/cancel/destroy 内调用 action 时，宿主自动使用当前 driver 的
   invocation，插件不能通过注册时缓存的上下文把 child 调用冒充为父调用。
 - 插件自行创建的工作线程必须用该次 `runtimeHandle` 作为 runtime_action 的
-  `user_data`，并在每个 ChildAgent 参数对象中添加 `__rpiRuntimeKey: runtimeKey`。
+  `user_data`，并在每个 ChildAgent 参数对象中添加 `__iceRuntimeKey: runtimeKey`。
   以下 op 示例省略此字段；宿主校验后将它移除，不传递给业务 action。
 - ChildAgent 拒绝仅注册级、已取消、失效或 child-originated invocation，
   无论工具叫 `delegate_task` 还是其他别名。缺少这些能力时明确提示升级，不回退。
@@ -99,7 +99,7 @@
 - 工具、provider hooks 和审批 hook 继承现有对象，不重新发现全局插件，
   因此父 `--package-only`、显式扩展加载及工具范围保持有效。
 - 工具继承父项目的执行环境/cwd。共享的扩展工具仍由父宿主所有，注入的
-  `__rpi.sessionId` 表示其父扩展状态空间；独立执行会话用返回的 `sessionId`
+  `__ice.sessionId` 表示其父扩展状态空间；独立执行会话用返回的 `sessionId`
   标识。这不是为每个子任务重新注册一套插件。
 - 权限门与 `ask_user` 使用父 UI mailbox，无需 RPC 转发。无交互消费者时
   保留显式错误/拒绝行为，不能默认允许。子任务取消信号送达工具和审批等待。
@@ -122,12 +122,12 @@
 ## 跨仓库验证
 
 ```sh
-# D:/Projects/rpi-package
-cargo test -p rpi-subagents
-cargo build -p rpi-subagents
+# D:/Projects/ice-package
+cargo test -p ice-subagents
+cargo build -p ice-subagents
 
-# D:/Projects/pi-rust，将变量设为实际 DLL / so / dylib 路径
-RPI_TEST_SUBAGENT_LIBRARY=/path/to/rpi_subagents.dll cargo test -p rpi-cli --test subagent_packages
+# D:/Projects/ice-rust，将变量设为实际 DLL / so / dylib 路径
+ICE_TEST_SUBAGENT_LIBRARY=/path/to/ice_subagents.dll cargo test -p ice-cli --test subagent_packages
 ```
 
 集成测试加载真实 DLL，使用本地 faux provider 和临时项目，验证进度、cwd、工具

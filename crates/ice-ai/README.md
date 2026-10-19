@@ -1,0 +1,116 @@
+# ice-ai
+
+[![crates.io](https://img.shields.io/crates/v/ice-ai.svg)](https://crates.io/crates/ice-ai)
+[![docs.rs](https://docs.rs/ice-ai/badge.svg)](https://docs.rs/ice-ai)
+
+The unified, provider-agnostic LLM layer: message and content types, the
+`Provider` trait, streaming events, and concrete provider implementations.
+
+Every other crate in the family talks in these types. Nothing above this layer
+knows whether it is talking to Anthropic, an OpenAI-compatible gateway, or the
+deterministic in-process `faux` provider.
+
+## Install
+
+```toml
+[dependencies]
+# Types + the faux provider only. No HTTP stack, no network at build time.
+ice-ai = "0.3"
+```
+
+```toml
+[dependencies]
+# Adds the real HTTP providers (Anthropic Messages, OpenAI-compatible Chat
+# Completions / Responses, and OpenAI-compatible gateways).
+ice-ai = { version = "0.3", features = ["providers"] }
+```
+
+| Feature | Default | What it enables |
+| ------- | ------- | --------------- |
+| `providers` | off | HTTP providers, `reqwest` + `eventsource-stream`, `images`, `http` |
+| `smoke` | off | `providers` plus a live network smoke test, gated at runtime on `ANTHROPIC_API_KEY` |
+
+Core builds stay network-free on purpose: a test double is not a special case,
+it is the default.
+
+## What lives where
+
+- `types` — `Message`, `Content`, `AssistantMessage`, `AssistantMessageEvent`,
+  `Context`, `Tool`, `Usage`. Serialized in the provider wire shape.
+- `model` — `Model` and the streaming-protocol compatibility structs.
+- `schema` — tool-parameter schema generation plus the coercion that recovers
+  JSON an LLM emitted slightly wrong.
+- `event_stream` — the producer/consumer streaming queue behind
+  `AssistantMessageEventStream`.
+- `provider` — the `Provider` trait seam, `ProviderHooks`, `SimpleStreamOptions`,
+  and the optional `DeferredProvider` capability for long-poll APIs.
+- `providers` — concrete implementations: `faux` (always), `anthropic`,
+  `openai_completions`, `openai_responses` (behind `providers`).
+  DeepSeek, OpenRouter, llama.cpp and Proxy live together in the optional
+  [ice-providers package](https://github.com/ice-rust/ice-package/tree/feature-1014/packages/ice-providers);
+  see the [migration guide](../../docs/architecture/provider-packages.md).
+
+## The `Provider` trait
+
+```rust
+use ice_ai::model::Model;
+use ice_ai::provider::SimpleStreamOptions;
+use ice_ai::types::Context;
+use ice_ai::AssistantMessageEventStream;
+
+#[async_trait::async_trait]
+pub trait Provider: Send + Sync {
+    fn id(&self) -> &str;
+    fn models(&self) -> &[Model];
+    async fn stream_simple(
+        &self,
+        model: &Model,
+        ctx: &Context,
+        opts: &SimpleStreamOptions,
+    ) -> AssistantMessageEventStream;
+}
+```
+
+`stream_simple` returns the consumer end of a stream whose producer is already
+running, and reports failures as `Error` events rather than `Err`. That keeps
+the harness and the agent loop uniform across providers: one code path handles
+a network failure, a malformed frame, and a cancelled request.
+
+## Testing without a network
+
+The `faux` provider scripts exact turns, so a test pins the model's behaviour
+rather than mocking it:
+
+```rust
+use ice_ai::providers::faux::{FauxProvider, FauxScript};
+use ice_ai::Provider;
+
+let provider = FauxProvider::new(
+    FauxScript::new()
+        .with_tool_call("write", serde_json::json!({ "path": "out.txt", "content": "hi" }))
+        .with_text("Done."),
+);
+let model = provider.default_model().clone();
+```
+
+A tool call followed by a text turn is enough to exercise the whole
+tool → result → follow-up cycle offline. See
+[`examples/tools`](https://github.com/Zyk-Void/ice-rust/tree/main/examples/tools).
+
+## Related crates
+
+| Crate | Role |
+| ----- | ---- |
+| [`ice-agent`](https://crates.io/crates/ice-agent) | The agent loop built on this layer |
+| [`ice-harness`](https://crates.io/crates/ice-harness) | Sessions, persistence, compaction |
+| [`ice-cli`](https://crates.io/crates/ice-cli) | The `ice` terminal agent |
+
+## Documentation
+
+- Crate docs: <https://docs.rs/ice-ai>
+- Architecture: [docs/architecture/overview.md](https://github.com/Zyk-Void/ice-rust/blob/main/docs/architecture/overview.md)
+
+## License
+
+MIT. See [LICENSE](https://github.com/Zyk-Void/ice-rust/blob/main/LICENSE)
+and [NOTICE](https://github.com/Zyk-Void/ice-rust/blob/main/NOTICE).

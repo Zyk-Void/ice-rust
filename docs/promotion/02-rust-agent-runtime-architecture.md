@@ -9,32 +9,32 @@
 放进自己的进程——编辑器插件、CI 任务、一个内部工具——就只能去调用它的 CLI，然后解析 stdout。
 这条路能走，但很脆：输出格式是给人看的、错误处理靠字符串匹配、也没法订阅中间事件。
 
-所以 rpi 的出发点是**先做库，CLI 只是第一个使用者**。这个决定一路推导出了后面所有的设计。
+所以 ice 的出发点是**先做库，CLI 只是第一个使用者**。这个决定一路推导出了后面所有的设计。
 
 ## 一、分层：让依赖方向不可逆
 
 九个 crate，单向依赖：
 
 ```
-rpi-telemetry → rpi-ai → rpi-agent → rpi-tools → rpi-harness → rpi-cli
+ice-telemetry → ice-ai → ice-agent → ice-tools → ice-harness → ice-cli
                   ↑                                        ↑
-            rpi-tui                          rpi-plugin-sdk → rpi-extensions
+            ice-tui                          ice-plugin-sdk → ice-extensions
 ```
 
 每一层只解决一件事：
 
 | crate | 职责 | 关键约束 |
 | --- | --- | --- |
-| `rpi-ai` | provider 无关的消息/流式类型 + 各 provider 实现 | 默认构建**不含 HTTP 依赖** |
-| `rpi-agent` | agent loop、`AgentTool`、事件、hooks、队列、取消 | 不认识任何 provider 的线格式 |
-| `rpi-tools` | `read`/`write`/`edit`/`bash` + `ExecutionEnv` 抽象 | 工具只依赖 `ExecutionEnv`，不依赖真实文件系统 |
-| `rpi-harness` | 会话树、JSONL 持久化、压缩、崩溃恢复 | 唯一负责"状态活过进程"的层 |
-| `rpi-cli` | TUI、配置、插件加载 | 只做编排，不含领域逻辑 |
-| `rpi-plugin-sdk` | 稳定 `#[repr(C)]` ABI | **零依赖叶子**，插件不该拖进整个 runtime |
+| `ice-ai` | provider 无关的消息/流式类型 + 各 provider 实现 | 默认构建**不含 HTTP 依赖** |
+| `ice-agent` | agent loop、`AgentTool`、事件、hooks、队列、取消 | 不认识任何 provider 的线格式 |
+| `ice-tools` | `read`/`write`/`edit`/`bash` + `ExecutionEnv` 抽象 | 工具只依赖 `ExecutionEnv`，不依赖真实文件系统 |
+| `ice-harness` | 会话树、JSONL 持久化、压缩、崩溃恢复 | 唯一负责"状态活过进程"的层 |
+| `ice-cli` | TUI、配置、插件加载 | 只做编排，不含领域逻辑 |
+| `ice-plugin-sdk` | 稳定 `#[repr(C)]` ABI | **零依赖叶子**，插件不该拖进整个 runtime |
 
 两条约束是硬性的，代码评审会直接拒：
 
-1. **不能有反向依赖。** `rpi-agent` 依赖 `rpi-cli` 这类改动一出现就说明分层错了。
+1. **不能有反向依赖。** `ice-agent` 依赖 `ice-cli` 这类改动一出现就说明分层错了。
 2. **插件 SDK 必须是零依赖叶子。** 如果它依赖 runtime，插件就会链接宿主，`cdylib` 加载立刻出问题。
 
 第二条尤其容易被忽略：插件是宿主**加载**进来的动态库，宿主链接插件，反过来不行。
@@ -44,10 +44,10 @@ rpi-telemetry → rpi-ai → rpi-agent → rpi-tools → rpi-harness → rpi-cli
 agent loop 里唯一接触模型的地方是 `StreamFn`——一个**同步**返回事件流消费端的函数：
 
 ```rust
-use rpi_ai::model::Model;
-use rpi_ai::provider::SimpleStreamOptions;
-use rpi_ai::types::Context;
-use rpi_ai::AssistantMessageEventStream;
+use ice_ai::model::Model;
+use ice_ai::provider::SimpleStreamOptions;
+use ice_ai::types::Context;
+use ice_ai::AssistantMessageEventStream;
 
 #[async_trait::async_trait]
 pub trait Provider: Send + Sync {
@@ -75,8 +75,8 @@ sync/async 的缝是有意留的：它让 loop 不需要是 async，也让它更
 **边界收在一个 trait，直接换来可测试性。** provider、测试替身、录制的回放三者可互换：
 
 ```rust
-use rpi_ai::providers::faux::{FauxProvider, FauxScript};
-use rpi_ai::Provider;
+use ice_ai::providers::faux::{FauxProvider, FauxScript};
+use ice_ai::Provider;
 
 let provider = FauxProvider::new(
     FauxScript::new()
@@ -86,7 +86,7 @@ let provider = FauxProvider::new(
 ```
 
 一个 `faux` provider 加一次工具调用，就能离线跑通"工具调用 → 结果回灌 → 下一轮"的完整循环。
-整套测试套件不联网，`rpi-ai` 的 HTTP provider 在 feature flag 后面——**默认构建里没有网络栈，
+整套测试套件不联网，`ice-ai` 的 HTTP provider 在 feature flag 后面——**默认构建里没有网络栈，
 所以测试不可能偷偷依赖网络**。
 
 ## 三、工具的输入有两个来源，都要处理
@@ -121,7 +121,7 @@ agent 跑一轮可能要几分钟。如果只在回合结束时持久化，那�
 如果重启时把这些当成"已发生的历史"，就会**重复执行工具**（对一个会写文件、发请求的工具
 是灾难）。
 
-所以 rpi 记的是**帧级进度**（`LaneRecord::AssistantFrame`），并且严格区分两类东西：
+所以 ice 记的是**帧级进度**（`LaneRecord::AssistantFrame`），并且严格区分两类东西：
 
 - **进度不是历史。** 流式帧写入 record stream，但**永远不进**模型看到的那个分支。
   重启时把已提交的前缀重放成一个"被打断的消息"。
@@ -173,8 +173,8 @@ SDK 里写死了五条规则，违反任意一条都是 UB：
   教训是"本地测试过了"不等于"仓库是绿的"，CI 必须真的跑。
 - **基准测试自己会骗人**：头一版我在计时窗口里每 10 ms 起一个 `tasklist` 采样内存，
   把两个工具都拖慢了约 100 ms，正好抹平了真实差距；第二版更离谱——隔离用的
-  `PI_CODING_AGENT_DIR` 只对原生 pi 生效，rpi 用的是 `RPI_CODING_AGENT_DIR`，
-  结果 rpi 一直在加载我本机的 25 个插件 DLL，"冷启动"被高估了近 10 倍。
+  `PI_CODING_AGENT_DIR` 只对原生 pi 生效，ice 用的是 `ICE_CODING_AGENT_DIR`，
+  结果 ice 一直在加载我本机的 25 个插件 DLL，"冷启动"被高估了近 10 倍。
   测量代码也需要被审查。
 
 还没做的：预编译二进制的 Homebrew/Scoop 分发、Gemini/Bedrock 适配器，
@@ -183,20 +183,20 @@ SDK 里写死了五条规则，违反任意一条都是 UB：
 
 ## 项目
 
-rpi 是 Rust 原生、library-first 的 coding-agent runtime，MIT 许可，九个 crate 同版本发布。
+ice 是 Rust 原生、library-first 的 coding-agent runtime，MIT 许可，九个 crate 同版本发布。
 
-- GitHub：https://github.com/bigfish1913/pi-rust
+- GitHub：https://github.com/Zyk-Void/ice-rust
 - 官网 / 文档：https://rpi.laofu.online/
-- 架构文档：https://github.com/bigfish1913/pi-rust/blob/main/docs/architecture/overview.md
+- 架构文档：https://github.com/Zyk-Void/ice-rust/blob/main/docs/architecture/overview.md
 - 自己搭 agent 的项目结构建议：
-  https://github.com/bigfish1913/pi-rust/blob/main/docs/agent/project-structure.md
+  https://github.com/Zyk-Void/ice-rust/blob/main/docs/agent/project-structure.md
 - 与原生 TypeScript 版的实测对比：
-  https://github.com/bigfish1913/pi-rust/blob/main/docs/performance/benchmark-vs-pi.md
+  https://github.com/Zyk-Void/ice-rust/blob/main/docs/performance/benchmark-vs-pi.md
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bigfish1913/pi-rust/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/scripts/install.sh | sh
 # 或者
-cargo install rpi-cli
+cargo install ice-cli
 ```
 
 想直接看代码：`cargo run -p minimal` 跑一个不联网、不需要 API key 的 agent。

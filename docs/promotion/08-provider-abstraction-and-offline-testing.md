@@ -1,12 +1,12 @@
 # Provider 抽象：让 Agent 不绑定 Anthropic 或 OpenAI
 
-> rpi 将消息类型、模型能力和流式事件放在 `rpi-ai`，把供应商协议藏在 Provider 实现后面。业务层因此可以在真实网关、OpenAI-compatible 服务和离线 faux provider 之间切换。
+> ice 将消息类型、模型能力和流式事件放在 `ice-ai`，把供应商协议藏在 Provider 实现后面。业务层因此可以在真实网关、OpenAI-compatible 服务和离线 faux provider 之间切换。
 
 ## 分层关系
 
 ```mermaid
 flowchart LR
-    Agent[rpi-agent loop] --> Context[统一 Context / Message]
+    Agent[ice-agent loop] --> Context[统一 Context / Message]
     Context --> Provider[Provider trait]
     Provider --> Anthropic[Anthropic Messages]
     Provider --> OpenAI[OpenAI Chat/Responses]
@@ -17,16 +17,16 @@ flowchart LR
 Provider 的核心契约是流式输出，而不是“返回一个字符串”：
 
 ```rust
-// crates/rpi-ai/src/provider.rs 的核心使用形态
+// crates/ice-ai/src/provider.rs 的核心使用形态
 pub trait Provider: Send + Sync {
     fn id(&self) -> &str;
-    fn models(&self) -> &[rpi_ai::Model];
+    fn models(&self) -> &[ice_ai::Model];
     fn stream_simple(
         &self,
-        model: &rpi_ai::Model,
-        context: &rpi_ai::types::Context,
+        model: &ice_ai::Model,
+        context: &ice_ai::types::Context,
         options: &SimpleStreamOptions,
-    ) -> rpi_ai::AssistantMessageEventStream;
+    ) -> ice_ai::AssistantMessageEventStream;
 }
 ```
 
@@ -36,8 +36,8 @@ pub trait Provider: Send + Sync {
 
 ```rust
 use std::sync::Arc;
-use rpi_ai::providers::faux::{FauxProvider, FauxScript};
-use rpi_ai::Provider;
+use ice_ai::providers::faux::{FauxProvider, FauxScript};
+use ice_ai::Provider;
 
 let provider = Arc::new(FauxProvider::new(
     FauxScript::new().with_text("deterministic reply"),
@@ -70,9 +70,9 @@ flowchart TD
 
 ## 工程取舍
 
-Provider 只负责协议适配；队列、工具、持久化属于更上层。这样 `rpi-ai` 可以被单独使用，`rpi-agent` 也能通过自定义 `StreamFn` 接入测试替身。默认构建还可以避免不必要的 HTTP 依赖。
+Provider 只负责协议适配；队列、工具、持久化属于更上层。这样 `ice-ai` 可以被单独使用，`ice-agent` 也能通过自定义 `StreamFn` 接入测试替身。默认构建还可以避免不必要的 HTTP 依赖。
 
-适合面向 Rust、LLM 网关和本地模型开发者推广。更多实现见 `crates/rpi-ai/src/providers` 与 `crates/rpi-ai/tests`。
+适合面向 Rust、LLM 网关和本地模型开发者推广。更多实现见 `crates/ice-ai/src/providers` 与 `crates/ice-ai/tests`。
 
 ---
 
@@ -80,10 +80,10 @@ Provider 只负责协议适配；队列、工具、持久化属于更上层。�
 
 # Provider Adapters Without Spreading Vendor Code Through the Agent
 
-Provider APIs disagree about messages, tool calls, usage, and streaming. rpi keeps those details in `rpi-ai` and gives the agent a common event model.
+Provider APIs disagree about messages, tool calls, usage, and streaming. ice keeps those details in `ice-ai` and gives the agent a common event model.
 
 The agent sees a `Context`, a `Model`, and `AssistantMessageEvent`. It does not need to know whether the response came from Anthropic Messages, OpenAI Responses, or an OpenAI-compatible gateway. Each adapter converts its protocol at the boundary.
 
 `FauxProvider` is part of the normal design, not a hidden test helper. A test can run the same stream path as production and assert the events it receives, without a live network.
 
-Read `crates/rpi-ai/src/provider.rs`, `event_stream.rs`, and `crates/rpi-ai/tests` for the implementation.
+Read `crates/ice-ai/src/provider.rs`, `event_stream.rs`, and `crates/ice-ai/tests` for the implementation.
