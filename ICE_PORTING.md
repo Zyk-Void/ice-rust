@@ -654,9 +654,37 @@ Missing implementations (`ice:ai/src/api/*`):
    upstream package names in the rebrand, or pin a Zyk-Void-owned repository.
 2. **Plugin ABI rename.** The entry symbol is now `ice_plugin_register`
    (was `rpi_plugin_register`), so upstream prebuilt plugins will not load.
-3. **Self-update** now points at `https://github.com/Zyk-Void/ice-rust` releases
+3. **Self-update** now points at `https://github.com/zyk-void/ice-rust` releases
    (`crates/ice-cli/src/prebuilt_release.rs:11`). None exist yet, so updates
    fail closed.
+4. **Runtime identity.** To keep it from touching TS ice's state, the Rust
+   build runs as `icers` with `~/.icers/agent`, project `.icers/`, and `ICERS_*`
+   env vars (see `FORK.md`). This report still writes "ice-rust" for the
+   codebase, and `ICE_*` when it names TS ice variables. Their Rust
+   equivalents are `ICERS_*`.
+
+---
+
+## 11a. Found while importing `~/.ice/agent` into `~/.icers/agent` (2026-10-19)
+
+1. **`ultra` thinking level.** ice has 7 levels: `minimal|low|medium|high|xhigh|max|ultra`
+   (`ice:ai/src/types.ts:80`). Rust's enum stops at `max`. Rust's `models.json`
+   parser rejects the whole file when a `thinkingLevelMap` has an `ultra` key
+   (`unknown variant 'ultra'`). The import dropped 3 such keys (all
+   `ultra → xhigh`). Port: add `Ultra` to the Rust thinking level, or at least
+   ignore unknown map keys instead of failing the entire catalog.
+2. **Built-in provider auth with no catalog.** `auth.json` holds keys for `zai`,
+   `opencode`, `opencode-go` and `modal`. TS ice serves the `zai` and
+   `opencode*` models from its built-in catalog (§9.2). Rust has no built-in
+   entries for them, so those keys are unused until the providers are
+   declared in `models.json` or §9.2 is ported.
+3. **Themes.** The custom theme `lavender-ice` (`~/.ice/agent/themes/*.json`)
+   was not imported. The Rust theme format and loader parity with the TS JSON
+   themes are unverified (§7.5).
+4. **Settings.** Only `defaultProvider`, `defaultModel`, `defaultThinkingLevel`,
+   `steeringMode` and `followUpMode` were imported. The rest are TS-only
+   (`packages`, `extensions`, `appearance`, the `ice.*` namespace, `fastMode`,
+   `favoriteModels`, `uiMode`, `statusLine`, `transport`, `async`; see §7.4).
 
 ---
 
