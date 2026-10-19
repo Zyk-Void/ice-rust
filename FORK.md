@@ -36,7 +36,7 @@ To take only one upstream commit (say, a performance fix) without a full sync,
 rebrand the patch on the fly and apply it on `main`:
 
 ```bash
-git show <upstream-sha> | perl -pe 's/rpi/ice/g; s/RPI/ICE/g; s/Rpi/Ice/g' | git apply -3
+git show <upstream-sha> | perl -pe 's/CARGO_BIN_EXE_rpi\b/CARGO_BIN_EXE_icers/g; s/(?<![A-Za-z0-9_-])rpi(?![A-Za-z0-9_-])/icers/g; s/rpi/ice/g; s/RPI/ICERS/g; s/Rpi/Ice/g' | git apply -3
 ```
 
 A later full sync then sees that change as already present.
