@@ -119,7 +119,7 @@ pub fn grapheme_cell_range(line: &str, column: usize) -> Option<Range<usize>> {
 /// with ESC. Covers CSI, OSC/APC/DCS/PM strings (ended by BEL or ST),
 /// character-set designations and two-byte escapes; an unterminated sequence
 /// runs to the end of `s`.
-fn escape_len(s: &str) -> usize {
+pub(crate) fn escape_len(s: &str) -> usize {
     debug_assert!(s.starts_with('\x1b'));
     let mut chars = s.char_indices().skip(1).peekable();
     let end = |next: Option<(usize, char)>| next.map_or(s.len(), |(i, c)| i + c.len_utf8());
@@ -152,6 +152,201 @@ pub fn strip_ansi(s: &str) -> String {
     }
     result.push_str(rest);
     result
+}
+
+/// Appended to every row a renderer writes so no style or hyperlink leaks
+/// into the next row, which may be repainted on its own.
+pub const SEGMENT_RESET: &str = "\x1b[0m\x1b]8;;\x07";
+
+/// A rendered row as written to the terminal (ice `applyLineResets`):
+/// [`normalize_terminal_output`] followed by [`SEGMENT_RESET`].
+pub fn terminal_row(line: &str) -> String {
+    let mut row = normalize_terminal_output(line);
+    row.push_str(SEGMENT_RESET);
+    row
+}
+
+/// An open OSC 8 hyperlink, kept with its original terminator so it can be
+/// re-opened and closed byte-compatibly.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct Hyperlink {
+    params: String,
+    url: String,
+    terminator: &'static str,
+}
+
+/// `Some(None)` closes a link, `Some(Some(_))` opens one, `None` means the
+/// sequence is not an OSC 8 hyperlink.
+fn parse_osc8(sequence: &str) -> Option<Option<Hyperlink>> {
+    let body = sequence.strip_prefix("\x1b]8;")?;
+    let (body, terminator) = if let Some(body) = body.strip_suffix('\x07') {
+        (body, "\x07")
+    } else {
+        (body.strip_suffix("\x1b\\")?, "\x1b\\")
+    };
+    let (params, url) = body.split_once(';')?;
+    Some((!url.is_empty()).then(|| Hyperlink {
+        params: params.to_string(),
+        url: url.to_string(),
+        terminator,
+    }))
+}
+
+/// Active SGR attributes and hyperlink at a point in styled text (ice
+/// `AnsiCodeTracker`), used to carry styling across wrapped rows.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct StyleTracker {
+    bold: bool,
+    dim: bool,
+    italic: bool,
+    underline: bool,
+    blink: bool,
+    inverse: bool,
+    hidden: bool,
+    strikethrough: bool,
+    /// Full parameter text, e.g. `31` or `38;5;240` or `38;2;1;2;3`.
+    fg: Option<String>,
+    bg: Option<String>,
+    link: Option<Hyperlink>,
+}
+
+impl StyleTracker {
+    /// Apply one escape sequence. Only SGR and OSC 8 change state; an SGR
+    /// reset clears styling but leaves an open hyperlink open.
+    pub(crate) fn process(&mut self, sequence: &str) {
+        if let Some(link) = parse_osc8(sequence) {
+            self.link = link;
+            return;
+        }
+        let Some(params) = sequence
+            .strip_prefix("\x1b[")
+            .and_then(|s| s.strip_suffix('m'))
+        else {
+            return;
+        };
+        if !params.bytes().all(|b| b.is_ascii_digit() || b == b';') {
+            return;
+        }
+        if params.is_empty() || params == "0" {
+            self.reset_style();
+            return;
+        }
+        let parts: Vec<&str> = params.split(';').collect();
+        let mut i = 0;
+        while i < parts.len() {
+            let code: u16 = parts[i].parse().unwrap_or(u16::MAX);
+            if code == 38 || code == 48 {
+                let len = match parts.get(i + 1) {
+                    Some(&"5") if i + 2 < parts.len() => 3,
+                    Some(&"2") if i + 4 < parts.len() => 5,
+                    _ => 0,
+                };
+                if len > 0 {
+                    let color = Some(parts[i..i + len].join(";"));
+                    if code == 38 {
+                        self.fg = color;
+                    } else {
+                        self.bg = color;
+                    }
+                    i += len;
+                    continue;
+                }
+            }
+            match code {
+                0 => self.reset_style(),
+                1 => self.bold = true,
+                2 => self.dim = true,
+                3 => self.italic = true,
+                4 => self.underline = true,
+                5 => self.blink = true,
+                7 => self.inverse = true,
+                8 => self.hidden = true,
+                9 => self.strikethrough = true,
+                21 => self.bold = false,
+                22 => {
+                    self.bold = false;
+                    self.dim = false;
+                }
+                23 => self.italic = false,
+                24 => self.underline = false,
+                25 => self.blink = false,
+                27 => self.inverse = false,
+                28 => self.hidden = false,
+                29 => self.strikethrough = false,
+                39 => self.fg = None,
+                49 => self.bg = None,
+                30..=37 | 90..=97 => self.fg = Some(code.to_string()),
+                40..=47 | 100..=107 => self.bg = Some(code.to_string()),
+                _ => {}
+            }
+            i += 1;
+        }
+    }
+
+    /// Apply every escape sequence in `text`.
+    pub(crate) fn process_text(&mut self, text: &str) {
+        let mut rest = text;
+        while let Some(esc) = rest.find('\x1b') {
+            rest = &rest[esc..];
+            let len = escape_len(rest);
+            self.process(&rest[..len]);
+            rest = &rest[len..];
+        }
+    }
+
+    fn reset_style(&mut self) {
+        *self = Self {
+            link: self.link.take(),
+            ..Self::default()
+        };
+    }
+
+    /// Sequences that re-establish the active state at the start of a row.
+    pub(crate) fn active_codes(&self) -> String {
+        let flags = [
+            (self.bold, "1"),
+            (self.dim, "2"),
+            (self.italic, "3"),
+            (self.underline, "4"),
+            (self.blink, "5"),
+            (self.inverse, "7"),
+            (self.hidden, "8"),
+            (self.strikethrough, "9"),
+        ];
+        let mut codes: Vec<&str> = flags
+            .iter()
+            .filter(|(on, _)| *on)
+            .map(|(_, code)| *code)
+            .collect();
+        codes.extend(self.fg.as_deref());
+        codes.extend(self.bg.as_deref());
+        let mut result = if codes.is_empty() {
+            String::new()
+        } else {
+            format!("\x1b[{}m", codes.join(";"))
+        };
+        if let Some(link) = &self.link {
+            result.push_str(&format!(
+                "\x1b]8;{};{}{}",
+                link.params, link.url, link.terminator
+            ));
+        }
+        result
+    }
+
+    /// What a wrapped row must close before its break: underline (so it does
+    /// not run into the caller's padding) and an open hyperlink (re-opened
+    /// on the next row). Background and other styles stay open for padding.
+    pub(crate) fn line_end_reset(&self) -> String {
+        let mut result = String::new();
+        if self.underline {
+            result.push_str("\x1b[24m");
+        }
+        if let Some(link) = &self.link {
+            result.push_str(&format!("\x1b]8;;{}", link.terminator));
+        }
+        result
+    }
 }
 
 /// Slice a string by visible column positions.
