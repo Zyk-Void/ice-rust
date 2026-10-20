@@ -908,9 +908,9 @@ fn push_wrapped_with_prefix(
     let continuation = " ".repeat(prefix_width);
     for (index, line) in wrapped.iter().enumerate() {
         let line_prefix = if index == 0 { prefix } else { &continuation };
-        // `wrap_text_with_ansi` preserves the separating space at a wrap
-        // boundary. It is useful for paragraphs, but here it would make a
-        // continuation one column farther right than the list's text.
+        // Continuations align under the item text: `wrap_text_with_ansi`
+        // drops the space at a word break, and leading spaces of a hard
+        // line break inside the item are not kept either.
         let body = if index == 0 {
             line.as_str()
         } else {

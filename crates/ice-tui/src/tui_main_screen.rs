@@ -173,8 +173,7 @@ impl TUI for TuiMainScreen {
             if i > 0 {
                 self.terminal.write("\r\n");
             }
-            self.terminal
-                .write(&crate::ansi::normalize_terminal_output(line));
+            self.terminal.write(&crate::ansi::terminal_row(line));
         }
 
         self.paint_overlays(&lines, width);
@@ -224,8 +223,7 @@ impl TuiMainScreen {
                 let base_line = base_lines.get(row).map(String::as_str).unwrap_or("");
                 let composite = composite_tui_line(base_line, line, x, overlay_width, width);
                 self.terminal.write("\r");
-                self.terminal
-                    .write(&crate::ansi::normalize_terminal_output(&composite));
+                self.terminal.write(&crate::ansi::terminal_row(&composite));
             }
         }
         // Return the cursor to the append position below the base transcript.

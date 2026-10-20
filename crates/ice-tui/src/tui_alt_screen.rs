@@ -688,7 +688,7 @@ impl TuiAltScreen {
         });
         let lines: Vec<String> = raw_lines
             .into_iter()
-            .map(|line| crate::ansi::normalize_terminal_output(&line.replace(CURSOR_MARKER, "")))
+            .map(|line| crate::ansi::terminal_row(&line.replace(CURSOR_MARKER, "")))
             .collect();
         let previous = self
             .previous_screen
@@ -967,7 +967,7 @@ impl TuiAltScreen {
         // Normalize after the cursor column is known: tab expansion keeps the
         // cell count, so the column stays valid.
         for line in &mut visible {
-            *line = crate::ansi::normalize_terminal_output(&line.replace(CURSOR_MARKER, ""));
+            *line = crate::ansi::terminal_row(&line.replace(CURSOR_MARKER, ""));
         }
 
         // Check for full redraw
@@ -2064,6 +2064,11 @@ mod tests {
                 "{written:?}"
             );
             assert!(!written.contains('\t'), "{written:?}");
+            // Every row ends with the segment reset (ice applyLineResets).
+            assert!(
+                written.contains(&format!("\u{0E4D}\u{0E32}{}", crate::ansi::SEGMENT_RESET)),
+                "{written:?}"
+            );
             tui.stop(Default::default());
         }
     }
