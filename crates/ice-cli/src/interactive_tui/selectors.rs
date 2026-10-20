@@ -369,6 +369,99 @@ pub(super) fn custom_entry_display_text(
 /// Open a selector for the current session's persisted entry tree. Selecting a
 /// message moves the main lane leaf to that entry, then the caller reloads the
 /// visible branch from durable storage.
+/// The user messages on the current branch, oldest first, as
+/// `(entry id, text)`: the fork points `/fork` offers (ice
+/// `getUserMessagesForForking`).
+pub(super) async fn user_messages_for_forking(harness: &AgentHarness) -> Vec<(String, String)> {
+    harness
+        .session()
+        .view("main")
+        .find_entries(&EntryQuery {
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|entry| match &entry {
+            Entry::Message(me) => match &me.message {
+                AgentMessage::User(u) => Some((entry.id().to_string(), user_message_text(u))),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect()
+}
+
+/// Text of the user message `entry_id`, to put back in the editor after
+/// forking before it.
+pub(super) async fn fork_message_text(harness: &AgentHarness, entry_id: &str) -> Option<String> {
+    user_messages_for_forking(harness)
+        .await
+        .into_iter()
+        .find(|(id, _)| id == entry_id)
+        .map(|(_, text)| text)
+}
+
+/// `/fork`: choose a prior user message (newest preselected). Selecting one
+/// forks the session before it and puts its text in the editor, so the
+/// prompt can be revised and sent again (ice `showUserMessageSelector`).
+pub(super) async fn open_fork_selector(
+    harness: &AgentHarness,
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    chat: &Arc<Container>,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+) {
+    let messages = user_messages_for_forking(harness).await;
+    if messages.is_empty() {
+        add_note_message(chat, "No messages to fork from.");
+        tui.request_render(false);
+        return;
+    }
+    let items: Vec<SelectItem> = messages
+        .iter()
+        .enumerate()
+        .map(|(index, (id, text))| {
+            let first_line = text.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
+            SelectItem::new(id, first_line.trim())
+                .with_description(&format!("#{}", index + 1))
+                .with_search_text(text)
+        })
+        .collect();
+    let newest = items.len() - 1;
+    let list = Arc::new(SelectList::new(items, 10));
+    list.set_selected_index(newest);
+    let state_sel = state.clone();
+    let ec_sel = editor_container.clone();
+    let editor_sel = editor.clone();
+    let tui_sel = tui.clone();
+    let tx_sel = tx.clone();
+    list.on_select(Arc::new(move |item| {
+        close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
+        let _ = tx_sel.send(TuiMessage::ForkBefore(item.value.clone()));
+    }));
+    let state_cancel = state.clone();
+    let ec_cancel = editor_container.clone();
+    let editor_cancel = editor.clone();
+    let tui_cancel = tui.clone();
+    list.on_cancel(Arc::new(move || {
+        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
+    }));
+    open_searchable_selector(
+        state,
+        editor_container,
+        editor,
+        tui,
+        Some("Fork from message"),
+        Some("Forks before the chosen message and puts it in the editor"),
+        list,
+        SelectorKind::Fork,
+    );
+}
+
 pub(super) async fn open_tree_selector(
     harness: &AgentHarness,
     state: &Arc<TuiState>,

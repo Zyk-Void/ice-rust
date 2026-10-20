@@ -62,6 +62,8 @@ pub(super) enum SelectorKind {
     Settings,
     /// `/tree` — navigate to an existing entry in the current session.
     Tree,
+    /// `/fork` — choose the user message to fork before.
+    Fork,
     /// Extension-provided selector; uses the same keyboard contract.
     Extension,
 }

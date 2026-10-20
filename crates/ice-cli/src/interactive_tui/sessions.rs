@@ -195,13 +195,17 @@ pub(super) async fn import_session(
     }
 }
 
+/// Fork the current session into a new one per `options` (the whole
+/// current branch by default, or up to an entry) and switch to it. Returns
+/// whether the fork happened.
 pub(super) async fn fork_session(
     harness: &AgentHarness,
     cwd: &std::path::Path,
     chat: &Arc<Container>,
     state: &Arc<TuiState>,
     tool_context: &ice_extensions::ToolCallContext,
-) {
+    options: &ice_harness::session::types::ForkOptions,
+) -> bool {
     use ice_harness::session::jsonl::{JsonlSessionRepo, JsonlSessionRepoOptions};
     use ice_tools::FileSystem;
 
@@ -222,12 +226,12 @@ pub(super) async fn fork_session(
         Ok(m) => m,
         Err(e) => {
             add_error_message(chat, &format!("Could not list sessions: {e}"));
-            return;
+            return false;
         }
     };
     let Some(source) = metas.iter().find(|m| m.id == id) else {
         add_error_message(chat, &format!("Current session {id} not found on disk."));
-        return;
+        return false;
     };
     let fork_storage = match repo
         .fork_typed(
@@ -238,14 +242,14 @@ pub(super) async fn fork_session(
                 cwd: cwd_str.clone(),
                 metadata: None,
             },
-            &ice_harness::session::types::ForkOptions::default(),
+            options,
         )
         .await
     {
         Ok(s) => s,
         Err(e) => {
             add_error_message(chat, &format!("Could not fork session: {e}"));
-            return;
+            return false;
         }
     };
     let new_session = ice_harness::session::session::Session::new(Arc::new(fork_storage), None);
@@ -253,7 +257,7 @@ pub(super) async fn fork_session(
         crate::session::set_active_session(harness, new_session, Some(tool_context)).await
     {
         add_error_message(chat, &format!("Could not fork session: {error}"));
-        return;
+        return false;
     }
     chat.clear();
     add_welcome_message(chat);
@@ -267,6 +271,7 @@ pub(super) async fn fork_session(
     .await;
     state.set_status(RunStatus::Idle);
     add_note_message(chat, "Forked into a new session.");
+    true
 }
 
 /// Render the restored session's prior transcript (user + assistant messages)

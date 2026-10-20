@@ -3482,3 +3482,72 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// `/fork` used to copy the whole branch with no choice of fork point. It
+/// now forks before a chosen user message (ice `fork(entryId)`, position
+/// "before") and returns that message's text for the editor.
+#[test]
+fn fork_before_a_chosen_message_keeps_only_the_earlier_turns() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let dir = crate::session::default_session_dir(cwd.path());
+                std::fs::create_dir_all(&dir).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let tool_context = ice_extensions::ToolCallContext::new(cwd_str.clone());
+                let session = crate::session::create_jsonl_session(&dir, &cwd_str)
+                    .await
+                    .unwrap();
+                crate::session::set_active_session(&harness, session, Some(&tool_context))
+                    .await
+                    .unwrap();
+                let old_id = harness.session().storage().metadata().id.clone();
+                for text in ["first prompt", "second prompt"] {
+                    harness
+                        .session()
+                        .append_message(user_message_with_images(text, Vec::new()))
+                        .await
+                        .unwrap();
+                }
+
+                let messages = user_messages_for_forking(&harness).await;
+                let texts: Vec<&str> = messages.iter().map(|(_, t)| t.as_str()).collect();
+                assert_eq!(texts, ["first prompt", "second prompt"]);
+                let second = messages[1].0.clone();
+                assert_eq!(
+                    fork_message_text(&harness, &second).await.as_deref(),
+                    Some("second prompt")
+                );
+
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                assert!(
+                    fork_session(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &tool_context,
+                        &ice_harness::session::types::ForkOptions::Branch {
+                            entry_id: Some(second),
+                            position: Some(ice_harness::session::types::ForkPosition::Before),
+                        },
+                    )
+                    .await
+                );
+                assert_ne!(harness.session().storage().metadata().id, old_id);
+                let texts: Vec<String> = user_messages_for_forking(&harness)
+                    .await
+                    .into_iter()
+                    .map(|(_, t)| t)
+                    .collect();
+                assert_eq!(texts, ["first prompt"]);
+                harness.close().await.unwrap();
+            })
+    })
+}

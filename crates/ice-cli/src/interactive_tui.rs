@@ -683,6 +683,11 @@ enum TuiMessage {
     ShowUsage,
     /// Fork the current session into a new one and switch to it (from `/fork`).
     ForkSession,
+    /// `/fork`: pick the user message to fork before (ice
+    /// `showUserMessageSelector`).
+    OpenForkSelector,
+    /// Fork before this user-message entry and put its text in the editor.
+    ForkBefore(String),
     /// Rename the current session (from `/name <name>`).
     SetSessionName(String),
     /// Import a JSONL session file into the session dir and switch to it
@@ -2257,7 +2262,7 @@ pub async fn interactive_tui(
                                 let _ = tx_for_key.send(TuiMessage::OpenTree);
                             }
                             "fork" => {
-                                let _ = tx_for_key.send(TuiMessage::ForkSession);
+                                let _ = tx_for_key.send(TuiMessage::OpenForkSelector);
                             }
                             _ => {}
                         }
@@ -3141,8 +3146,55 @@ pub async fn interactive_tui(
                     &chat_container,
                     &state,
                     &reload_context.tool_context,
+                    &ice_harness::session::types::ForkOptions::default(),
                 )
                 .await;
+                tui.request_render(false);
+            }
+            Some(TuiMessage::OpenForkSelector) => {
+                if *state.status.lock().unwrap() != RunStatus::Idle {
+                    add_note_message(
+                        &chat_container,
+                        "Wait for the current run to finish before forking.",
+                    );
+                    tui.request_render(false);
+                } else {
+                    open_fork_selector(
+                        &harness,
+                        &state,
+                        &editor_container,
+                        &editor,
+                        &tui,
+                        &chat_container,
+                        &tx,
+                    )
+                    .await;
+                }
+            }
+            Some(TuiMessage::ForkBefore(entry_id)) => {
+                let text = fork_message_text(&harness, &entry_id).await;
+                let forked = fork_session(
+                    &harness,
+                    &cwd,
+                    &chat_container,
+                    &state,
+                    &reload_context.tool_context,
+                    &ice_harness::session::types::ForkOptions::Branch {
+                        entry_id: Some(entry_id),
+                        position: Some(ice_harness::session::types::ForkPosition::Before),
+                    },
+                )
+                .await;
+                // ice puts the chosen message back in the editor to revise;
+                // without it, leave the current draft alone.
+                if let (true, Some(text)) = (forked, text) {
+                    editor.set_text(&text);
+                    // Caret at the end: last row, its length in bytes.
+                    editor.set_cursor(
+                        text.matches('\n').count(),
+                        text.rsplit('\n').next().map_or(0, str::len),
+                    );
+                }
                 tui.request_render(false);
             }
             Some(TuiMessage::ProviderOAuthAction {
