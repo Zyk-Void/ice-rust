@@ -6,6 +6,38 @@ use super::*;
 // Autocomplete
 // ===========================================================================
 
+/// Editor completion: the registry's visible slash commands, then the prompt
+/// templates in `resources` as `/name` entries (built-ins first, so they win
+/// a fuzzy tie), then file paths rooted at `cwd`. Built at startup and again
+/// after a successful `/reload`, so templates added since then are offered.
+pub(super) fn build_autocomplete_provider(
+    registry: &CommandRegistry,
+    resources: &ice_harness::types::AgentHarnessResources,
+    cwd: &std::path::Path,
+) -> Arc<dyn ice_tui::AutocompleteProvider> {
+    let mut commands = registry.visible_entries();
+    commands.extend(
+        resources
+            .prompt_templates
+            .as_deref()
+            .unwrap_or_default()
+            .iter()
+            .map(|t| SlashCommandEntry {
+                name: format!("/{}", t.name),
+                description: t
+                    .description
+                    .clone()
+                    .unwrap_or_else(|| "Expand prompt template".to_string()),
+            }),
+    );
+    let mut combined = CombinedAutocompleteProvider::new();
+    combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
+    combined.add_provider(Arc::new(FilePathAutocompleteProvider::with_root(
+        cwd.to_path_buf(),
+    )));
+    Arc::new(combined)
+}
+
 /// Refresh the autocomplete suggestion list from the current editor text +
 /// cursor. Renders the suggestions into `autocomplete_container` (above the
 /// editor) or clears it when there are none.

@@ -3482,3 +3482,39 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// Completion was built once at startup, so a prompt template added before
+/// `/reload` expanded but was never offered. The builder the reload handler
+/// calls must include the templates it is given, after the built-ins.
+#[test]
+fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
+    use ice_tui::AutocompleteProvider;
+    let registry = build_builtin_registry();
+    let before = build_autocomplete_provider(
+        &registry,
+        &ice_harness::types::AgentHarnessResources::default(),
+        std::path::Path::new("."),
+    );
+    let names = |provider: &Arc<dyn AutocompleteProvider>| -> Vec<String> {
+        provider
+            .get_suggestions("/revi", 5)
+            .map(|s| s.items.into_iter().map(|i| i.text).collect())
+            .unwrap_or_default()
+    };
+    assert!(!names(&before).iter().any(|n| n == "/review-pr"));
+
+    let resources = ice_harness::types::AgentHarnessResources {
+        prompt_templates: Some(vec![ice_harness::types::PromptTemplate {
+            name: "review-pr".into(),
+            description: Some("Review a pull request".into()),
+            content: "Review it".into(),
+        }]),
+        ..Default::default()
+    };
+    let after = build_autocomplete_provider(&registry, &resources, std::path::Path::new("."));
+    assert!(
+        names(&after).iter().any(|n| n == "/review-pr"),
+        "{:?}",
+        names(&after)
+    );
+}
