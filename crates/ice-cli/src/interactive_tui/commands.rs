@@ -141,10 +141,7 @@ impl SlashCommand for ModelCommand {
             ) {
                 let model_id = model.id.clone();
                 ctx.state.set_current_model(&model);
-                let lane = ctx.lane.clone();
-                tokio::spawn(async move {
-                    let _ = lane.set_model(model).await;
-                });
+                spawn_set_model(&ctx.state, &ctx.lane, model, &ctx.chat, &ctx.tui);
                 add_note_message(
                     &ctx.chat,
                     &format!(

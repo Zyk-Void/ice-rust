@@ -486,10 +486,7 @@ pub(super) fn open_settings_model_selector(
         state_sel.set_current_model(&model);
         let provider = model.provider.clone();
         let model_id = model.id.clone();
-        let lane = lane_sel.clone();
-        tokio::spawn(async move {
-            let _ = lane.set_model(model).await;
-        });
+        spawn_set_model(&state_sel, &lane_sel, model, &chat_sel, &tui_sel);
         // Persist provider + model together so a cross-provider default
         // survives the next launch (bare `defaultModel` alone would fall back).
         let note = set_default_model(&provider, &model_id);

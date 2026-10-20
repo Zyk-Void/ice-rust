@@ -138,7 +138,11 @@ pub(super) fn open_model_selector(
         tui.request_render(false);
         return None;
     }
+    let current = current_model_index(&items);
     let list = Arc::new(SelectList::new(items, 10));
+    if let Some(index) = current {
+        list.set_selected_index(index);
+    }
 
     // Capture the catalog + lane so the on_select closure can resolve the
     // chosen Model and apply it. `on_select` fires on the blocking key thread,
@@ -176,10 +180,7 @@ pub(super) fn open_model_selector(
         }
 
         state_sel.set_current_model(&model);
-        let lane = lane_sel.clone();
-        tokio::spawn(async move {
-            let _ = lane.set_model(model).await;
-        });
+        spawn_set_model(&state_sel, &lane_sel, model, &chat_sel, &tui_sel);
         add_note_message(
             &chat_sel,
             &format!(
@@ -211,6 +212,43 @@ pub(super) fn open_model_selector(
         searchable.set_search_text(term);
     }
     Some(searchable)
+}
+
+/// Index of the item `model_selector_items` marked as the current model, so
+/// `/model` opens on it.
+pub(super) fn current_model_index(items: &[SelectItem]) -> Option<usize> {
+    items.iter().position(|item| {
+        item.description
+            .as_deref()
+            .is_some_and(|d| d.ends_with(" (current)"))
+    })
+}
+
+/// Apply `model` on the lane in the background. The callers update the
+/// footer right away; a failure used to be dropped, leaving the footer naming
+/// a model the lane never switched to. It is now reported, and the footer is
+/// put back to the model the lane still has (when it can still be asked).
+pub(super) fn spawn_set_model(
+    state: &Arc<TuiState>,
+    lane: &Arc<dyn AgentLane>,
+    model: ice_ai::Model,
+    chat: &Arc<Container>,
+    tui: &Arc<TuiAltScreen>,
+) {
+    let state = state.clone();
+    let lane = lane.clone();
+    let chat = chat.clone();
+    let tui = tui.clone();
+    tokio::spawn(async move {
+        let id = model.id.clone();
+        if let Err(error) = lane.set_model(model).await {
+            if let Ok(actual) = lane.get_model().await {
+                state.set_current_model(&actual);
+            }
+            add_error_message(&chat, &format!("Could not switch to {id}: {error}"));
+            tui.request_render(false);
+        }
+    });
 }
 
 /// Cycle to the next catalog entry after `current_id`, wrapping to the first.

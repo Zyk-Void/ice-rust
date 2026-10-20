@@ -2340,10 +2340,13 @@ pub async fn interactive_tui(
                 let scope = same_provider_catalog(&scope, &current);
                 if let Some(next) = cycle_next_model(&scope, &current) {
                     state_for_key.set_current_model(&next);
-                    let lane = lane_for_key.clone();
-                    tokio::spawn(async move {
-                        let _ = lane.set_model(next).await;
-                    });
+                    spawn_set_model(
+                        &state_for_key,
+                        &lane_for_key,
+                        next,
+                        &state_for_key.chat_container,
+                        &tui_for_key,
+                    );
                     tui_for_key.request_render_reusing_scroll_content();
                 }
                 continue;
@@ -2367,10 +2370,13 @@ pub async fn interactive_tui(
                 let scope = same_provider_catalog(&scope, &current);
                 if let Some(prev) = cycle_prev_model(&scope, &current) {
                     state_for_key.set_current_model(&prev);
-                    let lane = lane_for_key.clone();
-                    tokio::spawn(async move {
-                        let _ = lane.set_model(prev).await;
-                    });
+                    spawn_set_model(
+                        &state_for_key,
+                        &lane_for_key,
+                        prev,
+                        &state_for_key.chat_container,
+                        &tui_for_key,
+                    );
                     tui_for_key.request_render_reusing_scroll_content();
                 }
                 continue;

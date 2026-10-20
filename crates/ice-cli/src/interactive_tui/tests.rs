@@ -3482,3 +3482,51 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// A rejected model switch used to be dropped (`let _ = lane.set_model`),
+/// leaving the footer naming a model the lane never used. It is reported now.
+#[test]
+fn rejected_model_switch_is_reported() {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let harness = AgentHarness::create(Default::default()).await.unwrap();
+            let lane = harness.lane("main");
+            harness.close().await.unwrap();
+            let chat = Arc::new(Container::new());
+            let tui = Arc::new(TuiAltScreen::new(
+                Box::new(ProcessTerminal::new()),
+                true,
+                None,
+            ));
+            let model = ice_ai::Model::new("m2", "M2", ice_ai::Api::Faux, "faux", "http://x");
+            let state = test_tui_state();
+            spawn_set_model(&state, &lane, model, &chat, &tui);
+            let reported = async {
+                loop {
+                    let text = strip_ansi(&chat.render(120).join("\n"));
+                    if text.contains("Could not switch to m2") {
+                        return;
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                }
+            };
+            tokio::time::timeout(std::time::Duration::from_secs(5), reported)
+                .await
+                .expect("the failure must be reported");
+        })
+}
+
+/// `/model` opens on the current model rather than the first entry.
+#[test]
+fn model_selector_items_mark_the_current_model_for_preselection() {
+    use ice_ai::{Api, Model};
+    let a = Model::new("a-1", "A 1", Api::Faux, "faux", "http://x");
+    let b = Model::new("b-2", "B 2", Api::Faux, "faux", "http://x");
+    let items = model_selector_items(&[a, b], "b-2");
+    assert_eq!(current_model_index(&items), Some(1));
+    assert_eq!(current_model_index(&model_selector_items(&[], "b-2")), None);
+}
