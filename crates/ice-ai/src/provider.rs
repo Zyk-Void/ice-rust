@@ -5,6 +5,9 @@
 
 use crate::event_stream::AssistantMessageEventStream;
 use crate::model::Model;
+pub use crate::simple_options::{
+    clamp_max_tokens_to_hard_limit, enforce_hard_max_tokens_in_record, request_max_tokens,
+};
 use crate::types::{AssistantMessage, Context, DeferredHandle, ThinkingBudgets, ThinkingLevel};
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -60,6 +63,10 @@ pub struct SimpleStreamOptions {
     /// lets the provider fit the thinking budget inside `Model::max_tokens`.
     /// Mirrors TS `SimpleStreamOptions.maxTokens`.
     pub max_tokens: Option<u64>,
+    /// Trusted runtime output authority, separate from user/model preferences.
+    /// Must be positive and finite. Provider payload customization cannot raise
+    /// or remove it; it is deliberately not exposed through option patches.
+    pub hard_max_output_tokens: Option<f64>,
     /// Sampling temperature. Only applied when the model supports it AND
     /// thinking is disabled (Anthropic rejects temperature under thinking).
     /// Mirrors TS `StreamOptions.temperature`.
@@ -83,6 +90,7 @@ impl Default for SimpleStreamOptions {
             signal: CancellationToken::new(),
             reasoning: None,
             max_tokens: None,
+            hard_max_output_tokens: None,
             temperature: None,
             thinking_budgets: None,
         }
@@ -119,6 +127,21 @@ impl SimpleStreamOptions {
 mod tests {
     use super::{SimpleStreamOptions, DEFAULT_LLM_API_TIMEOUT};
     use std::time::Duration;
+
+    #[test]
+    fn user_option_patch_cannot_remove_runtime_authority() {
+        let mut options = SimpleStreamOptions {
+            hard_max_output_tokens: Some(4096.0),
+            ..SimpleStreamOptions::default()
+        };
+        super::SimpleStreamOptionsPatch {
+            max_tokens: Some(Some(50_000)),
+            ..super::SimpleStreamOptionsPatch::default()
+        }
+        .apply(&mut options);
+        assert_eq!(options.hard_max_output_tokens, Some(4096.0));
+        assert_eq!(options.max_tokens, Some(50_000));
+    }
 
     #[test]
     fn llm_api_timeout_defaults_to_ten_minutes() {

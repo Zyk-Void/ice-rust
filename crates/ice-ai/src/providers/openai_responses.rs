@@ -5,7 +5,9 @@ use crate::event_stream::{
     AssistantMessageEventStreamProducer,
 };
 use crate::model::{Model, StreamingProtocolCompat};
-use crate::provider::{Provider, SimpleStreamOptions};
+use crate::provider::{
+    enforce_hard_max_tokens_in_record, request_max_tokens, Provider, SimpleStreamOptions,
+};
 use crate::providers::anthropic::cost::calculate_cost;
 use crate::providers::anthropic::json_parse::parse_streaming_json;
 use crate::providers::anthropic::retry::retry_provider_request;
@@ -1179,7 +1181,13 @@ async fn run_stream(
         emit_error(p, &mut out, "No API key", false);
         return;
     }
-    let body = build_request(model, ctx, opts);
+    let body = match build_request_with_hard_max_tokens(model, ctx, opts) {
+        Ok(body) => body,
+        Err(message) => {
+            emit_error(p, &mut out, message, false);
+            return;
+        }
+    };
     let url = responses_url(&model.base_url);
     let timeout = opts.request_timeout();
     let signal = opts.signal.clone();
@@ -1542,6 +1550,32 @@ impl ToolCallIndex {
 /// to chat-completions, Responses requires a `function_call` item before every
 /// `function_call_output`; sending only the latter is the source of the
 /// "No tool output found for function call ..." 400 error.
+fn build_request_with_hard_max_tokens(
+    model: &Model,
+    ctx: &Context,
+    opts: &SimpleStreamOptions,
+) -> Result<Value, String> {
+    let Some(hard_max_output_tokens) = opts.hard_max_output_tokens else {
+        return Ok(build_request(model, ctx, opts));
+    };
+
+    let max_tokens = request_max_tokens(model, ctx, opts)?;
+    if hard_max_output_tokens < 16.0 {
+        return Err(format!(
+            "hardMaxOutputTokens is below the OpenAI Responses provider minimum output floor of 16 tokens (received {hard_max_output_tokens})."
+        ));
+    }
+
+    let mut effective_opts = opts.clone();
+    effective_opts.max_tokens = Some(max_tokens);
+    let mut body = build_request(model, ctx, &effective_opts);
+    let Some(payload) = body.as_object_mut() else {
+        return Err("OpenAI Responses request payload must be an object".into());
+    };
+    enforce_hard_max_tokens_in_record(payload, "max_output_tokens", Some(hard_max_output_tokens))?;
+    Ok(body)
+}
+
 fn build_request(model: &Model, ctx: &Context, opts: &SimpleStreamOptions) -> Value {
     let grammar_tool_properties = grammar_tool_properties(model, &ctx.tools);
     let mut index = ToolCallIndex::default();
@@ -3090,6 +3124,117 @@ mod tests {
         options.max_tokens = Some(1);
         let body = build_request(&model(), &Context::new(Vec::new()), &options);
         assert_eq!(body["max_output_tokens"], 16);
+    }
+
+    #[test]
+    fn hard_output_authority_clamps_sampling_override_with_strongest_reasoning() {
+        let mut model = model();
+        model.reasoning = true;
+        model.max_tokens = 1024;
+        model.sampling_params = Some(
+            json!({ "max_output_tokens": 50_000 })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.0);
+        options.reasoning = Some(ThinkingLevel::Max);
+        // max_tokens remains unset to exercise model-default allowance
+        // selection before final authority enforcement.
+        let body = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap();
+
+        assert_eq!(body["reasoning"]["effort"], "high");
+        assert_eq!(body["max_output_tokens"].as_f64(), Some(256.0));
+    }
+
+    #[test]
+    fn hard_output_authority_resets_null_sampling_override_to_the_limit() {
+        let mut model = model();
+        model.max_tokens = 1024;
+        model.sampling_params = Some(
+            json!({ "max_output_tokens": null })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.0);
+        let body = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap();
+
+        assert_eq!(body["max_output_tokens"].as_f64(), Some(256.0));
+    }
+
+    #[test]
+    fn hard_output_authority_rejects_string_sampling_override() {
+        let mut model = model();
+        model.max_tokens = 1024;
+        model.sampling_params = Some(
+            json!({ "max_output_tokens": "unbounded" })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.0);
+        let error = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap_err();
+
+        assert!(error.contains("max_output_tokens"));
+    }
+
+    #[test]
+    fn hard_output_authority_rejects_limits_below_the_responses_floor() {
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(15.0);
+        let error =
+            build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
+                .unwrap_err();
+
+        assert!(error.contains("provider minimum output floor"));
+    }
+
+    #[test]
+    fn invalid_hard_limits_report_validation_before_the_responses_floor() {
+        for limit in [0.0, -1.0, f64::NEG_INFINITY, f64::INFINITY, f64::NAN] {
+            let mut options = SimpleStreamOptions::default();
+            options.hard_max_output_tokens = Some(limit);
+            let error =
+                build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
+                    .unwrap_err();
+
+            assert!(
+                error.contains("hardMaxOutputTokens"),
+                "limit={limit}: {error}"
+            );
+            assert!(
+                !error.contains("provider minimum output floor"),
+                "limit={limit}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn absent_hard_authority_preserves_responses_sampling_override() {
+        let mut model = model();
+        model.max_tokens = 1024;
+        model.sampling_params = Some(
+            json!({ "max_output_tokens": 123 })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+
+        let body = build_request_with_hard_max_tokens(
+            &model,
+            &Context::new(Vec::new()),
+            &SimpleStreamOptions::default(),
+        )
+        .unwrap();
+
+        assert_eq!(body["max_output_tokens"], 123);
     }
 
     #[test]

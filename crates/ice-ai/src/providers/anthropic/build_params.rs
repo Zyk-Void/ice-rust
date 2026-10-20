@@ -12,6 +12,7 @@
 
 use crate::model::{AnthropicMessagesCompat, Model, StreamingProtocolCompat};
 use crate::provider::SimpleStreamOptions;
+pub use crate::simple_options::{clamp_max_tokens_to_context, estimate_context_tokens};
 use crate::strict_schema::make_strict_json_schema;
 use crate::types::{
     AssistantMessage, Content, ImageContent, InputModality, Message, ThinkingLevel, Tool,
@@ -1066,16 +1067,48 @@ pub fn default_thinking_budgets() -> crate::types::ThinkingBudgets {
 /// Fit a thinking budget inside the response-token ceiling for budget-based
 /// thinking models. Mirrors `adjustMaxTokensForThinking`. Returns the effective
 /// `max_tokens` for the request and the `budget_tokens` for the `thinking`
-/// blob. When `base_max_tokens` is `None` the model cap is used and the budget
-/// fits inside it; otherwise the budget is ADDED on top (capped at the model
-/// max). If there's no room for the budget, shrink it (leaving MIN_ANSWER_TOKENS
-/// for the answer).
+/// blob. When `base_max_tokens` is `None` the model ceiling is used and the
+/// budget fits inside it; otherwise the budget is ADDED on top (capped at the
+/// effective ceiling). If there's no room for the budget, shrink it (leaving
+/// MIN_ANSWER_TOKENS for the answer).
 pub fn adjust_max_tokens_for_thinking(
     base_max_tokens: Option<u64>,
     model_max_tokens: u64,
     reasoning_level: ThinkingLevel,
     custom_budgets: Option<&crate::types::ThinkingBudgets>,
 ) -> (u64, u64) {
+    // With no runtime authority this helper cannot fail. Keep the original
+    // infallible signature for existing provider callers.
+    adjust_max_tokens_for_thinking_checked(
+        base_max_tokens,
+        model_max_tokens,
+        reasoning_level,
+        custom_budgets,
+        None,
+    )
+    .expect("thinking adjustment without a hard authority is valid")
+}
+
+/// Checked counterpart to [`adjust_max_tokens_for_thinking`]. The hard limit
+/// caps the combined reasoning + ordinary-output allowance, not just the
+/// ordinary portion. `None` for the caller cap means use the effective model
+/// / hard ceiling without adding a second thinking budget.
+pub fn adjust_max_tokens_for_thinking_checked(
+    base_max_tokens: Option<u64>,
+    model_max_tokens: u64,
+    reasoning_level: ThinkingLevel,
+    custom_budgets: Option<&crate::types::ThinkingBudgets>,
+    hard_max_output_tokens: Option<f64>,
+) -> Result<(u64, u64), String> {
+    if let Some(hard_limit) = hard_max_output_tokens {
+        if !hard_limit.is_finite() || hard_limit <= 0.0 {
+            return Err("hardMaxOutputTokens must be a positive finite number.".into());
+        }
+        if hard_limit < MIN_ANSWER_TOKENS as f64 {
+            return Err("hardMaxOutputTokens is below the minimum ordinary output size.".into());
+        }
+    }
+
     let defaults = default_thinking_budgets();
     let budgets = match custom_budgets {
         Some(c) => crate::types::ThinkingBudgets {
@@ -1094,16 +1127,22 @@ pub fn adjust_max_tokens_for_thinking(
         ThinkingLevel::High => budgets.high.unwrap_or(16384),
         _ => budgets.high.unwrap_or(16384),
     };
+
+    // Preserve fractional hard limits until they meet the integer token ceiling;
+    // flooring makes the outgoing integer request non-widening.
+    let ceiling = hard_max_output_tokens
+        .map(|hard| std::cmp::min(model_max_tokens, hard.floor() as u64))
+        .unwrap_or(model_max_tokens);
     let max_tokens = match base_max_tokens {
-        None => model_max_tokens,
-        Some(base) => std::cmp::min(base + thinking_budget, model_max_tokens),
+        None => ceiling,
+        Some(base) => base.saturating_add(thinking_budget).min(ceiling),
     };
     let final_budget = if max_tokens <= thinking_budget {
-        std::cmp::max(0, max_tokens.saturating_sub(MIN_ANSWER_TOKENS))
+        max_tokens.saturating_sub(MIN_ANSWER_TOKENS)
     } else {
         thinking_budget
     };
-    (max_tokens, final_budget)
+    Ok((max_tokens, final_budget))
 }
 
 /// Map a pi thinking level to an Anthropic adaptive-thinking effort string.
@@ -1130,78 +1169,6 @@ pub fn map_thinking_level_to_effort(model: &Model, level: ThinkingLevel) -> &'st
         ThinkingLevel::Medium => "medium",
         _ => "high",
     }
-}
-
-// ----------------------------------------------------------------------------
-// compute_context_tokens — minimal inline port of estimate.ts for clamp_max
-// ----------------------------------------------------------------------------
-
-/// Rough token estimate for clamp-max-tokens. Mirrors `estimateContextTokens`
-/// (chars/4 per text block, image=4800 chars). Used only when the model has a
-/// context window; the result feeds the `available = window - tokens - safety`
-/// clamp in `simple-options.ts::clampMaxTokensToContext`.
-pub fn estimate_context_tokens(messages: &[Message], system_prompt: Option<&str>) -> u64 {
-    let mut chars: u64 = 0;
-    if let Some(s) = system_prompt {
-        chars += s.chars().count() as u64;
-    }
-    for msg in messages {
-        match msg {
-            Message::User(u) => match &u.content {
-                crate::types::UserContent::Text(s) => chars += s.chars().count() as u64,
-                crate::types::UserContent::Blocks(blocks) => {
-                    for b in blocks {
-                        match b {
-                            Content::Text(t) => chars += t.text.chars().count() as u64,
-                            Content::Image(_) => chars += 4800,
-                            _ => {}
-                        }
-                    }
-                }
-            },
-            Message::Assistant(a) => {
-                for b in &a.content {
-                    match b {
-                        Content::Text(t) => chars += t.text.chars().count() as u64,
-                        Content::Thinking(t) => chars += t.thinking.chars().count() as u64,
-                        Content::Image(_) => chars += 4800,
-                        _ => {}
-                    }
-                }
-            }
-            Message::ToolResult(tr) => {
-                for b in &tr.content {
-                    match b {
-                        Content::Text(t) => chars += t.text.chars().count() as u64,
-                        Content::Image(_) => chars += 4800,
-                        _ => {}
-                    }
-                }
-            }
-        }
-    }
-    (chars + 3) / 4
-}
-
-/// Clamp `max_tokens` so the request never asks for more than the context
-/// window allows (minus a safety margin). Mirrors `clampMaxTokensToContext`.
-pub fn clamp_max_tokens_to_context(
-    model: &Model,
-    messages: &[Message],
-    system_prompt: Option<&str>,
-    max_tokens: u64,
-) -> u64 {
-    const CONTEXT_SAFETY_TOKENS: u64 = 4096;
-    const MIN_MAX_TOKENS: u64 = 1;
-    if model.context_window == 0 {
-        return std::cmp::max(MIN_MAX_TOKENS, max_tokens);
-    }
-    let tokens = estimate_context_tokens(messages, system_prompt);
-    let available = model
-        .context_window
-        .saturating_sub(tokens)
-        .saturating_sub(CONTEXT_SAFETY_TOKENS);
-    std::cmp::min(max_tokens, std::cmp::max(MIN_MAX_TOKENS, available))
 }
 
 // ----------------------------------------------------------------------------
@@ -1258,7 +1225,7 @@ pub fn build_params(
     ctx: &crate::types::Context,
     is_oauth: bool,
     opts: &SimpleStreamOptions,
-) -> BuiltParams {
+) -> Result<BuiltParams, String> {
     let compat = get_anthropic_compat(model);
     let cache_control_opt = get_cache_control(model, opts.cache_retention);
     let cache_ref = cache_control_opt.cache_control.as_ref();
@@ -1289,15 +1256,9 @@ pub fn build_params(
         &|name: &str| name.to_string(),
     );
 
-    // max_tokens: opts.max_tokens wins; else model.max_tokens. Thinking may
-    // inflate this (handled below for budget-based models).
-    let base_max_tokens = opts.max_tokens.unwrap_or(model.max_tokens);
-    let mut max_tokens = clamp_max_tokens_to_context(
-        model,
-        &ctx.messages,
-        ctx.system_prompt.as_deref(),
-        base_max_tokens,
-    );
+    // Start with the request cap after context and runtime-authority clamps.
+    // Budget-based thinking may add tokens below, bounded by both ceilings.
+    let mut max_tokens = crate::provider::request_max_tokens(model, ctx, opts)?;
 
     // Thinking config.
     let thinking_enabled = opts.reasoning.is_some() && opts.reasoning != Some(ThinkingLevel::Off);
@@ -1321,19 +1282,24 @@ pub fn build_params(
             } else {
                 // Budget-based thinking.
                 let reasoning_level = opts.reasoning.unwrap_or(ThinkingLevel::High);
-                let (adjusted_max, budget) = adjust_max_tokens_for_thinking(
-                    opts.max_tokens,
+                let (adjusted_max, budget) = adjust_max_tokens_for_thinking_checked(
+                    opts.max_tokens.map(|_| max_tokens),
                     model.max_tokens,
                     reasoning_level,
                     opts.thinking_budgets.as_ref(),
-                );
-                // Re-clamp the adjusted max to the context window.
-                max_tokens = clamp_max_tokens_to_context(
+                    opts.hard_max_output_tokens,
+                )?;
+                // Re-clamp the adjusted max to the context window, then apply
+                // hard authority again since reasoning may have added tokens.
+                let context_clamped = clamp_max_tokens_to_context(
                     model,
                     &ctx.messages,
                     ctx.system_prompt.as_deref(),
                     adjusted_max,
                 );
+                let mut adjusted_options = opts.clone();
+                adjusted_options.max_tokens = Some(context_clamped);
+                max_tokens = crate::provider::request_max_tokens(model, ctx, &adjusted_options)?;
                 let budget = std::cmp::min(budget, max_tokens.saturating_sub(MIN_ANSWER_TOKENS));
                 thinking = Some(AnthropicThinking::Enabled {
                     budget_tokens: budget,
@@ -1432,11 +1398,11 @@ pub fn build_params(
         metadata,
     };
 
-    BuiltParams {
+    Ok(BuiltParams {
         request,
         cache_control: cache_control_opt,
         beta_header,
-    }
+    })
 }
 
 fn build_beta_header(fine_grained: bool, interleaved: bool) -> Option<String> {
@@ -1612,7 +1578,7 @@ mod tests {
         let mut opts = SimpleStreamOptions::default();
         opts.reasoning = Some(ThinkingLevel::Medium);
         opts.temperature = Some(0.7);
-        let built = build_params(&model, &ctx, false, &opts);
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
         assert!(built.request.temperature.is_none());
         assert!(built.request.thinking.is_some());
     }
@@ -1630,7 +1596,7 @@ mod tests {
         };
         let mut opts = SimpleStreamOptions::default();
         opts.reasoning = Some(ThinkingLevel::High);
-        let built = build_params(&model, &ctx, false, &opts);
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
         assert!(matches!(
             built.request.thinking,
             Some(AnthropicThinking::Adaptive { .. })
@@ -1653,7 +1619,7 @@ mod tests {
         };
         let mut opts = SimpleStreamOptions::default();
         opts.reasoning = Some(ThinkingLevel::High);
-        let built = build_params(&model, &ctx, false, &opts);
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
         match built.request.thinking {
             Some(AnthropicThinking::Enabled { budget_tokens, .. }) => {
                 assert!(budget_tokens > 0);
@@ -1718,6 +1684,128 @@ mod tests {
             )))
             .unwrap(),
             json!("(tool image omitted: model does not support images)")
+        );
+    }
+
+    #[test]
+    fn hard_authority_caps_combined_thinking_and_output_tokens() {
+        let hard_limit = Some(4096.0);
+        for level in [ThinkingLevel::High, ThinkingLevel::Max] {
+            assert_eq!(
+                adjust_max_tokens_for_thinking_checked(
+                    Some(50_000),
+                    16_384,
+                    level,
+                    None,
+                    hard_limit,
+                )
+                .unwrap(),
+                (4096, 3072),
+            );
+            assert_eq!(
+                adjust_max_tokens_for_thinking_checked(None, 16_384, level, None, hard_limit,)
+                    .unwrap(),
+                (4096, 3072),
+            );
+        }
+    }
+
+    #[test]
+    fn thinking_adjustment_preserves_no_hard_limit_semantics() {
+        assert_eq!(
+            adjust_max_tokens_for_thinking_checked(
+                Some(50_000),
+                8192,
+                ThinkingLevel::High,
+                None,
+                None,
+            )
+            .unwrap(),
+            (8192, 7168),
+        );
+        assert_eq!(
+            adjust_max_tokens_for_thinking_checked(None, 8192, ThinkingLevel::High, None, None,)
+                .unwrap(),
+            (8192, 7168),
+        );
+    }
+
+    #[test]
+    fn hard_thinking_authority_rejects_invalid_values_and_too_small_floor() {
+        for invalid in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let error = adjust_max_tokens_for_thinking_checked(
+                Some(50_000),
+                8192,
+                ThinkingLevel::High,
+                None,
+                Some(invalid),
+            )
+            .unwrap_err();
+            assert!(error.contains("hardMaxOutputTokens must be a positive finite number"));
+        }
+        let error = adjust_max_tokens_for_thinking_checked(
+            Some(50_000),
+            8192,
+            ThinkingLevel::High,
+            None,
+            Some(1023.99),
+        )
+        .unwrap_err();
+        assert_eq!(
+            error,
+            "hardMaxOutputTokens is below the minimum ordinary output size."
+        );
+    }
+
+    #[test]
+    fn checked_builder_applies_hard_and_missing_authority_cases() {
+        let compat = AnthropicMessagesCompat::default();
+        let mut model = model_with_compat(compat);
+        model.reasoning = true;
+        let ctx = crate::types::Context {
+            system_prompt: None,
+            messages: vec![Message::User(UserMessage::new("hi", 0))],
+            tools: vec![],
+        };
+
+        let mut opts = SimpleStreamOptions::default();
+        opts.max_tokens = Some(50_000);
+        opts.reasoning = Some(ThinkingLevel::High);
+        opts.hard_max_output_tokens = Some(4096.0);
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
+        assert_eq!(built.request.max_tokens, 4096);
+        assert!(matches!(
+            built.request.thinking,
+            Some(AnthropicThinking::Enabled {
+                budget_tokens: 3072,
+                ..
+            })
+        ));
+
+        opts.max_tokens = None;
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
+        assert_eq!(built.request.max_tokens, 4096);
+
+        opts.hard_max_output_tokens = None;
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
+        assert_eq!(built.request.max_tokens, model.max_tokens);
+    }
+
+    #[test]
+    fn checked_builder_rejects_invalid_hard_limit_before_request_building() {
+        let mut model = model_with_compat(AnthropicMessagesCompat::default());
+        model.reasoning = true;
+        let ctx = crate::types::Context {
+            system_prompt: None,
+            messages: vec![Message::User(UserMessage::new("hi", 0))],
+            tools: vec![],
+        };
+        let mut opts = SimpleStreamOptions::default();
+        opts.reasoning = Some(ThinkingLevel::High);
+        opts.hard_max_output_tokens = Some(512.0);
+        assert_eq!(
+            build_params(&model, &ctx, false, &opts).err().unwrap(),
+            "hardMaxOutputTokens is below the minimum ordinary output size."
         );
     }
 

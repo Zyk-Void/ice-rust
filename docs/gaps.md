@@ -49,6 +49,8 @@ The first six gaps have no unported prerequisites:
 1. [SET-003](ice-gap/settings.md#set-003---project-trust-resolution-before-loading-executable-resources) — Project trust resolution before loading executable resources (P0, partial, ~280–480 lines)
 1. [CLI-039](ice-gap/cli-packaging.md#cli-039---native-project-package-links-preserve-cargo-workflow-and-close-name-containment-holes) — Native project package links: preserve Cargo workflow and close name-containment holes (P0, partial, ~100–190 lines)
 
+AI-006: hard output authority ported; remaining: toolChoice, service tier, per-request sampling map, prompt-cache key, transport/connect timeout, custom fetch/env, onPayload/onResponse wire hooks, headersToRecord (separate from ProviderHooks).
+
 ## Open decisions
 
 These need an owner decision before the affected gaps can close (see [ice-gap README](ice-gap/README.md#open-questions-and-evidence-limits)):
@@ -64,7 +66,7 @@ These need an owner decision before the affected gaps can close (see [ice-gap RE
 
 | Done | # | Group | ID | Pri | Status | Est. lines | Gap | Prerequisites |
 |:-:|---:|---|---|---|---|---:|---|---|
-| [ ] | 1 | G001 | [AI-006](ice-gap/ai.md#ai-006---shared-request-options-and-non-widening-hard-output-authority) | P0 | partial | 350–700 | Shared request options and non-widening hard output authority | — |
+| [~] | 1 | G001 | [AI-006](ice-gap/ai.md#ai-006---shared-request-options-and-non-widening-hard-output-authority) | P0 | partial | 350–700 | Shared request options and non-widening hard output authority | — |
 | [ ] | 2 | G002 | [AI-012](ice-gap/ai.md#ai-012---fail-closed-tool-schema-validation-coercion-and-accurate-argument-errors) | P0 | partial | 220–420 | Fail-closed tool schema validation, coercion and accurate argument errors | — |
 | [ ] | 3 | G003 | [TOOLS-019](ice-gap/tools.md#tools-019---exact-truncation-metadata-utf-8-boundaries-and-line-numbering) | P0 | partial | 80–140 | Exact truncation metadata, UTF-8 boundaries and line numbering | — |
 | [ ] | 4 | G004 | [SET-004](ice-gap/settings.md#set-004---locked-trust-store-with-canonical-ancestor-inheritance-and-grouped-updates) | P0 | partial | 170–280 | Locked trust store with canonical ancestor inheritance and grouped updates | — |

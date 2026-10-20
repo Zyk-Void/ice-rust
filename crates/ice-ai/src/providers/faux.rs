@@ -494,6 +494,33 @@ impl Provider for FauxProvider {
         tokio::spawn(async move {
             state.call_count.fetch_add(1, Ordering::Relaxed);
 
+            // Validate the request before shifting the scripted queue: invalid
+            // authority/options must not consume a response intended for a
+            // later valid request. With no hard limit, preserve faux's existing
+            // behavior of returning the scripted response unchanged.
+            let hard_allowance = if opts.hard_max_output_tokens.is_some() {
+                match crate::provider::request_max_tokens(&model, &ctx, &opts) {
+                    Ok(allowance) => Some(allowance),
+                    Err(error) => {
+                        let error = AssistantMessage::terminal(
+                            model.api.clone(),
+                            id.clone(),
+                            model.id.clone(),
+                            StopReason::Error,
+                            format!("Invalid hard/request output-token limit: {error}"),
+                            faux_now(),
+                        );
+                        prod.push(AssistantMessageEvent::Error {
+                            reason: ErrorReason::Error,
+                            error,
+                        });
+                        return;
+                    }
+                }
+            } else {
+                None
+            };
+
             let step = script.shift();
             let mut message = match step {
                 None => AssistantMessage::terminal(
@@ -520,6 +547,9 @@ impl Provider for FauxProvider {
                     m
                 }
             };
+            if let Some(allowance) = hard_allowance {
+                message = enforce_output_limit(message, allowance);
+            }
             message = with_usage_estimate(message, &ctx, &opts);
 
             // Cancellation: honor the caller's signal, and (optionally) an
@@ -574,6 +604,80 @@ fn default_faux_model() -> Model {
 
 fn estimate_tokens(text: &str) -> i64 {
     ((text.len() as f64) / 4.0).ceil() as i64
+}
+
+/// Apply the resolved request allowance to scripted output. Text and thinking
+/// are byte-truncated at UTF-8 boundaries; tool calls remain indivisible and
+/// are omitted if their serialized representation would exceed the allowance.
+fn enforce_output_limit(mut message: AssistantMessage, allowance: u64) -> AssistantMessage {
+    let max_bytes = usize::try_from(allowance.saturating_mul(4)).unwrap_or(usize::MAX);
+    let mut content = Vec::with_capacity(message.content.len());
+    let mut truncated = false;
+
+    for block in message.content.drain(..) {
+        match block {
+            Content::Text(mut text) => {
+                let current_len = content_to_assistant_text(&content).len();
+                let separator_len = usize::from(!content.is_empty());
+                let prefix_budget = max_bytes
+                    .saturating_sub(current_len)
+                    .saturating_sub(separator_len);
+                if current_len.saturating_add(separator_len) > max_bytes {
+                    truncated |= !text.text.is_empty();
+                    continue;
+                }
+                if text.text.len() > prefix_budget {
+                    text.text = truncate_at_char_boundary(&text.text, prefix_budget).to_owned();
+                    truncated = true;
+                }
+                content.push(Content::Text(text));
+            }
+            Content::Thinking(mut thinking) => {
+                let current_len = content_to_assistant_text(&content).len();
+                let separator_len = usize::from(!content.is_empty());
+                let prefix_budget = max_bytes
+                    .saturating_sub(current_len)
+                    .saturating_sub(separator_len);
+                if current_len.saturating_add(separator_len) > max_bytes {
+                    truncated |= !thinking.thinking.is_empty();
+                    continue;
+                }
+                if thinking.thinking.len() > prefix_budget {
+                    thinking.thinking =
+                        truncate_at_char_boundary(&thinking.thinking, prefix_budget).to_owned();
+                    truncated = true;
+                }
+                content.push(Content::Thinking(thinking));
+            }
+            Content::ToolCall(tool_call) => {
+                let mut candidate = content.clone();
+                candidate.push(Content::ToolCall(tool_call.clone()));
+                let rendered = content_to_assistant_text(&candidate);
+                if (estimate_tokens(&rendered) as u64) <= allowance {
+                    content.push(Content::ToolCall(tool_call));
+                } else {
+                    truncated = true;
+                }
+            }
+            // Faux does not stream generated images. Do not retain an image
+            // block that could misalign later streamed content indexes.
+            Content::Image(_) => truncated = true,
+        }
+    }
+
+    message.content = content;
+    if truncated {
+        message.stop_reason = StopReason::Length;
+    }
+    message
+}
+
+fn truncate_at_char_boundary(text: &str, max_bytes: usize) -> &str {
+    let mut end = text.len().min(max_bytes);
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    &text[..end]
 }
 
 fn with_usage_estimate(
@@ -924,4 +1028,163 @@ fn faux_next_u32() -> u32 {
     x ^= x >> 17;
     x ^= x << 5;
     x
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::provider::{Provider, SimpleStreamOptions};
+    use crate::types::ThinkingLevel;
+
+    async fn run_stream(
+        provider: &FauxProvider,
+        options: &SimpleStreamOptions,
+    ) -> (Vec<AssistantMessageEvent>, AssistantMessage) {
+        let context = Context::new(Vec::new());
+        let mut stream = provider
+            .stream_simple(provider.default_model(), &context, options)
+            .await;
+        let mut events = Vec::new();
+        while let Some(event) = stream.next().await {
+            events.push(event);
+        }
+        let message = stream.result().await.expect("terminal stream result");
+        (events, message)
+    }
+
+    #[tokio::test]
+    async fn invalid_hard_limits_error_without_consuming_scripted_steps() {
+        for hard_limit in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let script = FauxScript::new().with_text("queued response");
+            let provider = FauxProvider::new(script.clone());
+            let mut options = SimpleStreamOptions::default();
+            options.hard_max_output_tokens = Some(hard_limit);
+
+            let (events, error) = run_stream(&provider, &options).await;
+            assert_eq!(error.stop_reason, StopReason::Error);
+            assert!(error
+                .error_message
+                .as_deref()
+                .unwrap_or_default()
+                .contains("hard/request"));
+            assert!(events
+                .iter()
+                .any(|event| matches!(event, AssistantMessageEvent::Error { .. })));
+            assert_eq!(script.pending_count(), 1);
+
+            // The invalid request did not steal the queued step from a later
+            // valid call.
+            options.hard_max_output_tokens = Some(100.0);
+            let (_, response) = run_stream(&provider, &options).await;
+            assert_eq!(response.stop_reason, StopReason::Stop);
+            assert_eq!(
+                content_to_assistant_text(&response.content),
+                "queued response"
+            );
+            assert_eq!(script.pending_count(), 0);
+        }
+    }
+
+    #[tokio::test]
+    async fn explicit_zero_request_errors_without_consuming_scripted_step() {
+        let script = FauxScript::new().with_text("queued response");
+        let provider = FauxProvider::new(script.clone());
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(8.0);
+        options.max_tokens = Some(0);
+
+        let (events, error) = run_stream(&provider, &options).await;
+        assert_eq!(error.stop_reason, StopReason::Error);
+        assert!(error
+            .error_message
+            .as_deref()
+            .unwrap_or_default()
+            .contains("maxTokens"));
+        assert!(events
+            .iter()
+            .any(|event| matches!(event, AssistantMessageEvent::Error { .. })));
+        assert_eq!(script.pending_count(), 1);
+    }
+
+    #[tokio::test]
+    async fn subtoken_hard_limit_allows_zero_tokens() {
+        let script = FauxScript::new().with_text("cannot fit");
+        let provider = FauxProvider::new(script);
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(0.5);
+
+        let (_, message) = run_stream(&provider, &options).await;
+        assert_eq!(message.stop_reason, StopReason::Length);
+        assert_eq!(message.usage.output, 0);
+        assert!(message.content.iter().all(|block| match block {
+            Content::Text(text) => text.text.is_empty(),
+            Content::Thinking(thinking) => thinking.thinking.is_empty(),
+            _ => false,
+        }));
+    }
+
+    #[tokio::test]
+    async fn absent_request_uses_hard_allowance_and_truncates_output() {
+        let script = FauxScript::new().with_text("0123456789ABCDEFGHIJ");
+        let provider = FauxProvider::new(script);
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(2.5);
+
+        let (_, message) = run_stream(&provider, &options).await;
+        assert_eq!(message.stop_reason, StopReason::Length);
+        assert_eq!(content_to_assistant_text(&message.content), "01234567");
+        assert_eq!(message.usage.output, 2);
+    }
+
+    #[tokio::test]
+    async fn hard_limit_caps_reasoning_and_omits_oversized_tool_calls() {
+        let script = FauxScript::new();
+        script.set_responses(vec![FauxStep::message(faux_assistant_message(
+            vec![
+                FauxBlock::thinking("reasoning"),
+                FauxBlock::tool_call(
+                    "run",
+                    serde_json::json!({"payload": "far too large for the allowance"}),
+                ),
+                FauxBlock::text("answer"),
+            ],
+            StopReason::ToolUse,
+        ))]);
+        let mut model = default_faux_model();
+        model.reasoning = true;
+        let provider = FauxProvider::with_models(script, vec![model]);
+        let mut options = SimpleStreamOptions::default();
+        options.reasoning = Some(ThinkingLevel::High);
+        options.max_tokens = Some(128);
+        options.hard_max_output_tokens = Some(4.9);
+
+        let (_, message) = run_stream(&provider, &options).await;
+        assert_eq!(message.stop_reason, StopReason::Length);
+        assert_eq!(message.usage.output, 4);
+        assert!(message.usage.output <= 4);
+        assert!(!message
+            .content
+            .iter()
+            .any(|block| matches!(block, Content::ToolCall(_))));
+        assert_eq!(
+            content_to_assistant_text(&message.content),
+            "reasoning\nanswer"
+        );
+    }
+
+    #[tokio::test]
+    async fn no_hard_limit_preserves_faux_behavior_even_with_zero_request() {
+        let script = FauxScript::new().with_text("still emitted without authority");
+        let provider = FauxProvider::new(script);
+        let mut options = SimpleStreamOptions::default();
+        options.max_tokens = Some(0);
+
+        let (_, message) = run_stream(&provider, &options).await;
+        assert_eq!(message.stop_reason, StopReason::Stop);
+        assert_eq!(
+            content_to_assistant_text(&message.content),
+            "still emitted without authority"
+        );
+        assert!(message.usage.output > 0);
+    }
 }

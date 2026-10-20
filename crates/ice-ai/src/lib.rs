@@ -25,6 +25,7 @@ pub mod model;
 pub mod provider;
 pub mod providers;
 pub mod schema;
+pub mod simple_options;
 pub(crate) mod strict_schema;
 pub mod types;
 

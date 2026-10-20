@@ -424,6 +424,7 @@ fn options_json(opts: &SimpleStreamOptions) -> serde_json::Value {
         "sessionId": opts.session_id,
         "reasoning": opts.reasoning.map(|r| format!("{r:?}")),
         "maxTokens": opts.max_tokens,
+        "hardMaxOutputTokens": opts.hard_max_output_tokens,
         "temperature": opts.temperature,
         "thinkingBudgets": opts.thinking_budgets,
     })
@@ -1350,6 +1351,18 @@ fn chunk_string(chunk: &serde_json::Value, field: &str) -> String {
 mod tests {
     use super::*;
     use crate::registry::ExtensionRegistry;
+
+    #[test]
+    fn options_forward_runtime_output_authority_separately() {
+        let opts = SimpleStreamOptions {
+            max_tokens: Some(50_000),
+            hard_max_output_tokens: Some(4096.0),
+            ..SimpleStreamOptions::default()
+        };
+        let json = options_json(&opts);
+        assert_eq!(json["maxTokens"], 50_000);
+        assert_eq!(json["hardMaxOutputTokens"].as_f64(), Some(4096.0));
+    }
 
     ice_plugin_sdk::string_handler! {
         /// A stub `ProviderRequestFn` that writes a minimal assistant-message JSON
