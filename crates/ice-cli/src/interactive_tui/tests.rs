@@ -3482,3 +3482,27 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// Over SSH the system clipboard is the remote machine's, so copies never
+/// reached the user. ice also sends OSC 52 then; oversized payloads are
+/// skipped because terminals drop or choke on them.
+#[test]
+fn osc52_copy_encodes_text_and_detects_remote_sessions() {
+    assert_eq!(
+        osc52_sequence("héllo").as_deref(),
+        Some("\x1b]52;c;aMOpbGxv\x07")
+    );
+    assert!(osc52_sequence(&"x".repeat(75_000)).is_some());
+    assert!(osc52_sequence(&"x".repeat(75_001)).is_none());
+    let env = |vars: &'static [(&'static str, &'static str)]| {
+        move |key: &str| {
+            vars.iter()
+                .find(|(k, _)| *k == key)
+                .map(|(_, v)| std::ffi::OsString::from(v))
+        }
+    };
+    assert!(is_remote_session(env(&[("SSH_CONNECTION", "1 2 3 4")])));
+    assert!(is_remote_session(env(&[("MOSH_CONNECTION", "1")])));
+    assert!(!is_remote_session(env(&[("SSH_CLIENT", "")])));
+    assert!(!is_remote_session(env(&[])));
+}
