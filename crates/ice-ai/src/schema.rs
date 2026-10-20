@@ -69,28 +69,35 @@ static VALIDATOR_CACHE: Mutex<Option<ValidatorCache>> = Mutex::new(None);
 /// them as permissive.
 fn get_sub_schema_validator(schema: &Value) -> Result<Arc<JSONSchema>, String> {
     let key = schema.to_string();
-    let mut guard = VALIDATOR_CACHE.lock().unwrap();
-    let cache = guard.get_or_insert_with(ValidatorCache::default);
-    if let Some(v) = cache.validators.get(&key) {
-        return Ok(v.clone());
+    {
+        let guard = VALIDATOR_CACHE.lock().unwrap();
+        if let Some(validator) = guard.as_ref().and_then(|cache| cache.validators.get(&key)) {
+            return Ok(validator.clone());
+        }
     }
+
+    // Compile without holding the process-wide cache lock so independent
+    // schemas and cache hits are not blocked by a costly compilation.
     // jsonschema's default resolver handles `$ref` inside self-contained
     // schemas. Compilation errors are retained for the caller; only valid
     // validators are cached.
-    match JSONSchema::compile(schema) {
-        Ok(v) => {
-            let arc = Arc::new(v);
-            if cache.validators.len() == VALIDATOR_CACHE_CAPACITY {
-                if let Some(expired) = cache.insertion_order.pop_front() {
-                    cache.validators.remove(&expired);
-                }
-            }
-            cache.insertion_order.push_back(key.clone());
-            cache.validators.insert(key, arc.clone());
-            Ok(arc)
-        }
-        Err(error) => Err(error.to_string()),
+    let validator = Arc::new(JSONSchema::compile(schema).map_err(|error| error.to_string())?);
+
+    let mut guard = VALIDATOR_CACHE.lock().unwrap();
+    let cache = guard.get_or_insert_with(ValidatorCache::default);
+    // Another thread may have compiled and inserted this schema while this
+    // thread was compiling. Reuse its entry to keep the FIFO key unique.
+    if let Some(existing) = cache.validators.get(&key) {
+        return Ok(existing.clone());
     }
+    if cache.validators.len() >= VALIDATOR_CACHE_CAPACITY {
+        if let Some(expired) = cache.insertion_order.pop_front() {
+            cache.validators.remove(&expired);
+        }
+    }
+    cache.insertion_order.push_back(key.clone());
+    cache.validators.insert(key, validator.clone());
+    Ok(validator)
 }
 
 // ----------------------------------------------------------------------------
@@ -652,5 +659,40 @@ mod tests {
         };
         let err = validate_tool_call(&tools, &tc).unwrap_err();
         assert!(matches!(err, AiError::Schema { .. }));
+    }
+
+    #[test]
+    fn concurrent_validator_compilation_keeps_cache_entries_unique() {
+        const THREADS: usize = 8;
+        let schema = json!({"type":"object","title":"concurrent-cache-test"});
+        let barrier = Arc::new(std::sync::Barrier::new(THREADS));
+
+        let handles: Vec<_> = (0..THREADS)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                let schema = schema.clone();
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    let validator = get_sub_schema_validator(&schema).unwrap();
+                    assert!(validator.is_valid(&json!({})));
+                })
+            })
+            .collect();
+        for handle in handles {
+            handle.join().expect("validator thread should succeed");
+        }
+
+        let guard = VALIDATOR_CACHE.lock().unwrap();
+        let cache = guard
+            .as_ref()
+            .expect("validator cache should be initialized");
+        let unique_keys: HashSet<&String> = cache.insertion_order.iter().collect();
+        assert_eq!(
+            unique_keys.len(),
+            cache.insertion_order.len(),
+            "concurrent insertion must not duplicate FIFO cache keys"
+        );
+        assert_eq!(cache.validators.len(), cache.insertion_order.len());
+        assert!(cache.validators.len() <= VALIDATOR_CACHE_CAPACITY);
     }
 }
