@@ -1092,6 +1092,7 @@ pub async fn interactive_tui(
         EditorStyle::default(),
         keybindings.clone(),
     ));
+    sync_editor_viewport(&editor);
 
     // Bash-mode border: a `!`-prefixed draft recolors the editor border to the
     // bash accent (upstream's `updateEditorBorderColor` / `isBashMode`). The
@@ -1746,6 +1747,7 @@ pub async fn interactive_tui(
             // window size itself; the event's own columns/rows are not used (on
             // Windows they carry the console buffer size, not the window).
             if let Event::Resize(..) = ev {
+                sync_editor_viewport(&editor_for_key);
                 tui_for_key.note_resize();
                 continue;
             }
