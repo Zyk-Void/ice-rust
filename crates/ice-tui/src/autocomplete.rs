@@ -302,6 +302,8 @@ struct RecursiveSearchState {
 /// Entries fetched from the search before ranking, and items shown (ice).
 const RECURSIVE_SEARCH_LIMIT: usize = 100;
 const RECURSIVE_SHOWN_LIMIT: usize = 20;
+/// Longest an `fd` search may run before it is abandoned.
+const FD_SEARCH_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
 
 impl RecursiveFileAutocompleteProvider {
     /// A provider that searches with `fd` (or Debian's `fdfind`), which
@@ -481,15 +483,10 @@ fn fd_search(fd: &Path, base: &Path, query: &str) -> Vec<(String, bool)> {
         .arg("--base-directory")
         .arg(base)
         .args(["--max-results", &RECURSIVE_SEARCH_LIMIT.to_string()])
-        .args([
-            "--type",
-            "f",
-            "--type",
-            "d",
-            "--follow",
-            "--hidden",
-            "--fixed-strings",
-        ])
+        .args(["--type", "f", "--type", "d", "--follow", "--hidden"])
+        // Literal, case-insensitive matching, the same as the ranking (fd's
+        // default smart case would drop `parser.rs` for `@Parser`).
+        .args(["--fixed-strings", "--ignore-case"])
         .args([
             "--exclude",
             ".git",
@@ -499,17 +496,36 @@ fn fd_search(fd: &Path, base: &Path, query: &str) -> Vec<(String, bool)> {
             ".git/**",
         ])
         .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::null());
     if !query.is_empty() {
         command.arg("--").arg(query);
     }
-    let Ok(output) = command.output() else {
+    let Ok(mut child) = command.spawn() else {
         return Vec::new();
     };
-    if !output.status.success() {
-        return Vec::new();
+    // Searches run one at a time, so a search over a huge tree must not hold
+    // up the next query. `--max-results` keeps the output well under a pipe
+    // buffer, so polling before reading cannot deadlock.
+    let deadline = std::time::Instant::now() + FD_SEARCH_TIMEOUT;
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) if status.success() => break,
+            Ok(None) if std::time::Instant::now() < deadline => {
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Vec::new();
+            }
+        }
     }
-    String::from_utf8_lossy(&output.stdout)
+    let mut stdout = Vec::new();
+    if let Some(mut pipe) = child.stdout.take() {
+        let _ = std::io::Read::read_to_end(&mut pipe, &mut stdout);
+    }
+    String::from_utf8_lossy(&stdout)
         .lines()
         .filter(|line| !line.is_empty())
         .map(|line| {
@@ -847,6 +863,8 @@ mod tests {
         std::fs::write(dir.join(".git/needle"), "").unwrap();
         let entries = fd_search(&fd, &dir, "needle");
         assert_eq!(entries, vec![("a/b/needle.txt".to_string(), false)]);
+        // Case-insensitive, like the ranking.
+        assert_eq!(fd_search(&fd, &dir, "NEEDLE"), entries);
         let _ = std::fs::remove_dir_all(&dir);
     }
 
