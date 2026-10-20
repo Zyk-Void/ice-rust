@@ -113,6 +113,15 @@ fn snap_boundary(s: &str, idx: usize) -> usize {
         .unwrap_or(0)
 }
 
+/// Apply a `word_navigation` helper, which works in char indices, to the
+/// byte-offset caret: convert the caret to a char index, then the result back
+/// to a byte offset on a char boundary.
+fn word_target(s: &str, byte_col: usize, find: fn(&str, usize) -> usize) -> usize {
+    let char_col = s[..snap_boundary(s, byte_col)].chars().count();
+    let target = find(s, char_col);
+    s.char_indices().nth(target).map_or(s.len(), |(b, _)| b)
+}
+
 /// A folded store of a large paste, keyed by the id rendered in its marker.
 /// The document (`EditorState::lines`) only ever carries the short
 /// `[paste #id …]` marker; the real text lives here until the draft is
@@ -1049,7 +1058,11 @@ impl Editor {
         let killed = if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             let col = state.cursor_col;
-            let start = crate::word_navigation::find_word_backward(&state.lines[row], col);
+            let start = word_target(
+                &state.lines[row],
+                col,
+                crate::word_navigation::find_word_backward,
+            );
             let dead: String = state.lines[row].drain(start..col).collect();
             state.cursor_col = start;
             dead
@@ -1068,7 +1081,11 @@ impl Editor {
             let col = state.cursor_col;
             // Kill only the current word (not the trailing delimiter) —
             // `find_word_end` stops at the last word char.
-            let end = crate::word_navigation::find_word_end(&state.lines[row], col);
+            let end = word_target(
+                &state.lines[row],
+                col,
+                crate::word_navigation::find_word_end,
+            );
             let dead: String = state.lines[row].drain(col..end).collect();
             dead
         } else {
@@ -1082,8 +1099,11 @@ impl Editor {
     fn cursor_word_left(&self) {
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
-            state.cursor_col =
-                crate::word_navigation::find_word_backward(&state.lines[row], state.cursor_col);
+            state.cursor_col = word_target(
+                &state.lines[row],
+                state.cursor_col,
+                crate::word_navigation::find_word_backward,
+            );
         }
     }
 
@@ -1091,8 +1111,11 @@ impl Editor {
     fn cursor_word_right(&self) {
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
-            state.cursor_col =
-                crate::word_navigation::find_word_forward(&state.lines[row], state.cursor_col);
+            state.cursor_col = word_target(
+                &state.lines[row],
+                state.cursor_col,
+                crate::word_navigation::find_word_forward,
+            );
         }
     }
 
@@ -1871,6 +1894,42 @@ l12",
         editor.handle_key(mk(KeyModifiers::CONTROL, KeyCode::Char('d')));
         assert_eq!(editor.get_text(), "ac");
     }
+
+    #[test]
+    fn word_ops_on_multibyte_text_use_byte_cursor() {
+        // Regression: word helpers return char indices but `cursor_col` is a
+        // byte offset; mixing them indexed past the char vector or drained
+        // inside a UTF-8 sequence. "你好 世界" is 13 bytes, 5 chars.
+        use crossterm::event::{KeyCode, KeyModifiers};
+        let mk = |m, c| crossterm::event::KeyEvent::new(c, m);
+        let editor = Editor::simple();
+
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 13);
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Left));
+        assert_eq!(editor.cursor_position(), (0, 7));
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Left));
+        assert_eq!(editor.cursor_position(), (0, 0));
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Right));
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
+        assert_eq!(editor.get_text(), "你好 ");
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 13);
+        editor.handle_key(mk(KeyModifiers::CONTROL, KeyCode::Char('w')));
+        assert_eq!(editor.get_text(), "你好 ");
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        // Kill forward from the start removes the whole first word.
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 0);
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
+        assert_eq!(editor.get_text(), " 世界");
+    }
+
     #[test]
     fn test_selection_cut_copy_paste() {
         let editor = Editor::simple();
