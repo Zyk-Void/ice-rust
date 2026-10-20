@@ -1014,6 +1014,7 @@ pub async fn interactive_tui(
         || saved_settings.last_changelog_version.is_some()
         || saved_settings.last_ice_changelog_version.is_some();
     crate::extras::maybe_first_time_setup(&chat_container);
+    spawn_tmux_keyboard_check(&chat_container, &tui);
     let collapse_changelog =
         preferred_project_setting(&project_settings, |settings| settings.collapse_changelog)
             .or(saved_settings.collapse_changelog)

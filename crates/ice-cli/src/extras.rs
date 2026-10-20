@@ -30,6 +30,58 @@ pub fn mark_setup_done() -> std::io::Result<()> {
     std::fs::write(&path, b"1")
 }
 
+/// The tmux settings that stop modified Enter keys (Shift+Enter) reaching
+/// icers, given `tmux show -gv` for `extended-keys` and
+/// `extended-keys-format` (ice `checkTmuxKeyboardSetup`). `None` when
+/// tmux could not be asked or is set up well.
+pub fn tmux_keyboard_warning(
+    extended_keys: Option<&str>,
+    extended_keys_format: Option<&str>,
+) -> Option<&'static str> {
+    let extended_keys = extended_keys?;
+    if extended_keys != "on" && extended_keys != "always" {
+        return Some(
+            "tmux extended-keys is off. Modified Enter keys may not work. Add \
+             `set -g extended-keys on` to ~/.tmux.conf and restart tmux.",
+        );
+    }
+    if extended_keys_format == Some("xterm") {
+        return Some(
+            "tmux extended-keys-format is xterm. icers works best with csi-u. Add \
+             `set -g extended-keys-format csi-u` to ~/.tmux.conf and restart tmux.",
+        );
+    }
+    None
+}
+
+/// `tmux show -gv <option>`, or `None` if tmux fails or takes over 2 s.
+pub fn tmux_show(option: &str) -> Option<String> {
+    let mut child = std::process::Command::new("tmux")
+        .args(["show", "-gv", option])
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .ok()?;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) if status.success() => break,
+            Ok(None) if std::time::Instant::now() < deadline => {
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return None;
+            }
+        }
+    }
+    let mut out = String::new();
+    std::io::Read::read_to_string(&mut child.stdout.take()?, &mut out).ok()?;
+    Some(out.trim().to_string())
+}
+
 /// If first-time setup hasn't run yet, show a brief setup note in the chat
 /// container. Returns `true` if anything was shown.
 pub fn maybe_first_time_setup(chat: &Arc<Container>) -> bool {
@@ -71,6 +123,21 @@ fn bold(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// ice warns about the two tmux settings that break modified Enter keys,
+    /// and stays quiet when tmux could not be asked.
+    #[test]
+    fn tmux_keyboard_warning_matches_ice() {
+        assert_eq!(tmux_keyboard_warning(None, None), None);
+        assert!(tmux_keyboard_warning(Some("off"), Some("csi-u"))
+            .unwrap()
+            .contains("set -g extended-keys on"));
+        assert!(tmux_keyboard_warning(Some("on"), Some("xterm"))
+            .unwrap()
+            .contains("set -g extended-keys-format csi-u"));
+        assert_eq!(tmux_keyboard_warning(Some("always"), Some("csi-u")), None);
+        assert_eq!(tmux_keyboard_warning(Some("on"), None), None);
+    }
 
     #[test]
     fn test_sentinel_paths_under_agent_dir() {
