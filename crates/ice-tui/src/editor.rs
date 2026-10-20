@@ -427,7 +427,10 @@ impl Editor {
             if pastes.remove(&id).is_none() {
                 return;
             }
-            let higher: Vec<u32> = pastes.keys().copied().filter(|k| *k > id).collect();
+            // Ascending, so each id moves into the slot its predecessor just
+            // vacated; HashMap order could overwrite a not-yet-moved entry.
+            let mut higher: Vec<u32> = pastes.keys().copied().filter(|k| *k > id).collect();
+            higher.sort_unstable();
             for old in higher {
                 if let Some(entry) = pastes.remove(&old) {
                     pastes.insert(old - 1, entry);
@@ -2448,6 +2451,28 @@ l12",
         // Only the second survives, renumbered to #1, and it still expands.
         assert_eq!(editor.get_text(), "[paste #1 +12 lines]");
         assert_eq!(editor.get_expanded_text(), second);
+    }
+
+    #[test]
+    fn deleting_a_marker_renumbers_many_higher_pastes_without_collisions() {
+        // Regression: renumbering walked the HashMap's higher ids in
+        // arbitrary order, so moving #3 to #2 before #2 had moved to #1
+        // overwrote #2's payload. Six pastes make that order near-certain.
+        let editor = Editor::simple();
+        let payloads: Vec<String> = (1..=6).map(|n| format!("{n}\n").repeat(11)).collect();
+        for p in &payloads {
+            editor.handle_paste(p);
+        }
+        let marker_one = "[paste #1 +12 lines]";
+        editor.set_cursor(0, marker_one.len());
+        let _ = editor.handle_key(crossterm::event::KeyEvent::new(
+            KeyCode::Backspace,
+            KeyModifiers::NONE,
+        ));
+
+        let expected_text: String = (1..=5).map(|n| format!("[paste #{n} +12 lines]")).collect();
+        assert_eq!(editor.get_text(), expected_text);
+        assert_eq!(editor.get_expanded_text(), payloads[1..].concat());
     }
 
     #[test]
