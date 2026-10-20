@@ -666,8 +666,8 @@ enum TuiMessage {
     OpenTree,
     NavigateTree(String),
     Exit,
-    /// Clear the transcript (from `/clear`).
-    ClearChat,
+    /// Start a new session (from `/new` and its `/clear` alias).
+    NewSession,
     /// Compact the conversation (from `/compact`).
     Compact,
     /// Copy the last assistant reply to the clipboard (from `/copy`).
@@ -2993,9 +2993,16 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
-            Some(TuiMessage::ClearChat) => {
-                chat_container.clear();
-                add_welcome_message(&chat_container);
+            Some(TuiMessage::NewSession) => {
+                start_new_session(
+                    &harness,
+                    &lane,
+                    &cwd,
+                    &chat_container,
+                    &state,
+                    &reload_context.tool_context,
+                )
+                .await;
                 tui.request_render(false);
             }
             Some(TuiMessage::Compact) => {

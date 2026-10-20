@@ -97,8 +97,8 @@ pub(super) async fn share_session(harness: &AgentHarness, chat: &Arc<Container>)
 /// Hot-switch the harness to another saved session: abort any in-flight run,
 /// open the target session file, swap the durable backing, and re-render the
 /// transcript from the new history (mirrors pi's `/session` resume-in-place).
-/// Shared by the `/session` selector, `/import`, and `/fork`. The current
-/// model/footer stay put (v1 doesn't replay the session's ModelChange entries).
+/// Shared by the `/session` selector and `/import`. The current model stays
+/// put (v1 doesn't replay the session's ModelChange entries).
 pub(super) async fn switch_to_session(
     harness: &AgentHarness,
     lane: &Arc<dyn AgentLane>,
@@ -108,12 +108,7 @@ pub(super) async fn switch_to_session(
     state: &Arc<TuiState>,
     tool_context: &ice_extensions::ToolCallContext,
 ) -> bool {
-    if *state.status.lock().unwrap() == RunStatus::Working {
-        state.set_status(RunStatus::Aborting);
-        let _ = lane.abort().await;
-    }
-    if let Err(error) = lane.wait_for_idle().await {
-        add_error_message(chat, &format!("Could not switch session: {error}"));
+    if !settle_active_run(lane, chat, state, "switch session").await {
         return false;
     }
     let cwd_str = cwd.to_string_lossy().to_string();
@@ -129,17 +124,7 @@ pub(super) async fn switch_to_session(
                 state.set_status(RunStatus::Idle);
                 return false;
             }
-            chat.clear();
-            add_welcome_message(chat);
-            render_session_history(
-                harness,
-                chat,
-                state.markdown_transformer(),
-                Some(state.extension_session.clone()),
-                state.images_visible(),
-            )
-            .await;
-            state.set_status(RunStatus::Idle);
+            replace_session_ui(harness, chat, state).await;
             add_note_message(chat, &format!("Switched to session {id}."));
             true
         }
@@ -255,6 +240,78 @@ pub(super) async fn fork_session(
         add_error_message(chat, &format!("Could not fork session: {error}"));
         return;
     }
+    replace_session_ui(harness, chat, state).await;
+    add_note_message(chat, "Forked into a new session.");
+}
+
+/// `/new`: start an empty session in the current session directory (ice
+/// `AgentSessionRuntime.newSession`). Like ice's `teardownCurrent`, an
+/// in-flight run is aborted and settled before the backing is replaced, so
+/// the old session keeps every entry it had and the agent starts with no
+/// history.
+pub(super) async fn start_new_session(
+    harness: &AgentHarness,
+    lane: &Arc<dyn AgentLane>,
+    cwd: &std::path::Path,
+    chat: &Arc<Container>,
+    state: &Arc<TuiState>,
+    tool_context: &ice_extensions::ToolCallContext,
+) -> bool {
+    if !settle_active_run(lane, chat, state, "start a new session").await {
+        return false;
+    }
+    let dir = crate::session::default_session_dir(cwd);
+    if let Err(error) = std::fs::create_dir_all(&dir) {
+        add_error_message(chat, &format!("Could not create session dir: {error}"));
+        state.set_status(RunStatus::Idle);
+        return false;
+    }
+    let cwd_str = cwd.to_string_lossy().to_string();
+    let created = match crate::session::create_jsonl_session(&dir, &cwd_str).await {
+        Ok(session) => {
+            crate::session::set_active_session(harness, session, Some(tool_context)).await
+        }
+        Err(error) => Err(error),
+    };
+    if let Err(error) = created {
+        add_error_message(chat, &format!("Could not start a new session: {error}"));
+        state.set_status(RunStatus::Idle);
+        return false;
+    }
+    replace_session_ui(harness, chat, state).await;
+    add_note_message(chat, "✓ New session started");
+    true
+}
+
+/// Abort an in-flight run and wait for the lane to go idle before the session
+/// backing is replaced. Reports the failure as "Could not {action}: …".
+async fn settle_active_run(
+    lane: &Arc<dyn AgentLane>,
+    chat: &Arc<Container>,
+    state: &Arc<TuiState>,
+    action: &str,
+) -> bool {
+    if *state.status.lock().unwrap() == RunStatus::Working {
+        state.set_status(RunStatus::Aborting);
+        let _ = lane.abort().await;
+    }
+    if let Err(error) = lane.wait_for_idle().await {
+        add_error_message(chat, &format!("Could not {action}: {error}"));
+        return false;
+    }
+    true
+}
+
+/// Rebuild everything the screen shows about the session after its backing
+/// was replaced (`/new`, `/resume`, `/import`, `/fork`): the transcript, the
+/// footer's usage totals, and the per-run caches that pointed at the old
+/// transcript. Without the reset the footer kept counting the previous
+/// session's tokens and cost.
+pub(super) async fn replace_session_ui(
+    harness: &AgentHarness,
+    chat: &Arc<Container>,
+    state: &Arc<TuiState>,
+) {
     chat.clear();
     add_welcome_message(chat);
     render_session_history(
@@ -265,8 +322,48 @@ pub(super) async fn fork_session(
         state.images_visible(),
     )
     .await;
+    state.tool_components.lock().unwrap().clear();
+    state.bash_components.lock().unwrap().clear();
+    let (totals, last_text) = session_usage_and_last_text(harness).await;
+    state.footer.set_usage(totals);
+    state.footer.set_cache_hit_rate(None);
+    state.footer.set_context_tokens(None);
+    *state.last_assistant_text.lock().unwrap() = last_text;
     state.set_status(RunStatus::Idle);
-    add_note_message(chat, "Forked into a new session.");
+}
+
+/// Usage summed over the session's assistant messages, plus the last
+/// assistant text (for `/copy`).
+async fn session_usage_and_last_text(
+    harness: &AgentHarness,
+) -> (ice_tui::footer::UsageTotals, String) {
+    let mut totals = ice_tui::footer::UsageTotals::default();
+    let mut last_text = String::new();
+    let entries = harness
+        .session()
+        .view("main")
+        .find_entries(&EntryQuery {
+            entry_type: None,
+            custom_type: None,
+            order: Some(EntryOrder::OldestFirst),
+            limit: None,
+            cursor: None,
+        })
+        .await
+        .unwrap_or_default();
+    for entry in entries {
+        if let Entry::Message(me) = entry {
+            if let AgentMessage::Assistant(a) = &me.message {
+                let u = &a.usage;
+                totals.add(u.input, u.output, u.cache_read, u.cache_write, u.cost.total);
+                let text = assistant_text(a);
+                if !text.is_empty() {
+                    last_text = text;
+                }
+            }
+        }
+    }
+    (totals, last_text)
 }
 
 /// Render the restored session's prior transcript (user + assistant messages)

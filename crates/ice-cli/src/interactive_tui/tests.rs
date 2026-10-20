@@ -1462,8 +1462,8 @@ fn test_slash_command_dispatch() {
 
     resolves_to("/help", "/help");
     resolves_to("/?", "/help"); // alias → canonical
-    resolves_to("/clear", "/clear");
-    resolves_to("/new", "/clear"); // alias
+    resolves_to("/new", "/new");
+    resolves_to("/clear", "/new"); // alias
     resolves_to("/q", "/exit"); // alias
     resolves_to("/quit", "/exit"); // alias
     resolves_to("/version", "/version");
@@ -3481,4 +3481,93 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
             "op": "open", "requestId": "r4", "ui": {"kind": "input"}
         }))
         .is_err());
+}
+
+/// `/new` used to clear only the screen: the agent kept the whole history and
+/// the footer kept the old totals. It must swap in an empty session, leave
+/// the old one intact, and reset the footer; switching back must restore the
+/// old session's totals and `/copy` text.
+#[test]
+fn new_session_replaces_backing_and_footer_totals_follow_the_session() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let dir = crate::session::default_session_dir(cwd.path());
+                std::fs::create_dir_all(&dir).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let tool_context = ice_extensions::ToolCallContext::new(cwd_str.clone());
+                let old = crate::session::create_jsonl_session(&dir, &cwd_str)
+                    .await
+                    .unwrap();
+                crate::session::set_active_session(&harness, old, Some(&tool_context))
+                    .await
+                    .unwrap();
+                let old_id = harness.session().storage().metadata().id.clone();
+                let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+                reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                    kind: ice_ai::types::TextContentType,
+                    text: "old reply".into(),
+                    text_signature: None,
+                })];
+                reply.usage.input = 100;
+                reply.usage.output = 20;
+                reply.usage.cost.total = 0.5;
+                harness
+                    .session()
+                    .append_message(AgentMessage::Assistant(Box::new(reply)))
+                    .await
+                    .unwrap();
+
+                let state = test_tui_state();
+                state.footer.add_usage(100, 20, 0, 0, 0.5);
+                *state.last_assistant_text.lock().unwrap() = "old reply".into();
+                let chat = Arc::new(Container::new());
+                let lane = harness.lane("main");
+
+                assert!(
+                    start_new_session(&harness, &lane, cwd.path(), &chat, &state, &tool_context)
+                        .await
+                );
+                let new_id = harness.session().storage().metadata().id.clone();
+                assert_ne!(new_id, old_id);
+                let new_entries = harness
+                    .session()
+                    .view("main")
+                    .find_entries(&EntryQuery::default())
+                    .await
+                    .unwrap();
+                assert!(
+                    !new_entries.iter().any(|e| matches!(e, Entry::Message(_))),
+                    "the new session must start without the old conversation"
+                );
+                assert_eq!(
+                    state.footer.usage(),
+                    ice_tui::footer::UsageTotals::default()
+                );
+                assert!(state.last_assistant_text.lock().unwrap().is_empty());
+
+                assert!(
+                    switch_to_session(
+                        &harness,
+                        &lane,
+                        &old_id,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &tool_context
+                    )
+                    .await
+                );
+                let usage = state.footer.usage();
+                assert_eq!((usage.input, usage.output), (100, 20));
+                assert!((usage.cost - 0.5).abs() < f64::EPSILON);
+                assert_eq!(*state.last_assistant_text.lock().unwrap(), "old reply");
+                harness.close().await.unwrap();
+            })
+    })
 }

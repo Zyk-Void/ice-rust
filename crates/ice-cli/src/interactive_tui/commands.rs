@@ -21,23 +21,25 @@ impl SlashCommand for HelpCommand {
     }
 }
 
-pub(super) struct ClearChatCommand;
-impl SlashCommand for ClearChatCommand {
+/// `/new` (ice `handleClearCommand`) starts a new session. `/clear` is an
+/// alias: a "clear" that kept the agent's history would leave the model
+/// reading a conversation the screen claims is gone.
+pub(super) struct NewSessionCommand;
+impl SlashCommand for NewSessionCommand {
     fn name(&self) -> &'static str {
-        "/clear"
+        "/new"
     }
     fn aliases(&self) -> &'static [&'static str] {
-        &["/new"]
+        &["/clear"]
     }
-    // `/new` carries its own weight as a discoverable entry, so surface it.
     fn alias_visible(&self) -> &'static [&'static str] {
-        &["/new"]
+        &["/clear"]
     }
     fn description(&self) -> &'static str {
-        "Clear the conversation"
+        "Start a new session"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::ClearChat);
+        let _ = ctx.tx.send(TuiMessage::NewSession);
     }
 }
 
@@ -807,7 +809,7 @@ impl SlashCommand for ReloadCommand {
 pub(super) fn build_builtin_registry() -> CommandRegistry {
     let mut r = CommandRegistry::new();
     r.register(Arc::new(HelpCommand));
-    r.register(Arc::new(ClearChatCommand));
+    r.register(Arc::new(NewSessionCommand));
     r.register(Arc::new(ExitCommand));
     r.register(Arc::new(VersionCommand));
     r.register(Arc::new(ChangelogCommand));
