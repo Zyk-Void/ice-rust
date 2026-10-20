@@ -3482,3 +3482,42 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// Drag-copy used to re-render the chat at width 80 and index it by screen
+/// row, ignoring the real width, the scroll position and the columns, and it
+/// kept escape codes. It now reads the painted frame by screen cell.
+#[test]
+fn selection_copies_the_painted_cells_as_plain_text() {
+    let wide = format!("{}tail-past-80", "x".repeat(90));
+    let rows = vec![
+        "\x1b[1mheader row\x1b[0m".to_string(),
+        "first \x1b[31mred\x1b[0m line   ".to_string(),
+        wide.clone(),
+        "你好 world".to_string(),
+    ];
+    // Mid-line start and end across rows; styles dropped, padding trimmed.
+    assert_eq!(
+        extract_selected_text(&rows, (6, 1), (3, 3)).as_deref(),
+        Some(format!("red line\n{wide}\n你好").as_str())
+    );
+    // Reversed drag gives the same text; a single row keeps only its columns.
+    assert_eq!(
+        extract_selected_text(&rows, (3, 3), (6, 1)),
+        extract_selected_text(&rows, (6, 1), (3, 3))
+    );
+    assert_eq!(
+        extract_selected_text(&rows, (90, 2), (93, 2)).as_deref(),
+        Some("tail")
+    );
+    // A wide grapheme starting inside the range is copied whole.
+    assert_eq!(
+        extract_selected_text(&rows, (2, 3), (2, 3)).as_deref(),
+        Some("好")
+    );
+    // Rows past the frame are clamped; a start below it copies nothing.
+    assert_eq!(
+        extract_selected_text(&rows, (0, 3), (5, 40)).as_deref(),
+        Some("你好 world")
+    );
+    assert_eq!(extract_selected_text(&rows, (0, 9), (5, 9)), None);
+}

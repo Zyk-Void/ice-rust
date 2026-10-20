@@ -398,6 +398,17 @@ impl TuiAltScreen {
             .unwrap_or(false)
     }
 
+    /// The rows of the last painted frame, top to bottom, with their escape
+    /// sequences. In fullscreen mode row N is screen row N, so mouse
+    /// coordinates index it directly; in main-screen mode it is the rendered
+    /// document instead. Empty until the first frame and after a resize.
+    pub fn painted_rows(&self) -> Vec<String> {
+        self.previous_screen
+            .lock()
+            .map(|rows| rows.clone())
+            .unwrap_or_default()
+    }
+
     /// Get the current scroll position.
     pub fn viewport_top(&self) -> usize {
         if let Some(scroll) = self.get_primary_scroll_view() {

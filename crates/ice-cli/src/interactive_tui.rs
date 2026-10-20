@@ -1832,9 +1832,9 @@ pub async fn interactive_tui(
                                 .unwrap_or(true);
 
                             if auto_copy && is_drag {
-                                // Try to extract selected text from chat container
+                                // Copy what is on screen under the selection.
                                 if let Some(selected_text) =
-                                    extract_selected_text(&state_for_key.chat_container, start, end)
+                                    extract_selected_text(&tui_for_key.painted_rows(), start, end)
                                 {
                                     if !selected_text.trim().is_empty() {
                                         let _ = copy_to_clipboard(&selected_text);

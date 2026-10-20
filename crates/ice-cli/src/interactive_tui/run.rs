@@ -338,42 +338,48 @@ pub(super) fn copy_last_assistant(state: &Arc<TuiState>, chat: &Arc<Container>) 
 
 /// Extract text from the chat container within the given screen coordinates.
 /// Returns None if the selection is invalid or empty.
+/// Plain text of a mouse selection over the painted fullscreen frame.
+///
+/// `start` and `end` are `(column, row)` screen cells, inclusive, in either
+/// order. The first row is taken from the start column, the last row up to
+/// the end column, and rows between in full. Escape sequences are dropped and
+/// trailing padding is trimmed. This used to re-render the chat at a fixed
+/// width of 80 and index it by screen row, which ignored the real width, the
+/// scroll position and the columns, and kept escape codes.
 pub(super) fn extract_selected_text(
-    chat_container: &Arc<Container>,
+    rows: &[String],
     start: (u16, u16),
     end: (u16, u16),
 ) -> Option<String> {
-    use ice_tui::Component;
-
-    // Get the rendered lines from the chat container
-    let lines = chat_container.render(80); // Use a reasonable width
-    if lines.is_empty() {
-        return None;
-    }
-
-    // Normalize coordinates (ensure start is before end)
-    let (start_row, end_row) = if start.1 <= end.1 {
-        (start.1 as usize, end.1 as usize)
+    let key = |(col, row): (u16, u16)| (row as usize, col as usize);
+    let ((first_row, first_col), (last_row, last_col)) = if key(start) <= key(end) {
+        (key(start), key(end))
     } else {
-        (end.1 as usize, start.1 as usize)
+        (key(end), key(start))
     };
-
-    // Clamp to valid range
-    let start_row = start_row.min(lines.len().saturating_sub(1));
-    let end_row = end_row.min(lines.len().saturating_sub(1));
-
-    if start_row > end_row {
+    if first_row >= rows.len() {
         return None;
     }
-
-    // Extract the selected lines
-    let selected_lines: Vec<String> = lines[start_row..=end_row].to_vec();
-
-    if selected_lines.is_empty() {
-        return None;
-    }
-
-    Some(selected_lines.join("\n"))
+    // A drag that ends below the frame takes the last row in full.
+    let (last_row, last_col) = if last_row >= rows.len() {
+        (rows.len() - 1, usize::MAX)
+    } else {
+        (last_row, last_col)
+    };
+    let selected: Vec<String> = (first_row..=last_row)
+        .map(|index| {
+            let from = if index == first_row { first_col } else { 0 };
+            let line = &rows[index];
+            let text = if index == last_row {
+                let width = last_col.saturating_add(1).saturating_sub(from);
+                ice_tui::slice_with_width(line, from, width, false).0
+            } else {
+                ice_tui::slice_with_width(line, from, usize::MAX, false).0
+            };
+            ice_tui::strip_ansi(&text).trim_end().to_string()
+        })
+        .collect();
+    Some(selected.join("\n"))
 }
 
 /// Best-effort clipboard write. Enabled only with the `clipboard` feature
