@@ -989,7 +989,7 @@ mod tests {
         assert!(rendered.contains("\x1b[1m"), "nested strong style missing");
         assert!(rendered.contains("\x1b[3m"), "nested emphasis missing");
         assert!(
-            rendered.contains("\x1b[48;2;48;52;59m"),
+            rendered.contains(&crate::theme::Color::Rgb(48, 52, 59).to_bg()),
             "multi-backtick code span should use the code chip"
         );
     }
@@ -1007,7 +1007,7 @@ mod tests {
         let lines = md.render(80);
         assert!(!lines[0].is_empty());
         assert!(
-            lines[0].contains("\x1b[48;2;48;52;59m"),
+            lines[0].contains(&crate::theme::Color::Rgb(48, 52, 59).to_bg()),
             "inline code should use the theme chip background"
         );
     }
@@ -1042,7 +1042,7 @@ mod tests {
             "code block must not draw an outer frame: {plain}"
         );
         assert!(
-            joined.contains("\x1b[48;2;40;44;52m"),
+            joined.contains(&crate::theme::Color::Rgb(40, 44, 52).to_bg()),
             "code panel background missing: {joined:?}"
         );
         assert!(
