@@ -3482,3 +3482,40 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// A bare `/trust` used to mean "yes" and silently overrode a saved "no".
+/// It must only report the saved decision; explicit arguments change it.
+#[test]
+fn bare_trust_command_reports_and_never_changes_trust() {
+    with_isolated_config_dir(|| {
+        let project = tempfile::tempdir().unwrap();
+        let cwd = project.path();
+        crate::config::set_project_trust(cwd, Some(false)).unwrap();
+
+        let note = run_trust_command(cwd, "").unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+
+        let note = run_trust_command(cwd, "yes").unwrap();
+        assert!(
+            note.contains("marked trusted") && note.contains("Restart"),
+            "{note}"
+        );
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(true)
+        );
+
+        run_trust_command(cwd, "clear").unwrap();
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+        let note = run_trust_command(cwd, "").unwrap();
+        assert!(note.contains("no saved decision"), "{note}");
+
+        let note = run_trust_command(cwd, "maybe").unwrap();
+        assert!(note.starts_with("Usage:"), "{note}");
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+    })
+}

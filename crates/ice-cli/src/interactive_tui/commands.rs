@@ -594,38 +594,56 @@ pub(super) fn set_project_trust_for_command(
     crate::config::set_project_trust(cwd, value)
 }
 
+/// `/trust [yes|no|clear]`. A bare `/trust` only reports the saved decision:
+/// it used to mean "yes", so picking the command from autocomplete and
+/// pressing Enter silently trusted the project (ice opens a selector and
+/// changes nothing until a choice is made). Returns the note to show, or the
+/// error.
+pub(super) fn run_trust_command(cwd: &std::path::Path, args: &str) -> Result<String, String> {
+    const USAGE: &str = "Change it with /trust yes, /trust no or /trust clear.";
+    let value = match args.trim().to_ascii_lowercase().as_str() {
+        "" => {
+            let saved = crate::config::project_trust_decision(cwd)
+                .map_err(|error| format!("Could not read trust decision: {error}"))?;
+            let state = match saved {
+                Some(true) => "trusted (saved)",
+                Some(false) => "untrusted (saved)",
+                None => "no saved decision (project resources load by default)",
+            };
+            return Ok(format!(
+                "Project trust for {}: {state}. {USAGE}",
+                cwd.display()
+            ));
+        }
+        "yes" | "y" | "true" => Some(true),
+        "no" | "n" | "false" => Some(false),
+        "clear" | "reset" | "none" => None,
+        _ => return Ok(format!("Usage: /trust [yes|no|clear]. {USAGE}")),
+    };
+    set_project_trust_for_command(cwd, value)
+        .map_err(|error| format!("Could not save trust decision: {error}"))?;
+    let label = match value {
+        Some(true) => "marked trusted",
+        Some(false) => "marked untrusted",
+        None => "trust decision cleared",
+    };
+    Ok(format!(
+        "Current project {label}. Restart icers to apply it to project resources."
+    ))
+}
+
 pub(super) struct TrustCommand;
 impl SlashCommand for TrustCommand {
     fn name(&self) -> &'static str {
         "/trust"
     }
     fn description(&self) -> &'static str {
-        "Trust the current project"
+        "Show or set trust for the current project"
     }
     fn execute(&self, ctx: &CommandContext, args: &str) {
-        let value = match args.trim().to_ascii_lowercase().as_str() {
-            "" | "yes" | "y" | "true" => Some(true),
-            "no" | "n" | "false" => Some(false),
-            "clear" | "reset" | "none" => None,
-            _ => {
-                add_note_message(&ctx.chat, "Usage: /trust [yes|no|clear]");
-                ctx.tui.request_render(false);
-                return;
-            }
-        };
-        match set_project_trust_for_command(&ctx.cwd, value) {
-            Ok(()) => {
-                let label = match value {
-                    Some(true) => "trusted",
-                    Some(false) => "untrusted",
-                    None => "trust decision cleared",
-                };
-                add_note_message(&ctx.chat, &format!("Current project marked {label}."));
-            }
-            Err(error) => add_error_message(
-                &ctx.chat,
-                &format!("Could not save trust decision: {error}"),
-            ),
+        match run_trust_command(&ctx.cwd, args) {
+            Ok(note) => add_note_message(&ctx.chat, &note),
+            Err(error) => add_error_message(&ctx.chat, &error),
         }
         ctx.tui.request_render(false);
     }
