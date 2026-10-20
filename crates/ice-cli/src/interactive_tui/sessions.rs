@@ -625,13 +625,28 @@ pub(super) fn custom_message_fallback(custom: &ice_agent::CustomMessage) -> Stri
     }
 }
 
-/// Path to the enclosing repository's `.git/HEAD`, if any.
+/// Path to the `HEAD` file of the repository or worktree enclosing `cwd`.
+///
+/// `<dir>/.git` is a directory in a normal checkout and a `gitdir: <path>`
+/// file in a linked worktree or submodule; the path is relative to `<dir>`
+/// unless absolute. Following the file matters: walking past it would find an
+/// outer repository's HEAD and show that repository's branch.
 pub(super) fn find_git_head_path(cwd: &std::path::Path) -> Option<std::path::PathBuf> {
     let mut dir = Some(cwd);
     while let Some(current) = dir {
-        let head = current.join(".git").join("HEAD");
-        if head.exists() {
-            return Some(head);
+        let dot_git = current.join(".git");
+        if dot_git.is_dir() {
+            let head = dot_git.join("HEAD");
+            if head.is_file() {
+                return Some(head);
+            }
+        } else if let Ok(contents) = std::fs::read_to_string(&dot_git) {
+            if let Some(gitdir) = contents.trim().strip_prefix("gitdir:") {
+                let head = current.join(gitdir.trim()).join("HEAD");
+                if head.is_file() {
+                    return Some(head);
+                }
+            }
         }
         dir = current.parent();
     }
@@ -639,32 +654,18 @@ pub(super) fn find_git_head_path(cwd: &std::path::Path) -> Option<std::path::Pat
 }
 
 /// Current git branch for `cwd`, or `None` outside a repository / on error.
-/// Reads `.git/HEAD` directly (no `git` subprocess) so the footer can call it
-/// cheaply at startup.
+/// Reads `HEAD` directly (no `git` subprocess) so the footer can call it
+/// cheaply at startup. A branch keeps its full name (`feat/x`); a detached
+/// HEAD shows the first 7 characters of the commit.
 pub(super) fn git_branch_for(cwd: &std::path::Path) -> Option<String> {
-    let mut dir = Some(cwd);
-    while let Some(current) = dir {
-        let head = current.join(".git").join("HEAD");
-        if let Ok(contents) = std::fs::read_to_string(&head) {
-            let trimmed = contents.trim();
-            if let Some(reference) = trimmed.strip_prefix("ref: ") {
-                let branch = reference
-                    .rsplit('/')
-                    .next()
-                    .unwrap_or(reference)
-                    .trim()
-                    .to_string();
-                if !branch.is_empty() {
-                    return Some(branch);
-                }
-            }
-            if !trimmed.is_empty() {
-                return Some(trimmed.chars().take(7).collect());
-            }
-        }
-        dir = current.parent();
+    let contents = std::fs::read_to_string(find_git_head_path(cwd)?).ok()?;
+    let trimmed = contents.trim();
+    if let Some(reference) = trimmed.strip_prefix("ref:") {
+        let reference = reference.trim();
+        let branch = reference.strip_prefix("refs/heads/").unwrap_or(reference);
+        return (!branch.is_empty()).then(|| branch.to_string());
     }
-    None
+    (!trimmed.is_empty()).then(|| trimmed.chars().take(7).collect())
 }
 
 /// The name displayed for a model id (last path segment / after the final

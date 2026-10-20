@@ -3482,3 +3482,55 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// The footer used to keep only the last `/` segment of a branch and to
+/// skip a worktree's `.git` file, showing an outer repository's branch.
+#[test]
+fn footer_git_branch_follows_worktrees_and_keeps_full_names() {
+    let root = tempfile::tempdir().unwrap();
+    let write = |path: std::path::PathBuf, text: &str| {
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    };
+
+    // Normal checkout on a nested branch, queried from a subdirectory.
+    let repo = root.path().join("repo");
+    write(repo.join(".git/HEAD"), "ref: refs/heads/feat/tui-widths\n");
+    std::fs::create_dir_all(repo.join("src/deep")).unwrap();
+    assert_eq!(
+        git_branch_for(&repo.join("src/deep")).as_deref(),
+        Some("feat/tui-widths")
+    );
+    assert_eq!(find_git_head_path(&repo).unwrap(), repo.join(".git/HEAD"));
+
+    // Linked worktree nested inside that checkout, with a relative gitdir.
+    let worktree = repo.join(".worktrees/wt");
+    write(
+        repo.join(".git/worktrees/wt/HEAD"),
+        "ref: refs/heads/fix/footer\n",
+    );
+    write(worktree.join(".git"), "gitdir: ../../.git/worktrees/wt\n");
+    assert_eq!(git_branch_for(&worktree).as_deref(), Some("fix/footer"));
+    assert_eq!(
+        find_git_head_path(&worktree).unwrap(),
+        worktree.join("../../.git/worktrees/wt/HEAD")
+    );
+
+    // Absolute gitdir and a detached HEAD.
+    let detached = root.path().join("detached");
+    let gitdir = root.path().join("store/wt2");
+    write(
+        gitdir.join("HEAD"),
+        "0123456789abcdef0123456789abcdef01234567\n",
+    );
+    write(
+        detached.join(".git"),
+        &format!("gitdir: {}\n", gitdir.display()),
+    );
+    assert_eq!(git_branch_for(&detached).as_deref(), Some("0123456"));
+
+    // Not a repository.
+    let plain = root.path().join("plain");
+    std::fs::create_dir_all(&plain).unwrap();
+    assert_eq!(git_branch_for(&plain), None);
+}
