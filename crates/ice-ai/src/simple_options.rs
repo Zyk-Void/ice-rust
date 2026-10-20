@@ -48,17 +48,20 @@ pub fn enforce_hard_max_tokens_in_record(
         }
     };
     if let Some(limit) = clamp_max_tokens_to_hard_limit(requested, hard)? {
-        // Native adapters use integer token fields. Match JSON.stringify's
-        // integral-number encoding rather than sending e.g. 4096.0 to APIs
-        // that require integer wire values; preserve fractional pure clamps.
-        let value = if limit.fract() == 0.0 && limit <= u64::MAX as f64 {
-            Value::from(limit as u64)
-        } else {
-            Value::from(limit)
-        };
-        payload.insert(field.into(), value);
+        // Provider token fields are integers. Round down so a fractional limit
+        // never widens authority or reaches the wire as e.g. 4096.5.
+        payload.insert(field.into(), Value::from(whole_tokens(limit)?));
     }
     Ok(())
+}
+
+/// Floor a validated clamp to whole tokens; a sub-token limit allows nothing.
+fn whole_tokens(limit: f64) -> Result<u64, String> {
+    let tokens = limit.floor() as u64;
+    if tokens == 0 {
+        return Err("hardMaxOutputTokens must allow at least one output token.".into());
+    }
+    Ok(tokens)
 }
 
 /// Existing native context estimate (estimation parity is a separate gap).
@@ -123,10 +126,10 @@ pub fn request_max_tokens(
         context.system_prompt.as_deref(),
         options.max_tokens.unwrap_or(model.max_tokens),
     );
-    Ok(
-        clamp_max_tokens_to_hard_limit(Some(requested as f64), options.hard_max_output_tokens)?
-            .unwrap_or(requested as f64) as u64,
-    )
+    match clamp_max_tokens_to_hard_limit(Some(requested as f64), options.hard_max_output_tokens)? {
+        Some(limit) if options.hard_max_output_tokens.is_some() => whole_tokens(limit),
+        _ => Ok(requested),
+    }
 }
 
 #[cfg(test)]
@@ -203,6 +206,21 @@ mod tests {
         );
         enforce_hard_max_tokens_in_record(&mut payload, "max_output_tokens", None).unwrap();
         assert_eq!(payload["max_output_tokens"], 0);
+    }
+
+    #[test]
+    fn fractional_authority_reaches_the_wire_as_whole_tokens() {
+        let mut payload = Map::new();
+        payload.insert("max_tokens".into(), json!(50000));
+        enforce_hard_max_tokens_in_record(&mut payload, "max_tokens", Some(4096.5)).unwrap();
+        assert_eq!(payload["max_tokens"], json!(4096));
+
+        let mut payload = Map::new();
+        assert!(
+            enforce_hard_max_tokens_in_record(&mut payload, "max_tokens", Some(0.5))
+                .unwrap_err()
+                .contains("at least one output token")
+        );
     }
 
     #[test]

@@ -687,10 +687,10 @@ mod tests {
     }
 
     #[test]
-    fn serialized_output_authority_preserves_fractional_numeric_limit() {
+    fn serialized_output_authority_floors_fractional_limit() {
         let mut body = serde_json::json!({ "max_tokens": 50_000 });
         enforce_serialized_output_authority(&mut body, Some(4096.5)).unwrap();
-        assert_eq!(body["max_tokens"].as_f64(), Some(4096.5));
+        assert_eq!(body["max_tokens"], 4096);
     }
 
     #[tokio::test]

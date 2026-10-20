@@ -49,7 +49,7 @@ The first six gaps have no unported prerequisites:
 1. [SET-003](ice-gap/settings.md#set-003---project-trust-resolution-before-loading-executable-resources) — Project trust resolution before loading executable resources (P0, partial, ~280–480 lines)
 1. [CLI-039](ice-gap/cli-packaging.md#cli-039---native-project-package-links-preserve-cargo-workflow-and-close-name-containment-holes) — Native project package links: preserve Cargo workflow and close name-containment holes (P0, partial, ~100–190 lines)
 
-AI-006: hard output authority ported; remaining: toolChoice, service tier, per-request sampling map, prompt-cache key, transport/connect timeout, custom fetch/env, onPayload/onResponse wire hooks, headersToRecord (separate from ProviderHooks).
+AI-006: hard output authority ported in `ice-ai` (`SimpleStreamOptions::hard_max_output_tokens`), but no caller sets it yet: it takes effect once bounded agent/subagent finalization supplies the runtime allowance. Remaining: toolChoice, service tier, per-request sampling map, prompt-cache key, transport/connect timeout, custom fetch/env, onPayload/onResponse wire hooks, headersToRecord (separate from ProviderHooks).
 
 ## Open decisions
 

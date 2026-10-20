@@ -1452,16 +1452,26 @@ mod tests {
     }
 
     #[test]
-    fn hard_output_authority_inserts_selected_field_when_base_allowance_is_zero() {
-        let mut model = model();
-        model.max_tokens = 0;
+    fn hard_output_authority_floors_selected_field_to_whole_tokens() {
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.9);
+        let body =
+            build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
+                .unwrap();
+
+        assert_eq!(body["max_completion_tokens"], 256);
+        assert!(body.get("max_tokens").is_none());
+    }
+
+    #[test]
+    fn subtoken_hard_output_authority_is_rejected() {
         let mut options = SimpleStreamOptions::default();
         options.hard_max_output_tokens = Some(0.5);
-        let body = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
-            .unwrap();
+        let error =
+            build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
+                .unwrap_err();
 
-        assert_eq!(body["max_completion_tokens"].as_f64(), Some(0.5));
-        assert!(body.get("max_tokens").is_none());
+        assert!(error.contains("at least one output token"));
     }
 
     #[test]

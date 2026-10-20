@@ -1559,11 +1559,14 @@ fn build_request_with_hard_max_tokens(
         return Ok(build_request(model, ctx, opts));
     };
 
+    // Mirrors TS OPENAI_RESPONSES_MIN_OUTPUT_TOKENS: the final clamped value,
+    // not just the raw authority, must clear the provider floor.
+    const MIN_OUTPUT_TOKENS: u64 = 16;
+    const FLOOR_ERROR: &str = "hardMaxOutputTokens is below the provider minimum output floor.";
+
     let max_tokens = request_max_tokens(model, ctx, opts)?;
-    if hard_max_output_tokens < 16.0 {
-        return Err(format!(
-            "hardMaxOutputTokens is below the OpenAI Responses provider minimum output floor of 16 tokens (received {hard_max_output_tokens})."
-        ));
+    if max_tokens < MIN_OUTPUT_TOKENS {
+        return Err(FLOOR_ERROR.into());
     }
 
     let mut effective_opts = opts.clone();
@@ -1573,6 +1576,9 @@ fn build_request_with_hard_max_tokens(
         return Err("OpenAI Responses request payload must be an object".into());
     };
     enforce_hard_max_tokens_in_record(payload, "max_output_tokens", Some(hard_max_output_tokens))?;
+    if payload["max_output_tokens"].as_u64().unwrap_or(0) < MIN_OUTPUT_TOKENS {
+        return Err(FLOOR_ERROR.into());
+    }
     Ok(body)
 }
 
@@ -3192,6 +3198,23 @@ mod tests {
         let error =
             build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
                 .unwrap_err();
+
+        assert!(error.contains("provider minimum output floor"));
+    }
+
+    #[test]
+    fn sampling_override_below_the_responses_floor_is_rejected_under_authority() {
+        let mut model = model();
+        model.sampling_params = Some(
+            json!({ "max_output_tokens": 8 })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(4096.0);
+        let error = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap_err();
 
         assert!(error.contains("provider minimum output floor"));
     }
