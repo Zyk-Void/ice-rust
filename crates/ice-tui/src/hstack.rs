@@ -259,13 +259,14 @@ mod tests {
 
     #[test]
     fn test_hstack_horizontal_layout() {
-        let hstack = HStack::new();
-        hstack.add_child(Arc::new(Text::new("Hello", 0, 0)));
-        hstack.add_child(Arc::new(Text::new("World", 0, 0)));
+        // Text pads every row to the width it is given, so each child gets
+        // an explicit basis here.
+        let hstack = HStack::from_entries(vec![
+            StackEntry::new(Arc::new(Text::new("Hello", 0, 0))).basis(10),
+            StackEntry::new(Arc::new(Text::new("World", 0, 0))).basis(10),
+        ]);
 
         let lines = hstack.render(20);
-        assert_eq!(lines.len(), 1);
-        assert!(lines[0].contains("Hello"));
-        assert!(lines[0].contains("World"));
+        assert_eq!(lines, vec!["Hello     World     "]);
     }
 }
