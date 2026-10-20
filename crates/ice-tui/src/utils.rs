@@ -6,64 +6,10 @@ use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
 /// Get the visible width of a string, ignoring ANSI escape sequences.
+///
+/// Same measurement as [`crate::ansi::visible_width`]; both names stay public.
 pub fn visible_width(s: &str) -> usize {
-    if s.contains("\x1b_") || s.contains("\x1b]") {
-        return crate::ansi::visible_width(s);
-    }
-    let mut width = 0;
-    let mut in_escape = false;
-    let mut chars = s.chars().peekable();
-
-    while let Some(c) = chars.next() {
-        if in_escape {
-            // Check for OSC sequences (ends with BEL or ST)
-            if c == '\x07' {
-                in_escape = false;
-            } else if c == '\\' && chars.peek() == Some(&'\\') {
-                chars.next();
-                in_escape = false;
-            }
-            // CSI sequences end with a byte in 0x40-0x7E
-            else if c >= '@' && c <= '~' && c != '[' {
-                in_escape = false;
-            }
-            // OSC ] ... (ends with BEL or ST)
-            else if c == ']' {
-                // Skip until BEL or ST
-                while let Some(&next) = chars.peek() {
-                    if next == '\x07' {
-                        chars.next();
-                        in_escape = false;
-                        break;
-                    } else if next == '\x1b' {
-                        chars.next();
-                        if chars.peek() == Some(&'\\') {
-                            chars.next();
-                            in_escape = false;
-                            break;
-                        }
-                    } else {
-                        chars.next();
-                    }
-                }
-            }
-            continue;
-        }
-
-        if c == '\x1b' {
-            in_escape = true;
-            continue;
-        }
-
-        // Skip other control characters
-        if c < ' ' || c == '\x7f' {
-            continue;
-        }
-
-        width += UnicodeWidthStr::width(c.to_string().as_str());
-    }
-
-    width
+    crate::ansi::visible_width(s)
 }
 
 /// Slice a string by column positions, accounting for ANSI codes.
@@ -224,52 +170,10 @@ pub fn truncate_to_width(s: &str, max_width: usize, suffix: &str) -> String {
 }
 
 /// Strip ANSI escape sequences from a string.
+///
+/// Same as [`crate::ansi::strip_ansi`]; both names stay public.
 pub fn strip_ansi(s: &str) -> String {
-    if s.contains("\x1b_") || s.contains("\x1b]") {
-        return crate::ansi::strip_ansi(s);
-    }
-    let mut result = String::new();
-    let mut in_escape = false;
-    let mut chars = s.chars().peekable();
-
-    while let Some(c) = chars.next() {
-        if in_escape {
-            // OSC ends with BEL or ST
-            if c == '\x07' {
-                in_escape = false;
-            } else if c == '\\' && chars.peek() == Some(&'\\') {
-                chars.next();
-                in_escape = false;
-            }
-            // CSI ends with byte in 0x40-0x7E
-            else if c >= '@' && c <= '~' && c != '[' {
-                in_escape = false;
-            }
-            // OSC
-            else if c == ']' {
-                while let Some(&next) = chars.peek() {
-                    chars.next();
-                    if next == '\x07' {
-                        break;
-                    } else if next == '\x1b' && chars.peek() == Some(&'\\') {
-                        chars.next();
-                        break;
-                    }
-                }
-                in_escape = false;
-            }
-            continue;
-        }
-
-        if c == '\x1b' {
-            in_escape = true;
-            continue;
-        }
-
-        result.push(c);
-    }
-
-    result
+    crate::ansi::strip_ansi(s)
 }
 
 /// Wrap text to fit within a maximum width, preserving ANSI codes.

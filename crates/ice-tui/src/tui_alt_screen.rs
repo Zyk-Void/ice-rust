@@ -688,7 +688,7 @@ impl TuiAltScreen {
         });
         let lines: Vec<String> = raw_lines
             .into_iter()
-            .map(|line| line.replace(CURSOR_MARKER, ""))
+            .map(|line| crate::ansi::normalize_terminal_output(&line.replace(CURSOR_MARKER, "")))
             .collect();
         let previous = self
             .previous_screen
@@ -964,8 +964,10 @@ impl TuiAltScreen {
         // writing. Sending the APC marker to some Windows terminals caused the
         // character under the cursor to be erased when moving left/right.
         let cursor = extract_cursor_position(&visible, height);
+        // Normalize after the cursor column is known: tab expansion keeps the
+        // cell count, so the column stays valid.
         for line in &mut visible {
-            *line = line.replace(CURSOR_MARKER, "");
+            *line = crate::ansi::normalize_terminal_output(&line.replace(CURSOR_MARKER, ""));
         }
 
         // Check for full redraw
@@ -2028,6 +2030,42 @@ mod tests {
         tui.request_render(false);
 
         assert!(output.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn rendered_tabs_and_thai_am_are_normalized_before_writing() {
+        // Mirrors ice tab-width.test.ts: layout counts a tab as three cells,
+        // so a raw tab must never reach the terminal, where tab stops would
+        // move the rest of the row. Thai AM is decomposed for output only.
+        struct Raw;
+        impl Component for Raw {
+            fn render(&self, _width: usize) -> Vec<String> {
+                vec!["out\t192M ำ".to_string()]
+            }
+            fn invalidate(&self) {}
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+        }
+        for main_screen in [true, false] {
+            let output = Arc::new(Mutex::new(String::new()));
+            let terminal = RecordingTerminal {
+                output: output.clone(),
+            };
+            let tui = TuiAltScreen::new(Box::new(terminal), true, None);
+            tui.set_main_screen_mode(main_screen);
+            tui.set_layout_root(Some(Arc::new(Raw)));
+            tui.start_readerless();
+            tui.request_render(true);
+
+            let written = output.lock().unwrap().clone();
+            assert!(
+                written.contains("out   192M \u{0E4D}\u{0E32}"),
+                "{written:?}"
+            );
+            assert!(!written.contains('\t'), "{written:?}");
+            tui.stop(Default::default());
+        }
     }
 
     #[test]
