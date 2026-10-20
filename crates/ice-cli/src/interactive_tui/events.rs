@@ -178,14 +178,26 @@ pub(super) async fn handle_agent_event(
 ) {
     match event {
         AgentEvent::AgentStart => {
+            *state.run_started_at.lock().unwrap() = Some(std::time::Instant::now());
             state.set_status(RunStatus::Working);
             tui.request_render(false);
         }
 
-        AgentEvent::AgentEnd { .. } => {
+        AgentEvent::AgentEnd { messages } => {
             // Finalize any still-streaming assistant message.
             state.transcript_view().finalize_assistant();
             state.set_status(RunStatus::Idle);
+            // A run that finished on its own leaves a dim "✻ Worked for 3m
+            // 17s" line (ice `createRunSummary`); aborted or failed runs don't.
+            let started = state.run_started_at.lock().unwrap().take();
+            if let Some(line) = started.and_then(|at| run_summary_line(&messages, at.elapsed())) {
+                chat.add_child(Arc::new(Spacer::new(1)));
+                chat.add_child(Arc::new(Text::new(
+                    current_theme().colors.dim.fg(&line),
+                    0,
+                    0,
+                )));
+            }
             // Flush any `!command` results that completed mid-run: the run's
             // tool sequence is closed, so appending now keeps transcript order
             // intact (upstream's `flushPendingBashMessages`).
@@ -506,4 +518,44 @@ pub(super) fn tool_result_requests_markdown(details: Option<&serde_json::Value>)
         .and_then(|details| details.get("markdown"))
         .and_then(|value| value.as_bool())
         .unwrap_or(false)
+}
+
+/// Verbs for the run-summary line, one picked per run (ice
+/// `RUN_SUMMARY_VERBS`).
+const RUN_SUMMARY_VERBS: [&str; 12] = [
+    "Worked", "Sautéed", "Simmered", "Brewed", "Baked", "Churned", "Cooked", "Crunched", "Whisked",
+    "Forged", "Pondered", "Tinkered",
+];
+
+/// `✻ Worked for 3m 17s` when the run's last assistant message finished on
+/// its own; `None` for an aborted or failed run.
+pub(super) fn run_summary_line(
+    messages: &[AgentMessage],
+    elapsed: std::time::Duration,
+) -> Option<String> {
+    let last = messages.iter().rev().find_map(|m| match m {
+        AgentMessage::Assistant(a) => Some(a),
+        _ => None,
+    })?;
+    if matches!(
+        last.stop_reason,
+        ice_ai::types::StopReason::Aborted | ice_ai::types::StopReason::Error
+    ) {
+        return None;
+    }
+    let verb = RUN_SUMMARY_VERBS[(elapsed.subsec_nanos() as usize) % RUN_SUMMARY_VERBS.len()];
+    Some(format!("✻ {verb} for {}", format_run_duration(elapsed)))
+}
+
+/// `45s`, `3m 17s`, `1h 2m` (ice `formatShellRuntime`).
+fn format_run_duration(elapsed: std::time::Duration) -> String {
+    let seconds = elapsed.as_secs();
+    if seconds < 60 {
+        return format!("{seconds}s");
+    }
+    let minutes = seconds / 60;
+    if minutes < 60 {
+        return format!("{minutes}m {}s", seconds % 60);
+    }
+    format!("{}h {}m", minutes / 60, minutes % 60)
 }

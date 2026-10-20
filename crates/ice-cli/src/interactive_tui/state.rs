@@ -330,6 +330,8 @@ pub(super) struct TuiState {
     pub(super) pending_snapshot: std::sync::Mutex<ice_harness::agent_harness::QueuedMessages>,
     /// Fullscreen selection tracking for auto-copy.
     pub(super) selection_start: std::sync::Mutex<Option<(u16, u16)>>,
+    /// When the current agent run started, for the run-summary line.
+    pub(super) run_started_at: std::sync::Mutex<Option<std::time::Instant>>,
     pub(super) selection_end: std::sync::Mutex<Option<(u16, u16)>>,
 }
 

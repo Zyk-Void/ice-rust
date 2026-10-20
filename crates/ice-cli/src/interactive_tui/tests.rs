@@ -495,6 +495,7 @@ fn test_tui_state() -> Arc<TuiState> {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     })
 }
 
@@ -1609,6 +1610,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
 
     // The drain handler takes `Arc<TuiAltScreen>`, which needs a real
@@ -2668,6 +2670,7 @@ fn test_autocomplete_slash_suggestions_render() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -2761,6 +2764,7 @@ fn test_select_list_swap_restores_editor() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     let editor_container = Arc::new(Container::new());
     let editor = Arc::new(Editor::simple());
@@ -2857,6 +2861,7 @@ fn test_message_history_browse_restores_draft() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     let editor = Arc::new(Editor::simple());
 
@@ -2956,6 +2961,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -3041,6 +3047,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     })
 }
 
@@ -3481,4 +3488,31 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
             "op": "open", "requestId": "r4", "ui": {"kind": "input"}
         }))
         .is_err());
+}
+
+/// ice leaves a dim "✻ Worked for 3m 17s" line when a run finishes on its
+/// own, and nothing after an aborted or failed run.
+#[test]
+fn run_summary_line_marks_finished_runs_only() {
+    use ice_ai::types::StopReason;
+    let reply = |stop: StopReason| {
+        let mut a = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+        a.stop_reason = stop;
+        AgentMessage::Assistant(Box::new(a))
+    };
+    let at = |secs: u64| std::time::Duration::from_secs(secs);
+    let done = run_summary_line(&[reply(StopReason::Stop)], at(197)).unwrap();
+    assert!(
+        done.starts_with("✻ ") && done.ends_with(" for 3m 17s"),
+        "{done}"
+    );
+    assert!(run_summary_line(&[reply(StopReason::Stop)], at(45))
+        .unwrap()
+        .ends_with(" for 45s"));
+    assert!(run_summary_line(&[reply(StopReason::Stop)], at(3720))
+        .unwrap()
+        .ends_with(" for 1h 2m"));
+    assert_eq!(run_summary_line(&[reply(StopReason::Aborted)], at(5)), None);
+    assert_eq!(run_summary_line(&[reply(StopReason::Error)], at(5)), None);
+    assert_eq!(run_summary_line(&[], at(5)), None);
 }
