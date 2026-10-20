@@ -3482,3 +3482,56 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// A fake editor: a shell script that runs `body` with the draft path as its
+/// last argument (ice `test/fixtures/fake-external-editor.mjs`).
+#[cfg(unix)]
+fn fake_editor(dir: &std::path::Path, body: &str) -> String {
+    use std::os::unix::fs::PermissionsExt;
+    let path = dir.join("fake-editor");
+    std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    path.to_string_lossy().into_owned()
+}
+
+/// `$EDITOR` with arguments (`code --wait`) used to be run as one program
+/// name and failed to launch. ice splits it on spaces.
+#[cfg(unix)]
+#[test]
+fn external_editor_command_arguments_are_split() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), r#"printf 'args:%s' "$1" > "$2""#);
+    let result = edit_in_external_editor(&format!("{editor} --wait"), "draft");
+    assert_eq!(result.unwrap(), "args:--wait");
+}
+
+/// The saved file comes back with one trailing newline removed, and the
+/// editor sees the current draft.
+#[cfg(unix)]
+#[test]
+fn external_editor_returns_saved_text_without_trailing_newline() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), r#"printf '%s!\n' "$(cat "$1")" > "$1""#);
+    let result = edit_in_external_editor(&editor, "héllo\nwörld");
+    assert_eq!(result.unwrap(), "héllo\nwörld!");
+}
+
+/// A failed editor leaves the draft alone: the caller only replaces it on Ok.
+#[cfg(unix)]
+#[test]
+fn external_editor_failure_is_an_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), "exit 3");
+    let error = edit_in_external_editor(&editor, "draft").unwrap_err();
+    assert!(error.contains("exited"), "{error}");
+}
+
+/// The caret after an external edit used to be `(0, char count)`, a char
+/// count passed as a byte column on the first row.
+#[test]
+fn external_editor_caret_lands_at_the_end_in_bytes() {
+    assert_eq!(end_of_text_cursor("one\n你好"), (1, "你好".len()));
+    assert_eq!(end_of_text_cursor("abc"), (0, 3));
+    assert_eq!(end_of_text_cursor("a\n"), (1, 0));
+    assert_eq!(end_of_text_cursor(""), (0, 0));
+}

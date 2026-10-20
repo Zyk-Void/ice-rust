@@ -2269,13 +2269,17 @@ pub async fn interactive_tui(
             }
 
             // 2c. Ctrl+G: edit the current draft in the user's external
-            // editor, matching upstream's VISUAL/EDITOR fallback chain.
+            // editor. Blocks this thread until the editor exits.
             if keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::EXTERNAL_EDITOR,
             ) {
-                launch_external_editor(editor_for_key.get_expanded_text(), tx_for_key.clone());
+                run_external_editor(
+                    &tui_for_key,
+                    editor_for_key.get_expanded_text(),
+                    &tx_for_key,
+                );
                 continue;
             }
 
@@ -2901,9 +2905,9 @@ pub async fn interactive_tui(
             Some(TuiMessage::ExternalEditorResult(result)) => {
                 match result {
                     Ok(text) => {
-                        let cursor = text.chars().count();
+                        let (row, col) = end_of_text_cursor(&text);
                         editor.set_text(&text);
-                        editor.set_cursor(0, cursor);
+                        editor.set_cursor(row, col);
                         add_note_message(&chat_container, "Draft updated from external editor.");
                     }
                     Err(error) => add_error_message(&chat_container, &error),
