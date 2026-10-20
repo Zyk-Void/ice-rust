@@ -150,7 +150,7 @@ pub fn extract_segments(
     let mut tracker = StyleTracker::default();
     let mut pending_before = String::new();
     let mut after_started = false;
-    let after_end = after_start + after_len;
+    let after_end = after_start.saturating_add(after_len);
     let done = |col: usize| {
         if after_len == 0 {
             col >= before_end
@@ -623,6 +623,13 @@ pub fn apply_background_to_line(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn extract_segments_saturates_an_unbounded_after_range() {
+        let segments = extract_segments("abcd", 1, 2, usize::MAX, true);
+        assert_eq!(segments.before_width, 1);
+        assert_eq!(segments.after_width, 2);
+    }
 
     #[test]
     fn test_visible_width() {

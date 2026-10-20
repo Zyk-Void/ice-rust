@@ -366,7 +366,7 @@ pub fn slice_with_width(
     if width == 0 {
         return (String::new(), 0);
     }
-    let end_col = start_col + width;
+    let end_col = start_col.saturating_add(width);
     let mut result = String::new();
     let mut result_width = 0;
     let mut col = 0;
@@ -504,6 +504,14 @@ pub fn dim(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn slice_with_width_saturates_an_unbounded_range() {
+        assert_eq!(
+            slice_with_width("abc", 1, usize::MAX, true),
+            ("bc".to_string(), 2)
+        );
+    }
 
     #[test]
     fn test_visible_width() {
