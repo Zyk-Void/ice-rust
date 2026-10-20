@@ -197,29 +197,36 @@ impl FilePathAutocompleteProvider {
             )
         };
 
-        // Read directory
-        if let Ok(entries) = std::fs::read_dir(&dir) {
-            for entry in entries.take(self.max_results) {
-                if let Ok(entry) = entry {
-                    let name = entry.file_name().to_string_lossy().to_string();
-
-                    // Filter by prefix
-                    if !partial.is_empty()
-                        && !name.to_lowercase().starts_with(&partial.to_lowercase())
-                    {
-                        continue;
-                    }
-
-                    let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
-                    let text = if is_dir { format!("{}/", name) } else { name };
-
-                    items.push(
-                        AutocompleteItem::new(&text)
-                            .as_directory()
-                            .with_insert_space(!is_dir),
-                    );
+        // Filter the whole directory before limiting: `read_dir` order is
+        // unspecified, so cutting first dropped matches in large directories.
+        let partial = partial.to_lowercase();
+        let mut matches: Vec<(bool, String)> = std::fs::read_dir(&dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter_map(|entry| {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if !partial.is_empty() && !name.to_lowercase().starts_with(&partial) {
+                    return None;
                 }
-            }
+                let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                Some((is_dir, name))
+            })
+            .collect();
+        // Directories first, then case-insensitive name, so results are stable.
+        matches.sort_by(|(a_dir, a), (b_dir, b)| {
+            b_dir
+                .cmp(a_dir)
+                .then_with(|| a.to_lowercase().cmp(&b.to_lowercase()))
+                .then_with(|| a.cmp(b))
+        });
+        for (is_dir, name) in matches.into_iter().take(self.max_results) {
+            let text = if is_dir { format!("{}/", name) } else { name };
+            items.push(
+                AutocompleteItem::new(&text)
+                    .as_directory()
+                    .with_insert_space(!is_dir),
+            );
         }
 
         items
@@ -237,7 +244,9 @@ impl AutocompleteProvider for FilePathAutocompleteProvider {
         let cursor = snap_cursor(input, cursor);
         let (prefix, start) = self.extract_path_prefix(input, cursor)?;
 
-        if prefix.is_empty() && !input[start..cursor].starts_with('@') {
+        // `start` sits after an `@`, so a bare `@` (list the directory) is
+        // recognised by the character before it.
+        if prefix.is_empty() && !input[..start].ends_with('@') {
             return None;
         }
 
@@ -442,6 +451,35 @@ impl Default for AutocompleteManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Regression: the 50-entry limit ran before the prefix filter, so in a
+    /// directory with more entries the typed file was often missing.
+    #[test]
+    fn path_completion_filters_before_limiting_and_sorts() {
+        let dir = std::env::temp_dir().join(format!("ice-tui-path-ac-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        for i in 0..80 {
+            std::fs::write(dir.join(format!("file{i:02}.txt")), "").unwrap();
+        }
+        std::fs::write(dir.join("zz-target.rs"), "").unwrap();
+        std::fs::create_dir(dir.join("Zdir")).unwrap();
+        std::fs::write(dir.join("zebra.rs"), "").unwrap();
+        let provider = FilePathAutocompleteProvider::with_root(dir.clone());
+
+        let found = provider.get_suggestions("open zz", 7).unwrap();
+        let texts: Vec<_> = found.items.iter().map(|i| i.text.as_str()).collect();
+        assert_eq!(texts, vec!["zz-target.rs"]);
+
+        let found = provider.get_suggestions("@z", 2).unwrap();
+        let texts: Vec<_> = found.items.iter().map(|i| i.text.as_str()).collect();
+        assert_eq!(texts, vec!["Zdir/", "zebra.rs", "zz-target.rs"]);
+
+        let all = provider.get_suggestions("@", 1).unwrap();
+        assert_eq!(all.items.len(), 50);
+        assert_eq!(all.items[0].text, "Zdir/");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn snap_cursor_keeps_boundaries_including_end() {
