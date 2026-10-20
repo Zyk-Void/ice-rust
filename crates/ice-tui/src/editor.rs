@@ -1140,7 +1140,9 @@ impl Editor {
     /// Jump the caret to the next/previous occurrence of `target` (pi
     /// `jumpToChar`): scan the current line from after/before the caret, then
     /// onward/backward line by line. Byte-safe: `find`/`rfind` return char
-    /// boundaries and all search offsets start on one.
+    /// boundaries and all search offsets start on one. On the caret's line a
+    /// forward search starts after the char under the caret and a backward
+    /// search accepts any match that starts before the caret.
     fn jump_to_char(&self, target: char, dir: i32) {
         let forward = dir > 0;
         let mut state = self.state.lock().unwrap();
@@ -1150,10 +1152,14 @@ impl Editor {
         loop {
             let line = &state.lines[row];
             let search_from = if row == start_row {
+                let caret = snap_boundary(line, state.cursor_col);
                 if forward {
-                    (state.cursor_col + target.len_utf8()).min(line.len())
+                    line[caret..]
+                        .chars()
+                        .next()
+                        .map_or(line.len(), |c| caret + c.len_utf8())
                 } else {
-                    state.cursor_col.saturating_sub(target.len_utf8())
+                    caret
                 }
             } else if forward {
                 0
@@ -1928,6 +1934,47 @@ l12",
         editor.set_cursor(0, 0);
         editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
         assert_eq!(editor.get_text(), " 世界");
+    }
+
+    #[test]
+    fn char_jump_steps_over_the_char_at_the_caret_not_the_target() {
+        // Regression: the search offset used the *target's* UTF-8 length, so
+        // a multibyte line sliced inside a char (panic) and a backward jump
+        // skipped a match directly before the caret. Mirrors ice
+        // `jumpToChar`: forward starts after the char under the caret,
+        // backward finds a match that starts before the caret.
+        use crossterm::event::{KeyCode, KeyModifiers};
+        let mk = |m, c| crossterm::event::KeyEvent::new(c, m);
+        let jump = |editor: &Editor, backward: bool, c: char| {
+            let mods = if backward {
+                KeyModifiers::CONTROL | KeyModifiers::ALT
+            } else {
+                KeyModifiers::CONTROL
+            };
+            editor.handle_key(mk(mods, KeyCode::Char(']')));
+            editor.handle_key(mk(KeyModifiers::NONE, KeyCode::Char(c)));
+        };
+        let editor = Editor::simple();
+
+        editor.set_text("你x");
+        editor.set_cursor(0, 0);
+        jump(&editor, false, 'x');
+        assert_eq!(editor.cursor_position(), (0, 3));
+
+        editor.set_text("x世");
+        editor.set_cursor(0, 0);
+        jump(&editor, false, '世');
+        assert_eq!(editor.cursor_position(), (0, 1));
+
+        editor.set_text("axb");
+        editor.set_cursor(0, 2);
+        jump(&editor, true, 'x');
+        assert_eq!(editor.cursor_position(), (0, 1));
+
+        editor.set_text("世x界");
+        editor.set_cursor(0, 7);
+        jump(&editor, true, '世');
+        assert_eq!(editor.cursor_position(), (0, 0));
     }
 
     #[test]
