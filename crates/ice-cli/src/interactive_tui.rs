@@ -668,6 +668,8 @@ enum TuiMessage {
     Exit,
     /// Clear the transcript (from `/clear`).
     ClearChat,
+    /// A background `@` file search finished; refresh the completion menu.
+    AutocompleteReady,
     /// Compact the conversation (from `/compact`).
     Compact,
     /// Copy the last assistant reply to the clipboard (from `/copy`).
@@ -1180,6 +1182,18 @@ pub async fn interactive_tui(
         combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(
             all_slash_commands,
         )));
+        // `@query` searches the whole tree with `fd` when it is installed;
+        // until its results arrive (and without `fd`) the one-directory
+        // provider answers.
+        let tx_ready = tx.clone();
+        if let Some(recursive) = ice_tui::RecursiveFileAutocompleteProvider::with_fd(
+            cwd.clone(),
+            Arc::new(move || {
+                let _ = tx_ready.send(TuiMessage::AutocompleteReady);
+            }),
+        ) {
+            combined.add_provider(Arc::new(recursive));
+        }
         combined.add_provider(Arc::new(FilePathAutocompleteProvider::with_root(
             cwd.clone(),
         )));
@@ -2996,6 +3010,10 @@ pub async fn interactive_tui(
             Some(TuiMessage::ClearChat) => {
                 chat_container.clear();
                 add_welcome_message(&chat_container);
+                tui.request_render(false);
+            }
+            Some(TuiMessage::AutocompleteReady) => {
+                refresh_autocomplete(&state, &editor);
                 tui.request_render(false);
             }
             Some(TuiMessage::Compact) => {

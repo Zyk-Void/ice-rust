@@ -76,8 +76,8 @@ pub use ansi::{bold, strip_ansi, visible_width, CURSOR_MARKER};
 pub use assistant_message::{AssistantBlock, AssistantMessageComponent, AssistantMessageOptions};
 pub use autocomplete::{
     AutocompleteItem, AutocompleteManager, AutocompleteProvider, AutocompleteSuggestions,
-    CombinedAutocompleteProvider, FilePathAutocompleteProvider, SlashCommand,
-    SlashCommandAutocompleteProvider,
+    CombinedAutocompleteProvider, FilePathAutocompleteProvider, FileSearchFn,
+    RecursiveFileAutocompleteProvider, SlashCommand, SlashCommandAutocompleteProvider,
 };
 pub use bash_execution::{BashExecutionComponent, BashStatus, BashTruncation};
 pub use bordered_loader::{BorderedLoader, BorderedLoaderInner};

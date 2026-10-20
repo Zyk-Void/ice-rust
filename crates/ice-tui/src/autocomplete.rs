@@ -268,6 +268,275 @@ impl AutocompleteProvider for FilePathAutocompleteProvider {
     }
 }
 
+/// A recursive file search: `(base directory, query)` to entries relative to
+/// the base, `/`-separated, each with whether it is a directory.
+pub type FileSearchFn = dyn Fn(&Path, &str) -> Vec<(String, bool)> + Send + Sync;
+
+/// Recursive `@` attachment search (ice `getFuzzyFileSuggestions`): typing
+/// `@parser` finds `crates/x/src/parser.rs` anywhere under the root.
+///
+/// `get_suggestions` runs on the input thread for every key press, so it
+/// never blocks. It returns the ranked results cached for the current query,
+/// or `None` while a background search runs (so a later provider, such as
+/// the one-directory [`FilePathAutocompleteProvider`], answers meanwhile).
+/// One search runs at a time; when it finishes, the newest query typed in the
+/// meantime is searched next, results for older queries are dropped, and
+/// `notify` is called so the host can refresh the menu.
+pub struct RecursiveFileAutocompleteProvider {
+    root: PathBuf,
+    search: Arc<FileSearchFn>,
+    notify: Arc<dyn Fn() + Send + Sync>,
+    state: Arc<Mutex<RecursiveSearchState>>,
+}
+
+#[derive(Default)]
+struct RecursiveSearchState {
+    /// The query the user is currently on.
+    wanted: Option<String>,
+    /// Whether a background search is running.
+    running: bool,
+    /// The last finished query and its ranked items.
+    results: Option<(String, Vec<AutocompleteItem>)>,
+}
+
+/// Entries fetched from the search before ranking, and items shown (ice).
+const RECURSIVE_SEARCH_LIMIT: usize = 100;
+const RECURSIVE_SHOWN_LIMIT: usize = 20;
+
+impl RecursiveFileAutocompleteProvider {
+    /// A provider that searches with `fd` (or Debian's `fdfind`), which
+    /// honours `.gitignore`. `None` when neither is on `PATH`; ice also has no
+    /// recursive search without `fd`.
+    pub fn with_fd(root: PathBuf, notify: Arc<dyn Fn() + Send + Sync>) -> Option<Self> {
+        let fd = ["fd", "fdfind"]
+            .iter()
+            .find_map(|name| find_on_path(name))?;
+        let search: Arc<FileSearchFn> =
+            Arc::new(move |base: &Path, query: &str| fd_search(&fd, base, query));
+        Some(Self::with_search(root, search, notify))
+    }
+
+    /// A provider backed by any search function (used by tests).
+    pub fn with_search(
+        root: PathBuf,
+        search: Arc<FileSearchFn>,
+        notify: Arc<dyn Fn() + Send + Sync>,
+    ) -> Self {
+        Self {
+            root,
+            search,
+            notify,
+            state: Arc::new(Mutex::new(RecursiveSearchState::default())),
+        }
+    }
+
+    /// Search for `query` on a background thread, then for whatever query is
+    /// wanted by the time it finishes, until the results match it.
+    fn spawn_search(&self, query: String) {
+        let root = self.root.clone();
+        let search = self.search.clone();
+        let notify = self.notify.clone();
+        let state = self.state.clone();
+        std::thread::spawn(move || {
+            let mut query = query;
+            loop {
+                let items = rank_recursive_entries(&root, &query, search.as_ref());
+                let Ok(mut st) = state.lock() else { return };
+                st.results = Some((query.clone(), items));
+                match st.wanted.clone() {
+                    Some(next) if next != query => query = next,
+                    _ => {
+                        st.running = false;
+                        break;
+                    }
+                }
+            }
+            notify();
+        });
+    }
+}
+
+impl AutocompleteProvider for RecursiveFileAutocompleteProvider {
+    fn get_suggestions(&self, input: &str, cursor: usize) -> Option<AutocompleteSuggestions> {
+        let cursor = snap_cursor(input, cursor);
+        let before = &input[..cursor];
+        // Delimiters are ASCII, so `+ 1` stays on a char boundary.
+        let start = before.rfind(PATH_DELIMITERS).map_or(0, |i| i + 1);
+        let query = before[start..].strip_prefix('@')?;
+        let mut st = self.state.lock().ok()?;
+        if let Some((done, items)) = &st.results {
+            if done == query {
+                return (!items.is_empty()).then(|| AutocompleteSuggestions {
+                    items: items.clone(),
+                    start: start + 1,
+                    end: cursor,
+                    is_path: true,
+                });
+            }
+        }
+        st.wanted = Some(query.to_string());
+        if !st.running {
+            st.running = true;
+            drop(st);
+            self.spawn_search(query.to_string());
+        }
+        None
+    }
+
+    fn name(&self) -> &str {
+        "recursive-file"
+    }
+}
+
+/// Run `search` for `raw_query` and rank the entries (ice
+/// `getFuzzyFileSuggestions` + `scoreEntry`). A query with a `/` searches
+/// inside that directory for the part after the last `/`.
+fn rank_recursive_entries(
+    root: &Path,
+    raw_query: &str,
+    search: &FileSearchFn,
+) -> Vec<AutocompleteItem> {
+    let (base, query, display_base) = match raw_query.rfind('/') {
+        Some(slash) => {
+            let display_base = &raw_query[..=slash];
+            let base = if let Some(rest) = display_base.strip_prefix("~/") {
+                match std::env::var_os("HOME") {
+                    Some(home) => PathBuf::from(home).join(rest),
+                    None => return Vec::new(),
+                }
+            } else {
+                root.join(display_base)
+            };
+            if !base.is_dir() {
+                return Vec::new();
+            }
+            (base, &raw_query[slash + 1..], display_base)
+        }
+        None => (root.to_path_buf(), raw_query, ""),
+    };
+    let lower_query = query.to_lowercase();
+    let score = |path: &str, is_dir: bool| -> u32 {
+        if query.is_empty() {
+            return 1;
+        }
+        let name = path.rsplit('/').next().unwrap_or(path).to_lowercase();
+        let base = if name == lower_query {
+            100
+        } else if name.starts_with(&lower_query) {
+            80
+        } else if name.contains(&lower_query) {
+            50
+        } else if path.to_lowercase().contains(&lower_query) {
+            30
+        } else {
+            0
+        };
+        if is_dir && base > 0 {
+            base + 10
+        } else {
+            base
+        }
+    };
+    let mut scored: Vec<(u32, String, bool)> = search(&base, query)
+        .into_iter()
+        .take(RECURSIVE_SEARCH_LIMIT)
+        .filter_map(|(path, is_dir)| {
+            let path = path.trim_end_matches('/').to_string();
+            let s = score(&path, is_dir);
+            (s > 0).then_some((s, path, is_dir))
+        })
+        .collect();
+    // Stable: equal scores keep the search order.
+    scored.sort_by(|a, b| b.0.cmp(&a.0));
+    scored
+        .into_iter()
+        .take(RECURSIVE_SHOWN_LIMIT)
+        .map(|(_, path, is_dir)| {
+            let display = format!("{display_base}{path}");
+            let name = path.rsplit('/').next().unwrap_or(&path);
+            let (text, label) = if is_dir {
+                (format!("{display}/"), format!("{name}/"))
+            } else {
+                (display.clone(), name.to_string())
+            };
+            let item = AutocompleteItem::new(&text)
+                .with_label(&label)
+                .with_description(&display)
+                .with_insert_space(!is_dir);
+            if is_dir {
+                item.as_directory()
+            } else {
+                item
+            }
+        })
+        .collect()
+}
+
+/// `fd` over `base` with ice's arguments; entries come back relative to the
+/// base, directories with a trailing `/`. `--fixed-strings` keeps a typed
+/// `.` or `(` literal. Errors and non-zero exits give no entries.
+fn fd_search(fd: &Path, base: &Path, query: &str) -> Vec<(String, bool)> {
+    let mut command = std::process::Command::new(fd);
+    command
+        .arg("--base-directory")
+        .arg(base)
+        .args(["--max-results", &RECURSIVE_SEARCH_LIMIT.to_string()])
+        .args([
+            "--type",
+            "f",
+            "--type",
+            "d",
+            "--follow",
+            "--hidden",
+            "--fixed-strings",
+        ])
+        .args([
+            "--exclude",
+            ".git",
+            "--exclude",
+            ".git/*",
+            "--exclude",
+            ".git/**",
+        ])
+        .stdin(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+    if !query.is_empty() {
+        command.arg("--").arg(query);
+    }
+    let Ok(output) = command.output() else {
+        return Vec::new();
+    };
+    if !output.status.success() {
+        return Vec::new();
+    }
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| {
+            let line = line.replace('\\', "/");
+            let line = line.strip_prefix("./").unwrap_or(&line).to_string();
+            let is_dir = line.ends_with('/');
+            (line, is_dir)
+        })
+        .filter(|(line, _)| {
+            let path = line.trim_end_matches('/');
+            path != ".git" && !path.starts_with(".git/") && !path.contains("/.git/")
+        })
+        .collect()
+}
+
+/// First executable named `name` on `PATH` (with `.exe` on Windows).
+fn find_on_path(name: &str) -> Option<PathBuf> {
+    let file = if cfg!(windows) {
+        format!("{name}.exe")
+    } else {
+        name.to_string()
+    };
+    std::env::split_paths(&std::env::var_os("PATH")?)
+        .map(|dir| dir.join(&file))
+        .find(|candidate| candidate.is_file())
+}
+
 /// Slash command autocomplete provider.
 pub struct SlashCommandAutocompleteProvider {
     commands: Vec<SlashCommand>,
@@ -451,6 +720,135 @@ impl Default for AutocompleteManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A provider over a fixed entry list, and a receiver that fires when a
+    /// background search finishes. The search records each query it ran.
+    fn recursive_provider(
+        root: PathBuf,
+        entries: &'static [(&'static str, bool)],
+    ) -> (
+        RecursiveFileAutocompleteProvider,
+        std::sync::mpsc::Receiver<()>,
+        Arc<Mutex<Vec<String>>>,
+    ) {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let tx = Mutex::new(tx);
+        let queries = Arc::new(Mutex::new(Vec::new()));
+        let seen = queries.clone();
+        let search: Arc<FileSearchFn> = Arc::new(move |_base: &Path, query: &str| {
+            seen.lock().unwrap().push(query.to_string());
+            entries
+                .iter()
+                .filter(|(path, _)| path.to_lowercase().contains(&query.to_lowercase()))
+                .map(|(path, is_dir)| (path.to_string(), *is_dir))
+                .collect()
+        });
+        let notify = Arc::new(move || {
+            let _ = tx.lock().unwrap().send(());
+        });
+        (
+            RecursiveFileAutocompleteProvider::with_search(root, search, notify),
+            rx,
+            queries,
+        )
+    }
+
+    fn texts(suggestions: &AutocompleteSuggestions) -> Vec<&str> {
+        suggestions.items.iter().map(|i| i.text.as_str()).collect()
+    }
+
+    /// ice `getFuzzyFileSuggestions`: `@query` searches the whole tree and
+    /// ranks exact name, then prefix, then substring, then path matches, with
+    /// directories ahead on ties. The first call never blocks.
+    #[test]
+    fn recursive_at_search_ranks_matches_across_the_tree() {
+        const ENTRIES: &[(&str, bool)] = &[
+            ("docs/parser-notes.md", false),
+            ("crates/x/src/parser.rs", false),
+            ("crates/parser/", true),
+            ("crates/x/src/my_parser.rs", false),
+            ("parser/tests/a.rs", false),
+        ];
+        let (provider, ready, _) = recursive_provider(PathBuf::from("/repo"), ENTRIES);
+        assert!(provider.get_suggestions("see @parser", 11).is_none());
+        ready
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .unwrap();
+        let found = provider.get_suggestions("see @parser", 11).unwrap();
+        assert_eq!(
+            texts(&found),
+            vec![
+                "crates/parser/",
+                "docs/parser-notes.md",
+                "crates/x/src/parser.rs",
+                "crates/x/src/my_parser.rs",
+                "parser/tests/a.rs",
+            ]
+        );
+        assert_eq!((found.start, found.end), (5, 11));
+        assert_eq!(found.items[0].label.as_deref(), Some("parser/"));
+        assert!(found.items[0].is_directory && !found.items[0].insert_space);
+        assert!(provider.get_suggestions("no at here", 10).is_none());
+    }
+
+    /// Queries typed while a search runs are not lost: the newest one is
+    /// searched next and older results never answer a newer query.
+    #[test]
+    fn recursive_at_search_follows_the_newest_query() {
+        const ENTRIES: &[(&str, bool)] = &[("src/alpha.rs", false), ("src/beta.rs", false)];
+        let (provider, ready, queries) = recursive_provider(PathBuf::from("/repo"), ENTRIES);
+        assert!(provider.get_suggestions("@al", 3).is_none());
+        assert!(provider.get_suggestions("@be", 3).is_none());
+        // The "al" search may finish first; "be" must still be searched.
+        let found = loop {
+            ready
+                .recv_timeout(std::time::Duration::from_secs(5))
+                .unwrap();
+            if let Some(found) = provider.get_suggestions("@be", 3) {
+                break found;
+            }
+        };
+        assert_eq!(texts(&found), vec!["src/beta.rs"]);
+        assert_eq!(
+            queries.lock().unwrap().last().map(String::as_str),
+            Some("be")
+        );
+    }
+
+    /// A query with a `/` searches inside that directory and keeps the
+    /// typed directory in the completion.
+    #[test]
+    fn recursive_at_search_scopes_to_a_typed_directory() {
+        let dir = std::env::temp_dir().join(format!("ice-tui-at-scope-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("crates")).unwrap();
+        const ENTRIES: &[(&str, bool)] = &[("x/lib.rs", false)];
+        let (provider, ready, queries) = recursive_provider(dir.clone(), ENTRIES);
+        assert!(provider.get_suggestions("@crates/lib", 11).is_none());
+        ready
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .unwrap();
+        let found = provider.get_suggestions("@crates/lib", 11).unwrap();
+        assert_eq!(texts(&found), vec!["crates/x/lib.rs"]);
+        assert_eq!(queries.lock().unwrap().as_slice(), ["lib"]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The real `fd` backend, when installed: finds a nested file and skips
+    /// `.git`. Passes without running when `fd` is not on `PATH`.
+    #[test]
+    fn recursive_at_search_with_fd_when_available() {
+        let Some(fd) = ["fd", "fdfind"].iter().find_map(|n| find_on_path(n)) else {
+            return;
+        };
+        let dir = std::env::temp_dir().join(format!("ice-tui-at-fd-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("a/b")).unwrap();
+        std::fs::create_dir_all(dir.join(".git")).unwrap();
+        std::fs::write(dir.join("a/b/needle.txt"), "").unwrap();
+        std::fs::write(dir.join(".git/needle"), "").unwrap();
+        let entries = fd_search(&fd, &dir, "needle");
+        assert_eq!(entries, vec![("a/b/needle.txt".to_string(), false)]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     /// Regression: the 50-entry limit ran before the prefix filter, so in a
     /// directory with more entries the typed file was often missing.
