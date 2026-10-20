@@ -3482,3 +3482,51 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// `/tree` labels used to be only `message #N`, so picking a point meant
+/// guessing. They now say who said what.
+#[test]
+fn tree_labels_preview_each_entry() {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let harness = AgentHarness::create(Default::default()).await.unwrap();
+            let long = format!("\n  please refactor {}", "x".repeat(120));
+            harness
+                .session()
+                .append_message(user_message_with_images(&long, Vec::new()))
+                .await
+                .unwrap();
+            let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+            reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                kind: ice_ai::types::TextContentType,
+                text: "Done.\nDetails follow".into(),
+                text_signature: None,
+            })];
+            harness
+                .session()
+                .append_message(AgentMessage::Assistant(Box::new(reply)))
+                .await
+                .unwrap();
+            let entries = harness
+                .session()
+                .view("main")
+                .find_entries(&EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+            let labels: Vec<String> = entries.iter().map(tree_entry_summary).collect();
+            assert_eq!(labels.len(), 2, "{labels:?}");
+            assert!(
+                labels[0].starts_with("user: please refactor xxx"),
+                "{labels:?}"
+            );
+            assert!(labels[0].ends_with('…') && labels[0].chars().count() == 6 + 80 + 1);
+            assert_eq!(labels[1], "assistant: Done.");
+            harness.close().await.unwrap();
+        })
+}

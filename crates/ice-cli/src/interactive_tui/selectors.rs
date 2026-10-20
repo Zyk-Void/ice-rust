@@ -369,6 +369,42 @@ pub(super) fn custom_entry_display_text(
 /// Open a selector for the current session's persisted entry tree. Selecting a
 /// message moves the main lane leaf to that entry, then the caller reloads the
 /// visible branch from durable storage.
+/// One-line `/tree` label for an entry: who said what, so a point in the
+/// history can be picked by its content (ice `tree-selector.ts` entry
+/// formatting). Labels used to be only `message #12`.
+pub(super) fn tree_entry_summary(entry: &Entry) -> String {
+    fn first_line(text: &str) -> String {
+        let line = text
+            .lines()
+            .map(str::trim)
+            .find(|l| !l.is_empty())
+            .unwrap_or("");
+        let mut short: String = line.chars().take(80).collect();
+        if line.chars().count() > 80 {
+            short.push('…');
+        }
+        short
+    }
+    match entry {
+        Entry::Message(me) => match &me.message {
+            AgentMessage::User(u) => format!("user: {}", first_line(&user_message_text(u))),
+            AgentMessage::Assistant(a) => {
+                let text = assistant_text(a);
+                if text.trim().is_empty() {
+                    "assistant: (tool calls)".to_string()
+                } else {
+                    format!("assistant: {}", first_line(&text))
+                }
+            }
+            AgentMessage::ToolResult(t) => format!("tool result: {}", t.tool_name),
+            AgentMessage::Custom(_) => format!("{} #{}", entry.entry_type(), entry.seq()),
+        },
+        Entry::ModelChange(m) => format!("model → {}/{}", m.provider, m.model_id),
+        Entry::Compaction(c) => format!("compaction: {}", first_line(&c.summary)),
+        _ => format!("{} #{}", entry.entry_type(), entry.seq()),
+    }
+}
+
 pub(super) async fn open_tree_selector(
     harness: &AgentHarness,
     state: &Arc<TuiState>,
@@ -398,17 +434,24 @@ pub(super) async fn open_tree_selector(
     let items: Vec<SelectItem> = entries
         .iter()
         .map(|entry| {
+            let summary = tree_entry_summary(entry);
             let label = if current.as_deref() == Some(entry.id()) {
-                format!("{} #{} (current)", entry.entry_type(), entry.seq())
+                format!("{summary} (current)")
             } else {
-                format!("{} #{}", entry.entry_type(), entry.seq())
+                summary.clone()
             };
             let short_id = &entry.id()[..entry.id().len().min(12)];
-            // Search on the entry type, sequence, and id so `/tree` stays
-            // usable in long sessions.
-            let search_text = format!("{} {} {}", entry.entry_type(), entry.seq(), entry.id());
+            let description = format!("#{} {short_id}", entry.seq());
+            // Search on what the entry says as well as its type, sequence and
+            // id, so `/tree` stays usable in long sessions.
+            let search_text = format!(
+                "{summary} {} {} {}",
+                entry.entry_type(),
+                entry.seq(),
+                entry.id()
+            );
             SelectItem::new(entry.id(), &label)
-                .with_description(short_id)
+                .with_description(&description)
                 .with_search_text(&search_text)
         })
         .collect();
@@ -440,7 +483,7 @@ pub(super) async fn open_tree_selector(
         editor,
         tui,
         Some("Session tree"),
-        Some("Type to filter by entry type, sequence, or id"),
+        Some("Type to filter by text, entry type, sequence, or id"),
         list,
         SelectorKind::Tree,
     );
