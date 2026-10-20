@@ -4,9 +4,9 @@
 //!
 //! The TS source uses TypeBox's `Compile`/`Check`/`Value.Convert`; the Rust port
 //! replaces TypeBox with the `jsonschema` crate (`JSONSchema::compile` +
-//! `is_valid` + `validate`) and a faithful port of the coercion table. The
+//! `is_valid` + `validate`) and native compatibility coercion rules. The
 //! public entry point is [`validate_tool_arguments`], which mirrors TS
-//! `validateToolArguments`: `normalize_optional_nulls` → coerce → validate,
+//! `validateToolArguments`: coerce → validate,
 //! returning the coerced value or an `AiError::Schema`.
 
 use crate::error::AiError;
@@ -14,7 +14,7 @@ use crate::types::{Tool, ToolCall};
 use jsonschema::paths::PathChunk;
 use jsonschema::JSONSchema;
 use serde_json::{Map, Value};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex};
 
 // ----------------------------------------------------------------------------
@@ -49,38 +49,160 @@ fn matches_json_type(value: &Value, ty: &str) -> bool {
 }
 
 // ----------------------------------------------------------------------------
-// Validator cache — one compiled `JSONSchema` per schema, keyed by the
-// serialized schema content. Mirrors the TS `WeakMap<object, Compile>` cache.
+// Validator cache — compiled schemas are keyed by serialized content and kept
+// in a bounded FIFO so dynamically changing tool definitions cannot grow this
+// process-global cache without limit.
 // ----------------------------------------------------------------------------
 
-static VALIDATOR_CACHE: Mutex<Option<std::collections::HashMap<String, Arc<JSONSchema>>>> =
-    Mutex::new(None);
+const VALIDATOR_CACHE_CAPACITY: usize = 256;
 
-/// Compile-or-fetch a validator for a schema; `None` if compilation fails
-/// (mirrors TS `getSubSchemaValidator` returning `undefined` on throw).
-fn get_sub_schema_validator(schema: &Value) -> Option<Arc<JSONSchema>> {
+#[derive(Default)]
+struct ValidatorCache {
+    validators: HashMap<String, Arc<JSONSchema>>,
+    insertion_order: VecDeque<String>,
+}
+
+static VALIDATOR_CACHE: Mutex<Option<ValidatorCache>> = Mutex::new(None);
+
+/// Compile-or-fetch a validator for a schema, preserving compilation failures
+/// so the execution boundary can reject invalid schemas instead of treating
+/// them as permissive.
+fn get_sub_schema_validator(schema: &Value) -> Result<Arc<JSONSchema>, String> {
     let key = schema.to_string();
     let mut guard = VALIDATOR_CACHE.lock().unwrap();
-    let map = guard.get_or_insert_with(std::collections::HashMap::new);
-    if let Some(v) = map.get(&key) {
-        return Some(v.clone());
+    let cache = guard.get_or_insert_with(ValidatorCache::default);
+    if let Some(v) = cache.validators.get(&key) {
+        return Ok(v.clone());
     }
     // jsonschema's default resolver handles `$ref` inside self-contained
-    // schemas; compilation can fail on malformed input — in that case we cache
-    // nothing and return None, matching the TS try/catch → undefined.
+    // schemas. Compilation errors are retained for the caller; only valid
+    // validators are cached.
     match JSONSchema::compile(schema) {
         Ok(v) => {
             let arc = Arc::new(v);
-            map.insert(key, arc.clone());
-            Some(arc)
+            if cache.validators.len() == VALIDATOR_CACHE_CAPACITY {
+                if let Some(expired) = cache.insertion_order.pop_front() {
+                    cache.validators.remove(&expired);
+                }
+            }
+            cache.insertion_order.push_back(key.clone());
+            cache.validators.insert(key, arc.clone());
+            Ok(arc)
         }
-        Err(_) => None,
+        Err(error) => Err(error.to_string()),
     }
 }
 
 // ----------------------------------------------------------------------------
 // coercePrimitiveByType — faithful port of the TS table
 // ----------------------------------------------------------------------------
+
+/// Convert a finite floating-point value to JSON without saturating it to an
+/// integer at Rust's numeric bounds. Preserve ordinary integral values as
+/// integer JSON numbers where they fit exactly.
+fn json_number_from_f64(value: f64) -> Option<Value> {
+    if value.fract() == 0.0 {
+        // The upper bounds are exclusive because `i64::MAX as f64` and
+        // `u64::MAX as f64` round up to 2^63 and 2^64 respectively.
+        if value >= i64::MIN as f64 && value < 9_223_372_036_854_775_808.0 {
+            return Some(Value::from(value as i64));
+        }
+        if value >= 0.0 && value < 18_446_744_073_709_551_616.0 {
+            return Some(Value::from(value as u64));
+        }
+    }
+    serde_json::Number::from_f64(value).map(Value::Number)
+}
+
+/// Convert integer strings without lossy or saturating casts. Exact signed and
+/// unsigned integer text is handled directly. Decimal/exponent forms are
+/// parsed as exact decimal values and accepted only within JavaScript's
+/// safe-integer range.
+fn coerce_integer_string(value: &str) -> Option<Value> {
+    let value = value.trim();
+    if value.is_empty() {
+        return None;
+    }
+    if let Ok(parsed) = value.parse::<i64>() {
+        return Some(Value::from(parsed));
+    }
+    if let Ok(parsed) = value.parse::<u64>() {
+        return Some(Value::from(parsed));
+    }
+    parse_safe_integer_decimal(value).map(Value::from)
+}
+
+fn parse_safe_integer_decimal(value: &str) -> Option<i64> {
+    const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+
+    let (negative, unsigned) = if let Some(rest) = value.strip_prefix('-') {
+        (true, rest)
+    } else if let Some(rest) = value.strip_prefix('+') {
+        (false, rest)
+    } else {
+        (false, value)
+    };
+    let (mantissa, exponent) = match unsigned.find(|character| character == 'e' || character == 'E')
+    {
+        Some(index) => {
+            let (mantissa, suffix) = unsigned.split_at(index);
+            if suffix[1..].contains('e') || suffix[1..].contains('E') {
+                return None;
+            }
+            (mantissa, suffix[1..].parse::<i64>().ok()?)
+        }
+        None => (unsigned, 0),
+    };
+    let (whole, fraction) = match mantissa.split_once('.') {
+        Some((whole, fraction)) => (whole, fraction),
+        None => (mantissa, ""),
+    };
+    if (whole.is_empty() && fraction.is_empty())
+        || !whole.bytes().all(|byte| byte.is_ascii_digit())
+        || !fraction.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return None;
+    }
+
+    let digits = format!("{whole}{fraction}");
+    let significant = digits.trim_start_matches('0');
+    if significant.is_empty() {
+        return Some(0);
+    }
+
+    let decimal_position = i64::try_from(whole.len()).ok()?.checked_add(exponent)?;
+    if decimal_position <= 0 {
+        return None;
+    }
+
+    let integer_digits = if decimal_position < i64::try_from(digits.len()).ok()? {
+        let position = usize::try_from(decimal_position).ok()?;
+        if digits[position..].bytes().any(|byte| byte != b'0') {
+            return None;
+        }
+        digits[..position].to_string()
+    } else {
+        let zero_count =
+            usize::try_from(decimal_position - i64::try_from(digits.len()).ok()?).ok()?;
+        if digits.len().saturating_add(zero_count) > 16 {
+            return None;
+        }
+        format!("{digits}{}", "0".repeat(zero_count))
+    };
+    let normalized = integer_digits.trim_start_matches('0');
+    if normalized.is_empty() {
+        return Some(0);
+    }
+    if normalized.len() > 16 {
+        return None;
+    }
+    let magnitude = normalized.parse::<u64>().ok()?;
+    if magnitude > MAX_SAFE_INTEGER {
+        return None;
+    }
+    let value = i64::try_from(magnitude).ok()?;
+    Some(if negative { -value } else { value })
+}
 
 /// Coerce a primitive value to match a JSON-Schema primitive type. Mirrors TS
 /// `coercePrimitiveByType`. Returns the coerced value (possibly == input when
@@ -92,14 +214,7 @@ fn coerce_primitive_by_type(value: &Value, ty: &str) -> Value {
             Value::String(s) if !s.trim().is_empty() => {
                 if let Ok(parsed) = s.trim().parse::<f64>() {
                     if parsed.is_finite() {
-                        // Integer-valued numbers become i64 so they compare equal
-                        // to integral JSON (and validate under `type:number`).
-                        if parsed.fract() == 0.0 {
-                            return Value::from(parsed as i64);
-                        }
-                        return serde_json::Number::from_f64(parsed)
-                            .map(Value::Number)
-                            .unwrap_or_else(|| value.clone());
+                        return json_number_from_f64(parsed).unwrap_or_else(|| value.clone());
                     }
                 }
                 value.clone()
@@ -109,14 +224,7 @@ fn coerce_primitive_by_type(value: &Value, ty: &str) -> Value {
         },
         "integer" => match value {
             Value::Null => Value::from(0),
-            Value::String(s) if !s.trim().is_empty() => {
-                if let Ok(parsed) = s.trim().parse::<f64>() {
-                    if parsed.fract() == 0.0 && parsed.is_finite() {
-                        return Value::from(parsed as i64);
-                    }
-                }
-                value.clone()
-            }
+            Value::String(s) => coerce_integer_string(s).unwrap_or_else(|| value.clone()),
             Value::Bool(b) => Value::from(if *b { 1 } else { 0 }),
             _ => value.clone(),
         },
@@ -221,7 +329,7 @@ fn apply_schema_array_coercion(value: &mut Vec<Value>, schema: &Value) {
 fn coerce_with_union_schema(value: &Value, schemas: &[Value]) -> Value {
     // Pass 1: if any member already validates, keep as-is.
     for schema in schemas {
-        if let Some(v) = get_sub_schema_validator(schema) {
+        if let Ok(v) = get_sub_schema_validator(schema) {
             if v.is_valid(value) {
                 return value.clone();
             }
@@ -230,7 +338,7 @@ fn coerce_with_union_schema(value: &Value, schemas: &[Value]) -> Value {
     // Pass 2: clone + coerce against each member; return first that validates.
     for schema in schemas {
         let candidate = coerce_with_json_schema(value.clone(), schema);
-        if let Some(v) = get_sub_schema_validator(schema) {
+        if let Ok(v) = get_sub_schema_validator(schema) {
             if v.is_valid(&candidate) {
                 return candidate;
             }
@@ -290,79 +398,9 @@ pub fn coerce_with_json_schema(value: Value, schema: &Value) -> Value {
     next
 }
 
-// ----------------------------------------------------------------------------
-// normalizeOptionalNulls
-// ----------------------------------------------------------------------------
-
-/// Drop `null` values on non-required properties whose subschema rejects null.
-/// Mirrors TS `normalizeOptionalNulls`. Recurses into arrays + object props.
-fn normalize_optional_nulls(value: &mut Value, schema: &Value) {
-    match value {
-        Value::Array(arr) => {
-            let items = schema.as_object().and_then(|o| o.get("items"));
-            match items {
-                Some(Value::Array(items)) => {
-                    for (i, item_schema) in items.iter().enumerate() {
-                        if i < arr.len() {
-                            normalize_optional_nulls(&mut arr[i], item_schema);
-                        }
-                    }
-                }
-                Some(items) if items.is_object() => {
-                    for entry in arr.iter_mut() {
-                        normalize_optional_nulls(entry, items);
-                    }
-                }
-                _ => {}
-            }
-            return;
-        }
-        Value::Object(map) => {
-            let Some(sobj) = schema.as_object() else {
-                return;
-            };
-            let Some(properties) = sobj.get("properties").and_then(|p| p.as_object()) else {
-                return;
-            };
-            let required: HashSet<&str> = sobj
-                .get("required")
-                .and_then(|r| r.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
-                .unwrap_or_default();
-
-            let mut to_remove: Vec<String> = Vec::new();
-            for (key, prop_schema) in properties {
-                let Some(child) = map.get_mut(key) else {
-                    continue;
-                };
-                if child.is_null()
-                    && !required.contains(key.as_str())
-                    && !matches!(prop_schema.get("$ref"), Some(Value::String(_)))
-                    && !sub_schema_accepts_null(prop_schema)
-                {
-                    to_remove.push(key.clone());
-                } else {
-                    normalize_optional_nulls(child, prop_schema);
-                }
-            }
-            for key in to_remove {
-                map.remove(&key);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// True if `null` validates against the sub-schema (mirrors the inverted
-/// `getSubSchemaValidator(schema)?.Check(null) === false` test).
-fn sub_schema_accepts_null(schema: &Value) -> bool {
-    if let Some(v) = get_sub_schema_validator(schema) {
-        return v.is_valid(&Value::Null);
-    }
-    // No validator (malformed schema) — be permissive, matching the TS
-    // short-circuit (`?.Check(null) === false` is falsy when validator is undefined).
-    true
-}
+// Optional nulls are deliberately not removed before coercion. The shared
+// coercion pass handles them according to their property schemas, matching the
+// current TypeScript validator's plain-JSON-schema path.
 
 // ----------------------------------------------------------------------------
 // validateToolArguments — public entry point
@@ -371,36 +409,32 @@ fn sub_schema_accepts_null(schema: &Value) -> bool {
 /// Validate (and coerce) tool-call arguments against the tool's parameter
 /// schema. Mirrors TS `validateToolArguments`:
 ///
-/// 1. `normalize_optional_nulls` — drop null on non-required props that reject null.
-/// 2. `coerce_with_json_schema` — LLM-sloppy-JSON tolerance.
-/// 3. `JSONSchema::is_valid` — authoritative check.
+/// 1. `coerce_with_json_schema` — LLM-sloppy-JSON tolerance.
+/// 2. `JSONSchema::is_valid` — authoritative check.
 ///
 /// Returns the coerced arguments on success, or `AiError::Schema` with a
 /// formatted message (path + message per error + the received JSON) on failure.
 pub fn validate_tool_arguments(tool: &Tool, tool_call: &ToolCall) -> Result<Value, AiError> {
-    let mut args = tool_call.arguments.clone();
+    let args = tool_call.arguments.clone();
 
-    // Step 1: normalize optional nulls.
-    normalize_optional_nulls(&mut args, tool.parameters.as_value());
-
-    // Step 2: coerce. TS only skips the custom coerce pass when the schema
+    // Coerce. TS only skips the custom coerce pass when the schema
     // carries the TypeBox Kind symbol; schemars produces plain JSON Schemas, so
     // the Rust port always runs it.
     let coerced = coerce_with_json_schema(args.clone(), tool.parameters.as_value());
 
-    // Step 3: authoritative validate.
-    let validator = match get_sub_schema_validator(tool.parameters.as_value()) {
-        Some(v) => v,
-        None => match JSONSchema::compile(&Value::Bool(true)) {
-            Ok(v) => Arc::new(v),
-            // Truly unreachable: `true` is a valid boolean schema.
-            Err(e) => {
-                return Err(AiError::Schema {
-                    message: format!("could not compile tool schema for {:?}: {e}", tool.name),
-                })
-            }
-        },
-    };
+    // Authoritative validation.
+    let validator = get_sub_schema_validator(tool.parameters.as_value()).map_err(|diagnostic| {
+        AiError::Schema {
+            message: format!(
+                "Could not compile schema for tool {:?}: {diagnostic}\n\nTool schema:\n{}\n\nReceived arguments:\n{}",
+                tool_call.name,
+                serde_json::to_string_pretty(tool.parameters.as_value())
+                    .unwrap_or_else(|_| "<unprintable>".into()),
+                serde_json::to_string_pretty(&tool_call.arguments)
+                    .unwrap_or_else(|_| "<unprintable>".into())
+            ),
+        }
+    })?;
 
     let check_value = if coerced != args { &coerced } else { &args };
     if validator.is_valid(check_value) {
@@ -542,14 +576,14 @@ mod tests {
     }
 
     #[test]
-    fn normalize_optional_null_dropped() {
+    fn optional_null_is_coerced_not_dropped() {
         let t = tool(
             "t",
             json!({"type":"object","properties":{"opt":{"type":"string"}},"required":[]}),
         );
         let tc = call(json!({"opt":null}));
         let v = validate_tool_arguments(&t, &tc).unwrap();
-        assert!(v.get("opt").is_none());
+        assert_eq!(v["opt"], json!(""));
     }
 
     #[test]

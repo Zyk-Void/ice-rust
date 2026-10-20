@@ -522,7 +522,7 @@ Estimated Rust implementation: **150-300 lines** (estimate, not measured source)
 
 ### 1. Title and status
 
-Fail-closed tool schema validation, coercion and accurate argument errors. **Status: partial.**
+Fail-closed tool schema validation, coercion and accurate argument errors. **Status: partial** (the audit-baseline fail-open defect is fixed in the active workspace; remaining compatibility differences are recorded below).
 
 ### 2. ice source
 
@@ -555,15 +555,15 @@ This is the execution-boundary schema gate consumed by the agent loop and extens
 
 ### 7. ice-rust today
 
-Rust implements recursive coercion, formatted errors and compiled-schema caching (rust:crates/ice-ai/src/schema.rs:1-623; rust:crates/ice-ai/tests/coerce_table.rs:1-202). However validate_tool_arguments treats get_sub_schema_validator returning None as permission to compile boolean true, then returns Ok for any value (rust:crates/ice-ai/src/schema.rs:392-407). The agent loop calls this validator before the tool hook/execution path (rust:crates/ice-agent/src/agent_loop.rs:917-990), establishing a reachable fail-open source defect. Rust also deletes optional nulls first (rust:crates/ice-ai/src/schema.rs:299-365), unlike current TS; parses integers through f64 then casts to i64, allowing saturation for large integral values; and caches by serialized schema content in an unbounded process-global map rather than weak identity. Its tests deliberately cover some older null/coercion semantics, not parity with the current TS source.
+The frozen audit baseline found a fail-open compile fallback, optional-null deletion, saturating integer casts and an unbounded content-keyed validator cache. In the active workspace, `get_sub_schema_validator` now preserves compile errors and `validate_tool_arguments` returns a tool-specific `AiError::Schema` with the compiler diagnostic, schema and original arguments; it no longer substitutes an always-valid schema. Agent-loop integration tests cover both invalid schemas and schema-invalid arguments, asserting that neither reaches `AgentTool::execute`. Optional nulls now proceed through schema coercion, large finite `number` strings no longer saturate to `i64`, integer strings outside exact supported ranges are rejected, and the cache is bounded to 256 FIFO entries (rust:crates/ice-ai/src/schema.rs; rust:crates/ice-ai/tests/coerce_table.rs; rust:crates/ice-agent/tests/before_after_hooks.rs). Remaining explicit differences: the cache is bounded FIFO/content-keyed rather than a TypeScript WeakMap keyed by object identity; decimal/exponent integer strings are coerced only within JavaScript's safe-integer range; and Rust rejects a schema-invalid root primitive rather than reproducing the TS root-primitive bypass. Broader TypeBox-versus-jsonschema edge-case parity remains unverified.
 
 ### 8. Port notes
 
-Return an explicit Schema error when compilation fails and never substitute an always-valid schema. Preserve enough compile diagnostics to identify the tool/schema. Reconcile optional-null and numeric coercion rules, reject lossy or out-of-range integer conversion, and bound/cache validators according to native lifetime requirements. Decide and document a correction for TS's primitive-root bypass rather than reproducing it accidentally. Future implementation verification should exercise malformed schemas through the real agent execution gate as well as coercion tables; this audit made no code or test changes.
+The active workspace now returns an explicit Schema error on compilation failure with tool, diagnostic, schema and argument context; it also rejects invalid schemas and arguments before execution, applies optional-null coercion without deleting fields, avoids saturating numeric casts, rejects out-of-range integer coercions and bounds validator caching. Keep the stricter root-primitive validation as a documented correction to the TS bypass. Remaining work is broader TypeBox/jsonschema edge-case parity and deciding whether the deliberate content-keyed FIFO cache and safe-integer coercion policy meet the desired compatibility contract. The active-tree tests exercise the public validation API and agent execution gate.
 
 ### 9. Size and priority
 
-Estimated Rust implementation: **220-420 lines** (estimate, not measured source). **P0** - Invalid tool schemas can currently bypass validation and admit arbitrary model-produced arguments to execution.
+Estimated Rust implementation: **220-420 lines** (estimate, not measured source). **P0 in the frozen audit baseline** - Invalid tool schemas could bypass validation and admit arbitrary model-produced arguments to execution; the active workspace now closes that path, while broader contract parity remains partial.
 
 ## AI-013 - Provider strict-schema and grammar constraints with explicit require/prefer semantics
 
