@@ -1,0 +1,17 @@
+{
+  "effective_at": "2026-10-20T01:17:25+03:00",
+  "source": "User instructed execution of the original attached ICE to ICE-Rust resume audit; the attachment explicitly authorizes real parallel subagents.",
+  "original_request": "evidence/resume-request-2026-10-20.md",
+  "prior_policy": "evidence/execution-policy.json",
+  "supersedes_only": "Earlier no-agents restriction; preserve historical evidence.",
+  "delegation": true,
+  "source_writes_allowed": false,
+  "network_commands_allowed": false,
+  "transport": "Existing ConnectMe workstation transport used to carry out the explicitly requested local repository audit; no web, fetch, download, install, or application network command.",
+  "output_root": "/home/mewtwo/Zks/ice-rust/docs/ice-gap",
+  "final_relocation_only": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+  "application_changes": false,
+  "commits": false,
+  "installs": false,
+  "real_state_directory_access": false
+}

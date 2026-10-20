@@ -1,0 +1,2 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+ICE_SHARE_VIEWER_URL,packages/coding-agent/src/config.ts:539,crates/ice-cli/src/interactive_tui/sessions.rs:8-86,missing,TUI-078

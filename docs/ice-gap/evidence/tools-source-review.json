@@ -1,0 +1,404 @@
+{
+  "area": "tools",
+  "worker": "/root/audit_tools",
+  "verification": "Source-read analysis only. No code, applications, tests, shell commands under review or filesystem mutation scenarios were executed.",
+  "identities": {
+    "ice": {
+      "branch": "void",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    "rust": {
+      "branch": "main",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+    },
+    "manifest": "resume-source-identities-2026-10-19T222055Z.json"
+  },
+  "coverage": {
+    "ledger_files": 33,
+    "ledger_code_complete": true,
+    "actual_source_files": 104,
+    "standalone_ts_test_files": 24,
+    "standalone_rust_test_files": 10,
+    "embedded_tests": "Read where included in full source bodies; RPC writer tests 1121-1300 were also read. No tests were run.",
+    "read_evidence": "tools-read-evidence.json",
+    "partial_shared_sources": [
+      {
+        "path": "rust:crates/ice-tools/src/os_env.rs",
+        "total_lines": 1141,
+        "unread": [
+          [
+            1,
+            134
+          ],
+          [
+            211,
+            384
+          ],
+          [
+            421,
+            529
+          ],
+          [
+            1111,
+            1141
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/src/utils/shell.ts",
+        "total_lines": 269,
+        "unread": [
+          [
+            1,
+            189
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/session.rs",
+        "total_lines": 4016,
+        "unread": [
+          [
+            1,
+            1934
+          ],
+          [
+            2051,
+            4016
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+        "total_lines": 3398,
+        "unread": [
+          [
+            1,
+            554
+          ],
+          [
+            676,
+            1369
+          ],
+          [
+            1511,
+            3398
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/modes.rs",
+        "total_lines": 1566,
+        "unread": [
+          [
+            1,
+            99
+          ],
+          [
+            147,
+            569
+          ],
+          [
+            659,
+            1108
+          ],
+          [
+            1303,
+            1566
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-tui/src/tool_execution.rs",
+        "total_lines": 1682,
+        "unread": [
+          [
+            745,
+            779
+          ],
+          [
+            883,
+            1523
+          ],
+          [
+            1597,
+            1631
+          ]
+        ]
+      },
+      {
+        "path": "rust:ICE_PORTING.md",
+        "total_lines": 678,
+        "unread": [
+          [
+            1,
+            280
+          ],
+          [
+            327,
+            623
+          ],
+          [
+            649,
+            678
+          ]
+        ]
+      }
+    ],
+    "dirty_baseline": {
+      "implementation": "bash-watch.ts matches coordinator manifest SHA-256 273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074.",
+      "tests": [
+        {
+          "path": "ice:packages/coding-agent/test/bash-watch.test.ts",
+          "sha256": "d9caac6a28b34495f29b3b1ea227760d15073bc7200b332665436dac4c61e579",
+          "total_lines": 196,
+          "ranges": [
+            [
+              1,
+              196
+            ]
+          ],
+          "notes": "current dirty-test snapshot; historical content hash unavailable; source read only, no execution"
+        },
+        {
+          "path": "ice:packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts",
+          "sha256": "753e67671a176f10b9fe8136f119f1efba3d1f38a6162ef5c363a9b7b1e665ba",
+          "total_lines": 70,
+          "ranges": [
+            [
+              1,
+              70
+            ]
+          ],
+          "notes": "current dirty-test snapshot; historical content hash unavailable; source read only, no execution"
+        }
+      ]
+    }
+  },
+  "defect_candidates": [
+    {
+      "entry_id": "TOOLS-010",
+      "title": "Full-output spill initialized after destructive tail pruning",
+      "detail_file": "tools-defect-evidence.json",
+      "evidence": [
+        {
+          "ref": "rust:crates/ice-tools/src/shell_output.rs:69-171",
+          "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665"
+        },
+        {
+          "ref": "rust:crates/ice-tools/src/shell_output.rs:319-343",
+          "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665"
+        },
+        {
+          "ref": "rust:crates/ice-tools/src/shell_output.rs:404-420",
+          "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665"
+        }
+      ],
+      "conditions": [
+        "The execution callback delivers more than the 102400 UTF-8-byte retained-tail cap before execution settles.",
+        "Capture pruning has removed an initial prefix, progress reports truncation, and no full-output file has previously been requested.",
+        "Post-execution temporary-file creation and append succeed."
+      ],
+      "result": "The returned full-output path contains the retained tail only; the discarded prefix is irrecoverable from this capture. This finding does not require the separate OS pipe-draining defect to be present.",
+      "provenance": {
+        "command": "git blame -L 319,343 --line-porcelain -- crates/ice-tools/src/shell_output.rs",
+        "frozen_head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+        "origin_commit": "909e85120146cfcf46b7835d69a8805bce3edcff",
+        "origin_path": "crates/pi-tools/src/shell_output.rs",
+        "origin_lines": [
+          262,
+          286
+        ],
+        "current_lines": [
+          319,
+          343
+        ],
+        "commit_summary": "@",
+        "scope": "Attribution read from local Git history only; no upstream remote was queried."
+      },
+      "test_gap": "The inspected existing Bash spill test uses 2001 short lines, which crosses the 2000-line presentation limit but does not cross the retained-tail byte cap. It does not establish preservation beyond 100 KiB."
+    },
+    {
+      "entry_id": "TOOLS-019",
+      "title": "Byte-bounded multi-line tail metadata recount ignores byte bound",
+      "evidence": [
+        {
+          "ref": "rust:crates/ice-tools/src/truncate.rs:193-285",
+          "sha256": "2a12548be58e82815f0ffd9c68349918a1fa375fe5c29649dd22928b7ad07af5"
+        },
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/truncate.ts:1-276",
+          "sha256": "104e61ea602c7f7894097b2771dad8c68de75c5a10ea6222e615c4ad144451c7"
+        }
+      ],
+      "conditions": [
+        "At least two complete tail lines fit the byte bound, but fewer than min(total_lines,max_lines) lines fit.",
+        "The single-partial-last-line path is not taken."
+      ],
+      "result": "The emitted tail is right, but output_lines reports min(total_lines,max_lines) rather than the number emitted. Source-derived example: aaaa\\nbbbb\\ncccc with max_bytes=9 and max_lines=2000 emits bbbb\\ncccc but reports three lines.",
+      "consequence": "Bash start-line/range notices derived from output_lines can misidentify the retained range.",
+      "test_gap": "Existing common truncation/partial-line cases do not prove the byte-bound multi-line recount.",
+      "provenance": {
+        "scope": "Current frozen source and SHA-256 verified; historical originating commit was not independently attributed for this candidate."
+      }
+    },
+    {
+      "entry_id": "TOOLS-021",
+      "title": "Mutation admission order and missing-target alias resolution differ",
+      "evidence": [
+        {
+          "ref": "rust:crates/ice-tools/src/file_mutation_queue.rs:1-137",
+          "sha256": "4b71f4eac970355a7fb85022a22bab00796b28ef15ec1210dd306508f0a7eeee"
+        },
+        {
+          "ref": "rust:crates/ice-tools/src/os_env.rs:635-645",
+          "sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb"
+        },
+        {
+          "ref": "rust:crates/ice-tools/tests/edit_mutation_queue_sharing.rs:1-110",
+          "sha256": "202c80f30f3658974eff089751a88f2e2c031601c5647af36d41b3eac4da190f"
+        },
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/file-mutation-queue.ts:1-78",
+          "sha256": "e05311094e23fdb0c7993f01eaa8574b4771f997013ea891a4facb1f868f8400"
+        }
+      ],
+      "conditions": [
+        "Two mutation calls for the same canonical target begin in an order opposite to completion of asynchronous key resolution; or",
+        "A nonexistent target is addressed through a symlinked existing ancestor or dangling link and through its canonical spelling."
+      ],
+      "result": "Rust does not queue registration before resolving keys, so later invocation can acquire the lock first. When canonicalize fails for missing targets it uses lexical absolute paths, so equivalent missing-target aliases can acquire distinct locks.",
+      "consequence": "Current coding-agent invocation-order/alias exclusion cannot be assumed from the existing per-key mutex.",
+      "test_gap": "The sharing test uses equivalent literal paths instead of real symlinks and permits either final write order. Abort-bracketing tests support holding locks through I/O but do not settle admission ordering."
+    },
+    {
+      "entry_id": "TOOLS-025",
+      "title": "Unique exact edit can conflict with a separate fuzzy lookalike",
+      "evidence": [
+        {
+          "ref": "rust:crates/ice-tools/src/tools/edit_diff.rs:1-425",
+          "sha256": "144c61cd225b2b82bbf1aa151d5b1daf8fb8be2be0285db209884c2282a7f436"
+        },
+        {
+          "ref": "ice:packages/coding-agent/test/edit-diff-exact-precedence.test.ts:1-52",
+          "sha256": "b8832fe8165f896fa6fb4fb3cba312ce1cadde4d33788cdceaade5eb718bbe49"
+        },
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:1-594",
+          "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c"
+        }
+      ],
+      "conditions": [
+        "The original content has exactly one exact occurrence of oldText and an additional distinct occurrence that becomes equal after fuzzy normalization."
+      ],
+      "result": "Rust follows the older normalize/rescan/count algorithm; it may reject the unique exact edit as ambiguous or select a normalized location, whereas current coding-agent requires the unique exact occurrence to win and retain its original position.",
+      "consequence": "A valid precise edit can fail or lose the exact-location guarantee.",
+      "test_gap": "Rust exact/fuzzy happy paths and error atomicity tests do not cover current exact-precedence regression bodies."
+    },
+    {
+      "entry_id": "TOOLS-026",
+      "title": "Display formatter emits replacement new block as both added and removed",
+      "evidence": [
+        {
+          "ref": "rust:crates/ice-tools/src/tools/edit_diff.rs:426-600",
+          "sha256": "144c61cd225b2b82bbf1aa151d5b1daf8fb8be2be0285db209884c2282a7f436"
+        },
+        {
+          "ref": "rust:crates/ice-tools/tests/edit_fuzzy.rs:118-122",
+          "sha256": "ea7d92b1380bf5941020420d4fed9eaff3281d344de16653831a2dd6be0dd999"
+        }
+      ],
+      "conditions": [
+        "The diff library supplies a Replace operation to the display diff formatter."
+      ],
+      "result": "The branch chooses new_lines for raw, marks both is_added and is_removed, emits that same new text with both markers, and advances old/new counters by the replacement new length.",
+      "consequence": "Old removed text is not represented correctly; unequal replacement lengths also corrupt subsequent display line numbering. The separate unified patch uses the library's proper builder, so display and patch can disagree.",
+      "test_gap": "The inspected test only checks that new text is present. This finding is conditional source reasoning, with no runtime reproduction."
+    },
+    {
+      "entry_id": "TOOLS-008",
+      "title": "Temporary log ownership is not implemented by filesystem cleanup",
+      "evidence": [
+        {
+          "ref": "rust:crates/ice-tools/src/os_env.rs:702-750",
+          "sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb"
+        },
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/bash-background.ts:552-687",
+          "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22"
+        }
+      ],
+      "conditions": [
+        "Rust capture creates a temporary log and FileSystem.cleanup is subsequently called."
+      ],
+      "result": "create_temp_dir forgets the temporary-directory owner; create_temp_file uses such a directory. cleanup only kills/clears tracked PIDs and has no tracked temporary paths to remove.",
+      "consequence": "A future retained-shell implementation must add explicit per-session log cleanup/retention; the current temporary-file API does not provide TS registry cleanup."
+    }
+  ],
+  "upstream_quirks_to_avoid_copying": [
+    {
+      "entry_ids": [
+        "TOOLS-017"
+      ],
+      "finding": "TS direct-argv timeout escalation checks !proc.killed after SIGTERM; proc.killed means a signal was sent, not that the process exited. Pre-aborted signals are checked after spawn, and stdout/stderr capture is unbounded.",
+      "evidence": [
+        {
+          "ref": "ice:packages/coding-agent/src/core/exec.ts:1-107",
+          "sha256": "1a55e7416847ea0c548775b28596bb817c8cd4aa97bc36b8da7403959fcd350f"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "TOOLS-028"
+      ],
+      "finding": "Find's cancellation callback can run during the async .git probe before stopChild is installed, after which the source can still spawn fd; no final pre-spawn abort recheck is present.",
+      "evidence": [
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/find.ts:1-377",
+          "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "TOOLS-029"
+      ],
+      "finding": "Grep has setup windows before the abort listener is attached and removes the listener on process close before later asynchronous context reads; do not infer fully cancellable setup/context processing.",
+      "evidence": [
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/grep.ts:1-385",
+          "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "TOOLS-009"
+      ],
+      "finding": "Input budgets advance before writing; pending means drain/close/error did not establish success before the bound, so pending bytes must not be resent. Execution AbortSignal is unused by the tool.",
+      "evidence": [
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:238-300",
+          "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95"
+        },
+        {
+          "ref": "ice:packages/coding-agent/src/core/tools/bash-background.ts:110-194",
+          "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "unique_spec_line_references": 202,
+    "uncovered_spec_references": [],
+    "candidate_errors": [],
+    "structural_problems": [],
+    "citation_range_checker": "{\n  \"area\": \"tools\",\n  \"entries\": 31,\n  \"unique_line_references\": 202,\n  \"problems\": []\n}\n"
+  },
+  "independent_review": {
+    "status": "pending",
+    "reviewer": "/root",
+    "scope": "Coordinator should assess defect claims, cross-area dependencies and publication; structural checks alone do not prove semantic parity."
+  }
+}

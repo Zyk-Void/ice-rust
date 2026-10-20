@@ -1,0 +1,15 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "status": "PASS",
+  "proposal_sha256": "3bad2fa6387b5a5677cd166530547d36f1214467f7fa22b13c1552c6f2846f27",
+  "entries": 4,
+  "field_replacements": 5,
+  "manifest_replacements": 3,
+  "candidate_records": 27,
+  "candidate_dispositions": 27,
+  "native_source_literal_checks": 6,
+  "consumer_test_files": 4,
+  "original_claims_preserved": true,
+  "tests_executed": false,
+  "errors": []
+}

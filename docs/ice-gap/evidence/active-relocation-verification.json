@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-10-20T07:03:02.324Z",
+  "all_rust_citations_mapped_and_checked": true,
+  "source_only": true,
+  "old_head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+  "active_head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+  "summary": {
+    "citation_occurrences": 9950,
+    "unique_old_citations": 2092,
+    "methods": {
+      "unchanged": 8525,
+      "shifted": 47,
+      "reviewed": 1378
+    },
+    "source_files": 278,
+    "coverage_files": 277,
+    "planned_files": 52,
+    "changed_files": 32,
+    "already_active_citations": 4,
+    "relocated_source_files": 277
+  },
+  "report": "evidence/relocation-rust-remap.json",
+  "historical_provenance_preserved": true,
+  "source_execution": false
+}

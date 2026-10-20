@@ -1,0 +1,727 @@
+{
+  "captured_at": "2026-10-20T01:40:47.762Z",
+  "source_only": true,
+  "repair_artifact": "evidence/qa-first-pass-repairs.json",
+  "originals": [
+    {
+      "path": "evidence/blackhole.json",
+      "sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+      "claims": [
+        {
+          "first_pass_lines": [
+            386,
+            387
+          ],
+          "claim": "Optional Blackhole is missing as a plugin and deterministic engine.",
+          "verdict": "confirmed",
+          "finding": "Rust core compaction exists but no Blackhole implementation/native plugin was found; TypeScript package cannot be loaded by the native ABI.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/index.ts:153-159",
+            "rust:crates/ice-harness/src/compaction/compaction.rs:749-804"
+          ],
+          "entry_ids": [
+            "BLACK-001",
+            "BLACK-039"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            389,
+            390
+          ],
+          "claim": "Compiler normalizes messages into deterministic sections.",
+          "verdict": "confirmed",
+          "finding": "All normalized variants, source-index rules, sanitizer/filter and layout are specified, not only section names.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/types.ts:13-36",
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247"
+          ],
+          "entry_ids": [
+            "BLACK-007",
+            "BLACK-008",
+            "BLACK-009",
+            "BLACK-026"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            390,
+            391
+          ],
+          "claim": "Compiler extracts goals/preferences/files/commits/outstanding/recent actions and builds a bounded brief.",
+          "verdict": "corrected",
+          "finding": "Brief is bounded by line/content-word heuristics, not a global summary token budget. Findings and genuine user requests are also first-class sections. Exact limits and imperfect result/hash matching are specified.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/build-sections.ts:138-159",
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/format.ts:1-74"
+          ],
+          "entry_ids": [
+            "BLACK-013",
+            "BLACK-016",
+            "BLACK-018",
+            "BLACK-019",
+            "BLACK-020",
+            "BLACK-021",
+            "BLACK-022",
+            "BLACK-023",
+            "BLACK-024",
+            "BLACK-025",
+            "BLACK-026"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            392,
+            392
+          ],
+          "claim": "Live-state reconstructs Active Goal, Mode And Plan, Background Shells and MCP/external use.",
+          "verdict": "confirmed",
+          "finding": "These are tolerant recorded-state projections, not runtime authority checks or live process polls.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts:11-389"
+          ],
+          "entry_ids": [
+            "BLACK-032",
+            "BLACK-033",
+            "BLACK-035",
+            "BLACK-036"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            393,
+            393
+          ],
+          "claim": "Subagent digest reads latest child records.",
+          "verdict": "corrected",
+          "finding": "Latest valid data is per child ID, but the last12 cap follows first-seen Map insertion order, not most recently updated child. Malformed later records can leave prior state.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.ts:51-111"
+          ],
+          "entry_ids": [
+            "BLACK-034"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            394,
+            394
+          ],
+          "claim": "tailBehavior supports ice-default/minimal with kept-tail and recall-noise handling.",
+          "verdict": "confirmed",
+          "finding": "Current code default is minimal, contradicting provenance prose. Minimal uses a missing cut-ID sentinel and does not insert a resume user message.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:25-34",
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts:29-87",
+            "ice:packages/coding-agent/src/core/session-manager.ts:427-462"
+          ],
+          "entry_ids": [
+            "BLACK-002",
+            "BLACK-031"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            395,
+            395
+          ],
+          "claim": "Checkpoint recall appends a fresh session-matching bounded Relevant Memory section.",
+          "verdict": "corrected",
+          "finding": "It deletes a matching valid checkpoint before rendering, mismatched host IDs leave file, expiry15min, line cap24, and the nominal4000-unit header/body budget excludes an additional45-unit notice. No top-level JSON size/schema cap or atomic claim.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts:1-114"
+          ],
+          "entry_ids": [
+            "BLACK-037"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            396,
+            397
+          ],
+          "claim": "Refinement is optional, model-routed, bounded and falls back to deterministic text.",
+          "verdict": "corrected",
+          "finding": "Recent serialized input is capped24000 UTF-16 units and completion maxTokens1200; the deterministic summary is not itself bounded. Requested300 words is not enforced. Output is explicitly unverified and structural neutralization is narrow.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/refine.ts:16-81",
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:66-89"
+          ],
+          "entry_ids": [
+            "BLACK-038"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            398,
+            398
+          ],
+          "claim": "Before-compaction hook can override core and kept-tool outputs are trimmed.",
+          "verdict": "confirmed",
+          "finding": "Exact gating, cancel/override result and context-only6000-unit text budget are specified.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:24-111",
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts:12-83"
+          ],
+          "entry_ids": [
+            "BLACK-039",
+            "BLACK-040"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            399,
+            400
+          ],
+          "claim": "Config at agentDir/ice-blackhole with enum/percent/refine/memory settings.",
+          "verdict": "confirmed",
+          "finding": "Exact default/precedence/write permission behavior specified, including unused memory flag and optional refineModel.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:5-157"
+          ],
+          "entry_ids": [
+            "BLACK-002",
+            "BLACK-003",
+            "BLACK-004"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            401,
+            403
+          ],
+          "claim": "registerSettings and /blackhole provide status/percent/resume/pause/off.",
+          "verdict": "confirmed",
+          "finding": "Eight UI IDs and exact parser/preset/save behavior specified.",
+          "evidence": [
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/index.ts:12-151"
+          ],
+          "entry_ids": [
+            "BLACK-005",
+            "BLACK-006"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            410,
+            412
+          ],
+          "claim": "Mid-run compaction is missing in Rust; compaction exists mainly as manual flow.",
+          "verdict": "corrected",
+          "finding": "Rust installs an AfterToolResults closure, checks threshold, compacts/persists and replaces context before the next model step. Blackhole-specific percent settings, pause/resume request protocol and suppression state remain absent.",
+          "evidence": [
+            "rust:crates/ice-harness/src/agent_harness.rs:3867-3915",
+            "rust:crates/ice-harness/src/agent_harness.rs:3957-3969",
+            "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:21-68"
+          ],
+          "entry_ids": [
+            "BLACK-041"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "evidence/extensions.json",
+      "sha256": "8df9e6a206dbdb13cfd176c874832553c90792bf8d25426db64233c425e9450b",
+      "claims": [
+        {
+          "first_pass_lines": [
+            24,
+            39
+          ],
+          "claim": "TypeScript factories are not loaded by the native plugin model.",
+          "verdict": "confirmed",
+          "finding": "The current TS loader imports/caches factories while native loader accepts shared libraries through ice_plugin_register. Inline name/hidden/before-user semantics require a separate native application registration phase; launcher-specific feature implementations remain their area owners.",
+          "evidence": [
+            "ice:packages/coding-agent/src/core/extensions/loader.ts:564-675",
+            "ice:packages/coding-agent/src/core/extensions/types.ts:1589-1602",
+            "rust:crates/ice-extensions/src/loader.rs:1-761"
+          ],
+          "entry_ids": [
+            "EXT-001",
+            "EXT-002",
+            "EXT-057"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            41,
+            45
+          ],
+          "claim": "Plugin event coverage is already at parity because names exist in EventTag.",
+          "verdict": "corrected",
+          "finding": "Enum coverage does not establish behavior. Native context/provider/input/message/tool hooks omit return transformations or fields, cancellation/error ordering differs, and ProjectTrust has no host emitter. Borrowed payload cleanup also has a concrete BeforeAgentStart mismatch.",
+          "evidence": [
+            "ice:packages/coding-agent/src/core/extensions/runner.ts:888-1353",
+            "rust:crates/ice-extensions/src/translate.rs:1-968",
+            "rust:crates/ice-extensions/src/provider_hooks.rs:98-248",
+            "rust:crates/ice-cli/src/session.rs:1847-1901"
+          ],
+          "entry_ids": [
+            "EXT-022",
+            "EXT-023",
+            "EXT-024",
+            "EXT-025",
+            "EXT-026",
+            "EXT-027",
+            "EXT-028",
+            "EXT-029",
+            "EXT-030",
+            "EXT-031",
+            "EXT-032",
+            "EXT-033",
+            "EXT-034"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            448,
+            452
+          ],
+          "claim": "Listed UI methods have no Rust equivalent.",
+          "verdict": "corrected",
+          "finding": "Many exact controls are missing, but Rust already has owner-scoped text panels, queued editor text, structured dialogs and decoded Input handling. Widgets/footer/custom views/raw input are partial comparisons with explicit placement, ownership, payload, result and cancellation differences, not uniformly absent.",
+          "evidence": [
+            "ice:packages/coding-agent/src/core/extensions/types.ts:154-309",
+            "rust:crates/ice-extensions/src/status.rs:1-416",
+            "rust:crates/ice-extensions/src/editor_text.rs:1-184",
+            "rust:crates/ice-cli/src/interactive_tui/extensions.rs:1-939"
+          ],
+          "entry_ids": [
+            "EXT-040",
+            "EXT-042",
+            "EXT-043",
+            "EXT-044",
+            "EXT-045",
+            "EXT-046",
+            "EXT-047",
+            "EXT-048",
+            "EXT-049",
+            "EXT-050"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            453,
+            454
+          ],
+          "claim": "registerSettings has no native equivalent.",
+          "verdict": "confirmed",
+          "finding": "The TS group/items/onChange registry is real; the fully inspected native API/registry exposes no equivalent settings registrar. Native application settings alone do not provide extension-owned sections.",
+          "evidence": [
+            "ice:packages/coding-agent/src/core/extensions/loader.ts:317-329",
+            "rust:crates/ice-plugin-sdk/src/lib.rs:1200-1460"
+          ],
+          "entry_ids": [
+            "EXT-016"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            455,
+            458
+          ],
+          "claim": "Introspection list includes missing getFlag and refreshToken host methods.",
+          "verdict": "corrected",
+          "finding": "GetCliFlag is an implemented native action, though owner/absence semantics differ from TS getFlag. refreshToken is an OAuth ProviderConfig callback, not a public ExtensionAPI host method. Other listed context/tool/command metadata queries are separately missing or partial as specified.",
+          "evidence": [
+            "ice:packages/coding-agent/src/core/extensions/types.ts:1352-1353",
+            "ice:packages/coding-agent/src/core/extensions/types.ts:1514-1584",
+            "rust:crates/ice-cli/src/extensions_actions.rs:423-428",
+            "rust:crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+          ],
+          "entry_ids": [
+            "EXT-015",
+            "EXT-018",
+            "EXT-019",
+            "EXT-020",
+            "EXT-053",
+            "EXT-054"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            460,
+            463
+          ],
+          "claim": "Native tools/commands/flags/providers/dialog and specialized runtime actions are already implemented.",
+          "verdict": "confirmed",
+          "finding": "SDK registration, action dispatch, main-lane adapters and TUI dialog consumers are implemented. Existence of host action surfaces does not establish an external companion plugin or complete TS parity; child/stdio/side-question subsystem details remain their owners.",
+          "evidence": [
+            "rust:crates/ice-extensions/src/lib.rs:343-774",
+            "rust:crates/ice-extensions/src/actions.rs:1-1265",
+            "rust:crates/ice-cli/src/extensions_actions.rs:388-673",
+            "rust:crates/ice-cli/src/interactive_tui/extensions.rs:1-939"
+          ],
+          "entry_ids": [
+            "EXT-009",
+            "EXT-011",
+            "EXT-013",
+            "EXT-014",
+            "EXT-015",
+            "EXT-018",
+            "EXT-040"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            655,
+            656
+          ],
+          "claim": "Current native entry symbol is ice_plugin_register.",
+          "verdict": "confirmed",
+          "finding": "The frozen loader/SDK require the ice_plugin_register symbol. No claim about availability of historical upstream binaries or releases is made from local source alone.",
+          "evidence": [
+            "rust:crates/ice-extensions/src/loader.rs:1-761",
+            "rust:crates/ice-plugin-sdk/src/lib.rs:1-2169"
+          ],
+          "entry_ids": [
+            "EXT-001"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            666,
+            668
+          ],
+          "claim": "Custom entries must be added to the host API before later ports.",
+          "verdict": "corrected",
+          "finding": "Native AppendEntry already handles customType/data and returns entryId. Missing pieces include the TypeScript durable option, GetSessionName/SetLabel, full entry rendering and exact metadata events. This narrows the required work.",
+          "evidence": [
+            "ice:packages/coding-agent/src/core/agent-session.ts:2951-2964",
+            "rust:crates/ice-cli/src/extensions_actions.rs:454-514"
+          ],
+          "entry_ids": [
+            "EXT-038",
+            "EXT-053"
+          ],
+          "first_pass_source": {
+            "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+            "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+          }
+        }
+      ]
+    },
+    {
+      "path": "evidence/providers-auth.json",
+      "sha256": "4b3760500311ab668d22ae165da166a7dc7b26a6f73236e00a32bc15274dbf9d",
+      "claims": [
+        {
+          "first_pass_lines": [
+            31,
+            31
+          ],
+          "claim": "ice-provider-settings supplies the provider submenu in /settings.",
+          "verdict": "confirmed; native parity missing",
+          "finding": "The factory registers providers settings at line 204 and captures the session context through session_start. Native generic TUI settings and catalog/scoped selectors exist but do not implement this provider catalog/refetch submenu.",
+          "evidence": [
+            "ice:packages/coding-agent/src/ice-provider-settings.ts:199-233",
+            "rust:crates/ice-cli/src/interactive_tui/settings.rs:1854-1942"
+          ],
+          "entry_ids": [
+            "AUTH-028"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            589,
+            601
+          ],
+          "claim": "The TS built-in provider registry has 41 providers; native built-ins are Anthropic and OpenAI.",
+          "verdict": "count corrected; native capability qualified",
+          "finding": "all.ts registers 39 provider factories. OpenRouter image support is a separate capability, not an extra provider identity. Native core compiles Anthropic/OpenAI catalogs and supports configured/extension providers and three wire factories. Concrete external ice-package implementations were not inspected; core registration absence is not proof of package absence.",
+          "evidence": [
+            "ice:packages/ai/src/providers/all.ts:87-153",
+            "ice:packages/ai/src/providers/images/register-builtins.ts:1-51",
+            "rust:crates/ice-cli/src/provider.rs:851-979"
+          ],
+          "entry_ids": [
+            "AUTH-011"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            603,
+            610
+          ],
+          "claim": "TS implements provider-specific PKCE/device OAuth; Rust delegates OAuth to provider plugins.",
+          "verdict": "confirmed with explicit external-scope limitation",
+          "finding": "Seven concrete TS flows plus shared PKCE/device/callback helpers are specified. Native OAuth registration, begin/exchange/refresh/revoke dispatch, ABI ownership and CLI persistence are real. The inspected core has no equivalent concrete implementations of the seven flows; a TODO comment is not used to infer absence from external packages.",
+          "evidence": [
+            "ice:packages/ai/src/auth/oauth/load.ts:1-68",
+            "ice:packages/ai/src/auth/types.ts:117-237",
+            "rust:crates/ice-cli/src/auth.rs:1-346",
+            "rust:crates/ice-extensions/src/oauth.rs:14-198"
+          ],
+          "entry_ids": [
+            "AUTH-015",
+            "AUTH-016",
+            "AUTH-017",
+            "AUTH-018",
+            "AUTH-019",
+            "AUTH-020",
+            "AUTH-021",
+            "AUTH-022"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            612,
+            616
+          ],
+          "claim": "Radius gateway catalog refresh remains to be checked.",
+          "verdict": "missing in inspected native core",
+          "finding": "Radius normalizes gateway URLs, fetches/converts remote gateway catalog metadata and restores legacy OAuth gatewayConfig. Generic native provider config/package loading does not supply this concrete flow. The other listed AI utilities are owned by the AI audit.",
+          "evidence": [
+            "ice:packages/ai/src/providers/radius-config.ts:1-97",
+            "ice:packages/ai/src/providers/radius.ts:13-81",
+            "rust:crates/ice-cli/src/model_registry.rs:241-337"
+          ],
+          "entry_ids": [
+            "AUTH-014"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            618,
+            623
+          ],
+          "claim": "refreshLocalModelsForStartup fetches the local endpoint catalog on launch unless offline.",
+          "verdict": "incorrect call behavior; split startup from explicit refresh",
+          "finding": "The frozen refreshLocalModelsForStartup body only loads the raw Omni/local credential and sets ICE_LOCAL_API_KEY. It neither fetches models nor consults the declared skip/refresh/onFailure options. Explicit refreshLocalModels performs /models fetch, validation, provider replacement and atomic-name rename; it returns updated:false on failure. AUTH-027 owns catalog row conversion.",
+          "evidence": [
+            "ice:packages/coding-agent/src/ice-provider.ts:252-303",
+            "ice:packages/coding-agent/src/ice-provider.ts:73-250"
+          ],
+          "entry_ids": [
+            "AUTH-027",
+            "AUTH-032"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            624,
+            627
+          ],
+          "claim": "Provider submenu and fast-route priority behavior are missing from Rust.",
+          "verdict": "provider submenu confirmed; fast-route metadata and shared option behavior separated",
+          "finding": "The submenu/refetch consumer is absent from the inspected native TUI. Omni catalog mapping marks eligible cx/gpt-5.6, cx/gpt-6-luna and cx/gpt-6-sol route families and honors serviceTiers, including an explicitly empty list. Shared fast option application and wire behavior are SET/SESSION/AI-owned; this entry does not infer them solely from catalog metadata.",
+          "evidence": [
+            "ice:packages/coding-agent/src/ice-provider-settings.ts:199-233",
+            "ice:packages/coding-agent/src/ice-provider.ts:19-39",
+            "ice:packages/coding-agent/test/ice-provider-fast-mode.test.ts:1-19"
+          ],
+          "entry_ids": [
+            "AUTH-027",
+            "AUTH-028"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            534,
+            534
+          ],
+          "claim": "ICE_LOCAL_BASE_URL, ICE_LOCAL_API_KEY and ICE_OMNI_BASE_URL are local-provider environment surfaces.",
+          "verdict": "confirmed with direction and precedence corrections",
+          "finding": "Base URL uses Omni then legacy-local nullish precedence then configured URL/default. ICE_LOCAL_API_KEY is assigned by credential startup and explicit refresh; the cited source does not read it there. ICE_AGENT_VIEW_COLORS is outside AUTH scope.",
+          "evidence": [
+            "ice:packages/coding-agent/src/ice-provider.ts:10-17",
+            "ice:packages/coding-agent/src/ice-provider.ts:252-303"
+          ],
+          "entry_ids": [
+            "AUTH-032"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            670,
+            675
+          ],
+          "claim": "Rust lacks ultra and rejects an ultra thinkingLevelMap key; three private imported keys were remapped.",
+          "verdict": "source-level gap confirmed; private import counts unverified",
+          "finding": "TS declares off plus seven non-off levels through ultra, including the model-config schema. Native enum/map keys stop at max, so unknown ultra deserialization fails whole config. AI-005 owns runtime thinking/clamping. Actual user-directory imports and the stated three remappings cannot be checked under the explicit ban on real ~/.ice and ~/.icers reads.",
+          "evidence": [
+            "ice:packages/ai/src/types.ts:80-82",
+            "ice:packages/coding-agent/src/core/model-config.ts:54-64",
+            "rust:crates/ice-ai/src/types.rs:481-523",
+            "rust:crates/ice-cli/src/config.rs:343-405"
+          ],
+          "entry_ids": [
+            "AUTH-007"
+          ],
+          "first_pass_source": {
+            "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+            "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d"
+          }
+        },
+        {
+          "first_pass_lines": [
+            676,
+            680
+          ],
+          "claim": "Stored keys for zai/opencode/opencode-go/modal lack a native built-in catalog.",
+          "verdict": "public provider difference confirmed; Modal/private credential claim qualified",
+          "finding": "zai, opencode and opencode-go are actual TS built-in providers and absent from the native core's two compiled built-ins. Modal is not in the frozen TS 39-provider registry. Contents of private auth.json and whether any external provider package supplies these identities are explicitly unverified.",
+          "evidence": [
+            "ice:packages/ai/src/providers/all.ts:87-153",
+            "ice:packages/ai/src/providers/zai.ts:1-15",
+            "ice:packages/ai/src/providers/opencode.ts:1-22",
+            "ice:packages/ai/src/providers/opencode-go.ts:1-22",
+            "rust:crates/ice-cli/src/provider.rs:851-979"
+          ],
+          "entry_ids": [
+            "AUTH-011"
+          ],
+          "first_pass_source": {
+            "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+            "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d"
+          }
+        }
+      ]
+    },
+    {
+      "path": "evidence/tools.json",
+      "sha256": "111865d85e2a3625d6f0f273bc256f2cd13b94dab8e0d58b3abafb174deea736",
+      "claims": [
+        {
+          "first_pass_lines": [
+            284,
+            285
+          ],
+          "claim": "Rust model Bash lacks background and stdin parameters.",
+          "verdict": "confirmed-with-scope",
+          "finding": "Model-facing Rust Bash is foreground-only. Rust interactive user Bash has an asynchronous task and cancellation slot, so background-like user execution must not be called wholly missing.",
+          "evidence": [
+            "rust:ICE_PORTING.md:281-290",
+            "rust:crates/ice-tools/src/tools/bash.rs:1-426",
+            "rust:crates/ice-cli/src/interactive_tui.rs:555-675"
+          ],
+          "entry_ids": [
+            "TOOLS-001",
+            "TOOLS-003",
+            "TOOLS-016"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            287,
+            299
+          ],
+          "claim": "Automatic/manual release, a <=16 running registry, completion and cleanup.",
+          "verdict": "qualified",
+          "finding": "Immediate explicit launches enforce 16 running shells; foreground adoption/release is not covered by that admission guard. Finished non-lingering retention is 20 in adoption order; lingering jobs remain. User-kill synthetic completion omits ordinary log/exit/lingering fields, and late settlement is ignored. Full-log creation/removal and process cleanup require distinct contracts.",
+          "evidence": [
+            "rust:ICE_PORTING.md:287-299",
+            "ice:packages/coding-agent/src/core/tools/bash.ts:1-749",
+            "ice:packages/coding-agent/src/core/tools/bash-background.ts:1-687"
+          ],
+          "entry_ids": [
+            "TOOLS-003",
+            "TOOLS-004",
+            "TOOLS-005",
+            "TOOLS-008",
+            "TOOLS-010"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            300,
+            306
+          ],
+          "claim": "bash_output/kill/input controls, waiting limits and input denied without UI.",
+          "verdict": "qualified",
+          "finding": "Tool names and high-level limits are correct. No-UI denial applies to approval='ask'; allow bypasses confirmation. Exact wait/cursor/tail/grep, running-state checks, byte budgets and return schemas are specified in the entries.",
+          "evidence": [
+            "rust:ICE_PORTING.md:300-306",
+            "ice:packages/coding-agent/src/core/tools/bash-shells.ts:1-300",
+            "ice:packages/coding-agent/src/core/tools/bash-background.ts:1-687"
+          ],
+          "entry_ids": [
+            "TOOLS-006",
+            "TOOLS-007",
+            "TOOLS-008",
+            "TOOLS-009"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            307,
+            313
+          ],
+          "claim": "Pattern/silence/interval watches, <=16 watches, <=10 fires and defaults.",
+          "verdict": "qualified",
+          "finding": "Explicit create limits do not bound automatically installed default watches. Pattern defaults to one fire; other explicit watches default to three, with maximum ten. Explicit silence minimum is 5 seconds, while automatic silence settings follow their separate policy. Timed prompt detection, fire IDs, rearm/carry and cleanup are material omitted contracts; session owns alert delivery/wake.",
+          "evidence": [
+            "rust:ICE_PORTING.md:307-313",
+            "ice:packages/coding-agent/src/core/tools/bash-watch.ts:1-492",
+            "ice:packages/coding-agent/test/bash-watch.test.ts:1-196"
+          ],
+          "entry_ids": [
+            "TOOLS-011",
+            "TOOLS-012",
+            "TOOLS-013"
+          ]
+        },
+        {
+          "first_pass_lines": [
+            314,
+            316
+          ],
+          "claim": "Shells panel and RPC background controls/events.",
+          "verdict": "confirmed-with-cross-area-scope",
+          "finding": "The tool registry and session delivery contracts are documented in TOOLS and SESSION. RPC-026 verifies command responses and bash background/watch events. TUI-055 is a source-reviewed draft for the shells panel and must be published before global completion; no runtime behavior was exercised.",
+          "evidence": [
+            "rust:ICE_PORTING.md:314-316",
+            "ice:packages/coding-agent/src/core/tools/bash-background.ts:1-687",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:1-244",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:1-705",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-response-validation.ts:1-653",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:1-2253",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:39-190",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:30-177",
+            "rust:crates/ice-cli/src/modes.rs:450-566",
+            "rust:crates/ice-cli/src/remote/protocol.rs:280-315",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:577-697",
+            "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:685-795",
+            "rust:crates/ice-cli/src/remote/protocol.rs:24-119",
+            "rust:crates/ice-cli/src/session_driver.rs:333-351",
+            "ice:packages/coding-agent/src/modes/interactive/components/shells-panel.ts:1-290",
+            "ice:packages/coding-agent/test/shells-panel.test.ts:1-155"
+          ],
+          "entry_ids": [
+            "TOOLS-003",
+            "TOOLS-005",
+            "TOOLS-006",
+            "TOOLS-008",
+            "SESSION-025",
+            "RPC-026",
+            "TUI-055"
+          ],
+          "first_pass_source": {
+            "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+            "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+          }
+        },
+        {
+          "first_pass_lines": [
+            640,
+            640
+          ],
+          "claim": "Output guard requires verification.",
+          "verdict": "partial",
+          "finding": "Rust already has a bounded 64-message RPC writer with ordered drain and failure cancellation. It lacks stdout isolation, individual/aggregate UTF-8 byte reservations, typed limit errors, transient 10 ms retries and guard lifecycle; print mode drops sink failures. Context breakdown and usage totals remain other-area claims.",
+          "evidence": [
+            "rust:ICE_PORTING.md:640-640",
+            "ice:packages/coding-agent/src/core/output-guard.ts:1-147",
+            "rust:crates/ice-cli/src/modes.rs:570-658",
+            "rust:crates/ice-cli/src/modes.rs:1121-1300"
+          ],
+          "entry_ids": [
+            "TOOLS-031"
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Claim metadata only; no detailed gap entry removed or rewritten. Canonical Blackhole first-pass records are eight; four additional-audit behaviors are retained outside the first-pass count."
+}

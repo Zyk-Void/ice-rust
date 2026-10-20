@@ -1,0 +1,255 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+auth.json (standalone AI CLI working directory),packages/ai/src/cli.ts:8,,different-by-design,AI-017
+~/.ice/agent/logs/provider-continuation-diag.jsonl,packages/ai/src/utils/provider-continuation-diag.ts:163,,missing,AI-018
+/proc/self/environ,packages/ai/src/utils/provider-env.ts:26,,partial,AI-016
+src/providers/data/.manifest.json,packages/ai/scripts/model-data.ts:6,,missing,AI-058
+auth.json (readFileSync),packages/ai/src/cli.ts:21,,different-by-design,AI-017
+auth.json (writeFileSync),packages/ai/src/cli.ts:28,,different-by-design,AI-017
+.ice,packages/ai/src/utils/provider-continuation-diag.ts:163,,missing,AI-018
+path.dirname(filePath),packages/ai/src/utils/provider-continuation-diag.ts:173,,missing,AI-018
+filePath,packages/ai/src/utils/provider-continuation-diag.ts:174,,missing,AI-018
+"""/proc/self/environ""",packages/ai/src/utils/provider-env.ts:26,,partial,AI-016
+harness Bash temporary full-output log (bash-*.log),packages/agent/src/harness/utils/shell-output.ts:75,crates/ice-tools/src/shell_output.rs:319,partial,TOOLS-015
+harness Bash temporary full-output log (bash-*.log),packages/agent/src/harness/utils/shell-output.ts:88,crates/ice-tools/src/shell_output.rs:319,partial,TOOLS-015
+foreground spill log ownership on registry disposal,packages/coding-agent/src/core/tools/bash-background.ts:271,crates/ice-tools/src/os_env.rs:702,missing,TOOLS-008
+foreground spill log ownership on registry disposal,packages/coding-agent/src/core/tools/bash-background.ts:581,crates/ice-tools/src/os_env.rs:702,missing,TOOLS-008
+background full-output log queried by tail/grep,packages/coding-agent/src/core/tools/bash-background.ts:469,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-007
+background full-output log queried by tail/grep,packages/coding-agent/src/core/tools/bash-background.ts:655,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-007
+background shell log eviction/disposal,packages/coding-agent/src/core/tools/bash-background.ts:669,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-005
+sessionDir,packages/coding-agent/src/core/agent-session-runtime.ts:404,crates/ice-harness/src/agent_harness.rs:2056,partial,SESSION-021
+skill.filePath,packages/coding-agent/src/core/agent-session.ts:1605,crates/ice-cli/src/agent_session.rs:153,partial,SESSION-019
+dir,packages/coding-agent/src/core/agent-session.ts:3949,crates/ice-cli/src/agent_session.rs:347,partial,SESSION-038
+filePath,packages/coding-agent/src/core/agent-session.ts:3971,crates/ice-cli/src/agent_session.rs:347,partial,SESSION-038
+sessionDir,packages/coding-agent/src/core/session-manager.ts:495,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+resolvedFilePath,packages/coding-agent/src/core/session-manager.ts:528,crates/ice-harness/src/session/jsonl/storage.rs:133,different-by-design,SESSION-030
+filePath,packages/coding-agent/src/core/session-manager.ts:581,crates/ice-harness/src/session/jsonl/storage.rs:133,different-by-design,SESSION-030
+resolvedSessionDir,packages/coding-agent/src/core/session-manager.ts:648,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+path,packages/coding-agent/src/core/session-manager.ts:657,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+filePath,packages/coding-agent/src/core/session-manager.ts:698,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+dir,packages/coding-agent/src/core/session-manager.ts:832,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+this.sessionDir,packages/coding-agent/src/core/session-manager.ts:890,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+explicitPath,packages/coding-agent/src/core/session-manager.ts:914,crates/ice-harness/src/session/jsonl/storage.rs:133,different-by-design,SESSION-030
+this.sessionFile,packages/coding-agent/src/core/session-manager.ts:991,crates/ice-harness/src/session/jsonl/codec.rs:4,different-by-design,SESSION-029
+fd,packages/coding-agent/src/core/session-manager.ts:994,crates/ice-harness/src/session/jsonl/codec.rs:4,different-by-design,SESSION-029
+this.sessionFile,packages/coding-agent/src/core/session-manager.ts:1037,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+fd,packages/coding-agent/src/core/session-manager.ts:1040,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+this.sessionFile,packages/coding-agent/src/core/session-manager.ts:1048,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+fd,packages/coding-agent/src/core/session-manager.ts:1053,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+this.sessionFile,packages/coding-agent/src/core/session-manager.ts:1155,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+fd,packages/coding-agent/src/core/session-manager.ts:1158,crates/ice-harness/src/session/jsonl/storage.rs:111,different-by-design,SESSION-031
+dir,packages/coding-agent/src/core/session-manager.ts:1669,crates/ice-harness/src/session/state.rs:438,different-by-design,SESSION-033
+newSessionFile,packages/coding-agent/src/core/session-manager.ts:1690,crates/ice-harness/src/session/state.rs:438,different-by-design,SESSION-033
+newSessionFile,packages/coding-agent/src/core/session-manager.ts:1695,crates/ice-harness/src/session/state.rs:438,different-by-design,SESSION-033
+sessionsDir,packages/coding-agent/src/core/session-manager.ts:1744,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+dir,packages/coding-agent/src/core/session-manager.ts:1754,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+sessionPath,packages/coding-agent/src/core/session-manager.ts:1831,crates/ice-harness/src/session/jsonl/repo.rs:324,partial,SESSION-032
+"fileURLToPath(new URL(relativePath, import.meta.url))",packages/storage/sqlite-node/src/sqlite/migrations.ts:12,crates/ice-harness/src/session/sqlite.rs:1,different-by-design,SESSION-007
+.ice,packages/coding-agent/src/config.ts:523,,partial,SET-001
+agentDir/themes,packages/coding-agent/src/config.ts:563,,missing,SET-033
+agentDir/models.json,packages/coding-agent/src/config.ts:568,,partial,SET-001
+agentDir/auth.json,packages/coding-agent/src/config.ts:573,,partial,SET-001
+agentDir/settings.json,packages/coding-agent/src/config.ts:578,,partial,SET-007
+agentDir/tools,packages/coding-agent/src/config.ts:583,,partial,SET-001
+agentDir/bin,packages/coding-agent/src/config.ts:588,,partial,SET-001
+agentDir/prompts,packages/coding-agent/src/config.ts:593,,partial,SET-028
+agentDir/sessions,packages/coding-agent/src/config.ts:598,,partial,SET-001
+agentDir/<APP_NAME>-debug.log,packages/coding-agent/src/config.ts:603,,partial,SET-001
+cwd/.ice,packages/coding-agent/src/config.ts:558,,partial,SET-001
+agentDir/trust.json,packages/coding-agent/src/core/trust-manager.ts:213,,partial,SET-004
+trust.json.lock,packages/coding-agent/src/core/trust-manager.ts:146,,partial,SET-004
+AGENTS.md,packages/coding-agent/src/core/resource-loader.ts:85,,partial,SET-025
+AGENTS.MD,packages/coding-agent/src/core/resource-loader.ts:85,,partial,SET-025
+CLAUDE.md,packages/coding-agent/src/core/resource-loader.ts:85,,partial,SET-025
+CLAUDE.MD,packages/coding-agent/src/core/resource-loader.ts:85,,partial,SET-025
+agentDir/system-base.md,packages/coding-agent/src/core/resource-loader.ts:568,,partial,SET-026
+SYSTEM.md,packages/coding-agent/src/core/resource-loader.ts:1098,,partial,SET-026
+APPEND_SYSTEM.md,packages/coding-agent/src/core/resource-loader.ts:1114,,partial,SET-026
+.gitignore,packages/coding-agent/src/core/skills.ts:17,,partial,SET-030
+.ignore,packages/coding-agent/src/core/skills.ts:17,,partial,SET-030
+.fdignore,packages/coding-agent/src/core/skills.ts:17,,partial,SET-030
+SKILL.md,packages/coding-agent/src/core/skills.ts:196,,partial,SET-030
+package.json ice/pi resource manifest,packages/coding-agent/src/core/ice-manifest.ts:1,crates/ice-extensions/src/loader.rs:1,different-by-design,EXT-005
+session file target @1508,packages/coding-agent/src/modes/rpc/rpc-mode.ts:1508,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+session file target @1596,packages/coding-agent/src/modes/rpc/rpc-mode.ts:1596,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+Unix listener dirname(this.path) @67,packages/server/src/transports/unix/listener.ts:67,crates/ice-cli/src/remote/client.rs:34,missing,RPC-008
+Unix listener this.path @175,packages/server/src/transports/unix/listener.ts:175,crates/ice-cli/src/remote/client.rs:34,missing,RPC-008
+Unix listener preserved @188,packages/server/src/transports/unix/listener.ts:188,crates/ice-cli/src/remote/client.rs:34,missing,RPC-008
+Unix listener path @325,packages/server/src/transports/unix/listener.ts:325,crates/ice-cli/src/remote/client.rs:34,missing,RPC-008
+Unix listener preserved @335,packages/server/src/transports/unix/listener.ts:335,crates/ice-cli/src/remote/client.rs:34,missing,RPC-008
+Unix listener path @345,packages/server/src/transports/unix/listener.ts:345,crates/ice-cli/src/remote/client.rs:34,missing,RPC-008
+themesDir,packages/coding-agent/src/modes/interactive/theme/theme.ts:605,crates/ice-tui/src/theme.rs:343,missing,TUI-003
+themePath,packages/coding-agent/src/modes/interactive/theme/theme.ts:610,crates/ice-tui/src/theme.rs:343,missing,TUI-003
+customThemesDir,packages/coding-agent/src/modes/interactive/theme/theme.ts:667,crates/ice-tui/src/theme.rs:343,missing,TUI-003
+registeredTheme.sourcePath,packages/coding-agent/src/modes/interactive/theme/theme.ts:760,crates/ice-tui/src/theme.rs:343,missing,TUI-003
+themePath,packages/coding-agent/src/modes/interactive/theme/theme.ts:771,crates/ice-tui/src/theme.rs:343,missing,TUI-003
+themePath,packages/coding-agent/src/modes/interactive/theme/theme.ts:808,crates/ice-tui/src/theme.rs:343,missing,TUI-001
+profilesDir(),packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:107,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+profilePath(name),packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:121,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+profilesDir(),packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:156,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+tmpPath,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:158,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+tmpPath,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:159,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+profilePath(name),packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:169,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+profilePath(oldName),packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:185,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+customPath,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:23,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+customFile,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:28,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+getCustomThemesDir(),packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:70,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+tmpPath,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:73,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+tmpPath,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:74,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+source.path,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:102,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+themeFilePath(oldName),packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:122,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+themeFilePath(name),packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:132,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+.ice,packages/tui/src/tui.ts:375,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+ICE_TUI_WRITE_LOG file or directory/tui-<local timestamp>-<pid>.log,packages/tui/src/terminal.ts:112,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+logDirectory/ice-debug.log,packages/tui/src/tui-main-screen.ts:264,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+logDirectory/ice-crash.log,packages/tui/src/tui-main-screen.ts:478,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+/tmp/tui/render-<timestamp>-<random>.log,packages/tui/src/tui-main-screen.ts:520,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+logDirectory option -> ICE_CODING_AGENT_DIR -> home/.ice/agent,packages/tui/src/tui.ts:375,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+<os.tmpdir()>/session.html,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7644,crates/ice-cli/src/interactive_tui/sessions.rs:8,partial,TUI-078
+<os.tmpdir()>/ice-clipboard-<UUID>.<ext>,packages/coding-agent/src/modes/interactive/interactive-mode.ts:3761,crates/ice-cli/src/interactive_tui.rs:2425,partial,TUI-080
+<agent-dir>/<APP_NAME>-debug.log,packages/coding-agent/src/config.ts:602,crates/ice-cli/src/interactive_tui/commands.rs:799,missing,TUI-084
+<agent-dir>/keybindings.json,packages/coding-agent/src/core/keybindings.ts:440,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+~/.tmux.conf,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1372,crates/ice-cli/src/interactive_tui/run.rs:1,missing,TUI-077
+global agent definitions,packages/coding-agent/src/subagents/definitions/paths.ts:27,crates/ice-cli/src/child_agents.rs:207,missing,SUB-003
+project .ice/agents,packages/coding-agent/src/subagents/definitions/discover.ts:78,crates/ice-cli/src/child_agents.rs:207,missing,SUB-003
+project .claude/agents,packages/coding-agent/src/subagents/definitions/load.ts:113,crates/ice-cli/src/child_agents.rs:207,missing,SUB-002
+managedAgentsDir/packageAgentDirs,packages/coding-agent/src/subagents/definitions/load.ts:103,crates/ice-cli/src/child_agents.rs:207,missing,SUB-003
+<parent-session-dir>/subagents/<parent-session-id>/,packages/coding-agent/src/subagents/registry/child-sessions.ts:16,crates/ice-cli/src/child_agents.rs:207,missing,SUB-013
+<child-session-dir>/worktrees/<child-id>,packages/coding-agent/src/subagents/v2/runtime.ts:683,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+<worktree-path>.ice-owner.json,packages/coding-agent/src/subagents/isolation/worktree.ts:340,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+refs/ice/subagent-v2/worktrees/<sha256-path>,packages/coding-agent/src/subagents/isolation/worktree.ts:414,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+<child-session-dir>/patches/<child-id>/<tree>-<sha256>.patch,packages/coding-agent/src/subagents/v2/runtime.ts:2046,crates/ice-cli/src/child_agents.rs:207,missing,SUB-031
+<patch-directory>/<uuid>.recovery.json,packages/coding-agent/src/subagents/isolation/patch-state.ts:103,crates/ice-cli/src/child_agents.rs:207,missing,SUB-031
+<agentDir>/artifacts/subagent-output/<sha256-owner>/<uuid>/output.txt|output.json,packages/coding-agent/src/subagents/results/output-artifacts.ts:287,crates/ice-cli/src/child_agents.rs:207,missing,SUB-028
+legacy schema-v1 report artifact directory,packages/coding-agent/src/subagents/runtime/prompt.ts:358,crates/ice-cli/src/child_agents.rs:207,missing,SUB-042
+<agentDir>/sessions (prune traversal root),packages/coding-agent/src/subagents/v2/cli.ts:55,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+getObserveDashboardPath(),packages/coding-agent/src/observe/observe-server.ts:75,,missing,OBS-014
+path,packages/coding-agent/src/observe/observe-server.ts:95,,missing,OBS-014
+dirname(path),packages/coding-agent/src/observe/observe-server.ts:101,,missing,OBS-014
+path,packages/coding-agent/src/observe/observe-server.ts:103,,missing,OBS-014
+path,packages/coding-agent/src/observe/observe-server.ts:107,,missing,OBS-014
+dirname(databasePath),packages/coding-agent/src/observe/observe-store.ts:315,,missing,OBS-012
+agentDir/observability.sqlite,packages/coding-agent/src/main.ts:911,,missing,OBS-003
+agentDir/observe.token,packages/coding-agent/src/main.ts:935,,missing,OBS-014
+localStorage:ice-observe-inspector-width,packages/coding-agent/src/observe/observe-dashboard.html:870,,missing,OBS-021
+localStorage:ice-observe-view,packages/coding-agent/src/observe/observe-dashboard.html:1978,,missing,OBS-024
+~/.cognee/.env,packages/coding-agent/src/ice-cognee-env.ts:54,,missing,COG-002
+<storageDir>/observations.jsonl,packages/coding-agent/src/ice-cognee-observer.ts:55,,missing,COG-059
+<storageDir>/observations.jsonl.1,packages/coding-agent/src/ice-cognee-observer.ts:100,,missing,COG-060
+<agentDir>/ice-blackhole/ice-blackhole-config.json,packages/coding-agent/src/ice-cognee.ts:141,,missing,COG-051
+<target>.<uuid>.tmp,packages/coding-agent/src/ice-cognee.ts:467,,missing,COG-042
+<storageDir>/pending/,packages/coding-agent/src/ice-cognee.ts:1135,,missing,COG-033
+<storageDir>/pending/<operationId>.json,packages/coding-agent/src/ice-cognee.ts:503,,missing,COG-034
+<storageDir>/dream/<sessionId>.json,packages/coding-agent/src/ice-cognee.ts:620,,missing,COG-037
+<storageDir>/dream/<sessionId>.<sha256(dataset)>.json,packages/coding-agent/src/ice-cognee.ts:614,,missing,COG-037
+<dream-record>.lock,packages/coding-agent/src/ice-cognee.ts:653,,missing,COG-038
+<dream-record> acknowledgement removal,packages/coding-agent/src/ice-cognee.ts:725,,missing,COG-040
+<storageDir>/config.json,packages/coding-agent/src/ice-cognee.ts:1134,,missing,COG-006
+<agentDir>/ice-cognee/api_key.json,packages/coding-agent/src/ice-cognee.ts:901,,missing,COG-003
+~/.cognee-plugin/api_key.json,packages/coding-agent/src/ice-cognee.ts:900,,missing,COG-003
+<storageDir>/warmup/<timestamp>-<uuid-prefix>.json,packages/coding-agent/src/ice-cognee.ts:1270,,missing,COG-036
+<storageDir>/compaction-recall.json,packages/coding-agent/src/ice-cognee.ts:2288,,missing,COG-051
+<packageDir>/{src|dist}/ice-cognee-skills/,packages/coding-agent/src/config.ts:469,,missing,COG-058
+<agentDir>/ice-blackhole/ice-blackhole-config.json,packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:39,,missing,BLACK-002
+<agentDir>/ice-cognee/compaction-recall.json,packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts:32,,missing,BLACK-037
+auth-storage.ts:statSync(path),packages/coding-agent/src/core/auth-storage.ts:45,crates/ice-cli/src/config.rs:143,partial,AUTH-003
+auth-storage.ts:writeFileSync(temporary),packages/coding-agent/src/core/auth-storage.ts:60,crates/ice-cli/src/config.rs:20,partial,AUTH-002
+auth-storage.ts:renameSync(temporary),packages/coding-agent/src/core/auth-storage.ts:61,crates/ice-cli/src/config.rs:20,partial,AUTH-002
+auth-storage.ts:readFileSync(this.authPath),packages/coding-agent/src/core/auth-storage.ts:87,crates/ice-cli/src/config.rs:143,partial,AUTH-003
+auth-storage.ts:mkdirSync(dir),packages/coding-agent/src/core/auth-storage.ts:97,crates/ice-cli/src/config.rs:20,partial,AUTH-002
+auth-storage.ts:writeFileSync(this.authPath),packages/coding-agent/src/core/auth-storage.ts:103,crates/ice-cli/src/config.rs:20,partial,AUTH-002
+auth-storage.ts:readFileSync(this.authPath),packages/coding-agent/src/core/auth-storage.ts:142,crates/ice-cli/src/config.rs:143,partial,AUTH-003
+auth-storage.ts:readFileSync(this.authPath),packages/coding-agent/src/core/auth-storage.ts:214,crates/ice-cli/src/config.rs:143,partial,AUTH-003
+auth-storage.ts:readFileSync(normalizePath(authPath)),packages/coding-agent/src/core/auth-storage.ts:413,crates/ice-cli/src/config.rs:143,partial,AUTH-003
+model-config.ts:readFile(path),packages/coding-agent/src/core/model-config.ts:240,crates/ice-cli/src/config.rs:343,partial,AUTH-007
+ice-provider.ts:readFile(authPath),packages/coding-agent/src/ice-provider.ts:67,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+ice-provider.ts:readFile(modelsPath),packages/coding-agent/src/ice-provider.ts:259,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+ice-provider.ts:writeFile(temporaryPath),packages/coding-agent/src/ice-provider.ts:284,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+ice-provider.ts:rename(temporaryPath),packages/coding-agent/src/ice-provider.ts:285,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+models catalog cache,packages/coding-agent/src/core/models-store.ts:1,crates/ice-cli/src/provider.rs:859,missing,AUTH-010
+Omni models.json temporary replacement,packages/coding-agent/src/ice-provider.ts:284,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+"""/proc/self/environ""",packages/coding-agent/src/bun/restore-sandbox-env.ts:26,crates/ice-cli/src/bin/icers.rs:16,partial,CLI-001
+absolutePath,packages/coding-agent/src/cli/file-processor.ts:50,crates/ice-cli/src/app.rs:807,partial,CLI-009
+absolutePath,packages/coding-agent/src/cli/file-processor.ts:63,crates/ice-cli/src/app.rs:807,partial,CLI-009
+absolutePath,packages/coding-agent/src/cli/file-processor.ts:90,crates/ice-cli/src/app.rs:807,partial,CLI-009
+.ice,packages/coding-agent/src/cli/startup-ui.ts:28,crates/ice-cli/src/extras.rs:35,partial,CLI-015
+.ice,packages/coding-agent/src/core/legacy-compat/paths.ts:4,crates/ice-cli/src/config.rs:93,different-by-design,CLI-018
+oauthPath,packages/coding-agent/src/migrations.ts:35,crates/ice-cli/src/config.rs:176,partial,CLI-013
+oauthPath,packages/coding-agent/src/migrations.ts:40,crates/ice-cli/src/config.rs:176,partial,CLI-013
+settingsPath,packages/coding-agent/src/migrations.ts:49,crates/ice-cli/src/config.rs:176,partial,CLI-013
+settingsPath,packages/coding-agent/src/migrations.ts:59,crates/ice-cli/src/config.rs:176,partial,CLI-013
+dirname(authPath),packages/coding-agent/src/migrations.ts:67,crates/ice-cli/src/config.rs:176,partial,CLI-013
+authPath,packages/coding-agent/src/migrations.ts:68,crates/ice-cli/src/config.rs:176,partial,CLI-013
+agentDir,packages/coding-agent/src/migrations.ts:89,crates/ice-cli/src/config.rs:195,partial,CLI-014
+file,packages/coding-agent/src/migrations.ts:101,crates/ice-cli/src/config.rs:195,partial,CLI-014
+correctDir,packages/coding-agent/src/migrations.ts:116,crates/ice-cli/src/config.rs:195,partial,CLI-014
+file,packages/coding-agent/src/migrations.ts:125,crates/ice-cli/src/config.rs:195,partial,CLI-014
+commandsDir,packages/coding-agent/src/migrations.ts:142,crates/ice-cli/src/config.rs:195,partial,CLI-014
+configPath,packages/coding-agent/src/migrations.ts:161,crates/ice-cli/src/config.rs:195,partial,CLI-014
+configPath,packages/coding-agent/src/migrations.ts:167,crates/ice-cli/src/config.rs:195,partial,CLI-014
+binDir,packages/coding-agent/src/migrations.ts:192,crates/ice-cli/src/config.rs:195,partial,CLI-014
+oldPath,packages/coding-agent/src/migrations.ts:196,crates/ice-cli/src/config.rs:195,partial,CLI-014
+toolsDir,packages/coding-agent/src/migrations.ts:233,crates/ice-cli/src/config.rs:195,partial,CLI-014
+compatibleConfigRoot,packages/coding-agent/src/core/legacy-compat/paths.ts:4,crates/ice-cli/src/config.rs:93,different-by-design,CLI-018
+compatibleCogneeStorageDir,packages/coding-agent/src/core/legacy-compat/cognee.ts:3,,different-by-design,CLI-018
+compatibleBlackholeConfigPath,packages/coding-agent/src/core/legacy-compat/cognee.ts:7,,different-by-design,CLI-018
+observability.sqlite,packages/coding-agent/src/main.ts:911,,partial,CLI-019
+observe.token,packages/coding-agent/src/main.ts:935,,partial,CLI-019
+"""/proc/self/environ""",packages/coding-agent/src/core/package-manager.ts:12,crates/ice-cli/src/install.rs:223,different-by-design,CLI-023
+<agentDir>/tmp/extensions,packages/coding-agent/src/core/package-manager.ts:219,,missing,CLI-022
+<agentDir>/npm/node_modules,packages/coding-agent/src/core/package-manager.ts:2057,,missing,CLI-022
+<projectConfigDir>/npm/node_modules,packages/coding-agent/src/core/package-manager.ts:2055,,missing,CLI-022
+<scopeRoot>/git/<host>/<repository-path>,packages/coding-agent/src/core/package-manager.ts:2087,,missing,CLI-022
+<agentDir>/tmp/extensions/npm/<hash8>/node_modules,packages/coding-agent/src/core/package-manager.ts:2052,,missing,CLI-022
+<agentDir>/tmp/extensions/git-<host>/<hash8>/<repository-path>,packages/coding-agent/src/core/package-manager.ts:2081,,missing,CLI-022
+.<repository>.ice-update-incomplete,packages/coding-agent/src/core/package-manager.ts:1938,,missing,CLI-026
+<managed-npm-root>/package.json,packages/coding-agent/src/core/package-manager.ts:1994,,missing,CLI-022
+<managed-root>/.gitignore,packages/coding-agent/src/core/package-manager.ts:2004,,missing,CLI-022
+.gitignore,packages/coding-agent/src/core/package-manager.ts:206,,missing,CLI-030
+.ignore,packages/coding-agent/src/core/package-manager.ts:206,,missing,CLI-030
+.fdignore,packages/coding-agent/src/core/package-manager.ts:206,,missing,CLI-030
+SKILL.md,packages/coding-agent/src/core/package-manager.ts:363,,missing,CLI-030
+package.json:ice,packages/coding-agent/src/core/package-manager.ts:2138,,missing,CLI-029
+package.json:pi,packages/coding-agent/src/core/package-manager.ts:2138,,missing,CLI-029
+package.json:ice.extensions,packages/coding-agent/src/core/package-manager.ts:2138,,missing,CLI-029
+package.json:ice.skills,packages/coding-agent/src/core/package-manager.ts:2138,,missing,CLI-029
+package.json:ice.prompts,packages/coding-agent/src/core/package-manager.ts:2138,,missing,CLI-029
+package.json:ice.themes,packages/coding-agent/src/core/package-manager.ts:2138,,missing,CLI-029
+extensions/index.ts,packages/coding-agent/src/core/package-manager.ts:551,,missing,CLI-029
+extensions/index.js,packages/coding-agent/src/core/package-manager.ts:552,,missing,CLI-029
+extensions/,packages/coding-agent/src/core/package-manager.ts:563,,missing,CLI-030
+skills/,packages/coding-agent/src/core/package-manager.ts:346,,missing,CLI-030
+prompts/,packages/coding-agent/src/core/package-manager.ts:459,,missing,CLI-030
+themes/,packages/coding-agent/src/core/package-manager.ts:496,,missing,CLI-030
+<ancestor>/.agents/skills,packages/coding-agent/src/core/package-manager.ts:445,,missing,CLI-032
+<HOME>/.agents/skills,packages/coding-agent/src/core/package-manager.ts:2387,,missing,CLI-032
+.git,packages/coding-agent/src/core/package-manager.ts:427,,missing,CLI-032
+<agentDir>/claude-sdk.json,packages/coding-agent/src/claude-sdk/extension.ts:8,,missing,MISC-030
+claude-sdk.tokenFile absolute private credential path,packages/coding-agent/src/claude-sdk/adapter.ts:56,,missing,MISC-030
+.ice,packages/evals/src/extensions.eval.ts:24,,missing,MISC-048
+.eval/<timestamp>_<UUID>,packages/evals/scripts/run-evals.mjs:13,,missing,MISC-040
+src/**/*.eval.ts,packages/evals/vitest.config.ts:10,,missing,MISC-040
+test/**/*.test.ts,packages/evals/vitest.test.config.ts:8,,missing,MISC-040
+ice-eval-*/workspace,packages/evals/src/ice-harness.ts:123,,partial,MISC-041
+ice-eval-*/agent,packages/evals/src/ice-harness.ts:124,,partial,MISC-041
+ice-eval-*/sessions,packages/evals/src/ice-harness.ts:141,,partial,MISC-041
+sessions/<SHA-256(runId)>/session.jsonl,packages/evals/src/vitest-evals/artifacts.ts:104,,missing,MISC-044
+sources/<SHA-256(runId)>/<basename>,packages/evals/src/vitest-evals/artifacts.ts:100,,missing,MISC-044
+runs.jsonl,packages/evals/src/vitest-evals/reporter.ts:46,,missing,MISC-046
+.ice/extensions/hello.ts,packages/evals/src/extensions.eval.ts:24,,missing,MISC-048
+<exportTemplateDir>/template.html,packages/coding-agent/src/core/export-html/index.ts:145,crates/ice-cli/src/export.rs:19,partial,MISC-017
+<exportTemplateDir>/template.css,packages/coding-agent/src/core/export-html/index.ts:146,crates/ice-cli/src/export.rs:19,partial,MISC-017
+<exportTemplateDir>/template.js,packages/coding-agent/src/core/export-html/index.ts:147,crates/ice-cli/src/export.rs:19,partial,MISC-017
+<exportTemplateDir>/vendor/marked.min.js,packages/coding-agent/src/core/export-html/index.ts:148,crates/ice-cli/src/export.rs:19,partial,MISC-017
+<exportTemplateDir>/vendor/highlight.min.js,packages/coding-agent/src/core/export-html/index.ts:149,crates/ice-cli/src/export.rs:19,partial,MISC-017
+HTML export outputPath,packages/coding-agent/src/core/export-html/index.ts:280,crates/ice-cli/src/export.rs:19,partial,MISC-017
+HTML export outputPath,packages/coding-agent/src/core/export-html/index.ts:314,crates/ice-cli/src/export.rs:19,partial,MISC-017
+HF_TOKEN_PATH / HF_HOME/token / XDG_CACHE_HOME/huggingface/token / ~/.cache/huggingface/token,packages/coding-agent/src/extensions/llama/huggingface.ts:39,crates/ice-ai/src/providers/mod.rs:1,missing,MISC-022
+changelogPath,packages/coding-agent/src/utils/changelog.ts:117,crates/ice-cli/src/changelog.rs:13,partial,MISC-013
+/proc/version,packages/coding-agent/src/utils/clipboard-image.ts:149,crates/ice-cli/src/interactive_tui/run.rs:409,partial,MISC-006
+WSL clipboard image temporary file,packages/coding-agent/src/utils/clipboard-image.ts:196,crates/ice-cli/src/interactive_tui/run.rs:409,partial,MISC-006
+WSL clipboard image temporary file,packages/coding-agent/src/utils/clipboard-image.ts:206,crates/ice-cli/src/interactive_tui/run.rs:409,partial,MISC-006
+<getBinDir()>/,packages/coding-agent/src/utils/tools-manager.ts:268,crates/ice-tools/src/tools/find.rs:1,different-by-design,MISC-010
+<getBinDir()>/extract_tmp_<binary>_<pid>_<timestamp>_<random>,packages/coding-agent/src/utils/tools-manager.ts:284,crates/ice-tools/src/tools/find.rs:1,different-by-design,MISC-010
+<getBinDir()>/<binary>[.exe],packages/coding-agent/src/utils/tools-manager.ts:307,crates/ice-tools/src/tools/find.rs:1,different-by-design,MISC-010
+<node_modules>/.ice-native-quarantine/<run>/<relative native file>,packages/coding-agent/src/utils/windows-self-update.ts:80,crates/ice-cli/src/updates.rs:1297,different-by-design,MISC-002
+Windows loaded native dependency path,packages/coding-agent/src/utils/windows-self-update.ts:81,crates/ice-cli/src/updates.rs:1297,different-by-design,MISC-002

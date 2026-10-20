@@ -1,0 +1,1642 @@
+{
+  "source_only": true,
+  "records": [
+    {
+      "area": "ai",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AI-01",
+        "entries": [
+          "AI-006",
+          "AI-012",
+          "AI-023",
+          "AI-052",
+          "AI-053"
+        ],
+        "question": "The source differences are established. During implementation, which malformed-input compatibility behaviors should be preserved, and which should intentionally fail closed? Hard output authority, schema compile failures, missing stream terminators and cross-block delta loss should be treated as correctness boundaries rather than replicated leniency."
+      },
+      "text": "The source differences are established. During implementation, which malformed-input compatibility behaviors should be preserved, and which should intentionally fail closed? Hard output authority, schema compile failures, missing stream terminators and cross-block delta loss should be treated as correctness boundaries rather than replicated leniency."
+    },
+    {
+      "area": "ai",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AI-02",
+        "entries": [
+          "AI-027",
+          "AI-055",
+          "AI-056"
+        ],
+        "question": "Should the new Codex transport preserve the TS socket pool’s session/account-only identity, or deliberately include endpoint and credential revision? Endpoint/token rotation behavior requires an explicit implementation choice; no live endpoint was contacted."
+      },
+      "text": "Should the new Codex transport preserve the TS socket pool’s session/account-only identity, or deliberately include endpoint and credential revision? Endpoint/token rotation behavior requires an explicit implementation choice; no live endpoint was contacted."
+    },
+    {
+      "area": "ai",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AI-03",
+        "entries": [
+          "AI-015",
+          "AI-057",
+          "AI-058"
+        ],
+        "question": "Which model-catalog refresh and image-provider lifecycle should be shipped with the first native release? The report specifies the frozen source behavior, while current external model availability and pricing remain outside this offline audit."
+      },
+      "text": "Which model-catalog refresh and image-provider lifecycle should be shipped with the first native release? The report specifies the frozen source behavior, while current external model availability and pricing remain outside this offline audit."
+    },
+    {
+      "area": "ai",
+      "kind": "unverified",
+      "record": {
+        "tests_executed": false,
+        "source_code_modified": false,
+        "description": "All available text for 67 assigned source rows was reviewed, with one generated image catalog grouped under its fully read generator/consumer. All 137 TS AI test/helper files and six native integration tests have source review. Explicit redactions are excluded. Live provider behavior and external package internals were not tested.",
+        "generated_data_groups": [
+          {
+            "path": "ice:packages/ai/src/image-models.generated.ts",
+            "sha256": "eca804167d721a157c997bc22d76e6f869da35467782eb4b0de1f6b3b2d8ff66",
+            "total_lines": 820,
+            "read_ranges": [
+              [
+                1,
+                35
+              ]
+            ],
+            "policy": "Generated values grouped under fully read generator generate-image-models.ts:1-163 and consumer image-models.ts:1-43; complete body not claimed as read."
+          },
+          {
+            "path": "ice:packages/ai/src/models.generated.ts",
+            "sha256": "7f7b345e04d96fe3944c4aee7821790fa0174e2780ed872e237411dfc94e541d",
+            "total_lines": 122,
+            "read_ranges": [
+              [
+                1,
+                122
+              ]
+            ],
+            "policy": "Full aggregator read; full 2909-line generator, model-data validation and AUTH-owned provider shards/consumer support grouped catalog-value review. No generator executed."
+          }
+        ],
+        "redacted_read_records": [
+          {
+            "path": "ice:packages/ai/src/models.ts",
+            "total_lines": 954,
+            "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+            "ranges": [
+              [
+                1,
+                468
+              ],
+              [
+                470,
+                492
+              ],
+              [
+                494,
+                954
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 2,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              469,
+              493
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/utils/estimate.ts",
+            "total_lines": 144,
+            "sha256": "8334f683185cc11d7e867f30963dfc4b9d89c3db79e852364e89a24cb89b316a",
+            "ranges": [
+              [
+                1,
+                91
+              ],
+              [
+                93,
+                144
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              92
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/anthropic-messages.ts",
+            "total_lines": 1369,
+            "sha256": "cc77875a3585aa8a9984e1851daa31a0f65bb8dbc7334a3c0fa7b1493f66a123",
+            "ranges": [
+              [
+                1,
+                846
+              ],
+              [
+                848,
+                1369
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 3,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              847
+            ]
+          },
+          {
+            "path": "ice:packages/ai/test/openrouter-oauth.test.ts",
+            "total_lines": 323,
+            "sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+            "ranges": [
+              [
+                1,
+                8
+              ],
+              [
+                10,
+                242
+              ],
+              [
+                244,
+                258
+              ],
+              [
+                260,
+                323
+              ]
+            ],
+            "owners": [
+              "coordinator",
+              "audit_session"
+            ],
+            "records": 2,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              9,
+              243,
+              259
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/test/anthropic-auth-token.test.ts",
+            "total_lines": 188,
+            "sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+            "ranges": [
+              [
+                1,
+                156
+              ],
+              [
+                158,
+                165
+              ],
+              [
+                167,
+                188
+              ]
+            ],
+            "owners": [
+              "coordinator",
+              "audit_session"
+            ],
+            "records": 2,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              157,
+              166
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/test/together-models.test.ts",
+            "total_lines": 81,
+            "sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+            "ranges": [
+              [
+                1,
+                10
+              ],
+              [
+                12,
+                74
+              ],
+              [
+                76,
+                81
+              ]
+            ],
+            "owners": [
+              "coordinator",
+              "audit_session"
+            ],
+            "records": 2,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              11,
+              75
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/test/fireworks-models.test.ts",
+            "total_lines": 328,
+            "sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+            "ranges": [
+              [
+                1,
+                15
+              ],
+              [
+                17,
+                108
+              ],
+              [
+                110,
+                328
+              ]
+            ],
+            "owners": [
+              "coordinator",
+              "audit_session"
+            ],
+            "records": 2,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              16,
+              109
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/test/baseten-models.test.ts",
+            "total_lines": 142,
+            "sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+            "ranges": [
+              [
+                1,
+                11
+              ],
+              [
+                13,
+                135
+              ],
+              [
+                137,
+                142
+              ]
+            ],
+            "owners": [
+              "coordinator",
+              "audit_session"
+            ],
+            "records": 2,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              12,
+              136
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/api/openai-completions.ts",
+            "total_lines": 1581,
+            "sha256": "02be1155ed483bf695482658d264d283843180453a388c4b062f6cc39441d818",
+            "ranges": [
+              [
+                1,
+                728
+              ],
+              [
+                730,
+                884
+              ],
+              [
+                886,
+                1389
+              ],
+              [
+                1393,
+                1403
+              ],
+              [
+                1405,
+                1581
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              729,
+              885,
+              1390,
+              1391,
+              1392,
+              1404
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/openai-responses.ts",
+            "total_lines": 520,
+            "sha256": "06fa48e250dc0ff5e065d201387e1b3a38315fd911995e57d9a48ae690026e51",
+            "ranges": [
+              [
+                1,
+                166
+              ],
+              [
+                168,
+                171
+              ],
+              [
+                173,
+                432
+              ],
+              [
+                434,
+                481
+              ],
+              [
+                483,
+                520
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              167,
+              172,
+              433,
+              482
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/azure-openai-responses.ts",
+            "total_lines": 359,
+            "sha256": "3df661dff8afd3ec3f7c083046d399b5eb9532a90dea99b619038cedc4ae311a",
+            "ranges": [
+              [
+                1,
+                116
+              ],
+              [
+                118,
+                121
+              ],
+              [
+                123,
+                307
+              ],
+              [
+                309,
+                349
+              ],
+              [
+                351,
+                359
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              117,
+              122,
+              308,
+              350
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/ice-messages.ts",
+            "total_lines": 451,
+            "sha256": "23770ef5d114e4c6b99287c72cff7153750a46da6be6a37d8c66567939c694d3",
+            "ranges": [
+              [
+                1,
+                395
+              ],
+              [
+                397,
+                451
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              396
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/openrouter-images.ts",
+            "total_lines": 197,
+            "sha256": "c658f331cb2278e7accc925fa72eb3c3902d32d6ff37c4263b6bb6108888d440",
+            "ranges": [
+              [
+                1,
+                172
+              ],
+              [
+                176,
+                197
+              ]
+            ],
+            "owners": [
+              "coordinator"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              173,
+              174,
+              175
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/bedrock-converse-stream.ts",
+            "total_lines": 1196,
+            "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+            "ranges": [
+              [
+                1,
+                502
+              ],
+              [
+                504,
+                616
+              ],
+              [
+                618,
+                1196
+              ]
+            ],
+            "owners": [
+              "audit_tools"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              503,
+              617
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/google-generative-ai.ts",
+            "total_lines": 536,
+            "sha256": "8e6b6bbc1b34213e9c0d1f251352a94da9746cd3b948974df777e35ae1ef0798",
+            "ranges": [
+              [
+                1,
+                376
+              ],
+              [
+                378,
+                536
+              ]
+            ],
+            "owners": [
+              "audit_tools"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              377
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/google-vertex.ts",
+            "total_lines": 611,
+            "sha256": "f59e58d8c6c4301dd24810f98ac09b960587723de71ce154a6885e2bb4fe97b7",
+            "ranges": [
+              [
+                1,
+                475
+              ],
+              [
+                477,
+                611
+              ]
+            ],
+            "owners": [
+              "audit_tools"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              476
+            ]
+          },
+          {
+            "path": "ice:packages/ai/test/google-vertex-api-key-resolution.test.ts",
+            "total_lines": 224,
+            "sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+            "ranges": [
+              [
+                1,
+                67
+              ],
+              [
+                69,
+                111
+              ],
+              [
+                113,
+                224
+              ]
+            ],
+            "owners": [
+              "audit_tools"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              68,
+              112
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/api/mistral-conversations.ts",
+            "total_lines": 690,
+            "sha256": "0c2fbfd65bb82a8561c74d20093bf1febda14a4912bc59e7b0d10ddbb0d2355a",
+            "ranges": [
+              [
+                1,
+                268
+              ],
+              [
+                270,
+                350
+              ],
+              [
+                353,
+                690
+              ]
+            ],
+            "owners": [
+              "audit_tools"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              269,
+              351,
+              352
+            ]
+          },
+          {
+            "path": "ice:packages/ai/src/env-api-keys.ts",
+            "total_lines": 188,
+            "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+            "ranges": [
+              [
+                1,
+                28
+              ],
+              [
+                32,
+                188
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              29,
+              30,
+              31
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "rust:crates/ice-cli/src/config.rs",
+            "total_lines": 1761,
+            "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+            "ranges": [
+              [
+                1,
+                886
+              ],
+              [
+                888,
+                1641
+              ],
+              [
+                1644,
+                1761
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              887,
+              1642,
+              1643
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/providers/cloudflare-auth.ts",
+            "total_lines": 104,
+            "sha256": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+            "ranges": [
+              [
+                1,
+                3
+              ],
+              [
+                5,
+                104
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              4
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/coding-agent/src/core/provider-composer.ts",
+            "total_lines": 592,
+            "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+            "ranges": [
+              [
+                1,
+                78
+              ],
+              [
+                80,
+                592
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              79
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/auth/oauth/anthropic.ts",
+            "total_lines": 364,
+            "sha256": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+            "ranges": [
+              [
+                1,
+                30
+              ],
+              [
+                32,
+                364
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              31
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/auth/oauth/openai-codex.ts",
+            "total_lines": 544,
+            "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+            "ranges": [
+              [
+                1,
+                28
+              ],
+              [
+                30,
+                31
+              ],
+              [
+                33,
+                544
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              29,
+              32
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/auth/oauth/openrouter.ts",
+            "total_lines": 312,
+            "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+            "ranges": [
+              [
+                1,
+                20
+              ],
+              [
+                22,
+                312
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              21
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/auth/oauth/xai.ts",
+            "total_lines": 239,
+            "sha256": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+            "ranges": [
+              [
+                1,
+                10
+              ],
+              [
+                12,
+                239
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              11
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/coding-agent/src/ice-provider.ts",
+            "total_lines": 360,
+            "sha256": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+            "ranges": [
+              [
+                1,
+                187
+              ],
+              [
+                189,
+                199
+              ],
+              [
+                201,
+                360
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              188,
+              200
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/ai/src/providers/faux.ts",
+            "total_lines": 710,
+            "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+            "ranges": [
+              [
+                1,
+                445
+              ],
+              [
+                447,
+                710
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              446
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "ice:packages/coding-agent/test/model-registry.test.ts",
+            "total_lines": 2052,
+            "sha256": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+            "ranges": [
+              [
+                1,
+                1528
+              ],
+              [
+                1530,
+                1550
+              ],
+              [
+                1552,
+                1616
+              ],
+              [
+                1618,
+                1638
+              ],
+              [
+                1640,
+                2052
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              1529,
+              1551,
+              1617,
+              1639
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          },
+          {
+            "path": "rust:crates/ice-cli/src/app.rs",
+            "total_lines": 1015,
+            "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+            "ranges": [
+              [
+                245,
+                317
+              ]
+            ],
+            "owners": [
+              "audit_session"
+            ],
+            "records": 1,
+            "fully_read": false,
+            "excluded_redacted_lines": [
+              96
+            ],
+            "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+          }
+        ]
+      },
+      "text": "All available text for 67 assigned source rows was reviewed, with one generated image catalog grouped under its fully read generator/consumer. All 137 TS AI test/helper files and six native integration tests have source review. Explicit redactions are excluded. Live provider behavior and external package internals were not tested."
+    },
+    {
+      "area": "agent",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AGENT-01",
+        "question": "Should the Rust public Agent match awaited TypeScript subscriber acknowledgements and synthetic failure events, or expose these as an explicit compatibility/critical-sink mode while keeping lossy broadcast for UI?",
+        "entries": [
+          "AGENT-021",
+          "AGENT-024",
+          "AGENT-027"
+        ]
+      },
+      "text": "Should the Rust public Agent match awaited TypeScript subscriber acknowledgements and synthetic failure events, or expose these as an explicit compatibility/critical-sink mode while keeping lossy broadcast for UI?"
+    },
+    {
+      "area": "agent",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AGENT-02",
+        "question": "Which TypeScript quirks should be corrected rather than copied: shared continuation arrays, reset during active runs, replacement-string metacharacters, ignore anchoring/escaped exclamation, nonfinite timestamps and unbounded proxy/shell buffers?",
+        "entries": [
+          "AGENT-004",
+          "AGENT-027",
+          "AGENT-029",
+          "AGENT-050",
+          "AGENT-057",
+          "AGENT-060",
+          "AGENT-064"
+        ]
+      },
+      "text": "Which TypeScript quirks should be corrected rather than copied: shared continuation arrays, reset during active runs, replacement-string metacharacters, ignore anchoring/escaped exclamation, nonfinite timestamps and unbounded proxy/shell buffers?"
+    },
+    {
+      "area": "agent",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AGENT-03",
+        "question": "Should the Rust SDK offer exact flat TypeScript message/diagnostic serialization, while retaining native kind/data enums and context-only orphan recovery internally?",
+        "entries": [
+          "AGENT-001",
+          "AGENT-055",
+          "AGENT-058",
+          "AGENT-062",
+          "AGENT-063",
+          "AGENT-064",
+          "AGENT-065"
+        ]
+      },
+      "text": "Should the Rust SDK offer exact flat TypeScript message/diagnostic serialization, while retaining native kind/data enums and context-only orphan recovery internally?"
+    },
+    {
+      "area": "agent",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AGENT-04",
+        "question": "Should post-exit shell output use TypeScript’s resettable 100 ms idle grace or Rust’s bounded-total policy once live pipe draining is repaired?",
+        "entries": [
+          "AGENT-050",
+          "AGENT-053"
+        ]
+      },
+      "text": "Should post-exit shell output use TypeScript’s resettable 100 ms idle grace or Rust’s bounded-total policy once live pipe draining is repaired?"
+    },
+    {
+      "area": "agent",
+      "kind": "unverified",
+      "record": {
+        "entry_id": "AGENT-060",
+        "finding": "Connector safety rules blocked node_modules/ignore. Call-site transformations and concrete Rust subset are verified; full JavaScript matcher edge semantics are not. No bypass, install or network request was attempted."
+      },
+      "text": "Connector safety rules blocked node_modules/ignore. Call-site transformations and concrete Rust subset are verified; full JavaScript matcher edge semantics are not. No bypass, install or network request was attempted."
+    },
+    {
+      "area": "agent",
+      "kind": "unverified",
+      "record": {
+        "entry_id": "AGENT-056",
+        "finding": "Dependency-level yaml vs yaml_serde equivalence was not fully inspected or executed. Exact local fence/metadata code and Rust salvage behavior are verified."
+      },
+      "text": "Dependency-level yaml vs yaml_serde equivalence was not fully inspected or executed. Exact local fence/metadata code and Rust salvage behavior are verified."
+    },
+    {
+      "area": "session",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SESSION-001",
+        "entries": [
+          "SESSION-029",
+          "SESSION-030",
+          "SESSION-031",
+          "SESSION-038"
+        ],
+        "question": "Should coding v3 import/export compatibility be exposed as an explicit adapter alongside native v4? The specification identifies the adapter boundary while preserving native durability."
+      },
+      "text": "Should coding v3 import/export compatibility be exposed as an explicit adapter alongside native v4? The specification identifies the adapter boundary while preserving native durability."
+    },
+    {
+      "area": "settings",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SET-01",
+        "entries": [
+          "SET-003",
+          "SET-008",
+          "SET-021",
+          "SET-025",
+          "SET-026"
+        ],
+        "question": "Should native resource policy adopt ICE globalFirst and its trust treatment of standing instructions, or preserve explicitly documented native project-first/whole-context gating? The current differences are established; selecting the target policy is an implementation decision."
+      },
+      "text": "Should native resource policy adopt ICE globalFirst and its trust treatment of standing instructions, or preserve explicitly documented native project-first/whole-context gating? The current differences are established; selecting the target policy is an implementation decision."
+    },
+    {
+      "area": "settings",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SET-02",
+        "entries": [
+          "SET-002",
+          "SET-028",
+          "SET-029",
+          "SET-030",
+          "SET-031"
+        ],
+        "question": "Which JavaScript-specific ordering, UTF-16 limits and lenient parse behaviors should the Rust compatibility layer retain, and which should be deliberate improvements? Native safety fixes should not reproduce unchecked numeric arithmetic or discovery cycles."
+      },
+      "text": "Which JavaScript-specific ordering, UTF-16 limits and lenient parse behaviors should the Rust compatibility layer retain, and which should be deliberate improvements? Native safety fixes should not reproduce unchecked numeric arithmetic or discovery cycles."
+    },
+    {
+      "area": "settings",
+      "kind": "unverified",
+      "record": {
+        "tests_executed": false,
+        "description": "All 17 assigned source/document files and all 10 identified core settings/resource/trust/config test bodies have attributed source-read evidence. UI selector/style, RPC settings and provider settings consumer tests are reconciled in their accepted area manifests and canonical coverage, with exact visible ranges and exclusions retained. No tests or application processes were executed.",
+        "unread_core_test_ranges": [],
+        "consumer_test_ownership": {
+          "packages/coding-agent/test/settings-selector.test.ts": "tui",
+          "packages/coding-agent/test/ui-style-settings.test.ts": "tui",
+          "packages/coding-agent/test/rpc-settings.test.ts": "rpc-remote",
+          "packages/coding-agent/test/ice-provider-settings.test.ts": "providers-auth"
+        }
+      },
+      "text": "All 17 assigned source/document files and all 10 identified core settings/resource/trust/config test bodies have attributed source-read evidence. UI selector/style, RPC settings and provider settings consumer tests are reconciled in their accepted area manifests and canonical coverage, with exact visible ranges and exclusions retained. No tests or application processes were executed."
+    },
+    {
+      "area": "extensions",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-EXT-01",
+        "question": "Which source quirks should a compatibility layer retain versus explicitly improve: shallow mutable event chains, malformed trust returns, cross-plugin UI keys, void background errors and unbounded buffers?",
+        "entries": [
+          "EXT-006",
+          "EXT-017",
+          "EXT-023",
+          "EXT-025",
+          "EXT-027",
+          "EXT-034",
+          "EXT-043",
+          "EXT-051",
+          "EXT-056"
+        ]
+      },
+      "text": "Which source quirks should a compatibility layer retain versus explicitly improve: shallow mutable event chains, malformed trust returns, cross-plugin UI keys, void background errors and unbounded buffers?"
+    },
+    {
+      "area": "extensions",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-EXT-02",
+        "question": "Which arbitrary Component/factory behaviors should become declarative native UI protocols, and which remain intentionally unsupported with explicit mode capabilities?",
+        "entries": [
+          "EXT-036",
+          "EXT-040",
+          "EXT-043",
+          "EXT-044",
+          "EXT-045",
+          "EXT-047",
+          "EXT-048"
+        ]
+      },
+      "text": "Which arbitrary Component/factory behaviors should become declarative native UI protocols, and which remain intentionally unsupported with explicit mode capabilities?"
+    },
+    {
+      "area": "extensions",
+      "kind": "unverified",
+      "record": "Source-only audit: no application tests, plugin initialization, provider requests, subprocesses or real user state were executed/accessed.",
+      "text": "Source-only audit: no application tests, plugin initialization, provider requests, subprocesses or real user state were executed/accessed."
+    },
+    {
+      "area": "extensions",
+      "kind": "unverified",
+      "record": "Modified extensions-input-event.test.ts matches the read hash but differs from frozen Git HEAD and is absent from the original source manifest; do not infer its historical dirty contents.",
+      "text": "Modified extensions-input-event.test.ts matches the read hash but differs from frozen Git HEAD and is absent from the original source manifest; do not infer its historical dirty contents."
+    },
+    {
+      "area": "extensions",
+      "kind": "unverified",
+      "record": "Native leak/dispatch/lifetime findings are control-flow evidence, not executed crash/leak demonstrations; general tag/union or extern-C panic hazards require concrete caller/runtime review.",
+      "text": "Native leak/dispatch/lifetime findings are control-flow evidence, not executed crash/leak demonstrations; general tag/union or extern-C panic hazards require concrete caller/runtime review."
+    },
+    {
+      "area": "extensions",
+      "kind": "unverified",
+      "record": "Some cross-area caller behavior is deliberately owned by session/agent/tools/TUI/RPC/providers/settings. Dependency requests preserve those seams instead of inventing future entry IDs.",
+      "text": "Some cross-area caller behavior is deliberately owned by session/agent/tools/TUI/RPC/providers/settings. Dependency requests preserve those seams instead of inventing future entry IDs."
+    },
+    {
+      "area": "rpc-remote",
+      "kind": "open_questions",
+      "record": {
+        "id": "RPC-Q1",
+        "entries": [
+          "RPC-015",
+          "RPC-036"
+        ],
+        "question": "The external ice-server package implementation, deployment and global session/authentication policy were intentionally not fetched or inspected. Coordinate any later integration verification against an explicitly supplied package/version; this audit only credits the native client/driver and source-visible fake/optional integration tests."
+      },
+      "text": "The external ice-server package implementation, deployment and global session/authentication policy were intentionally not fetched or inspected. Coordinate any later integration verification against an explicitly supplied package/version; this audit only credits the native client/driver and source-visible fake/optional integration tests."
+    },
+    {
+      "area": "rpc-remote",
+      "kind": "open_questions",
+      "record": {
+        "id": "RPC-Q2",
+        "entries": [
+          "RPC-015",
+          "RPC-027"
+        ],
+        "question": "Connector-redacted lines remain unverified: Rust app.rs:96 and TS test/suite/rpc-subagents.test.ts:230. Their surrounding visible contracts are documented without reconstructing hidden values. Do not mark those exact lines read during publication."
+      },
+      "text": "Connector-redacted lines remain unverified: Rust app.rs:96 and TS test/suite/rpc-subagents.test.ts:230. Their surrounding visible contracts are documented without reconstructing hidden values. Do not mark those exact lines read during publication."
+    },
+    {
+      "area": "rpc-remote",
+      "kind": "open_questions",
+      "record": {
+        "id": "RPC-Q3",
+        "entries": [
+          "RPC-024",
+          "RPC-034"
+        ],
+        "question": "The frozen TS get_last_assistant_text implementation omits undefined text while its current validator requires a present string-or-null text. The proposed port should normalize absence to null, with an explicit compatibility decision rather than treating the source/test disagreement as tested success."
+      },
+      "text": "The frozen TS get_last_assistant_text implementation omits undefined text while its current validator requires a present string-or-null text. The proposed port should normalize absence to null, with an explicit compatibility decision rather than treating the source/test disagreement as tested success."
+    },
+    {
+      "area": "rpc-remote",
+      "kind": "open_questions",
+      "record": {
+        "id": "RPC-Q4",
+        "entries": [
+          "RPC-001",
+          "RPC-002",
+          "RPC-003",
+          "RPC-005",
+          "RPC-015",
+          "RPC-036"
+        ],
+        "question": "The newer TS binary APIs/parser are implemented modules, but production experimental CLI invocation was not found in the audited production source. Preserve that distinction when deciding whether binary server/client launch should be exposed in native CLI."
+      },
+      "text": "The newer TS binary APIs/parser are implemented modules, but production experimental CLI invocation was not found in the audited production source. Preserve that distinction when deciding whether binary server/client launch should be exposed in native CLI."
+    },
+    {
+      "area": "tui",
+      "kind": "unverified",
+      "record": "Connector-redacted source/test lines are excluded in every normalized read record; none were recovered or treated as visible.",
+      "text": "Connector-redacted source/test lines are excluded in every normalized read record; none were recovered or treated as visible."
+    },
+    {
+      "area": "tui",
+      "kind": "unverified",
+      "record": "rust:crates/ice-cli/src/interactive_tui/sessions.rs:627 has a source-credit conflict: the original TUI record omitted it while SESSION raw records claimed full read. It remains excluded pending coordinator reconciliation.",
+      "text": "rust:crates/ice-cli/src/interactive_tui/sessions.rs:627 has a source-credit conflict: the original TUI record omitted it while SESSION raw records claimed full read. It remains excluded pending coordinator reconciliation."
+    },
+    {
+      "area": "tui",
+      "kind": "unverified",
+      "record": "status-line.test.ts and packages/tui/test/editor.test.ts were dirty at baseline without a captured original working-tree SHA. Their current bodies are source-read; neither is described as new drift.",
+      "text": "status-line.test.ts and packages/tui/test/editor.test.ts were dirty at baseline without a captured original working-tree SHA. Their current bodies are source-read; neither is described as new drift."
+    },
+    {
+      "area": "tui",
+      "kind": "unverified",
+      "record": "TypeBox node_modules package inspection was denied; default runtime extra-property handling remains unverified. No bypass or install was attempted.",
+      "text": "TypeBox node_modules package inspection was denied; default runtime extra-property handling remains unverified. No bypass or install was attempted."
+    },
+    {
+      "area": "tui",
+      "kind": "unverified",
+      "record": "Private user theme existence/import history and real user-profile state remain outside the authorized source scope.",
+      "text": "Private user theme existence/import history and real user-profile state remain outside the authorized source scope."
+    },
+    {
+      "area": "tui",
+      "kind": "unverified",
+      "record": "External terminal versions, gh/auth/upload responses and actual tmux negotiation were not executed; local process construction and documented policy are the evidence.",
+      "text": "External terminal versions, gh/auth/upload responses and actual tmux negotiation were not executed; local process construction and documented policy are the evidence."
+    },
+    {
+      "area": "subagents",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SUB-001",
+        "entries": [
+          "SUB-034"
+        ],
+        "question": "Bounded repository inventory plus complete native host/DLL test reads did not establish an ice-subagents companion implementation. Treat the host as native infrastructure; external ICERS_TEST_SUBAGENT_LIBRARY tests are conditional and were not run."
+      },
+      "text": "Bounded repository inventory plus complete native host/DLL test reads did not establish an ice-subagents companion implementation. Treat the host as native infrastructure; external ICERS_TEST_SUBAGENT_LIBRARY tests are conditional and were not run."
+    },
+    {
+      "area": "safe-verify",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SAFE-01",
+        "question": "Should Rust preserve the current untrusted built-in edit/write allowance, external protected-file bypass and extension-write/read_plan exemptions, or deliberately strengthen them?",
+        "entries": [
+          "SAFE-004",
+          "SAFE-005",
+          "SAFE-013"
+        ]
+      },
+      "text": "Should Rust preserve the current untrusted built-in edit/write allowance, external protected-file bypass and extension-write/read_plan exemptions, or deliberately strengthen them?"
+    },
+    {
+      "area": "safe-verify",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SAFE-02",
+        "question": "Should ordinary verifier completion gain the same session/generation stale-pass checks as Goals? Current TS ordinary completion persists captured-generation receipts even after stale context.",
+        "entries": [
+          "SAFE-021",
+          "SAFE-024"
+        ]
+      },
+      "text": "Should ordinary verifier completion gain the same session/generation stale-pass checks as Goals? Current TS ordinary completion persists captured-generation receipts even after stale context."
+    },
+    {
+      "area": "safe-verify",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-SAFE-03",
+        "question": "Should changing verifier command hash force automatic re-verification even when checkedGeneration equals mutationGeneration? Current restore marks pending without resetting checkedGeneration.",
+        "entries": [
+          "SAFE-003",
+          "SAFE-021"
+        ]
+      },
+      "text": "Should changing verifier command hash force automatic re-verification even when checkedGeneration equals mutationGeneration? Current restore marks pending without resetting checkedGeneration."
+    },
+    {
+      "area": "observability",
+      "kind": "open_questions",
+      "record": {
+        "id": "OBS-Q01",
+        "entries": [
+          "OBS-001"
+        ],
+        "question": "Should icers retain an install-report/attribution feature, and which service/branding should it use? TS currently uses ice.dev; no Rust service choice is inferred."
+      },
+      "text": "Should icers retain an install-report/attribution feature, and which service/branding should it use? TS currently uses ice.dev; no Rust service choice is inferred."
+    },
+    {
+      "area": "observability",
+      "kind": "open_questions",
+      "record": {
+        "id": "OBS-Q02",
+        "entries": [
+          "OBS-012",
+          "OBS-014"
+        ],
+        "question": "Should the Rust port redact live browser/SSE data and strengthen token-file validation, or deliberately preserve TS's durable-only redaction and existing-token semantics? The source contract and implications are specified."
+      },
+      "text": "Should the Rust port redact live browser/SSE data and strengthen token-file validation, or deliberately preserve TS's durable-only redaction and existing-token semantics? The source contract and implications are specified."
+    },
+    {
+      "area": "observability",
+      "kind": "open_questions",
+      "record": {
+        "id": "OBS-Q03",
+        "entries": [
+          "OBS-013",
+          "OBS-016"
+        ],
+        "question": "Should the Rust combined view correct the first-250-events stale-state shortcut and validate shared-port ownership? These are explicit TS limitations, not reasons to copy them accidentally."
+      },
+      "text": "Should the Rust combined view correct the first-250-events stale-state shortcut and validate shared-port ownership? These are explicit TS limitations, not reasons to copy them accidentally."
+    },
+    {
+      "area": "cognee",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-COG-01",
+        "question": "Should Rust retain enabled capture/recall by default and unrestricted HTTP/S endpoint selection, or add an explicit consent/trust boundary before sending prompt/tool data?",
+        "entries": [
+          "COG-001",
+          "COG-007",
+          "COG-046",
+          "COG-047"
+        ]
+      },
+      "text": "Should Rust retain enabled capture/recall by default and unrestricted HTTP/S endpoint selection, or add an explicit consent/trust boundary before sending prompt/tool data?"
+    },
+    {
+      "area": "cognee",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-COG-02",
+        "question": "Should ambiguous manual remembers and warmup writes be quarantined rather than automatically replayed, and should pending records gain path validation and cross-process claims?",
+        "entries": [
+          "COG-032",
+          "COG-034",
+          "COG-035",
+          "COG-036",
+          "COG-064"
+        ]
+      },
+      "text": "Should ambiguous manual remembers and warmup writes be quarantined rather than automatically replayed, and should pending records gain path validation and cross-process claims?"
+    },
+    {
+      "area": "cognee",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-COG-03",
+        "question": "Should late capture/registration/observation completions be fenced to their original session, and should all state reset when one extension instance changes session?",
+        "entries": [
+          "COG-043",
+          "COG-044",
+          "COG-059",
+          "COG-062"
+        ]
+      },
+      "text": "Should late capture/registration/observation completions be fenced to their original session, and should all state reset when one extension instance changes session?"
+    },
+    {
+      "area": "cognee",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-COG-04",
+        "question": "Should health and shutdown receive hard total deadlines, all observed fields be redacted, and successful improve mean a confirmed server job completion rather than request acceptance?",
+        "entries": [
+          "COG-010",
+          "COG-017",
+          "COG-045",
+          "COG-049",
+          "COG-054",
+          "COG-059"
+        ]
+      },
+      "text": "Should health and shutdown receive hard total deadlines, all observed fields be redacted, and successful improve mean a confirmed server job completion rather than request acceptance?"
+    },
+    {
+      "area": "cognee",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-COG-05",
+        "question": "Should manual improve obey enabled/claim/in-flight policy, settings writes be awaited/serialized, and the displayed settings values refresh from loaded configuration?",
+        "entries": [
+          "COG-057",
+          "COG-065",
+          "COG-066"
+        ]
+      },
+      "text": "Should manual improve obey enabled/claim/in-flight policy, settings writes be awaited/serialized, and the displayed settings values refresh from loaded configuration?"
+    },
+    {
+      "area": "cognee",
+      "kind": "unverified",
+      "record": {
+        "entry_id": "COG-043",
+        "finding": "External ice-memory plugin implementation is not in the local checkout and network access is prohibited. No parity claim is made about that external package."
+      },
+      "text": "External ice-memory plugin implementation is not in the local checkout and network access is prohibited. No parity claim is made about that external package."
+    },
+    {
+      "area": "blackhole",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-BLACK-01",
+        "question": "Should the Rust port preserve the current optional/unused memory setting and minimal-tail default, or revise the stale provenance/UI contract?",
+        "entries": [
+          "BLACK-001",
+          "BLACK-002",
+          "BLACK-005"
+        ]
+      },
+      "text": "Should the Rust port preserve the current optional/unused memory setting and minimal-tail default, or revise the stale provenance/UI contract?"
+    },
+    {
+      "area": "blackhole",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-BLACK-02",
+        "question": "Should checkpoint consumption be hardened to atomic claim, validated top-level JSON and a true whole-section budget? Current TS is one-shot by deletion but not race-safe, and the notice sits outside the 4000-unit budget.",
+        "entries": [
+          "BLACK-037"
+        ]
+      },
+      "text": "Should checkpoint consumption be hardened to atomic claim, validated top-level JSON and a true whole-section budget? Current TS is one-shot by deletion but not race-safe, and the notice sits outside the 4000-unit budget."
+    },
+    {
+      "area": "blackhole",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-BLACK-03",
+        "question": "Should old model-inferred State Of Work be explicitly stripped during re-compaction and should whitespace-prefixed forged headers be neutralized? Current source does neither comprehensively.",
+        "entries": [
+          "BLACK-030",
+          "BLACK-038"
+        ]
+      },
+      "text": "Should old model-inferred State Of Work be explicitly stripped during re-compaction and should whitespace-prefixed forged headers be neutralized? Current source does neither comprehensively."
+    },
+    {
+      "area": "blackhole",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-BLACK-04",
+        "question": "For cross-language fidelity, which Unicode word segmentation and UTF-16 clipping behavior is authoritative when Rust Unicode/ICU output differs?",
+        "entries": [
+          "BLACK-010",
+          "BLACK-013",
+          "BLACK-026"
+        ]
+      },
+      "text": "For cross-language fidelity, which Unicode word segmentation and UTF-16 clipping behavior is authoritative when Rust Unicode/ICU output differs?"
+    },
+    {
+      "area": "providers-auth",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AUTH-001",
+        "entries": [
+          "AUTH-007",
+          "AUTH-011"
+        ],
+        "question": "Private import contents/counts in first-pass lines 668–680 cannot be verified because actual ~/.ice and ~/.icers reads are forbidden. Source-level schema/catalog findings are complete; no private-state verification is claimed."
+      },
+      "text": "Private import contents/counts in first-pass lines 668–680 cannot be verified because actual ~/.ice and ~/.icers reads are forbidden. Source-level schema/catalog findings are complete; no private-state verification is claimed."
+    },
+    {
+      "area": "providers-auth",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AUTH-002",
+        "entries": [
+          "AUTH-011",
+          "AUTH-015",
+          "AUTH-016",
+          "AUTH-017",
+          "AUTH-018",
+          "AUTH-019",
+          "AUTH-020",
+          "AUTH-021",
+          "AUTH-022"
+        ],
+        "question": "Concrete external ice-package provider/OAuth implementations were not supplied or inspected and must not be inferred absent from generic native host comments. Keep external package status explicitly unverified."
+      },
+      "text": "Concrete external ice-package provider/OAuth implementations were not supplied or inspected and must not be inferred absent from generic native host comments. Keep external package status explicitly unverified."
+    },
+    {
+      "area": "providers-auth",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AUTH-003",
+        "entries": [
+          "AUTH-007",
+          "AUTH-008",
+          "AUTH-019",
+          "AUTH-027",
+          "AUTH-029"
+        ],
+        "question": "Connector-redacted source initializers remain unverified: config.rs887 output-limit default, provider-composer.ts79 alias expression, OpenRouter OAuth token endpoint, ice-provider.ts188/200 output-limit expressions, Faux pacing initializer446. Entries preserve visible surrounding behavior/test assertions without reconstructing hidden text."
+      },
+      "text": "Connector-redacted source initializers remain unverified: config.rs887 output-limit default, provider-composer.ts79 alias expression, OpenRouter OAuth token endpoint, ice-provider.ts188/200 output-limit expressions, Faux pacing initializer446. Entries preserve visible surrounding behavior/test assertions without reconstructing hidden text."
+    },
+    {
+      "area": "providers-auth",
+      "kind": "open_questions",
+      "record": {
+        "id": "Q-AUTH-004",
+        "entries": [
+          "AUTH-006",
+          "AUTH-024",
+          "AUTH-028"
+        ],
+        "question": "Coordinator must merge the explicitly assigned adjacent AI/TUI/SESSION test source-read evidence before final audit closure. This worker read 45 of 66 inventoried tests and all 124 assigned source/doc files."
+      },
+      "text": "Coordinator must merge the explicitly assigned adjacent AI/TUI/SESSION test source-read evidence before final audit closure. This worker read 45 of 66 inventoried tests and all 124 assigned source/doc files."
+    },
+    {
+      "area": "cli-packaging",
+      "kind": "open_questions",
+      "record": {
+        "id": "CLI-Q001",
+        "entries": [
+          "CLI-003",
+          "CLI-004",
+          "CLI-017"
+        ],
+        "question": "Should the native compatibility surface retain stricter missing-value diagnostics, --tui-mode/platform default and unauthenticated catalog listing, or expose explicit aliases/options for the TS spellings and available-model mode? Both current behaviors are documented; no undocumented default is assumed."
+      },
+      "text": "Should the native compatibility surface retain stricter missing-value diagnostics, --tui-mode/platform default and unauthenticated catalog listing, or expose explicit aliases/options for the TS spellings and available-model mode? Both current behaviors are documented; no undocumented default is assumed."
+    },
+    {
+      "area": "cli-packaging",
+      "kind": "open_questions",
+      "record": {
+        "id": "CLI-Q002",
+        "entries": [
+          "CLI-006",
+          "CLI-014"
+        ],
+        "question": "What mode-aware authorization interface should replace TS's unguarded cross-project readline prompt, and at what trust stage should project commands→prompts migration occur? The current source order is documented; no policy change was executed."
+      },
+      "text": "What mode-aware authorization interface should replace TS's unguarded cross-project readline prompt, and at what trust stage should project commands→prompts migration occur? The current source order is documented; no policy change was executed."
+    },
+    {
+      "area": "misc",
+      "kind": "open_questions",
+      "record": {
+        "id": "MISC-Q-1",
+        "entries": [
+          "MISC-048"
+        ],
+        "question": "Actual model-backed smoke and extension-authoring outcomes were not measured. Source-only audit scope; no model/auth/network/test execution."
+      },
+      "text": "Actual model-backed smoke and extension-authoring outcomes were not measured. Source-only audit scope; no model/auth/network/test execution."
+    },
+    {
+      "area": "misc",
+      "kind": "open_questions",
+      "record": {
+        "id": "MISC-Q-2",
+        "entries": [
+          "MISC-043",
+          "MISC-045",
+          "MISC-046"
+        ],
+        "question": "External vitest-evals 0.15.0 normalization, run recognition, partial-error attachment and judge execution internals were not read. Checked-in adapter invocation/types/options are fully audited; external implementation behavior is not invented."
+      },
+      "text": "External vitest-evals 0.15.0 normalization, run recognition, partial-error attachment and judge execution internals were not read. Checked-in adapter invocation/types/options are fully audited; external implementation behavior is not invented."
+    },
+    {
+      "area": "misc",
+      "kind": "unverified",
+      "record": "No runtime verification. Exact previously redacted user-state/credential limitations from other areas remain unchanged.",
+      "text": "No runtime verification. Exact previously redacted user-state/credential limitations from other areas remain unchanged."
+    },
+    {
+      "area": "misc",
+      "kind": "unverified",
+      "record": "First-pass claims, candidate mapping and shared source credits are reconciled in the accepted manifests and canonical coverage. Relevant tests have attributed source-read evidence for the documented visible ranges; no application or test execution occurred.",
+      "text": "First-pass claims, candidate mapping and shared source credits are reconciled in the accepted manifests and canonical coverage. Relevant tests have attributed source-read evidence for the documented visible ranges; no application or test execution occurred."
+    },
+    {
+      "area": "misc",
+      "kind": "unverified",
+      "record": "Current read-only native searches scoped to repository crates; concrete external provider packages are unverified.",
+      "text": "Current read-only native searches scoped to repository crates; concrete external provider packages are unverified."
+    },
+    {
+      "area": "misc",
+      "kind": "unverified",
+      "record": "No direct downloader/abort/sleep utility suite was found in the documented searches. Adjacent consumer-test source coverage is retained in the accepted owner manifests and canonical read coverage; no runtime result is claimed.",
+      "text": "No direct downloader/abort/sleep utility suite was found in the documented searches. Adjacent consumer-test source coverage is retained in the accepted owner manifests and canonical read coverage; no runtime result is claimed."
+    },
+    {
+      "area": "misc",
+      "kind": "unverified",
+      "record": {
+        "entries": [
+          "MISC-030",
+          "MISC-031",
+          "MISC-032",
+          "MISC-033",
+          "MISC-034",
+          "MISC-035",
+          "MISC-036",
+          "MISC-037"
+        ],
+        "limitation": "Local OmniRoute/official Claude SDK server implementation, subscription verification, server TTL/capacity/context fingerprint and SDK process cleanup lie outside the authorized two source trees and were not exercised."
+      },
+      "text": "Local OmniRoute/official Claude SDK server implementation, subscription verification, server TTL/capacity/context fingerprint and SDK process cleanup lie outside the authorized two source trees and were not exercised."
+    },
+    {
+      "area": "misc",
+      "kind": "unverified",
+      "record": {
+        "entries": [
+          "MISC-030"
+        ],
+        "limitation": "Permission/ownership behavior was source-read; no OS permission matrix or real configuration/token files were accessed."
+      },
+      "text": "Permission/ownership behavior was source-read; no OS permission matrix or real configuration/token files were accessed."
+    }
+  ],
+  "external_dependency_limits": [
+    {
+      "review_id": "DEPQA-044",
+      "area": "observability",
+      "entry_id": "OBS-009",
+      "target_area": "misc",
+      "capability": "Full Goals task tree/state schema and producer, if owned outside safe-verify host.",
+      "kind": "external-unverified",
+      "entry_ids": [],
+      "related_entry_ids": [
+        "SAFE-022",
+        "SAFE-023",
+        "SAFE-024"
+      ],
+      "rationale": "The existing SAFE-003/021/022 prerequisites correctly cover guard/verifier data and the Goals authority host. SAFE does not implement the external optional goal scheduler's full ice-goals-state tree producer. Keep that producer explicitly unverified, not assigned to MISC or inferred from a host snapshot.",
+      "disposition": "external_producer_unverified"
+    }
+  ]
+}

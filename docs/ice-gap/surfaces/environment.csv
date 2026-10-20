@@ -1,0 +1,285 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+ICE_CACHE_RETENTION,packages/ai/src/api/anthropic-messages.ts:59,,missing,AI-050
+ICE_PROVIDER_CONTINUATION_DIAG,packages/ai/src/utils/provider-continuation-diag.ts:97,,missing,AI-018
+ICE_PROVIDER_CONTINUATION_DIAG_FILE,packages/ai/src/utils/provider-continuation-diag.ts:158,,missing,AI-018
+ICE_PROVIDER_CONTINUATION_DIAG_STDERR,packages/ai/src/utils/provider-continuation-diag.ts:179,,missing,AI-018
+AWS_BEDROCK_SKIP_AUTH,packages/ai/src/api/bedrock-converse-stream.ts:163,,missing,AI-030
+AWS_BEDROCK_FORCE_HTTP1,packages/ai/src/api/bedrock-converse-stream.ts:209,,missing,AI-030
+AWS_BEARER_TOKEN_BEDROCK,packages/ai/src/api/bedrock-converse-stream.ts:167,,missing,AI-030
+VITEST,packages/ai/src/utils/provider-continuation-diag.ts:93,,missing,AI-018
+VITEST_WORKER_ID,packages/ai/src/utils/provider-continuation-diag.ts:93,,missing,AI-018
+<dynamic env: name>,packages/ai/src/utils/provider-env.ts:47,,partial,AI-016
+<dynamic env: name>,packages/ai/src/utils/provider-env.ts:48,,partial,AI-016
+http_proxy,packages/ai/src/utils/node-http-proxy.ts:82,,partial,AI-016
+HTTP_PROXY,packages/ai/src/utils/node-http-proxy.ts:82,,partial,AI-016
+https_proxy,packages/ai/src/utils/node-http-proxy.ts:82,,partial,AI-016
+HTTPS_PROXY,packages/ai/src/utils/node-http-proxy.ts:82,,partial,AI-016
+all_proxy,packages/ai/src/utils/node-http-proxy.ts:82,,partial,AI-016
+ALL_PROXY,packages/ai/src/utils/node-http-proxy.ts:82,,partial,AI-016
+no_proxy,packages/ai/src/utils/node-http-proxy.ts:38,,partial,AI-016
+NO_PROXY,packages/ai/src/utils/node-http-proxy.ts:38,,partial,AI-016
+ProgramFiles,packages/agent/src/harness/env/nodejs.ts:202,crates/ice-tools/src/os_env.rs:296,present,AGENT-048
+ProgramFiles(x86),packages/agent/src/harness/env/nodejs.ts:204,crates/ice-tools/src/os_env.rs:297,present,AGENT-048
+ICE_SESSION_ID,packages/coding-agent/src/core/tools/bash.ts:220,crates/ice-tools/src/tools/bash.rs:146,partial,TOOLS-002
+ICE_SESSION_FILE,packages/coding-agent/src/core/tools/bash.ts:222,crates/ice-tools/src/tools/bash.rs:146,partial,TOOLS-002
+ICE_PROVIDER,packages/coding-agent/src/core/tools/bash.ts:224,crates/ice-tools/src/tools/bash.rs:146,partial,TOOLS-002
+ICE_MODEL,packages/coding-agent/src/core/tools/bash.ts:225,crates/ice-tools/src/tools/bash.rs:146,partial,TOOLS-002
+ICE_REASONING_LEVEL,packages/coding-agent/src/core/tools/bash.ts:227,crates/ice-tools/src/tools/bash.rs:146,partial,TOOLS-002
+PNPM_HOME,packages/coding-agent/src/config.ts:132,,different-by-design,SET-002
+VISUAL,packages/coding-agent/src/core/settings-manager.ts:1160,,partial,SET-015
+EDITOR,packages/coding-agent/src/core/settings-manager.ts:1160,,partial,SET-015
+HOME,packages/coding-agent/src/core/trust-manager.ts:186,,partial,SET-004
+ICE_CODING_AGENT_DIR,packages/coding-agent/src/config.ts:527,,partial,SET-001
+ICE_CODING_AGENT_SESSION_DIR,packages/coding-agent/src/config.ts:528,,partial,SET-001
+ICE_SHARE_VIEWER_URL,packages/coding-agent/src/config.ts:539,,partial,SET-001
+ICE_PACKAGE_DIR,packages/coding-agent/src/config.ts:371,,partial,SET-001
+ICE_CLEAR_ON_SHRINK,packages/coding-agent/src/core/settings-manager.ts:1430,,partial,SET-015
+ICE_HARDWARE_CURSOR,packages/coding-agent/src/core/settings-manager.ts:1546,,partial,SET-015
+ICE_OFFLINE,packages/coding-agent/src/modes/rpc/rpc-mode.ts:1268,crates/ice-cli/src/modes.rs:450,partial,RPC-023
+ICE_CODING_AGENT assignment,packages/coding-agent/src/rpc-entry.ts:8,crates/ice-cli/src/app.rs:434,missing,RPC-020
+AI_AGENT assignment,packages/coding-agent/src/rpc-entry.ts:9,crates/ice-cli/src/app.rs:434,missing,RPC-020
+WT_SESSION,packages/tui/src/keys.ts:717,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+SSH_CONNECTION,packages/tui/src/keys.ts:717,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+SSH_CLIENT,packages/tui/src/keys.ts:717,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+SSH_TTY,packages/tui/src/keys.ts:717,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+TERM_PROGRAM,packages/tui/src/terminal-image.ts:69,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+TERMINAL_EMULATOR,packages/tui/src/terminal-image.ts:70,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+TERM,packages/tui/src/terminal-image.ts:71,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+COLORTERM,packages/tui/src/terminal-image.ts:72,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+TMUX,packages/tui/src/terminal-image.ts:78,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+KITTY_WINDOW_ID,packages/tui/src/terminal-image.ts:87,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+GHOSTTY_RESOURCES_DIR,packages/tui/src/terminal-image.ts:91,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+WEZTERM_PANE,packages/tui/src/terminal-image.ts:95,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+WARP_SESSION_ID,packages/tui/src/terminal-image.ts:100,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+WARP_TERMINAL_SESSION_UUID,packages/tui/src/terminal-image.ts:100,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+ITERM_SESSION_ID,packages/tui/src/terminal-image.ts:104,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+WT_SESSION,packages/tui/src/terminal-image.ts:108,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+TERM_PROGRAM,packages/tui/src/terminal.ts:42,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+COLUMNS,packages/tui/src/terminal.ts:467,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+LINES,packages/tui/src/terminal.ts:471,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+TERMUX_VERSION,packages/tui/src/tui-main-screen.ts:44,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+ICE_DEBUG_REDRAW,packages/tui/src/tui-main-screen.ts:258,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+ICE_CODING_AGENT_DIR,packages/tui/src/tui.ts:375,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+ICE_TUI_WRITE_LOG,packages/tui/src/terminal.ts:113,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+ICE_HARDWARE_CURSOR,packages/tui/src/tui.ts:347,crates/ice-tui/src/tui_alt_screen.rs:1,partial,TUI-216
+ICE_CLEAR_ON_SHRINK,packages/tui/src/tui.ts:353,crates/ice-tui/src/tui_alt_screen.rs:1,partial,TUI-216
+ICE_TUI_DEBUG,packages/tui/src/tui-main-screen.ts:517,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+WSL_DISTRO_NAME,packages/coding-agent/src/core/footer-data-provider.ts:108,crates/ice-cli/src/interactive_tui/sessions.rs:628,partial,TUI-037
+WSL_INTEROP,packages/coding-agent/src/core/footer-data-provider.ts:108,crates/ice-cli/src/interactive_tui/sessions.rs:628,partial,TUI-037
+VISUAL,packages/coding-agent/src/modes/interactive/components/extension-editor.ts:55,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+EDITOR,packages/coding-agent/src/modes/interactive/components/extension-editor.ts:56,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+HOME,packages/coding-agent/src/modes/interactive/components/footer.ts:198,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+USERPROFILE,packages/coding-agent/src/modes/interactive/components/footer.ts:198,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+HOME,packages/coding-agent/src/modes/interactive/components/footer.ts:341,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+USERPROFILE,packages/coding-agent/src/modes/interactive/components/footer.ts:341,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+HOME,packages/coding-agent/src/modes/interactive/components/footer.ts:514,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+USERPROFILE,packages/coding-agent/src/modes/interactive/components/footer.ts:514,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+HOME,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:940,crates/ice-cli/src/interactive_tui/selectors.rs:381,partial,TUI-066
+USERPROFILE,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:940,crates/ice-cli/src/interactive_tui/selectors.rs:381,partial,TUI-066
+ICE_OFFLINE,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1216,crates/ice-cli/src/interactive_tui/settings.rs:530,partial,TUI-044
+ICE_OFFLINE,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1318,crates/ice-cli/src/interactive_tui/rendering.rs:9,partial,TUI-040
+TMUX,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1336,crates/ice-cli/src/interactive_tui/run.rs:1,missing,TUI-077
+ICE_OFFLINE,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1414,crates/ice-cli/src/interactive_tui/run.rs:1,partial,TUI-072
+HOME,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1642,crates/ice-cli/src/interactive_tui/rendering.rs:9,partial,TUI-040
+USERPROFILE,packages/coding-agent/src/modes/interactive/interactive-mode.ts:1642,crates/ice-cli/src/interactive_tui/rendering.rs:9,partial,TUI-040
+ICE_SHARE_VIEWER_URL,packages/coding-agent/src/config.ts:539,crates/ice-cli/src/interactive_tui/sessions.rs:8,missing,TUI-078
+LANG (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:22,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+LC_ALL (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:23,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+LC_CTYPE (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:24,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+LC_MESSAGES (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:25,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+LC_MONETARY (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:26,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+LC_NUMERIC (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:27,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+LC_TIME (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:28,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+PATH (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:29,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+SHELL (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:30,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+TERM (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:31,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+TMPDIR (delegated Bash allowlist),packages/coding-agent/src/subagents/types.ts:32,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+GIT_AUTHOR_NAME (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:80,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_AUTHOR_EMAIL (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:81,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_COMMITTER_NAME (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:82,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_COMMITTER_EMAIL (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:83,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_TERMINAL_PROMPT (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:84,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_CONFIG_NOSYSTEM (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:85,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_CONFIG_GLOBAL (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:86,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_ATTR_NOSYSTEM (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:87,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_NO_LAZY_FETCH (worktree Git override),packages/coding-agent/src/subagents/isolation/worktree.ts:88,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+GIT_INDEX_FILE (owned temporary index),packages/coding-agent/src/subagents/isolation/worktree.ts:280,crates/ice-cli/src/child_agents.rs:207,missing,SUB-030
+ICE_TELEMETRY,packages/coding-agent/src/core/telemetry.ts:11,,missing,OBS-001
+ICE_OFFLINE (install telemetry gate),packages/coding-agent/src/modes/interactive/interactive-mode.ts:1414,,missing,OBS-001
+ICE_TIMING,packages/coding-agent/src/core/timings.ts:8,crates/ice-cli/src/timings.rs:12,partial,OBS-002
+COGNEE_API_KEY,packages/coding-agent/src/ice-cognee.ts:897,,missing,COG-003
+ICE_COGNEE_ENABLED,packages/coding-agent/src/ice-cognee.ts:337,,missing,COG-001
+ICE_COGNEE_RECALL,packages/coding-agent/src/ice-cognee.ts:339,,missing,COG-001
+ICE_COGNEE_REMEMBER,packages/coding-agent/src/ice-cognee.ts:340,,missing,COG-001
+ICE_COGNEE_BASE_URL,packages/coding-agent/src/ice-cognee.ts:351,,missing,COG-001
+COGNEE_BASE_URL,packages/coding-agent/src/ice-cognee.ts:351,,missing,COG-001
+ICE_COGNEE_DATASET,packages/coding-agent/src/ice-cognee.ts:352,,missing,COG-001
+ICE_COGNEE_CAPTURE,packages/coding-agent/src/ice-cognee.ts:354,,missing,COG-001
+ICE_COGNEE_CAPTURE_TOOLS,packages/coding-agent/src/ice-cognee.ts:357,,missing,COG-001
+ICE_COGNEE_IMPROVE,packages/coding-agent/src/ice-cognee.ts:360,,missing,COG-001
+ICE_COGNEE_COMPACTION_SUMMARY,packages/coding-agent/src/ice-cognee.ts:361,,missing,COG-001
+ICE_COGNEE_CHECKPOINT_RECALL,packages/coding-agent/src/ice-cognee.ts:370,,missing,COG-001
+COGNEE_LOCAL_API_URL,packages/coding-agent/src/ice-cognee-env.ts:64,,missing,COG-002
+COGNEE_PLUGIN_DATASET,packages/coding-agent/src/ice-cognee-env.ts:14,,missing,COG-002
+COGNEE_DATASET,packages/coding-agent/src/ice-cognee-env.ts:15,,missing,COG-002
+COGNEE_SESSION_ID,packages/coding-agent/src/ice-cognee-env.ts:16,,missing,COG-002
+COGNEE_* / ICE_COGNEE_* env-file acceptance,packages/coding-agent/src/ice-cognee-env.ts:41,,missing,COG-002
+ICE_CODING_AGENT_DIR,packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:40,,missing,BLACK-002
+ICE_BLACKHOLE_COMPACTION,packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:91,,missing,BLACK-003
+ICE_BLACKHOLE_COMPACTION_ENGINE,packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:95,,missing,BLACK-003
+ICE_BLACKHOLE_MID_RUN_COMPACTION,packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:103,,missing,BLACK-003
+ICE_BLACKHOLE_COMPACT_AFTER_PERCENT,packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:114,,missing,BLACK-003
+ICE_OFFLINE,packages/coding-agent/src/core/model-runtime.ts:217,crates/ice-cli/src/provider.rs:859,missing,AUTH-010
+ICE_OMNI_BASE_URL,packages/coding-agent/src/ice-provider.ts:16,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+ICE_LOCAL_BASE_URL,packages/coding-agent/src/ice-provider.ts:16,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+ICE_LOCAL_API_KEY,packages/coding-agent/src/ice-provider.ts:282,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+ICE_LOCAL_API_KEY,packages/coding-agent/src/ice-provider.ts:301,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+GROQ_API_KEY,packages/ai/src/providers/groq.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ZAI_API_KEY,packages/ai/src/providers/zai.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+GEMINI_API_KEY,packages/ai/src/providers/google.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ZAI_CODING_CN_API_KEY,packages/ai/src/providers/zai-coding-cn.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENROUTER_API_KEY,packages/ai/src/providers/openrouter-images.ts:12,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENCODE_API_KEY,packages/ai/src/providers/opencode.ts:15,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_API_KEY,packages/ai/src/providers/xiaomi.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+COPILOT_GITHUB_TOKEN,packages/ai/src/providers/github-copilot.ts:15,crates/ice-cli/src/config.rs:232,missing,AUTH-018
+OPENCODE_API_KEY,packages/ai/src/providers/opencode-go.ts:15,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_TOKEN_PLAN_SGP_API_KEY,packages/ai/src/providers/xiaomi-token-plan-sgp.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+TOGETHER_API_KEY,packages/ai/src/providers/together.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+FIREWORKS_API_KEY,packages/ai/src/providers/fireworks.ts:12,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENAI_API_KEY,packages/ai/src/providers/openai.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_TOKEN_PLAN_CN_API_KEY,packages/ai/src/providers/xiaomi-token-plan-cn.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+RADIUS_API_KEY,packages/ai/src/providers/radius.ts:31,crates/ice-cli/src/config.rs:232,missing,AUTH-014
+DEEPSEEK_API_KEY,packages/ai/src/providers/deepseek.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_TOKEN_PLAN_AMS_API_KEY,packages/ai/src/providers/xiaomi-token-plan-ams.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+QWEN_TOKEN_PLAN_API_KEY,packages/ai/src/providers/qwen-token-plan.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+NVIDIA_API_KEY,packages/ai/src/providers/nvidia.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XAI_API_KEY,packages/ai/src/providers/xai.ts:14,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+AZURE_OPENAI_API_KEY,packages/ai/src/providers/azure-openai-responses.ts:10,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+QWEN_TOKEN_PLAN_CN_API_KEY,packages/ai/src/providers/qwen-token-plan-cn.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MOONSHOT_API_KEY,packages/ai/src/providers/moonshotai.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+AI_GATEWAY_API_KEY,packages/ai/src/providers/vercel-ai-gateway.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENROUTER_API_KEY,packages/ai/src/providers/openrouter.ts:13,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MOONSHOT_API_KEY,packages/ai/src/providers/moonshotai-cn.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MISTRAL_API_KEY,packages/ai/src/providers/mistral.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+CEREBRAS_API_KEY,packages/ai/src/providers/cerebras.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+BASETEN_API_KEY,packages/ai/src/providers/baseten.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ANT_LING_API_KEY,packages/ai/src/providers/ant-ling.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+KIMI_API_KEY,packages/ai/src/providers/kimi-coding.ts:13,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-020
+MINIMAX_API_KEY,packages/ai/src/providers/minimax.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MINIMAX_CN_API_KEY,packages/ai/src/providers/minimax-cn.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+HF_TOKEN,packages/ai/src/providers/huggingface.ts:11,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ICE_OAUTH_CALLBACK_HOST,packages/ai/src/auth/oauth/anthropic.ts:32,crates/ice-cli/src/credentials.rs:71,missing,AUTH-016
+ICE_OAUTH_CALLBACK_HOST,packages/ai/src/auth/oauth/openai-codex.ts:45,crates/ice-ai/src/types.rs:460,missing,AUTH-017
+KIMI_CODE_OAUTH_HOST,packages/ai/src/auth/oauth/kimi-coding.ts:36,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-020
+KIMI_OAUTH_HOST,packages/ai/src/auth/oauth/kimi-coding.ts:36,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-020
+ICE_OAUTH_CALLBACK_HOST,packages/ai/src/auth/oauth/openrouter.ts:26,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-019
+AWS_BEARER_TOKEN_BEDROCK,packages/ai/src/providers/amazon-bedrock.ts:64,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+AWS_PROFILE,packages/ai/src/providers/amazon-bedrock.ts:65,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+AWS_ACCESS_KEY_ID,packages/ai/src/providers/amazon-bedrock.ts:72,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+AWS_SECRET_ACCESS_KEY,packages/ai/src/providers/amazon-bedrock.ts:72,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+AWS_WEB_IDENTITY_TOKEN_FILE,packages/ai/src/providers/amazon-bedrock.ts:77,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+GOOGLE_CLOUD_API_KEY,packages/ai/src/providers/google-vertex.ts:71,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+GOOGLE_CLOUD_PROJECT,packages/ai/src/providers/google-vertex.ts:79,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+GCLOUD_PROJECT,packages/ai/src/providers/google-vertex.ts:79,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+GOOGLE_CLOUD_LOCATION,packages/ai/src/providers/google-vertex.ts:80,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+RADIUS_API_KEY,packages/ai/src/providers/radius.ts:31,crates/ice-cli/src/config.rs:232,missing,AUTH-014
+AWS_CONTAINER_CREDENTIALS_RELATIVE_URI,packages/ai/src/providers/amazon-bedrock.ts:75,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+AWS_CONTAINER_CREDENTIALS_FULL_URI,packages/ai/src/providers/amazon-bedrock.ts:76,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+GOOGLE_APPLICATION_CREDENTIALS,packages/ai/src/providers/google-vertex.ts:74,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+CLOUDFLARE_API_KEY,packages/ai/src/providers/cloudflare-auth.ts:37,crates/ice-cli/src/config.rs:232,missing,AUTH-013
+CLOUDFLARE_ACCOUNT_ID,packages/ai/src/providers/cloudflare-auth.ts:38,crates/ice-cli/src/config.rs:232,missing,AUTH-013
+CLOUDFLARE_GATEWAY_ID,packages/ai/src/providers/cloudflare-auth.ts:40,crates/ice-cli/src/config.rs:232,missing,AUTH-013
+ANTHROPIC_AUTH_TOKEN,packages/ai/src/providers/anthropic.ts:24,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ANTHROPIC_OAUTH_TOKEN,packages/ai/src/providers/anthropic.ts:33,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ANTHROPIC_API_KEY,packages/ai/src/providers/anthropic.ts:33,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+COPILOT_GITHUB_TOKEN (legacy readiness helper),packages/ai/src/env-api-keys.ts:70,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ANT_LING_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:80,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+QWEN_TOKEN_PLAN_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:81,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+QWEN_TOKEN_PLAN_CN_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:82,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENAI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:83,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+AZURE_OPENAI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:84,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+NVIDIA_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:85,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+DEEPSEEK_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:86,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+GEMINI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:87,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+GOOGLE_CLOUD_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:88,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+GROQ_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:89,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+CEREBRAS_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:90,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XAI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:91,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+RADIUS_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:92,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENROUTER_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:93,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+AI_GATEWAY_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:94,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ZAI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:95,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ZAI_CODING_CN_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:96,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MISTRAL_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:97,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MINIMAX_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:98,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MINIMAX_CN_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:99,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MOONSHOT_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:100,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+MOONSHOT_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:101,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+HF_TOKEN (legacy readiness helper),packages/ai/src/env-api-keys.ts:102,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+FIREWORKS_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:103,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+TOGETHER_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:104,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+BASETEN_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:105,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENCODE_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:106,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+OPENCODE_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:107,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+KIMI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:108,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+CLOUDFLARE_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:109,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+CLOUDFLARE_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:110,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:111,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_TOKEN_PLAN_CN_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:112,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_TOKEN_PLAN_AMS_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:113,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+XIAOMI_TOKEN_PLAN_SGP_API_KEY (legacy readiness helper),packages/ai/src/env-api-keys.ts:114,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+ICE_CODING_AGENT,packages/coding-agent/src/cli.ts:13,crates/ice-cli/src/bin/icers.rs:16,partial,CLI-001
+AI_AGENT,packages/coding-agent/src/cli.ts:14,crates/ice-cli/src/bin/icers.rs:16,partial,CLI-001
+<dynamic env: ENV_AGENT_DIR>,packages/coding-agent/src/cli/startup-ui.ts:128,crates/ice-cli/src/extras.rs:35,partial,CLI-015
+ICE_CODING_AGENT,packages/coding-agent/src/core/legacy-compat/bootstrap.ts:5,crates/ice-cli/src/bin/icers.rs:16,partial,CLI-001
+ICE_CODING_AGENT,packages/coding-agent/src/ice.ts:25,crates/ice-cli/src/app.rs:138,partial,CLI-002
+AI_AGENT,packages/coding-agent/src/ice.ts:26,crates/ice-cli/src/app.rs:138,partial,CLI-002
+PI_CODING_AGENT_DIR,packages/coding-agent/src/ice.ts:29,crates/ice-cli/src/app.rs:138,partial,CLI-002
+ICE_OFFLINE,packages/coding-agent/src/ice.ts:76,crates/ice-cli/src/app.rs:138,partial,CLI-002
+ICE_OFFLINE,packages/coding-agent/src/main.ts:533,crates/ice-cli/src/app.rs:100,partial,CLI-019
+ICE_OFFLINE,packages/coding-agent/src/main.ts:535,crates/ice-cli/src/app.rs:100,partial,CLI-019
+ICE_SKIP_VERSION_CHECK,packages/coding-agent/src/main.ts:536,crates/ice-cli/src/app.rs:100,partial,CLI-019
+<dynamic env: ENV_SESSION_DIR>,packages/coding-agent/src/main.ts:648,crates/ice-cli/src/session.rs:154,partial,CLI-006
+ICE_STARTUP_BENCHMARK,packages/coding-agent/src/main.ts:890,crates/ice-cli/src/app.rs:100,partial,CLI-019
+getCompatibleConfigEnv,packages/coding-agent/src/core/legacy-compat/env.ts:3,crates/ice-cli/src/config.rs:93,different-by-design,CLI-018
+getIceEnv,packages/coding-agent/src/core/legacy-compat/env.ts:13,crates/ice-cli/src/config.rs:93,different-by-design,CLI-018
+normalizeLegacyEnvironment,packages/coding-agent/src/core/legacy-compat/env.ts:17,crates/ice-cli/src/config.rs:93,different-by-design,CLI-018
+clearSessionEnvironment,packages/coding-agent/src/core/legacy-compat/env.ts:29,crates/ice-cli/src/config.rs:93,different-by-design,CLI-018
+ICE_SESSION_ID,packages/coding-agent/src/core/legacy-compat/env.ts:22,,different-by-design,CLI-018
+ICE_SESSION_FILE,packages/coding-agent/src/core/legacy-compat/env.ts:23,,different-by-design,CLI-018
+ICE_PROVIDER,packages/coding-agent/src/core/legacy-compat/env.ts:24,,different-by-design,CLI-018
+ICE_MODEL,packages/coding-agent/src/core/legacy-compat/env.ts:25,,different-by-design,CLI-018
+ICE_REASONING_LEVEL,packages/coding-agent/src/core/legacy-compat/env.ts:26,,different-by-design,CLI-018
+ICE_EXPERIMENTAL,packages/coding-agent/src/cli/startup-ui.ts:125,crates/ice-cli/src/extras.rs:35,partial,CLI-015
+HOME,packages/coding-agent/src/core/package-manager.ts:215,,missing,CLI-022
+ICE_OFFLINE,packages/coding-agent/src/core/package-manager.ts:46,crates/ice-cli/src/updates.rs:136,partial,CLI-028
+GIT_TERMINAL_PROMPT,packages/coding-agent/src/core/package-manager.ts:1635,,missing,CLI-028
+ICE_PROVIDER,packages/evals/src/smoke.eval.ts:13,,missing,MISC-048
+ICE_MODEL,packages/evals/src/smoke.eval.ts:14,,missing,MISC-048
+ICE_EVAL_ARTIFACT_DIR,packages/evals/src/vitest-evals/reporter.ts:15,,missing,MISC-046
+ICE_PROVIDER,packages/evals/scripts/run-evals.mjs:57,,missing,MISC-040
+ICE_MODEL,packages/evals/scripts/run-evals.mjs:58,,missing,MISC-040
+ICE_EVAL_ARTIFACT_DIR,packages/evals/scripts/run-evals.mjs:9,,missing,MISC-040
+HTTP_PROXY,packages/coding-agent/src/core/http-dispatcher.ts:48,crates/ice-cli/src/settings.rs:125,partial,SET-013
+HTTPS_PROXY,packages/coding-agent/src/core/http-dispatcher.ts:49,crates/ice-cli/src/settings.rs:125,partial,SET-013
+LLAMA_BASE_URL,packages/coding-agent/src/extensions/llama/provider.ts:76,crates/ice-ai/src/types.rs:419,missing,MISC-023
+LLAMA_BASE_URL,packages/coding-agent/src/extensions/llama/provider.ts:79,crates/ice-ai/src/types.rs:419,missing,MISC-023
+DISPLAY,packages/coding-agent/src/utils/clipboard-native.ts:16,crates/ice-cli/src/interactive_tui/run.rs:395,partial,MISC-004
+WAYLAND_DISPLAY,packages/coding-agent/src/utils/clipboard-native.ts:16,crates/ice-cli/src/interactive_tui/run.rs:395,partial,MISC-004
+TERMUX_VERSION,packages/coding-agent/src/utils/clipboard-native.ts:31,crates/ice-cli/src/interactive_tui/run.rs:395,partial,MISC-004
+WAYLAND_DISPLAY,packages/coding-agent/src/utils/clipboard.ts:54,crates/ice-cli/src/interactive_tui/run.rs:395,partial,MISC-004
+TERMUX_VERSION,packages/coding-agent/src/utils/clipboard.ts:114,crates/ice-cli/src/interactive_tui/run.rs:379,partial,MISC-005
+WAYLAND_DISPLAY,packages/coding-agent/src/utils/clipboard.ts:124,crates/ice-cli/src/interactive_tui/run.rs:379,partial,MISC-005
+DISPLAY,packages/coding-agent/src/utils/clipboard.ts:125,crates/ice-cli/src/interactive_tui/run.rs:379,partial,MISC-005
+ProgramFiles,packages/coding-agent/src/utils/shell.ts:79,crates/ice-tools/src/os_env.rs:175,partial,MISC-011
+ProgramFiles(x86),packages/coding-agent/src/utils/shell.ts:83,crates/ice-tools/src/os_env.rs:175,partial,MISC-011
+PATH (first case-insensitive ambient key),packages/coding-agent/src/utils/shell.ts:125,crates/ice-tools/src/os_env.rs:175,partial,MISC-011
+ICE_OFFLINE,packages/coding-agent/src/utils/tools-manager.ts:15,crates/ice-tools/src/tools/find.rs:1,different-by-design,MISC-010
+SystemRoot,packages/coding-agent/src/utils/tools-manager.ts:199,crates/ice-tools/src/tools/find.rs:1,different-by-design,MISC-010
+WINDIR,packages/coding-agent/src/utils/tools-manager.ts:199,crates/ice-tools/src/tools/find.rs:1,different-by-design,MISC-010
+ICE_UPDATE_URL,packages/coding-agent/src/utils/version-check.ts:35,crates/ice-cli/src/updates.rs:17,partial,MISC-001
+HF_TOKEN,packages/coding-agent/src/extensions/llama/huggingface.ts:47,,missing,MISC-022
+HF_TOKEN_PATH,packages/coding-agent/src/extensions/llama/huggingface.ts:51,,missing,MISC-022
+HF_HOME,packages/coding-agent/src/extensions/llama/huggingface.ts:52,,missing,MISC-022
+XDG_CACHE_HOME,packages/coding-agent/src/extensions/llama/huggingface.ts:53,,missing,MISC-022
+LLAMA_API_KEY,packages/coding-agent/src/extensions/llama/provider.ts:105,,missing,MISC-023

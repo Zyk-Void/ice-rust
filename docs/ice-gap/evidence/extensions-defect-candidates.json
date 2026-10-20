@@ -1,0 +1,161 @@
+{
+  "area": "extensions",
+  "scope": "Source-derived review candidates; no application code changed and no runtime test executed.",
+  "items": [
+    {
+      "id": "EXT-DEF-01",
+      "entry_ids": [
+        "EXT-034"
+      ],
+      "severity": "P0",
+      "finding": "ProjectTrust tag has no host emitter/three-way decision path; missing/error trust defaults true, and project_only chooses project extension dirs before the trust branch.",
+      "evidence": [
+        "rust:crates/ice-plugin-sdk/src/lib.rs:590-645",
+        "rust:crates/ice-cli/src/session.rs:1847-1901",
+        "ice:packages/coding-agent/src/core/extensions/runner.ts:223-253"
+      ],
+      "review": "SET-003 owns policy/store detail. Independently confirm executable admission and distinguish intended policy from implementation gap."
+    },
+    {
+      "id": "EXT-DEF-02",
+      "entry_ids": [
+        "EXT-037",
+        "EXT-038"
+      ],
+      "severity": "P1",
+      "finding": "invoke_renderer matches renderer kind but ignores registration name/customType; first valid JSON result can claim an unrelated custom type and suppress a later usable renderer.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui/sessions.rs:470-610",
+        "ice:packages/coding-agent/src/core/extensions/runner.ts:640-651"
+      ],
+      "review": "Review exact-name routing, valid-but-unrenderable output and callback keepalive."
+    },
+    {
+      "id": "EXT-DEF-03",
+      "entry_ids": [
+        "EXT-033"
+      ],
+      "severity": "P1",
+      "finding": "BeforeAgentStart is constructed as a Data payload by provider hook dispatch but is grouped as payload-free by free_dispatched_event.",
+      "evidence": [
+        "rust:crates/ice-extensions/src/provider_hooks.rs:98-186",
+        "rust:crates/ice-extensions/src/translate.rs:905-968"
+      ],
+      "review": "Confirmed control-flow mismatch; no measured leak execution. Other tags require their own constructor proof."
+    },
+    {
+      "id": "EXT-DEF-04",
+      "entry_ids": [
+        "EXT-033",
+        "EXT-010"
+      ],
+      "severity": "P1",
+      "finding": "dispatch_to_handlers returns on stale snapshot before reclaiming already-created host-owned event strings.",
+      "evidence": [
+        "rust:crates/ice-extensions/src/translate.rs:342-352",
+        "rust:crates/ice-extensions/src/translate.rs:905-968"
+      ],
+      "review": "Review caller ownership on stale dispatch; do not broaden to unproven use-after-free claims."
+    },
+    {
+      "id": "EXT-DEF-05",
+      "entry_ids": [
+        "EXT-033"
+      ],
+      "severity": "P1",
+      "finding": "PluginApi free_string documentation suggests plugin ownership of event payloads, contradicting borrowed EventView semantics and host cleanup.",
+      "evidence": [
+        "rust:crates/ice-plugin-sdk/src/lib.rs:1371-1375",
+        "rust:crates/ice-plugin-sdk/src/events.rs:21-29",
+        "rust:crates/ice-extensions/src/translate.rs:905-968"
+      ],
+      "review": "Align docs and producer/borrow ownership; following the wrong ownership instruction can conflict with host reclamation."
+    },
+    {
+      "id": "EXT-DEF-06",
+      "entry_ids": [
+        "EXT-014"
+      ],
+      "severity": "P1",
+      "finding": "Native shortcut routing uses bare key names for shortcut lookup and emits to all Input subscribers, instead of the TS selected shortcut owner's handler.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:390-505",
+        "ice:packages/coding-agent/src/core/extensions/runner.ts:526-573"
+      ],
+      "review": "Confirm modifier-qualified registration behavior and ownership before calling complete shortcut parity."
+    },
+    {
+      "id": "EXT-DEF-07",
+      "entry_ids": [
+        "EXT-020"
+      ],
+      "severity": "P1",
+      "finding": "Reload callback path ignores missing/disconnected reload signal errors and returns null, so success does not prove reload was queued.",
+      "evidence": [
+        "rust:crates/ice-extensions/src/actions.rs:793-868"
+      ],
+      "review": "Session owner should assess channel lifecycle and failure propagation; do not rely on stale comments claiming fallback."
+    },
+    {
+      "id": "EXT-DEF-08",
+      "entry_ids": [
+        "EXT-017"
+      ],
+      "severity": "P2",
+      "finding": "Native dispatch_event trampoline returns zero without forwarding an extension event bus message.",
+      "evidence": [
+        "rust:crates/ice-extensions/src/lib.rs:769-774",
+        "ice:packages/coding-agent/src/core/event-bus.ts:1-34"
+      ],
+      "review": "A callback pointer being non-null is not behavioral event-bus support."
+    },
+    {
+      "id": "EXT-DEF-09",
+      "entry_ids": [
+        "EXT-031",
+        "EXT-049"
+      ],
+      "severity": "P2",
+      "finding": "Native resource-discovery theme paths are accepted by collector but only skill/prompt paths are consumed at startup/reload.",
+      "evidence": [
+        "rust:crates/ice-extensions/src/resources.rs:1-317",
+        "rust:crates/ice-cli/src/session.rs:499-539",
+        "rust:crates/ice-cli/src/session.rs:1395-1443"
+      ],
+      "review": "Session owner confirms full caller path; TUI/settings own actual theme catalog wiring."
+    },
+    {
+      "id": "EXT-DEF-10",
+      "entry_ids": [
+        "EXT-040"
+      ],
+      "severity": "P3",
+      "finding": "TypeScript input dialog accepts a placeholder parameter but its interactive component ignores _placeholder.",
+      "evidence": [
+        "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90"
+      ],
+      "review": "Source/documentation divergence; native input does implement a placeholder."
+    },
+    {
+      "id": "EXT-DEF-11",
+      "entry_ids": [
+        "EXT-045"
+      ],
+      "severity": "P2",
+      "finding": "A custom asynchronous component factory can resolve after done settled and leave a late component outside the normal disposal path.",
+      "evidence": [
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3535-3615"
+      ],
+      "review": "Potential resource-retention case from source order; needs a dedicated implementation review, not assumed reproduced."
+    }
+  ],
+  "draft_corrections": [
+    "Original user_bash response/error behavior was wrong.",
+    "Original tool_call catch/error-reporting description was invented.",
+    "Original tool_result modification/wrapper behavior was wrong.",
+    "Original input requestId claim was nonexistent.",
+    "Original Rust ProjectTrust tag, environment override, emitter and headless-deny story was unsupported.",
+    "Original native schema validation conflated JSON object representation with schema type object."
+  ],
+  "source_test_distinction": "All cited tests were read only. The modified input-event test is explicitly current-only; clean tracked tests were compared to frozen HEAD. Draft prose is not treated as source authority."
+}

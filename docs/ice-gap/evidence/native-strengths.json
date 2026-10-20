@@ -1,0 +1,667 @@
+{
+  "records": [
+    {
+      "area": "ai",
+      "capability": "Typed durable assistant partial-progress frame encoder and reducer",
+      "ts_comparison": "Rust has versioned, identity-bearing frames with ordered block starts/deltas/ends, scalar text offsets, checkpoints and validated replay. The historical TS assistant-message-frame module referenced in its comments is absent from the reviewed TS inventory; SESSION-029/031 full-message JSONL and RPC-004/013 transient projections do not establish this frame persistence contract. Preserve it. The frame enum does not encode terminal usage/stop metadata, so this is a durable partial-progress capability rather than complete settled-message metadata persistence.",
+      "evidence": [
+        "rust:crates/ice-ai/src/frames.rs:1-1393",
+        "ice:packages/ai/src/utils/event-stream.ts:1-89",
+        "ice:packages/coding-agent/src/modes/json-event.ts:21-40"
+      ]
+    },
+    {
+      "area": "ai",
+      "capability": "Explicit failure when an assistant result producer disappears",
+      "ts_comparison": "The native unbounded MPSC event stream pairs with a oneshot result; a dropped result producer yields RecvError. The TS helper can end iteration with an undefined result while leaving result() unresolved. Preserve native producer-drop failure while adding the TS stream/error dispatch contracts.",
+      "evidence": [
+        "rust:crates/ice-ai/src/event_stream.rs:1-172",
+        "rust:crates/ice-ai/tests/event_stream.rs:1-109",
+        "ice:packages/ai/src/utils/event-stream.ts:1-89"
+      ]
+    },
+    {
+      "area": "agent",
+      "capability": "Operational native AgentHarness versus the exported TypeScript v2 scaffold",
+      "ts_comparison": "The directly compared TypeScript packages/agent AgentHarness methods explicitly reject or return static no-op results, while Rust creates a working durable main-lane runner. This is scoped to that exported class, not a claim that the TypeScript coding-agent cannot run sessions.",
+      "evidence": [
+        "ice:packages/agent/src/harness/agent-harness.ts:280-312",
+        "ice:packages/agent/src/harness/agent-harness.ts:354-422",
+        "rust:crates/ice-harness/src/agent_harness.rs:649-810"
+      ]
+    },
+    {
+      "area": "agent",
+      "capability": "Orphan-tool repair inside the harness converter",
+      "ts_comparison": "The Rust converter synthesizes missing provider-context results without rerunning tools and drops unmatched results. The directly compared TS harness converter only maps roles; related repair in other TS layers remains a separate audit dependency.",
+      "evidence": [
+        "ice:packages/agent/src/harness/messages.ts:124-168",
+        "rust:crates/ice-harness/src/messages.rs:302-438"
+      ]
+    },
+    {
+      "area": "agent",
+      "capability": "Native execution-environment improvements to retain",
+      "ts_comparison": "Rust offers an explicit per-call shell-program override and filters inherited host-private variables. The directly compared NodeExecutionEnv selects its configured Bash-like shell and spreads inherited environment variables without that filter. Keep these native features while fixing the inheritEnv=false and pipe-draining defects.",
+      "evidence": [
+        "ice:packages/agent/src/harness/env/nodejs.ts:168-248",
+        "rust:crates/ice-tools/src/os_env.rs:67-104",
+        "rust:crates/ice-tools/src/os_env.rs:840-891"
+      ]
+    },
+    {
+      "area": "tools",
+      "capability": "Native filesystem search/listing through ExecutionEnv",
+      "ts_comparison": "TS default find and grep provision fd/rg; Rust traverses and matches in process. Preserve that backend choice while implementing TOOLS-028/029/030 observable semantics.",
+      "evidence": [
+        "rust:crates/ice-tools/src/tools/find.rs:1-300",
+        "rust:crates/ice-tools/src/tools/grep.rs:1-436",
+        "rust:crates/ice-tools/src/tools/ls.rs:1-226"
+      ]
+    },
+    {
+      "area": "tools",
+      "capability": "MutatingEnv capability boundary and queue held through mutation I/O",
+      "ts_comparison": "Keep Rust's explicit mutation capability and lock lifetime while adding invocation-order/canonical-alias parity.",
+      "evidence": [
+        "rust:crates/ice-tools/src/file_mutation_queue.rs:1-137",
+        "rust:crates/ice-tools/tests/abort_bracketing.rs:232-308"
+      ]
+    },
+    {
+      "area": "tools",
+      "capability": "Native image processing without Photon worker/WASM",
+      "ts_comparison": "The Rust image backend can remain native; its corrected orientation-aware no-transform condition is valuable. TOOLS-023 separates backend choice from MIME/quality/resize/coordinate differences.",
+      "evidence": [
+        "rust:crates/ice-tools/src/image_processing.rs:1-485"
+      ]
+    },
+    {
+      "area": "tools",
+      "capability": "Additional edit input compatibility and duplicate-match context",
+      "ts_comparison": "Rust accepts single edit objects and JSON-string objects and returns richer ambiguity context; current TS normalizes legacy flat input and JSON array strings. Preserve intentional Rust compatibility while fixing exact precedence.",
+      "evidence": [
+        "rust:crates/ice-tools/src/tools/edit_diff.rs:1-425",
+        "rust:crates/ice-tools/tests/edit_fuzzy.rs:66-93"
+      ]
+    },
+    {
+      "area": "tools",
+      "capability": "Optional Windows PowerShell tool",
+      "ts_comparison": "Outside the seven-name TS factories inspected here, Rust exports a Windows-only PowerShell tool using UTF-16LE base64 EncodedCommand, fixed noninteractive options and capture cancellation/timeout. Preserve it; this is a factory comparison, not a claim that no TS extension can supply PowerShell.",
+      "evidence": [
+        "rust:crates/ice-tools/src/tools/powershell.rs:1-138",
+        "ice:packages/coding-agent/src/core/tools/index.ts:1-196"
+      ]
+    },
+    {
+      "area": "tools",
+      "capability": "Bounded native blocking RPC writer",
+      "ts_comparison": "Retain the 64-message channel, blocking sink isolation, ordered drain and failure cancellation while adding the distinct TOOLS-031 byte-budget/isolation contract.",
+      "evidence": [
+        "rust:crates/ice-cli/src/modes.rs:570-658",
+        "rust:crates/ice-cli/src/modes.rs:1121-1300"
+      ]
+    },
+    {
+      "area": "session",
+      "capability": "Native v4 mutation log and durable lane operations",
+      "ts_comparison": "Preserve replay/recovery, sequence validation, durable operation/queue/usage records and storage ownership while adding an explicit coding-v3 adapter; do not relax the native format silently. Differences are detailed in SESSION-029 through SESSION-031.",
+      "evidence": [
+        "rust:crates/ice-harness/src/session/jsonl/codec.rs:1-612",
+        "rust:crates/ice-harness/src/session/jsonl/storage.rs:1-931",
+        "rust:crates/ice-harness/src/session/jsonl/repo.rs:1-1105"
+      ]
+    },
+    {
+      "area": "session",
+      "capability": "Canonical SQLite state repository",
+      "ts_comparison": "Real existing session persistence; separate from the TS dashboard database. Preserve native behavior and identify concurrency limitations in SESSION-006/007 rather than deleting/replacing it wholesale.",
+      "evidence": [
+        "rust:crates/ice-harness/src/session/sqlite.rs:1-494"
+      ]
+    },
+    {
+      "area": "session",
+      "capability": "Incremental cache diagnostics",
+      "ts_comparison": "Rust provides an incremental tracker in addition to batch cache-miss diagnostics. The literal expression at line 95 was redacted by the read tool, so full formula equivalence is not claimed.",
+      "evidence": [
+        "rust:crates/ice-harness/src/cache_stats.rs:160-341"
+      ]
+    },
+    {
+      "area": "settings",
+      "capability": "Additional AGENTS.override.md candidate in the native context loader",
+      "ts_comparison": "The inspected TS coding resource loader's four-file candidate list lacks this native higher-priority filename; retain or explicitly resolve the difference during context parity work.",
+      "evidence": [
+        "rust:crates/ice-harness/src/context_files.rs:30-40",
+        "ice:packages/coding-agent/src/core/resource-loader.ts:84-103"
+      ]
+    },
+    {
+      "area": "settings",
+      "capability": "File-synced temporary staging for native configuration replacement",
+      "ts_comparison": "Rust's shared atomic writer creates a unique temporary file, syncs it and renames it; the TS settings storage uses a cross-process lock and direct writeFileSync. Preserve native staging while adding the TS changed-field/read-modify-write semantics; the native file sync does not supply a missing cross-process lock or parent-directory fsync.",
+      "evidence": [
+        "rust:crates/ice-cli/src/config.rs:1000-1038",
+        "ice:packages/coding-agent/src/core/settings-manager.ts:257-314"
+      ]
+    },
+    {
+      "area": "extensions",
+      "capability": "Native event-handler priority/platform metadata",
+      "ts_comparison": "TypeScript on(event,handler) uses extension/load order and no per-handler numeric priority or platform filter. Inline before-user priority is factory initialization order, not this native event ordering feature.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/extensions/loader.ts:268-281",
+        "rust:crates/ice-extensions/src/registry.rs:1-1330"
+      ]
+    },
+    {
+      "area": "extensions",
+      "capability": "Owner-scoped bounded declarative UI components",
+      "ts_comparison": "Native panel IDs/limits/slots and owner cleanup are more explicit than TS shared-key arbitrary Component widgets. This is scoped to the core extension UI API, not a claim that TS application code cannot build bounded views.",
+      "evidence": [
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:2955-3077",
+        "rust:crates/ice-extensions/src/status.rs:1-416",
+        "rust:crates/ice-extensions/src/panel.rs:1-117"
+      ]
+    },
+    {
+      "area": "extensions",
+      "capability": "Versioned native producer-owned string and library keepalive ABI",
+      "ts_comparison": "TypeScript managed objects/factories do not require this ABI. Preserve native ownership/lifetime protections while fixing the concrete payload cleanup inconsistencies.",
+      "evidence": [
+        "rust:crates/ice-plugin-sdk/src/lib.rs:1-2169",
+        "rust:crates/ice-extensions/src/tool.rs:1-1027"
+      ]
+    },
+    {
+      "area": "extensions",
+      "capability": "Host-managed child, side-question and stdio runtime actions",
+      "ts_comparison": "These are explicit native RuntimeActionId variants beyond the core TS ExtensionAPI. TS subagent/controller/application features are being audited separately; no global absence claim or companion plugin availability claim is made.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/extensions/types.ts:1254-1507",
+        "rust:crates/ice-plugin-sdk/src/lib.rs:1053-1074",
+        "rust:crates/ice-extensions/src/actions.rs:984-1265"
+      ]
+    },
+    {
+      "area": "rpc-remote",
+      "capability": "Native TCP JSON-RPC remote-session driver and shared TUI projection",
+      "ts_comparison": "Preserve the real connect/authenticate/start_session/subscribe/send/stop_session path, native transcript/status fold and complete-message UI projection while adding distinct TS binary and child-process adapters. External server implementation/deployment remains unverified.",
+      "evidence": [
+        "rust:crates/ice-cli/src/remote/client.rs:24-190",
+        "rust:crates/ice-cli/src/remote/session.rs:136-493",
+        "rust:crates/ice-cli/src/session_driver.rs:207-444"
+      ]
+    },
+    {
+      "area": "rpc-remote",
+      "capability": "Native approval-dialog request and explicit close lifecycle",
+      "ts_comparison": "Native ui_dialog_request/ui_dialog_closed and UiDialogResponse are existing remote modal capabilities. Preserve request/close forwarding and native cancel behavior; they are partial counterparts, not blanket absence or full TS extension_ui_request parity.",
+      "evidence": [
+        "rust:crates/ice-cli/src/remote/protocol.rs:30-41",
+        "rust:crates/ice-cli/src/modes.rs:355-483",
+        "rust:crates/ice-cli/src/session_driver.rs:333-351",
+        "rust:crates/ice-cli/tests/remote_client_smoke.rs:186-322"
+      ]
+    },
+    {
+      "area": "rpc-remote",
+      "capability": "Native low-level binary helpers",
+      "ts_comparison": "Framing, CBOR and codec modules have real source and unit tests. Credit their partial behavior without claiming live binary session transport/schema parity. Preserve explicit native value-domain differences and fix the tagged-value depth-guard bypass rather than copying it.",
+      "evidence": [
+        "rust:crates/ice-cli/src/remote/framing.rs:1-214",
+        "rust:crates/ice-cli/src/remote/cbor.rs:1-378",
+        "rust:crates/ice-cli/src/remote/codec.rs:1-144"
+      ]
+    },
+    {
+      "area": "rpc-remote",
+      "capability": "Conditional extension-owned stdio plus built-in native JSONL loop",
+      "ts_comparison": "Native RPC mode is implemented when extensions do not own the I/O path. Preserve both dispatch branches and native ping/stop/control behavior while implementing the additional TS command families.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:434-505",
+        "rust:crates/ice-cli/src/modes.rs:278-571"
+      ]
+    },
+    {
+      "area": "tui",
+      "capability": "Native minimal line patches, cached scroll layout and readerless/suspended renderer ownership",
+      "entry_ids": [
+        "TUI-202",
+        "TUI-212",
+        "TUI-216",
+        "TUI-221",
+        "TUI-222"
+      ],
+      "evidence": [
+        "rust:crates/ice-tui/src/line_diff.rs:1-358",
+        "rust:crates/ice-tui/src/tui_alt_screen.rs:1-2133"
+      ],
+      "notes": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps.",
+      "ts_comparison": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps."
+    },
+    {
+      "area": "tui",
+      "capability": "Native editor selection/redo, component mutable APIs and searchable selector extensions",
+      "entry_ids": [
+        "TUI-229",
+        "TUI-234",
+        "TUI-242",
+        "TUI-245",
+        "TUI-256",
+        "TUI-258"
+      ],
+      "evidence": [
+        "rust:crates/ice-tui/src/editor.rs:1-2420",
+        "rust:crates/ice-tui/src/select_list.rs:1-679",
+        "rust:crates/ice-tui/src/settings_list.rs:1-608"
+      ],
+      "notes": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry.",
+      "ts_comparison": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry."
+    },
+    {
+      "area": "tui",
+      "capability": "Passive-overlay collision avoidance",
+      "entry_ids": [
+        "TUI-219"
+      ],
+      "evidence": [
+        "rust:crates/ice-tui/src/overlay.rs:178-248"
+      ],
+      "notes": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior.",
+      "ts_comparison": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior."
+    },
+    {
+      "area": "tui",
+      "capability": "Native jump-to-end primitive",
+      "entry_ids": [
+        "TUI-223"
+      ],
+      "evidence": [
+        "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+      ],
+      "notes": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership.",
+      "ts_comparison": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership."
+    },
+    {
+      "area": "tui",
+      "capability": "Native standalone LaTeX helper",
+      "evidence": [
+        "rust:crates/ice-tui/src/latex.rs:1-369"
+      ],
+      "notes": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option.",
+      "ts_comparison": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option."
+    },
+    {
+      "area": "tui",
+      "capability": "Native preservation TUI-223",
+      "evidence": [
+        "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+      ],
+      "notes": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior.",
+      "ts_comparison": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior."
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-003",
+        "TUI-024"
+      ],
+      "description": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only.",
+      "capability": "Native behavior preserved by TUI-003, TUI-024",
+      "ts_comparison": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only.",
+      "evidence": [
+        "rust:crates/ice-tui/src/theme.rs:343-386",
+        "rust:crates/ice-tui/src/theme.rs:507-526",
+        "rust:crates/ice-cli/src/interactive_tui.rs:972-984",
+        "rust:crates/ice-cli/src/interactive_tui/selectors.rs:449-506",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:390-433",
+        "rust:crates/ice-cli/src/interactive_tui/commands.rs:320-349",
+        "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:622-828",
+        "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:983-1066",
+        "ice:packages/coding-agent/src/modes/interactive/theme/theme-controller.ts:18-140",
+        "ice:packages/coding-agent/src/modes/interactive/components/theme-selector.ts:1-68",
+        "ice:packages/coding-agent/test/theme-picker.test.ts:25-75",
+        "ice:packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts:149-157",
+        "ice:packages/coding-agent/test/interactive-mode-status.test.ts:313-372",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:120-153",
+        "rust:crates/ice-tui/src/user_message.rs:58-119",
+        "rust:crates/ice-tui/src/assistant_message.rs:41-84",
+        "rust:crates/ice-tui/src/assistant_message.rs:257-283",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5225-5469",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6020-6048",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6098",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6159-6203",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6309-6319"
+      ]
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-025"
+      ],
+      "description": "Preserve native copy-on-select setting and working immediate/live settings controls.",
+      "capability": "Native behavior preserved by TUI-025",
+      "ts_comparison": "Preserve native copy-on-select setting and working immediate/live settings controls.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:51-300",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:301-383",
+        "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:1-194",
+        "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:506-1028",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6325",
+        "ice:packages/coding-agent/test/settings-selector.test.ts:1-75",
+        "ice:packages/coding-agent/test/ui-style-settings.test.ts:1-31"
+      ]
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-046",
+        "TUI-047",
+        "TUI-073"
+      ],
+      "description": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders.",
+      "capability": "Native behavior preserved by TUI-046, TUI-047, TUI-073",
+      "ts_comparison": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:698-785",
+        "rust:crates/ice-cli/src/interactive_tui/selectors.rs:518-613",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:802-819",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:1187-1204",
+        "rust:crates/ice-cli/src/interactive_tui/selectors.rs:615-694",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3223-3290",
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:2312-2356",
+        "ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:1-215",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6933-7026",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7028-7181",
+        "ice:packages/coding-agent/test/oauth-selector.test.ts:1-53",
+        "ice:packages/coding-agent/test/oauth-selector.test.ts:55-148",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:821-895",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:897-1186",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:788-797",
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:1958-2061",
+        "rust:crates/ice-cli/src/interactive_tui.rs:1863-1885",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2011-2037",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3148-3221",
+        "ice:packages/coding-agent/src/modes/interactive/components/login-dialog.ts:1-234",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7183-7439",
+        "rust:crates/ice-cli/src/interactive_tui/extensions.rs:77-495",
+        "rust:crates/ice-cli/src/interactive_tui/extensions.rs:529-939",
+        "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:1-129",
+        "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90",
+        "ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:1-133"
+      ]
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-074"
+      ],
+      "description": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences.",
+      "capability": "Native behavior preserved by TUI-074",
+      "ts_comparison": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:1398-1497",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2617-2695",
+        "rust:crates/ice-tui/src/editor.rs:1186-1204",
+        "rust:crates/ice-cli/src/interactive_tui.rs:1425-1460",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2655-2692",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2661-2672",
+        "rust:crates/ice-cli/src/interactive_tui.rs:1487-1495",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2600-2613",
+        "rust:crates/ice-cli/src/interactive_tui/state.rs:833-864",
+        "rust:crates/ice-cli/src/interactive_tui/events.rs:15-148",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3784-4063",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5160-5219",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5796-5952",
+        "ice:packages/coding-agent/test/interactive-mode-send-now.test.ts:1-72",
+        "ice:packages/coding-agent/test/interactive-mode-compaction.test.ts:1-88",
+        "ice:packages/coding-agent/test/interactive-mode-bash-routing.test.ts:1-26"
+      ]
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-072"
+      ],
+      "description": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all.",
+      "capability": "Native behavior preserved by TUI-072",
+      "ts_comparison": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui/run.rs:1-121",
+        "rust:crates/ice-cli/src/interactive_tui/commands.rs:82-100",
+        "rust:crates/ice-cli/src/interactive_tui/rendering.rs:256-314",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:923-951",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1021-1027",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1386-1430",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7842-7861"
+      ]
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-078",
+        "TUI-080"
+      ],
+      "description": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview.",
+      "capability": "Native behavior preserved by TUI-078, TUI-080",
+      "ts_comparison": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui/sessions.rs:8-86",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3038-3040",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7630-7722",
+        "ice:packages/coding-agent/src/config.ts:538-541",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2425-2615",
+        "rust:crates/ice-cli/src/interactive_tui/run.rs:313-337",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2133-2133",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3004-3006",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3731-3732",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3748-3782",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7724-7741",
+        "ice:packages/coding-agent/test/interactive-tui.test.ts:132-243"
+      ]
+    },
+    {
+      "area": "tui",
+      "entry_ids": [
+        "TUI-079",
+        "TUI-082"
+      ],
+      "description": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details.",
+      "capability": "Native behavior preserved by TUI-079, TUI-082",
+      "ts_comparison": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details.",
+      "evidence": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:990-1000",
+        "rust:crates/ice-cli/src/interactive_tui.rs:1300-1350",
+        "rust:crates/ice-cli/src/interactive_tui.rs:1571-1571",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:424-462",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:953-1019",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1049-1115",
+        "ice:packages/coding-agent/test/interactive-tui.test.ts:1-243",
+        "rust:crates/ice-cli/src/interactive_tui/commands.rs:634-654",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3042-3054",
+        "rust:crates/ice-cli/src/interactive_tui/commands.rs:297-317",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3086-3135",
+        "rust:crates/ice-cli/src/interactive_tui/commands.rs:738-772",
+        "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7743-7828",
+        "ice:packages/coding-agent/test/interactive-mode-status.test.ts:1-1545"
+      ]
+    },
+    {
+      "area": "subagents",
+      "capability": "Owner-scoped native child handles and independent active-cleanup permits",
+      "ts_comparison": "Rust limits retained handles and active/cleanup work separately to 16 each, reserves before await, and keeps an active permit until execution scopes actually become idle after the 2 s cleanup grace. TS admission releases after abandonment while an uncooperative operation can remain active; preserve Rust's stronger accounting while adding V2 lifecycle.",
+      "evidence": [
+        "rust:crates/ice-cli/src/child_agents.rs:44-130",
+        "rust:crates/ice-cli/src/child_agents.rs:207-418",
+        "rust:crates/ice-cli/src/child_agents/tests/security.rs:101-229",
+        "ice:packages/coding-agent/src/subagents/v2/runtime.ts:958-1309"
+      ]
+    },
+    {
+      "area": "subagents",
+      "capability": "Lifetime-bounded delta/final output and owner-checked destructive polling",
+      "ts_comparison": "Native output budget counts delta plus final bytes cumulatively (4 MiB/8192 events), regardless of polling; result is withheld until queued deltas drain. One oversized first delta may exceed the 64 KiB per-poll target. Retain lifetime bounds alongside new nondestructive artifacts.",
+      "evidence": [
+        "rust:crates/ice-cli/src/child_agents.rs:140-206",
+        "rust:crates/ice-cli/src/child_agents.rs:288-418",
+        "rust:crates/ice-cli/src/child_agents/tests.rs:1-240"
+      ]
+    },
+    {
+      "area": "subagents",
+      "capability": "Invocation/plugin lifetime cancellation and fail-closed panic handling",
+      "ts_comparison": "Native children are linked to invocation, parent run, parent scope and explicit job cancellation/timeout, with expired invocations rejected and revoked owners unable to reenter. Child tool errors/panics are contained; no-grandchild narrowing and alias root reentry checks remain useful.",
+      "evidence": [
+        "rust:crates/ice-cli/src/child_agents.rs:44-130",
+        "rust:crates/ice-cli/src/child_agents.rs:207-418",
+        "rust:crates/ice-cli/src/child_agents/tests/invocation.rs:1-58",
+        "rust:crates/ice-cli/src/child_agents/tests/security.rs:1-230"
+      ]
+    },
+    {
+      "area": "subagents",
+      "capability": "Exact inherited private provider/model binding and guarded tool scopes",
+      "ts_comparison": "create_child snapshots parent runtime policy/model/provider/thinking/resource configuration and wraps allowed parent tools under a tracked child scope. Preserve this native capability; TS V2 adds contract persistence, per-child tools and policy envelopes rather than replacing native binding isolation.",
+      "evidence": [
+        "rust:crates/ice-harness/src/agent_harness/child.rs:1-172",
+        "rust:crates/ice-harness/src/agent_harness/child/tests.rs:1-298"
+      ]
+    },
+    {
+      "area": "subagents",
+      "capability": "Independent native side questions",
+      "ts_comparison": "Native one-turn tool-free side questions use a 64 KiB UTF-8 tail of committed user/assistant text, excluding tool/custom/image/thinking, and survive parent-run cancellation while remaining bounded by session close. This is a distinct capability from TS controllable persistent V2 child views.",
+      "evidence": [
+        "rust:crates/ice-harness/src/agent_harness/child.rs:178-300",
+        "rust:crates/ice-harness/src/agent_harness/child/tests.rs:1-298"
+      ]
+    },
+    {
+      "area": "observability",
+      "capability": "Monotonic synchronized timing collection",
+      "ts_comparison": "Rust uses Instant, Mutex and a fixed namespace print order; TS uses Date.now and Map insertion order. Preserve monotonic timing even if moving the Rust startup flush earlier.",
+      "evidence": [
+        "rust:crates/ice-cli/src/timings.rs:1-109",
+        "ice:packages/coding-agent/src/core/timings.ts:1-52"
+      ]
+    },
+    {
+      "area": "observability",
+      "capability": "Explicit local span contexts, no-op and in-memory test sinks",
+      "ts_comparison": "Rust supplies a Send+Sync TelemetryContext, RAII span guard, stdout/file/disabled production contexts and an in-memory completion sink. The inspected TS observation subsystem uses event projections rather than this trait/sink contract. Preserve these alongside observation; a separate source-read concurrent-drop defect is documented.",
+      "evidence": [
+        "rust:crates/ice-telemetry/src/context.rs:16-103",
+        "rust:crates/ice-telemetry/src/production.rs:19-115",
+        "rust:crates/ice-telemetry/src/noop.rs:1-19",
+        "rust:crates/ice-telemetry/src/testing.rs:1-72",
+        "ice:packages/coding-agent/src/observe/observe-recorder.ts:134-188"
+      ]
+    },
+    {
+      "area": "providers-auth",
+      "capability": "Exact provider identity isolation and selected execution bindings",
+      "ts_comparison": "Preserve native configured identity/case isolation, public catalog sanitization, provider/API binding restoration and explicit invocation-scoped key isolation while adding TS composition/auth behavior.",
+      "evidence": [
+        "rust:crates/ice-cli/src/provider.rs:90-330",
+        "rust:crates/ice-cli/src/provider.rs:374-558",
+        "rust:crates/ice-cli/src/provider.rs:1050-1386"
+      ]
+    },
+    {
+      "area": "providers-auth",
+      "capability": "Native provider packages and OAuth ABI host",
+      "ts_comparison": "Generic registered plugin callbacks, package manifests and native begin/exchange/refresh/revoke host behavior are existing functionality, not absence. Concrete externally maintained ice-package implementations are outside this audit scope.",
+      "evidence": [
+        "rust:crates/ice-cli/src/auth.rs:1-346",
+        "rust:crates/ice-cli/tests/provider_packages.rs:1-766",
+        "rust:crates/ice-extensions/src/oauth.rs:1-299"
+      ]
+    },
+    {
+      "area": "providers-auth",
+      "capability": "Native Faux extensions and actual deferred FIFO",
+      "ts_comparison": "Retain abort_after injection, Unicode-safe streamed chunks and global scripted DeferredPoll support while implementing TS per-handle deferred semantics; the native comment claiming deferred out of scope is stale.",
+      "evidence": [
+        "rust:crates/ice-ai/src/providers/faux.rs:1-928",
+        "ice:packages/ai/src/providers/faux.ts:567-643"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "capability": "Native dev/dev-local wrapper, custom ABI extension staging and cleanup",
+      "ts_comparison": "The TS distribution launcher installs factories and routes agent commands; native dev helper behavior is retained as an extra, not treated as a TS requirement.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:104-128",
+        "rust:crates/ice-cli/src/app.rs:581-615",
+        "rust:crates/ice-cli/src/app.rs:509-519"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "capability": "Native plugin stdio ownership with lifecycle validation",
+      "ts_comparison": "Native startup defers stdin until extensions can claim it, then forces the headless lifecycle even over ICE_FORCE_TUI. TS CLI's rpc skip is narrower.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:315-381",
+        "rust:crates/ice-cli/src/app.rs:460-491"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "capability": "Unauthenticated native full-catalog listing",
+      "ts_comparison": "TS --list-models queries runtime availability; native catalog inspection before credentials is a useful deliberate extra.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:197-203",
+        "rust:crates/ice-cli/src/app.rs:654-768"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "capability": "Native flat-layout migration with confirmed recovery/count defect",
+      "ts_comparison": "Different from TS oauth/settings credential conversion; native folder-existence gate prevents retry after failed transfer and increments attempts as moves.",
+      "evidence": [
+        "rust:crates/ice-cli/src/config.rs:195-225",
+        "rust:crates/ice-cli/src/config.rs:260-269",
+        "rust:crates/ice-cli/src/config.rs:408-416"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "entry_id": "CLI-040",
+      "capability": "Native Cargo artifact installation, ownership locking and rollback to preserve",
+      "ts_comparison": "Retain the Cargo backend, strict mutation registry, artifact ownership checks, lock, staging and rollback when adding resource-package commands. Do not replace them with TS's weaker payload-then-settings ordering. Keep backend-specific registries separate and expose native versus resource-package identities explicitly in the command facade. No new Rust implementation is required for this retained capability; size is zero and compatibility work is counted in the owning source/CLI entries.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/package-manager.ts:973-1041",
+        "ice:packages/coding-agent/src/core/package-manager.ts:2008-2135",
+        "rust:crates/ice-cli/src/install.rs:1-1928"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "entry_id": "CLI-041",
+      "capability": "Verified native extension prebuilt distribution and publisher provenance to preserve",
+      "ts_comparison": "Preserve the bounded manifest/archive protocol, publisher continuity, provenance and object validation while adding TS resource backends. Keep verification before activation and runtime ABI loading after it. No new Rust implementation is estimated for this retained capability. Do not loosen archive/path/hash limits to make TS package naming fit, and do not treat downloaded native libraries as equivalent to JS package directories.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/package-manager.ts:1352-1432",
+        "ice:packages/coding-agent/src/core/package-manager.ts:1826-1861",
+        "rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403",
+        "rust:crates/ice-cli/src/install.rs:155-221"
+      ]
+    },
+    {
+      "area": "cli-packaging",
+      "entry_id": "CLI-042",
+      "capability": "Native startup update cache, per-entry freshness and backend-aware notices to preserve",
+      "ts_comparison": "Retain native result classification, freshness, merge locking and publisher-aware keys. Add resource-package notices through explicit backend-tagged records and shared presentation only after CLI-028 exists. Preserve the distinction between automatic native disable flags and TS explicit update-service behavior. No replacement implementation is required for this retained capability; size is zero.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/package-manager.ts:1120-1200",
+        "ice:packages/coding-agent/src/core/package-manager.ts:2138-2510",
+        "rust:crates/ice-cli/src/updates.rs:1-521",
+        "rust:crates/ice-cli/src/updates.rs:2408-3531"
+      ]
+    }
+  ],
+  "source": "Accepted area manifests; no new capability inference"
+}

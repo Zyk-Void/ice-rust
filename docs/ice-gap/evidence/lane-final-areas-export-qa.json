@@ -1,0 +1,17 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "status": "verified",
+  "publication_ready": true,
+  "expected": 200,
+  "actual": 200,
+  "misc": 63,
+  "tui": 137,
+  "types": 116,
+  "runtime": 84,
+  "entry_updates": 77,
+  "field_replacements": 17,
+  "source_files_current_hash_checked": 74,
+  "new_entries": 0,
+  "problems": [],
+  "scope": "Static audit-artifact/definition consistency only. No build/test/application execution. A current hash check is not independent full source review or retrospective baseline certification."
+}

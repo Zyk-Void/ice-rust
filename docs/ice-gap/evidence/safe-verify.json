@@ -1,0 +1,2650 @@
+{
+  "area": "safe-verify",
+  "complete": true,
+  "entries": [
+    {
+      "id": "SAFE-001",
+      "title": "Mandatory guard bootstrap and process-scoped flags",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 120,
+      "size_max": 220,
+      "dependencies": [
+        "EXT-057",
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-019",
+        "SAFE-025",
+        "SET-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "CLI-002",
+          "kind": "shared-contract",
+          "reason": "The guard needs ordered hidden inline factories and the resource-loader rule that --no-extensions does not remove supplied inline factories. CLI-002 is the launcher consuming this policy, not a prerequisite of the guard service.",
+          "reviews": [
+            "DEPQA-001"
+          ]
+        },
+        {
+          "entry_id": "EXT-057",
+          "kind": "prerequisite",
+          "reason": "The guard needs ordered hidden inline factories and the resource-loader rule that --no-extensions does not remove supplied inline factories. CLI-002 is the launcher consuming this policy, not a prerequisite of the guard service.",
+          "reviews": [
+            "DEPQA-001"
+          ]
+        },
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-021",
+          "kind": "prerequisite",
+          "reason": "The guard needs ordered hidden inline factories and the resource-loader rule that --no-extensions does not remove supplied inline factories. CLI-002 is the launcher consuming this policy, not a prerequisite of the guard service.",
+          "reviews": [
+            "DEPQA-001"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-002",
+      "title": "Canonical guarded root and immutable Git baseline",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 80,
+      "size_max": 160,
+      "dependencies": [
+        "SAFE-003"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-003",
+      "title": "Version 3 durable guard state and branch restoration",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 240,
+      "size_max": 420,
+      "dependencies": [
+        "EXT-053",
+        "SAFE-002",
+        "SAFE-019",
+        "SESSION-031",
+        "SESSION-034"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "EXT-053",
+          "kind": "prerequisite",
+          "reason": "Branch reads must expose custom entries in the selected root-to-leaf branch, while append/flush preserves ordered custom state. SAFE uses ordinary appendEntry here; do not silently promise durable=true/fsync on every guard state write.",
+          "reviews": [
+            "DEPQA-002"
+          ]
+        },
+        {
+          "entry_id": "SAFE-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-031",
+          "kind": "prerequisite",
+          "reason": "Branch reads must expose custom entries in the selected root-to-leaf branch, while append/flush preserves ordered custom state. SAFE uses ordinary appendEntry here; do not silently promise durable=true/fsync on every guard state write.",
+          "reviews": [
+            "DEPQA-002"
+          ]
+        },
+        {
+          "entry_id": "SESSION-034",
+          "kind": "prerequisite",
+          "reason": "Branch reads must expose custom entries in the selected root-to-leaf branch, while append/flush preserves ordered custom state. SAFE uses ordinary appendEntry here; do not silently promise durable=true/fsync on every guard state write.",
+          "reviews": [
+            "DEPQA-002"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-004",
+      "title": "Effective tool authority by mode, origin and declared access",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 180,
+      "size_max": 300,
+      "dependencies": [
+        "EXT-024",
+        "EXT-026",
+        "EXT-035",
+        "EXT-054",
+        "SAFE-001",
+        "SAFE-003",
+        "SAFE-005",
+        "SAFE-013"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "EXT-024",
+          "kind": "prerequisite",
+          "reason": "Tool access/sourceInfo metadata, active selection, dispatch-time blocking and the separate user_bash replacement seam are real host prerequisites. Metadata is not authority; the guard owns the mode/trust decisions.",
+          "reviews": [
+            "DEPQA-003"
+          ]
+        },
+        {
+          "entry_id": "EXT-026",
+          "kind": "prerequisite",
+          "reason": "Tool access/sourceInfo metadata, active selection, dispatch-time blocking and the separate user_bash replacement seam are real host prerequisites. Metadata is not authority; the guard owns the mode/trust decisions.",
+          "reviews": [
+            "DEPQA-003"
+          ]
+        },
+        {
+          "entry_id": "EXT-035",
+          "kind": "prerequisite",
+          "reason": "Tool access/sourceInfo metadata, active selection, dispatch-time blocking and the separate user_bash replacement seam are real host prerequisites. Metadata is not authority; the guard owns the mode/trust decisions.",
+          "reviews": [
+            "DEPQA-003"
+          ]
+        },
+        {
+          "entry_id": "EXT-054",
+          "kind": "prerequisite",
+          "reason": "Tool access/sourceInfo metadata, active selection, dispatch-time blocking and the separate user_bash replacement seam are real host prerequisites. Metadata is not authority; the guard owns the mode/trust decisions.",
+          "reviews": [
+            "DEPQA-003"
+          ]
+        },
+        {
+          "entry_id": "SAFE-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-005",
+      "title": "Prospective-path and protected-file mutation checks",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 160,
+      "size_max": 280,
+      "dependencies": [
+        "SAFE-002",
+        "SAFE-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-006",
+      "title": "Manual plan/build transitions and pending-plan override",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-007",
+        "SAFE-012",
+        "SAFE-025"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-007",
+      "title": "Planning/execution model selection and thinking restoration",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 200,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-006",
+        "SAFE-012"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-008",
+      "title": "Hidden planning and approved-plan context messages",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-012",
+        "SAFE-014",
+        "SAFE-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-009",
+      "title": "ask planning questionnaire",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-010",
+      "title": "draft_plan bounded session-native Markdown drafts",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-013"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-011",
+      "title": "propose_plan approval submission and retry behavior",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "SAFE-006",
+        "SAFE-010",
+        "SAFE-012"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-012",
+      "title": "Explicit review, approval identity and settled-turn handoff",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 180,
+      "size_max": 300,
+      "dependencies": [
+        "AGENT-019",
+        "EXT-019",
+        "SAFE-003",
+        "SAFE-006",
+        "SAFE-007",
+        "SAFE-008",
+        "SAFE-013",
+        "SAFE-014",
+        "SAFE-015",
+        "SESSION-022"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-019",
+          "kind": "prerequisite",
+          "reason": "The core stop-after-turn gate precedes queue consumption; the session publishes agent_settled only after its post-run work. EXT-019 exposes the control, while SESSION-035 binds it. agent_end alone is insufficient.",
+          "reviews": [
+            "DEPQA-004"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "prerequisite",
+          "reason": "The core stop-after-turn gate precedes queue consumption; the session publishes agent_settled only after its post-run work. EXT-019 exposes the control, while SESSION-035 binds it. agent_end alone is insufficient.",
+          "reviews": [
+            "DEPQA-004"
+          ]
+        },
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-022",
+          "kind": "prerequisite",
+          "reason": "The core stop-after-turn gate precedes queue consumption; the session publishes agent_settled only after its post-run work. EXT-019 exposes the control, while SESSION-035 binds it. agent_end alone is insufficient.",
+          "reviews": [
+            "DEPQA-004"
+          ]
+        },
+        {
+          "entry_id": "SESSION-035",
+          "kind": "shared-contract",
+          "reason": "The core stop-after-turn gate precedes queue consumption; the session publishes agent_settled only after its post-run work. EXT-019 exposes the control, while SESSION-035 binds it. agent_end alone is insufficient.",
+          "reviews": [
+            "DEPQA-004"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-013",
+      "title": "read_plan acknowledgement and post-compaction mutation gate",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 80,
+      "size_max": 150,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-006",
+        "SAFE-012"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-014",
+      "title": "Fresh approved-plan context projection and orphan-result pruning",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 150,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-008",
+        "SAFE-012"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-015",
+      "title": "Compacted and retained approval-context handoffs",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "SAFE-006",
+        "SAFE-008",
+        "SAFE-012",
+        "SAFE-013",
+        "SAFE-014",
+        "SESSION-016",
+        "SESSION-035"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "EXT-019",
+          "kind": "shared-contract",
+          "reason": "SESSION-016 owns actual manual compaction settlement; SESSION-035 specifically binds ctx.compact to asynchronous onComplete/onError callbacks. The approved-plan callback dispatch and error fallback remain SAFE-owned.",
+          "reviews": [
+            "DEPQA-005"
+          ]
+        },
+        {
+          "entry_id": "SAFE-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-016",
+          "kind": "prerequisite",
+          "reason": "SESSION-016 owns actual manual compaction settlement; SESSION-035 specifically binds ctx.compact to asynchronous onComplete/onError callbacks. The approved-plan callback dispatch and error fallback remain SAFE-owned.",
+          "reviews": [
+            "DEPQA-005"
+          ]
+        },
+        {
+          "entry_id": "SESSION-035",
+          "kind": "prerequisite",
+          "reason": "SESSION-016 owns actual manual compaction settlement; SESSION-035 specifically binds ctx.compact to asynchronous onComplete/onError callbacks. The approved-plan callback dispatch and error fallback remain SAFE-owned.",
+          "reviews": [
+            "DEPQA-005"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-016",
+      "title": "Bounded prose-only planning continuations and abort suppression",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 160,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-008",
+        "SAFE-009",
+        "SAFE-010",
+        "SAFE-012",
+        "SAFE-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-017",
+      "title": "Authorized native mutation generations",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 90,
+      "size_max": 170,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-005",
+        "SAFE-013",
+        "SAFE-019"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-018",
+      "title": "Subagent patch verification import and conflict accounting",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 90,
+      "size_max": 180,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-013",
+        "SAFE-017",
+        "SAFE-021",
+        "SUB-032"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SUB-031",
+          "kind": "shared-contract",
+          "reason": "The parent imports the typed applied/rollback-conflict/verification receipt from child patch integration. This is a receipt/transaction prerequisite, not permission to trust human-readable child output. SAFE-018 separately decides mutation and checked-generation accounting.",
+          "reviews": [
+            "DEPQA-006"
+          ]
+        },
+        {
+          "entry_id": "SUB-032",
+          "kind": "prerequisite",
+          "reason": "The parent imports the typed applied/rollback-conflict/verification receipt from child patch integration. This is a receipt/transaction prerequisite, not permission to trust human-readable child output. SAFE-018 separately decides mutation and checked-generation accounting.",
+          "reviews": [
+            "DEPQA-006"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-019",
+      "title": "Trusted verifier argv validation and command identity",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "SAFE-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-020",
+      "title": "Bounded verifier subprocess, timeout and cancellation",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 220,
+      "size_max": 380,
+      "dependencies": [
+        "SAFE-002",
+        "SAFE-019"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-021",
+      "title": "Automatic/manual verification, durable receipts and lifecycle cleanup",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 190,
+      "size_max": 330,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-017",
+        "SAFE-018",
+        "SAFE-019",
+        "SAFE-020"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-022",
+      "title": "Versioned Goals host registry and lifecycle ownership",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-023",
+        "SAFE-024"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-023",
+      "title": "Immutable Goals authority snapshot and session binding",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 70,
+      "size_max": 140,
+      "dependencies": [
+        "SAFE-002",
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-019",
+        "SAFE-022",
+        "SAFE-025"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-024",
+      "title": "Goals fresh verification with overlap, cancellation and stale-pass rejection",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 140,
+      "size_max": 250,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-013",
+        "SAFE-019",
+        "SAFE-020",
+        "SAFE-021",
+        "SAFE-022",
+        "SAFE-023"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-025",
+      "title": "Authoritative frozen capability publication to subagents",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 50,
+      "size_max": 100,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SUB-007",
+          "kind": "shared-contract",
+          "reason": "SAFE publishes the frozen parent snapshot. Child ceiling composition, adapter filtering, live revalidation and extension binding consume it. Reversing that direction would make the authority producer depend on its consumers.",
+          "reviews": [
+            "DEPQA-007"
+          ]
+        },
+        {
+          "entry_id": "SUB-014",
+          "kind": "shared-contract",
+          "reason": "SAFE publishes the frozen parent snapshot. Child ceiling composition, adapter filtering, live revalidation and extension binding consume it. Reversing that direction would make the authority producer depend on its consumers.",
+          "reviews": [
+            "DEPQA-007"
+          ]
+        },
+        {
+          "entry_id": "SUB-019",
+          "kind": "shared-contract",
+          "reason": "SAFE publishes the frozen parent snapshot. Child ceiling composition, adapter filtering, live revalidation and extension binding consume it. Reversing that direction would make the authority producer depend on its consumers.",
+          "reviews": [
+            "DEPQA-007"
+          ]
+        },
+        {
+          "entry_id": "SUB-035",
+          "kind": "shared-contract",
+          "reason": "SAFE publishes the frozen parent snapshot. Child ceiling composition, adapter filtering, live revalidation and extension binding consume it. Reversing that direction would make the authority producer depend on its consumers.",
+          "reviews": [
+            "DEPQA-007"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE-026",
+      "title": "Guard status reporting and safety notifications",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 50,
+      "size_max": 100,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/docs/ice-goals-host.md",
+      "entry_ids": [
+        "SAFE-022",
+        "SAFE-023",
+        "SAFE-024"
+      ],
+      "status": "mapped",
+      "notes": "Complete registry/interface/documentation read; contract and scope mapped to Goals entries."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-goals-host.ts",
+      "entry_ids": [
+        "SAFE-022",
+        "SAFE-023",
+        "SAFE-024"
+      ],
+      "status": "mapped",
+      "notes": "Complete registry/interface/documentation read; contract and scope mapped to Goals entries."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-safe-verify.ts",
+      "entry_ids": [
+        "SAFE-001",
+        "SAFE-002",
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-005",
+        "SAFE-006",
+        "SAFE-007",
+        "SAFE-008",
+        "SAFE-009",
+        "SAFE-010",
+        "SAFE-011",
+        "SAFE-012",
+        "SAFE-013",
+        "SAFE-014",
+        "SAFE-015",
+        "SAFE-016",
+        "SAFE-017",
+        "SAFE-018",
+        "SAFE-019",
+        "SAFE-020",
+        "SAFE-021",
+        "SAFE-022",
+        "SAFE-023",
+        "SAFE-024",
+        "SAFE-025",
+        "SAFE-026"
+      ],
+      "status": "mapped",
+      "notes": "Complete source read; 26 atomic entries cover bootstrap, state, enforcement, plan tools/transitions, verifier and Goals."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "cli",
+      "name": "--ice-mode",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:834",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-001",
+      "candidate_ids": [
+        "C000866",
+        "C000869",
+        "C000871",
+        "C000880"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--ice-allow-bash",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:835",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-004",
+      "candidate_ids": [
+        "C000881"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--allow-external",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:839",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-004",
+      "candidate_ids": [
+        "C000867",
+        "C000868",
+        "C000882"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--ice-verify",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:844",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-019",
+      "candidate_ids": [
+        "C000872",
+        "C000883"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--ice-workgraph-dispatch",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:847",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-023",
+      "candidate_ids": [
+        "C000884"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--ice-plan-model",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:851",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-007",
+      "candidate_ids": [
+        "C000873",
+        "C000885"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--ice-build-model",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:855",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-007",
+      "candidate_ids": [
+        "C000874",
+        "C000886"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "tools",
+      "name": "ask",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1005",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-009",
+      "candidate_ids": [
+        "C000891"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "tools",
+      "name": "draft_plan",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1074",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-010",
+      "candidate_ids": [
+        "C000892"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "tools",
+      "name": "propose_plan",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1122",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-011",
+      "candidate_ids": [
+        "C000893"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "tools",
+      "name": "read_plan",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1186",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-013",
+      "candidate_ids": [
+        "C000894"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/plan",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1530",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-006",
+      "candidate_ids": [
+        "C000896"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/build",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1549",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-006",
+      "candidate_ids": [
+        "C000897"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/ice-plan-review",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1564",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-006",
+      "candidate_ids": [
+        "C000898"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/ice-verify",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1584",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-021",
+      "candidate_ids": [
+        "C000899"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/ice-status",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1590",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-026",
+      "candidate_ids": [
+        "C000900"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "ice-safe-verify-state",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:861",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-003",
+      "candidate_ids": [
+        "C000887"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "ice-plan-mode-context",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:988",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-008",
+      "candidate_ids": [
+        "C000889"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "ice-approved-plan-context",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:997",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-008",
+      "candidate_ids": [
+        "C000890"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "ice-plan-execution-start",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1217",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-008",
+      "candidate_ids": [
+        "C000895"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "ice-plan-decision-reminder",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1766",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-016",
+      "candidate_ids": [
+        "C000907"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "before_agent_start",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:983",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-008",
+      "candidate_ids": [
+        "C000888"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "tool_call",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1626",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-004",
+      "candidate_ids": [
+        "C000901"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "tool_result",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1659",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-017",
+      "candidate_ids": [
+        "C000902"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "agent_start",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1726",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-016",
+      "candidate_ids": [
+        "C000903"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "agent_end",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1732",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-016",
+      "candidate_ids": [
+        "C000904"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "turn_end",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1736",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-016",
+      "candidate_ids": [
+        "C000905"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "agent_settled",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1744",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-016",
+      "candidate_ids": [
+        "C000906"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "context",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1773",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-014",
+      "candidate_ids": [
+        "C000908"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_compact",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1807",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-013",
+      "candidate_ids": [
+        "C000909"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "user_bash",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1813",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-004",
+      "candidate_ids": [
+        "C000910"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_start",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1880",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-003",
+      "candidate_ids": [
+        "C000911"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_tree",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1881",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-003",
+      "candidate_ids": [
+        "C000912"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_shutdown",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:1882",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-021",
+      "candidate_ids": [
+        "C000913"
+      ],
+      "notes": "This row is the guard handler at the cited source location, not a claim that the generic event name is absent from Rust."
+    },
+    {
+      "category": "extension-api",
+      "name": "IceGoalsHostController.version",
+      "ice_ref": "packages/coding-agent/src/ice-goals-host.ts:31",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-022",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "IceGoalsHostController.snapshot",
+      "ice_ref": "packages/coding-agent/src/ice-goals-host.ts:32",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-023",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "IceGoalsHostController.verify",
+      "ice_ref": "packages/coding-agent/src/ice-goals-host.ts:33",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-024",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "registerIceGoalsHost",
+      "ice_ref": "packages/coding-agent/src/ice-goals-host.ts:41",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-022",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "getIceGoalsHost",
+      "ice_ref": "packages/coding-agent/src/ice-goals-host.ts:54",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-022",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "getConfiguredIceVerifierArgv",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:141",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-019",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "IceSafeVerifyOptions.onModeChange",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:800",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-025",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "IceSafeVerifyOptions.onCapabilityChange",
+      "ice_ref": "packages/coding-agent/src/ice-safe-verify.ts:801",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "SAFE-025",
+      "candidate_ids": []
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000870",
+      "reason": "Reference to another CLI flag for incompatibility validation, not a guard flag registration. The CLI flag is audited at its owning parser; guard-specific rejection is SAFE-001."
+    },
+    {
+      "candidate_id": "C000875",
+      "reason": "Node stdout/stderr stream data listener at packages/coding-agent/src/ice-safe-verify.ts:527, not an extension hook. Execution/output behavior is SAFE-020."
+    },
+    {
+      "candidate_id": "C000876",
+      "reason": "Node stdout/stderr stream data listener at packages/coding-agent/src/ice-safe-verify.ts:530, not an extension hook. Execution/output behavior is SAFE-020."
+    },
+    {
+      "candidate_id": "C000877",
+      "reason": "Argument to git, not an ICE CLI surface; baseline algorithm documented in SAFE-002 at packages/coding-agent/src/ice-safe-verify.ts:740-762."
+    },
+    {
+      "candidate_id": "C000878",
+      "reason": "Argument to git, not an ICE CLI surface; baseline algorithm documented in SAFE-002 at packages/coding-agent/src/ice-safe-verify.ts:740-762."
+    },
+    {
+      "candidate_id": "C000879",
+      "reason": "Argument to git, not an ICE CLI surface; baseline algorithm documented in SAFE-002 at packages/coding-agent/src/ice-safe-verify.ts:740-762."
+    }
+  ],
+  "claims": [
+    {
+      "first_pass_lines": [
+        215,
+        217
+      ],
+      "claim": "The guarded-mode subsystem is missing; Rust plan_mode_* hits are rendering.",
+      "verdict": "confirmed",
+      "finding": "Generic hooks/actions and plan panels exist, but no ICE guard state or commands are implemented.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:808-895",
+        "rust:crates/ice-cli/src/args.rs:107-230",
+        "rust:crates/ice-cli/src/transcript_view.rs:348-350",
+        "rust:crates/ice-extensions/src/actions.rs:381-499"
+      ],
+      "entry_ids": [
+        "SAFE-001",
+        "SAFE-003",
+        "SAFE-004"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        220,
+        225
+      ],
+      "claim": "IceStateV3 stores mode, root, Git baseline, mutation/check counters and verifier.",
+      "verdict": "confirmed",
+      "finding": "Exact full state and acceptance rules specified, including current-process Bash observation.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:161-208",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:716-762"
+      ],
+      "entry_ids": [
+        "SAFE-002",
+        "SAFE-003"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        226,
+        228
+      ],
+      "claim": "Plan state stores status/content/hash/read/context/model fields.",
+      "verdict": "confirmed",
+      "finding": "Also includes reminder count and approval/cutoff timestamps; full schema is SAFE-003.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:169-182"
+      ],
+      "entry_ids": [
+        "SAFE-003",
+        "SAFE-007",
+        "SAFE-010"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        229,
+        231
+      ],
+      "claim": "State is custom-entry persisted and restored on session_start/session_tree.",
+      "verdict": "confirmed",
+      "finding": "Latest matching branch record only; invalid newest does not fall back to an older record; exact customType equality.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:860-862",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1825-1881",
+        "ice:packages/coding-agent/src/core/legacy-compat/identity.ts:1-3"
+      ],
+      "entry_ids": [
+        "SAFE-003"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        234,
+        235
+      ],
+      "claim": "tool_call blocks tools outside the effective mode set.",
+      "verdict": "confirmed",
+      "finding": "Both visibility and dispatch are covered, with origin/access-class rules.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:876-895",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1626-1658"
+      ],
+      "entry_ids": [
+        "SAFE-004"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        236,
+        237
+      ],
+      "claim": "Plan mode permits read tools, ask/draft/propose and read_plan.",
+      "verdict": "corrected",
+      "finding": "read_plan is unavailable until a plan exists; allowlist includes goal/subagent names and declared nonexternal read tools. A legacy allowlist name is not proof of registered capability.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:24-68",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:869-894"
+      ],
+      "entry_ids": [
+        "SAFE-004",
+        "SAFE-013"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        238,
+        239
+      ],
+      "claim": "Build edit/write require trusted project, and Bash requires the flag.",
+      "verdict": "corrected",
+      "finding": "Built-in edit/write are present even untrusted; trust gates declared extension writes, external tools and Bash. Bash additionally requires build and current-process --ice-allow-bash.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:58-68",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:863-890",
+        "ice:packages/coding-agent/test/ice-safe-verify.test.ts:1156-1196"
+      ],
+      "entry_ids": [
+        "SAFE-004",
+        "SAFE-005"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        240,
+        241
+      ],
+      "claim": "Build mutations require read_plan after approval.",
+      "verdict": "corrected",
+      "finding": "Exact gate covers edit/write/integrate_writer_patch and agent_patch apply, not arbitrary extension writes or Bash. Resume preserves readInBuild; build re-entry and compaction reset it.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1635-1656",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1807-1812",
+        "ice:packages/coding-agent/test/ice-safe-verify.test.ts:1122-1141"
+      ],
+      "entry_ids": [
+        "SAFE-013"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        242,
+        243
+      ],
+      "claim": "validateMutationPath rejects outside root unless allow-external.",
+      "verdict": "corrected",
+      "finding": "Requires effective trusted-build external access, not flag alone. That opt-in bypasses protected .git/.env/credential names too, after prospective-path resolution.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:365-397",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:866-868"
+      ],
+      "entry_ids": [
+        "SAFE-004",
+        "SAFE-005"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        244,
+        246
+      ],
+      "claim": "Every successful mutation bumps generation and patch receipts integrate.",
+      "verdict": "corrected",
+      "finding": "Only matching authorized native IDs count; failed/unknown results and unobserved shell/external writes do not. Patch applied/verified, unverified and rollback_conflict have distinct branches.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1659-1725"
+      ],
+      "entry_ids": [
+        "SAFE-017",
+        "SAFE-018"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        247,
+        249
+      ],
+      "claim": "Hidden plan and approved context is injected before agent start.",
+      "verdict": "confirmed",
+      "finding": "Exact custom types, prompts and display=false are specified.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:87-114",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:983-1003"
+      ],
+      "entry_ids": [
+        "SAFE-008"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        249,
+        250
+      ],
+      "claim": "A reminder is injected whenever a plan turn lacks ask/propose.",
+      "verdict": "corrected",
+      "finding": "Any tool call suppresses this prose-only path; pending/aborted/already-scheduled states suppress it; cap 3; headless print/json early return differs from RPC.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1726-1772"
+      ],
+      "entry_ids": [
+        "SAFE-016"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        251,
+        251
+      ],
+      "claim": "Fresh policy trims at approval cutoff.",
+      "verdict": "corrected",
+      "finding": "Latest execution-start marker takes precedence over timestamp fallback; unmatched retained tool results are removed; durable session history remains.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1773-1806"
+      ],
+      "entry_ids": [
+        "SAFE-014"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        252,
+        253
+      ],
+      "claim": "Mode-specific model flags swap model and restore preplan thinking.",
+      "verdict": "confirmed",
+      "finding": "Exact scope/ambiguity/fallback and UI-selection rules added; unavailable auth/lookup only warns.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:417-438",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:908-941",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1225-1239"
+      ],
+      "entry_ids": [
+        "SAFE-007"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        257,
+        257
+      ],
+      "claim": "Registered planning tool ask.",
+      "verdict": "confirmed",
+      "finding": "Full schema, result, state changes and failure behavior documented.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1005-1072"
+      ],
+      "entry_ids": [
+        "SAFE-009"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        258,
+        258
+      ],
+      "claim": "Registered planning tool draft_plan.",
+      "verdict": "confirmed",
+      "finding": "Full schema, result, state changes and failure behavior documented.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1074-1120"
+      ],
+      "entry_ids": [
+        "SAFE-010"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        259,
+        259
+      ],
+      "claim": "Registered planning tool propose_plan.",
+      "verdict": "confirmed",
+      "finding": "Full schema, result, state changes and failure behavior documented.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1122-1185"
+      ],
+      "entry_ids": [
+        "SAFE-011"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        260,
+        260
+      ],
+      "claim": "Registered planning tool read_plan.",
+      "verdict": "confirmed",
+      "finding": "Full schema, result, state changes and failure behavior documented.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1186-1212"
+      ],
+      "entry_ids": [
+        "SAFE-013"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        261,
+        261
+      ],
+      "claim": "Five guard slash commands are registered.",
+      "verdict": "confirmed",
+      "finding": "Argument ignoring, UI-only manual-override confirmation and exact reporting are specified.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1530-1624"
+      ],
+      "entry_ids": [
+        "SAFE-006",
+        "SAFE-021",
+        "SAFE-026"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        262,
+        265
+      ],
+      "claim": "Seven guard flags are validated before startup.",
+      "verdict": "corrected",
+      "finding": "All seven are registered, but this validator explicitly validates mode/external/verifier/model values; it does not independently validate every boolean or reject duplicate verifier/model flags. Sub-yolo validation occurs first in a separate normalizer.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:238-320",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:834-858",
+        "ice:packages/coding-agent/src/ice.ts:64-74"
+      ],
+      "entry_ids": [
+        "SAFE-001",
+        "SAFE-019"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        266,
+        267
+      ],
+      "claim": "Verifier runs no-shell argv with 120000 ms timeout and 64 KiB output cap.",
+      "verdict": "confirmed",
+      "finding": "Raw-byte capture/UTF-8 caveat and injected-executor behavior specified.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:134-144",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:501-630"
+      ],
+      "entry_ids": [
+        "SAFE-019",
+        "SAFE-020"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        267,
+        268
+      ],
+      "claim": "Verifier has a termination grace period.",
+      "verdict": "confirmed",
+      "finding": "Exact default 5000 ms with SIGTERM then force kill; cleanup can cancel escalation on close.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:136-136",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:472-560"
+      ],
+      "entry_ids": [
+        "SAFE-020"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        268,
+        269
+      ],
+      "claim": "Verifier records exit code, signal, duration and output.",
+      "verdict": "corrected",
+      "finding": "signal is declared optional but never populated by runVerifier/execVerifier. Normal result records exit code/duration/output; spawn-error result omits exit/output.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:184-195",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:550-558",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:604-625"
+      ],
+      "entry_ids": [
+        "SAFE-020"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        269,
+        270
+      ],
+      "claim": "Listed verifier status union is correct.",
+      "verdict": "confirmed",
+      "finding": "Goals receipt can additionally say stale; no automatic retries are added by this union.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:150-159",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1503-1516"
+      ],
+      "entry_ids": [
+        "SAFE-003",
+        "SAFE-020",
+        "SAFE-024"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        271,
+        275
+      ],
+      "claim": "Versioned Goals registry and snapshot expose session/authority/verifier hash.",
+      "verdict": "confirmed",
+      "finding": "Registry key is a Symbol, not environment; snapshot freezes outer object and tools and includes workgraphDispatch.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-goals-host.ts:3-34",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1445-1466"
+      ],
+      "entry_ids": [
+        "SAFE-022",
+        "SAFE-023"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        275,
+        277
+      ],
+      "claim": "Goals verification requires saved trusted build, command, reread plan and no overlap.",
+      "verdict": "confirmed",
+      "finding": "Also checks native-session identity/pre-aborted signals and rejects stale passing receipts.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1303-1346",
+        "ice:packages/coding-agent/src/ice-safe-verify.ts:1468-1521"
+      ],
+      "entry_ids": [
+        "SAFE-024"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        277,
+        277
+      ],
+      "claim": "The host is consumed by external goals/Workgraph extension.",
+      "verdict": "corrected",
+      "finding": "Docs identify optional external pi-goal-x consumer, not loaded by default. workgraphDispatch only observes CLI intent; it does not prove Workgraph consumes Goals host.",
+      "evidence": [
+        "ice:packages/coding-agent/docs/ice-goals-host.md:9-19",
+        "ice:packages/coding-agent/docs/ice-goals-host.md:33-45"
+      ],
+      "entry_ids": [
+        "SAFE-022",
+        "SAFE-023"
+      ]
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/ice-safe-verify.ts",
+      "ranges": [
+        [
+          1,
+          1896
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-goals-host.ts",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/ice-goals-host.md",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-safe-verify.test.ts",
+      "ranges": [
+        [
+          1,
+          1578
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-goals-host.test.ts",
+      "ranges": [
+        [
+          1,
+          332
+        ]
+      ]
+    }
+  ],
+  "supplemental_ledger": [],
+  "rust_only": [],
+  "open_questions": [
+    {
+      "id": "Q-SAFE-01",
+      "question": "Should Rust preserve the current untrusted built-in edit/write allowance, external protected-file bypass and extension-write/read_plan exemptions, or deliberately strengthen them?",
+      "entries": [
+        "SAFE-004",
+        "SAFE-005",
+        "SAFE-013"
+      ]
+    },
+    {
+      "id": "Q-SAFE-02",
+      "question": "Should ordinary verifier completion gain the same session/generation stale-pass checks as Goals? Current TS ordinary completion persists captured-generation receipts even after stale context.",
+      "entries": [
+        "SAFE-021",
+        "SAFE-024"
+      ]
+    },
+    {
+      "id": "Q-SAFE-03",
+      "question": "Should changing verifier command hash force automatic re-verification even when checkedGeneration equals mutationGeneration? Current restore marks pending without resetting checkedGeneration.",
+      "entries": [
+        "SAFE-003",
+        "SAFE-021"
+      ]
+    }
+  ],
+  "unverified": [],
+  "dependency_requests": [],
+  "dependency_request_history": [
+    {
+      "entry_id": "SAFE-001",
+      "area": "extensions",
+      "capability": "mandatory hidden before-user extension factories unaffected by --no-extensions"
+    },
+    {
+      "entry_id": "SAFE-003",
+      "area": "session",
+      "capability": "branch custom-entry persistence and ordered append"
+    },
+    {
+      "entry_id": "SAFE-004",
+      "area": "extensions",
+      "capability": "tool metadata access/origin and dispatch-time blocking hooks"
+    },
+    {
+      "entry_id": "SAFE-012",
+      "area": "agent",
+      "capability": "stopAfterTurn and agent_settled boundary"
+    },
+    {
+      "entry_id": "SAFE-015",
+      "area": "session",
+      "capability": "extension compaction callback completion and failure"
+    },
+    {
+      "entry_id": "SAFE-018",
+      "area": "subagents",
+      "capability": "agent_patch apply receipt and verifier transaction"
+    },
+    {
+      "entry_id": "SAFE-025",
+      "area": "subagents",
+      "capability": "parent capability snapshot caps child admission"
+    }
+  ],
+  "dependency_resolutions": [
+    {
+      "entry_id": "SAFE-001",
+      "area": "extensions",
+      "capability": "mandatory hidden before-user extension factories unaffected by --no-extensions",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-057",
+        "SET-021"
+      ],
+      "related_entry_ids": [
+        "CLI-002"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-001",
+      "rationale": "The guard needs ordered hidden inline factories and the resource-loader rule that --no-extensions does not remove supplied inline factories. CLI-002 is the launcher consuming this policy, not a prerequisite of the guard service.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "SAFE-003",
+      "area": "session",
+      "capability": "branch custom-entry persistence and ordered append",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-034",
+        "SESSION-031",
+        "EXT-053"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-002",
+      "rationale": "Branch reads must expose custom entries in the selected root-to-leaf branch, while append/flush preserves ordered custom state. SAFE uses ordinary appendEntry here; do not silently promise durable=true/fsync on every guard state write.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "SAFE-004",
+      "area": "extensions",
+      "capability": "tool metadata access/origin and dispatch-time blocking hooks",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-035",
+        "EXT-024",
+        "EXT-054",
+        "EXT-026"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-003",
+      "rationale": "Tool access/sourceInfo metadata, active selection, dispatch-time blocking and the separate user_bash replacement seam are real host prerequisites. Metadata is not authority; the guard owns the mode/trust decisions.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "SAFE-012",
+      "area": "agent",
+      "capability": "stopAfterTurn and agent_settled boundary",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-019",
+        "SESSION-022",
+        "EXT-019"
+      ],
+      "related_entry_ids": [
+        "SESSION-035"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-004",
+      "rationale": "The core stop-after-turn gate precedes queue consumption; the session publishes agent_settled only after its post-run work. EXT-019 exposes the control, while SESSION-035 binds it. agent_end alone is insufficient.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "SAFE-015",
+      "area": "session",
+      "capability": "extension compaction callback completion and failure",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-016",
+        "SESSION-035"
+      ],
+      "related_entry_ids": [
+        "EXT-019"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-005",
+      "rationale": "SESSION-016 owns actual manual compaction settlement; SESSION-035 specifically binds ctx.compact to asynchronous onComplete/onError callbacks. The approved-plan callback dispatch and error fallback remain SAFE-owned.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "SAFE-018",
+      "area": "subagents",
+      "capability": "agent_patch apply receipt and verifier transaction",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SUB-032"
+      ],
+      "related_entry_ids": [
+        "SUB-031"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-006",
+      "rationale": "The parent imports the typed applied/rollback-conflict/verification receipt from child patch integration. This is a receipt/transaction prerequisite, not permission to trust human-readable child output. SAFE-018 separately decides mutation and checked-generation accounting.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "SAFE-025",
+      "area": "subagents",
+      "capability": "parent capability snapshot caps child admission",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SUB-007",
+        "SUB-014",
+        "SUB-019",
+        "SUB-035"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-007",
+      "rationale": "SAFE publishes the frozen parent snapshot. Child ceiling composition, adapter filtering, live revalidation and extension binding consume it. Reversing that direction would make the authority producer depend on its consumers.",
+      "previous_confirmed_entry_ids": []
+    }
+  ],
+  "source_evidence_coordinate_system": "Historical read/provenance records retain ff9270f coordinates and hashes; current rust: comparison citations and surfaces are remapped to 1891337. Canonical read-coverage.json separately records current source identity and exact transferred credit.",
+  "draft_complete": true,
+  "published": true,
+  "accepted_phase": "active-source-verified"
+}

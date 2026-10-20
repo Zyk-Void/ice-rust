@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "area": "cli-packaging",
+  "active_only": true,
+  "original_gate_required": true,
+  "captured_at": "2026-10-20T03:44:36.775Z",
+  "changes": [
+    {
+      "id": "CLI-001",
+      "field": "rust",
+      "old_text": "The native binary uses a multi-thread Tokio runtime, awaits app::run and converts its integer code to ExitCode through a u8 cast; lib.rs supplies HOST_NAME/HOST_VERSION. It has no JavaScript warning hook, Bun injection layer or empty-process.env bug to reproduce (rust:crates/ice-cli/src/bin/ice.rs:1-21; rust:crates/ice-cli/src/lib.rs:82-89). Full app.rs startup and a scoped crates search found no corresponding assignments for ICE_CODING_AGENT/AI_AGENT, or PI_CODING_AGENT_DIR launcher bridge. The environment configuration name ICE_CODING_AGENT_DIR does exist and must not be confused with the ICE_CODING_AGENT marker (rust:crates/ice-cli/src/app.rs:82-190; rust:crates/ice-cli/src/config.rs:89-108).",
+      "new_text": "The native binary, icers, uses a multi-thread Tokio runtime, awaits app::run and converts its integer code to ExitCode through a u8 cast; lib.rs supplies HOST_NAME/HOST_VERSION. It has no JavaScript warning hook, Bun injection layer or empty-process.env bug to reproduce (rust:crates/ice-cli/src/bin/ice.rs:1-21; rust:crates/ice-cli/src/lib.rs:82-89). Full app.rs startup and a scoped crates search found no corresponding assignments for ICE_CODING_AGENT/AI_AGENT, or PI_CODING_AGENT_DIR launcher bridge. The native environment configuration name ICERS_CODING_AGENT_DIR exists and must not be confused with the ICE_CODING_AGENT marker (rust:crates/ice-cli/src/app.rs:82-190; rust:crates/ice-cli/src/config.rs:89-108).",
+      "reason": "Native executable/config override are renamed; absent TS ICE_CODING_AGENT/AI_AGENT markers and PI bridge remain unchanged claims.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-003",
+      "field": "rust",
+      "old_text": "Native args.rs genuinely parses most common flags and has extensive inline tests. It additionally recognizes --base-url, --timeout, --extensions-dir/ICE_EXTENSIONS_DIR, --dev-local-only, --project-only and --debug-system-prompt. It peels '=value' for all long flags; take_value rejects a following dash-prefixed value except bare '-'. It stores unknown flags in a sorted BTreeMap; CSV values drop empty fields; theme is a last-wins scalar; --thinking lacks ultra; invalid --mode is a usage error. Native --tui-mode accepts case-insensitive regular/fullscreen and defaults to regular on macOS, fullscreen elsewhere, while TS's public flag is --ui-mode. It does not recognize fast/no-fast/observe/print-system-template as builtins. Bare '@' and '-' become messages in Rust. The -p branch lacks the TS '---' prompt exception (rust:crates/ice-cli/src/args.rs:76-270; rust:crates/ice-cli/src/args.rs:271-555; rust:crates/ice-cli/src/args.rs:718-1120).",
+      "new_text": "Native args.rs genuinely parses most common flags and has extensive inline tests. It additionally recognizes --base-url, --timeout, --extensions-dir/ICERS_EXTENSIONS_DIR, --dev-local-only, --project-only and --debug-system-prompt. It peels '=value' for all long flags; take_value rejects a following dash-prefixed value except bare '-'. It stores unknown flags in a sorted BTreeMap; CSV values drop empty fields; theme is a last-wins scalar; --thinking lacks ultra; invalid --mode is a usage error. Native --tui-mode accepts case-insensitive regular/fullscreen and defaults to regular on macOS, fullscreen elsewhere, while TS's public flag is --ui-mode. It does not recognize fast/no-fast/observe/print-system-template as builtins. Bare '@' and '-' become messages in Rust. The -p branch lacks the TS '---' prompt exception (rust:crates/ice-cli/src/args.rs:76-270; rust:crates/ice-cli/src/args.rs:271-555; rust:crates/ice-cli/src/args.rs:718-1120).",
+      "reason": "Native args environment lookup changed.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-004",
+      "field": "rust",
+      "old_text": "Native handle_parse_short_circuits checks help first, version second and parser errors third, so --help suppresses errors and beats --version. Native version prints 'ice VERSION'; its help is static and does not create services or list extension flags. It migrates its layout after cwd resolution, then handles export and list-models before provider credentials, resume and harness construction (rust:crates/ice-cli/src/app.rs:174-219; rust:crates/ice-cli/src/app.rs:523-579; rust:crates/ice-cli/src/args.rs:589-716). Native resolve_mode gives the presence of unknown flag 'server' highest priority, then rpc/json, then -p/non-TTY; later ICE_FORCE_TUI='1' can override it until a plugin stdio claim authoritatively forces RPC. A genuine JSONL branch exists; comments claiming no built-in RPC are stale (rust:crates/ice-cli/src/args.rs:556-578; rust:crates/ice-cli/src/app.rs:234-235; rust:crates/ice-cli/src/app.rs:352-381; rust:crates/ice-cli/src/app.rs:434-505).",
+      "new_text": "Native handle_parse_short_circuits checks help first, version second and parser errors third, so --help suppresses errors and beats --version. Native version prints 'icers VERSION'; its help is static and does not create services or list extension flags. It migrates its layout after cwd resolution, then handles export and list-models before provider credentials, resume and harness construction (rust:crates/ice-cli/src/app.rs:174-219; rust:crates/ice-cli/src/app.rs:523-579; rust:crates/ice-cli/src/args.rs:589-716). Native resolve_mode gives the presence of unknown flag 'server' highest priority, then rpc/json, then -p/non-TTY; later ICERS_FORCE_TUI='1' can override it until a plugin stdio claim authoritatively forces RPC. A genuine JSONL branch exists; comments claiming no built-in RPC are stale (rust:crates/ice-cli/src/args.rs:556-578; rust:crates/ice-cli/src/app.rs:234-235; rust:crates/ice-cli/src/app.rs:352-381; rust:crates/ice-cli/src/app.rs:434-505).",
+      "reason": "Native version output and force-TUI control follow the active host identity.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-006",
+      "field": "rust",
+      "old_text": "Native select_session prioritizes no_session, then continue/resume, fork, session_id, session. It applies no TS conflict validation and defaults its root to cwd/.ice/sessions, with only flag then saved setting overriding it. app resolves --resume into a picker result before provider/harness creation and requires both TTYs; the picker uses the default project directory rather than the supplied session-dir. --continue has an error when no resumable metadata exists instead of the TS fresh-session fallback (rust:crates/ice-cli/src/session.rs:154-192; rust:crates/ice-cli/src/app.rs:617-638; rust:crates/ice-cli/src/resume_picker.rs:16-26; rust:crates/ice-cli/src/session.rs:2096-2135).\n\nNative ById searches the selected directory using one first-match predicate (exact ID OR path contains query OR query contains ID); it does not perform the TS direct-path/global exact-before-prefix algorithm. Fork searches only its default root, ignores selected session-dir and requested target ID, and creates with id=None. Native name is applied during build_prepared after provider resolution, whitespace clears the name, and failures are only warned when verbose. Missing-cwd restore always warns and continues using native startup cwd, without TS interactive approval or headless failure (rust:crates/ice-cli/src/session.rs:2498-2519; rust:crates/ice-cli/src/session.rs:2137-2184; rust:crates/ice-cli/src/session.rs:400-422; rust:crates/ice-cli/src/session.rs:2676-2713).",
+      "new_text": "Native select_session prioritizes no_session, then continue/resume, fork, session_id, session. It applies no TS conflict validation and defaults its root to cwd/.icers/sessions, with only flag then saved setting overriding it. app resolves --resume into a picker result before provider/harness creation and requires both TTYs; the picker uses the default project directory rather than the supplied session-dir. --continue has an error when no resumable metadata exists instead of the TS fresh-session fallback (rust:crates/ice-cli/src/session.rs:154-192; rust:crates/ice-cli/src/app.rs:617-638; rust:crates/ice-cli/src/resume_picker.rs:16-26; rust:crates/ice-cli/src/session.rs:2096-2135).\n\nNative ById searches the selected directory using one first-match predicate (exact ID OR path contains query OR query contains ID); it does not perform the TS direct-path/global exact-before-prefix algorithm. Fork searches only its default root, ignores selected session-dir and requested target ID, and creates with id=None. Native name is applied during build_prepared after provider resolution, whitespace clears the name, and failures are only warned when verbose. Missing-cwd restore always warns and continues using native startup cwd, without TS interactive approval or headless failure (rust:crates/ice-cli/src/session.rs:2498-2519; rust:crates/ice-cli/src/session.rs:2137-2184; rust:crates/ice-cli/src/session.rs:400-422; rust:crates/ice-cli/src/session.rs:2676-2713).",
+      "reason": "Native default session directory changed; TS paths remain unchanged.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-008",
+      "field": "rust",
+      "old_text": "Native app deliberately waits until extensions are loaded to determine owns_stdio and validates the stdio lifecycle before reading. It skips reads for rpc/server or a plugin stdio claim, a native capability that should be retained (rust:crates/ice-cli/src/app.rs:221-235; rust:crates/ice-cli/src/app.rs:315-342). Its reader has an ICE_SKIP_STDIN='1' escape hatch, skips TTYs, calls blocking read_to_string and trims successful input, but maps every read/UTF-8 error to None. Thus it can proceed with remaining CLI/file input after silently losing a failed pipe. It also performs the blocking read directly in the async startup path (rust:crates/ice-cli/src/app.rs:770-800).",
+      "new_text": "Native app deliberately waits until extensions are loaded to determine owns_stdio and validates the stdio lifecycle before reading. It skips reads for rpc/server or a plugin stdio claim, a native capability that should be retained (rust:crates/ice-cli/src/app.rs:221-235; rust:crates/ice-cli/src/app.rs:315-342). Its reader has an ICERS_SKIP_STDIN='1' escape hatch, skips TTYs, calls blocking read_to_string and trims successful input, but maps every read/UTF-8 error to None. Thus it can proceed with remaining CLI/file input after silently losing a failed pipe. It also performs the blocking read directly in the async startup path (rust:crates/ice-cli/src/app.rs:770-800).",
+      "reason": "Native stdin bypass control changed.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-018",
+      "field": "rust",
+      "old_text": "Native agent_dir uses exactly ICE_CODING_AGENT_DIR when present and absolute, otherwise home/.ice/agent; its default session root is cwd/.ice/sessions. These are canonical native rules, with a separate default flat-layout migration rather than implicit .pi/PIV fallback (rust:crates/ice-cli/src/config.rs:89-108; rust:crates/ice-cli/src/config.rs:176-225; rust:crates/ice-cli/src/session.rs:189-192). Rust typed settings/environment APIs do not need literal JS shallow-copy functions, but must preserve their exact-name contract at compatibility boundaries. Native package/extension interoperability is assessed by EXT-001/002 and the package supplement; no blanket 'Rust cannot load any Pi package' conclusion is drawn from these helper files.",
+      "new_text": "Native agent_dir uses exactly ICERS_CODING_AGENT_DIR when present and absolute, otherwise home/.icers/agent; its default session root is cwd/.icers/sessions. These are canonical native rules, with a separate default flat-layout migration rather than implicit .pi/PIV fallback (rust:crates/ice-cli/src/config.rs:89-108; rust:crates/ice-cli/src/config.rs:176-225; rust:crates/ice-cli/src/session.rs:189-192). Rust typed settings/environment APIs do not need literal JS shallow-copy functions, but must preserve their exact-name contract at compatibility boundaries. Native package/extension interoperability is assessed by EXT-001/002 and the package supplement; no blanket 'Rust cannot load any Pi package' conclusion is drawn from these helper files.\n\nThe active native names deliberately differ from the TypeScript ice/.ice/ICE_* names; these path and environment rules do not establish automatic migration of historical TypeScript or old-native directories.",
+      "reason": "Explicitly distinguish native runtime identity from TypeScript compatibility names.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-019",
+      "field": "rust",
+      "old_text": "Native run wraps run_inner and prints timing after it returns. Native offline normalization sets ICE_OFFLINE but not the TS ICE_SKIP_VERSION_CHECK marker. It has its own --connect early route, static warnings only under verbose, plugin-owned stdio validation, ICE_SKIP_STDIN/ICE_FORCE_TUI controls, and cleanup of dev watcher/context/harness after mode execution. RPC/server dispatch contains real extension lifecycle and JSONL/plugin-stdio choices (rust:crates/ice-cli/src/app.rs:73-103; rust:crates/ice-cli/src/args.rs:31-71; rust:crates/ice-cli/src/app.rs:315-381; rust:crates/ice-cli/src/app.rs:434-520; rust:crates/ice-cli/src/app.rs:640-650). The startup path lacks the TS recorder/dashboard, extension console buffering, benchmark and stdout takeover sequence; these are specific integrations rather than absence of all cleanup or timing.",
+      "new_text": "Native run wraps run_inner and prints timing after it returns. Native offline normalization sets ICERS_OFFLINE but not the TS ICE_SKIP_VERSION_CHECK marker. It has its own --connect early route, static warnings only under verbose, plugin-owned stdio validation, ICERS_SKIP_STDIN/ICERS_FORCE_TUI controls, and cleanup of dev watcher/context/harness after mode execution. RPC/server dispatch contains real extension lifecycle and JSONL/plugin-stdio choices (rust:crates/ice-cli/src/app.rs:73-103; rust:crates/ice-cli/src/args.rs:31-71; rust:crates/ice-cli/src/app.rs:315-381; rust:crates/ice-cli/src/app.rs:434-520; rust:crates/ice-cli/src/app.rs:640-650). The startup path lacks the TS recorder/dashboard, extension console buffering, benchmark and stdout takeover sequence; these are specific integrations rather than absence of all cleanup or timing.",
+      "reason": "Native controls change; the explicitly TS ICE_SKIP_VERSION_CHECK marker remains.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-022",
+      "field": "rust",
+      "old_text": "Native global installation targets the agent's native extension directory and a native package registry; project links target cwd/.ice/packages/<name>/extensions. These are valid native artifacts paths but do not implement npm/Git resource caches or the temporary TS layout. The native global installer validates flat artifact names, while project name containment is weaker and is separately corrected in CLI-039 (rust:crates/ice-cli/src/install.rs:93-154; rust:crates/ice-cli/src/packages.rs:136-166). No npm/Git cache manager was found in the fully read native package modules.",
+      "new_text": "Native global installation targets the agent's native extension directory and a native package registry; project links target cwd/.icers/packages/<name>/extensions. These are valid native artifacts paths but do not implement npm/Git resource caches or the temporary TS layout. The native global installer validates flat artifact names, while project name containment is weaker and is separately corrected in CLI-039 (rust:crates/ice-cli/src/install.rs:93-154; rust:crates/ice-cli/src/packages.rs:136-166). No npm/Git cache manager was found in the fully read native package modules.",
+      "reason": "Native project package location changed.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-039",
+      "field": "mechanism",
+      "old_text": "TS local resource installation records an existing source path without copying it. Rust's project link command instead builds a Cargo dynamic library and installs a copied artifact under the project, so its filesystem mutation boundary must be evaluated independently.\n\nNative 'package link' accepts --path, --package/-P, --name or one positional display name, --debug, --locked and --force/-f. It resolves the source against cwd, runs cargo metadata --format-version 1 --no-deps, selects the requested Cargo package or a unique cdylib candidate (preferring the canonical source-containing manifest where unambiguous), then builds using JSON compiler-artifact messages and release by default. The build occurs before the existing target/no-force check. It selects a dynamic library artifact and targets cwd/.ice/packages/<name>/extensions. Force removes the old target before copying through a fixed adjacent temporary filename and rename. Registry parsing/updating occurs after artifact activation, so a corrupt registry or later write failure can leave changed payload without matching metadata (rust:crates/ice-cli/src/packages.rs:48-190; rust:crates/ice-cli/src/packages.rs:468-605).\n\nThe project registry is {packages:[{name, version, source, cargo_package, artifacts?}]} with missing artifacts defaulting empty. Writes use .packages.json.tmp then rename, without the global installer's mutation lock or multi-file rollback. List reads only this project registry. Update strictly reads both project and global registries before rebuilding; it relinks selected project records with force, then invokes the current executable's native install command for eligible global records. It preserves custom GitHub/prebuilt versus --build backend, excludes local-source global entries, continues after individual failures and returns aggregate failure. Project --locked/debug affect Cargo rebuilds, not every global installer invocation. Unlink validates one name, requires a matching record, removes its directory before rewriting the registry, and does not have rollback (rust:crates/ice-cli/src/packages.rs:192-467).\n\nSource-proven containment defect: valid_name accepts any nonempty ASCII alphanumeric/dash/underscore/dot sequence, including '.' and '..'. Direct app dispatch reaches package::run; a supplied --name '..' passes validation. Given a valid source/build, joining that name can direct the artifact into cwd/.ice/extensions and persist '..' if the registry write succeeds. Unlink '..' then requires that registry record and calls remove_dir_all on cwd/.ice/packages/.. before updating metadata. The audit did not execute this or establish OS-specific deletion effects for a terminal parent component. Cargo-derived selected.name uses the same validator, but Cargo's own permitted-name constraints were not independently audited. Parsed registry names have no semantic revalidation, and project_package_dirs directly joins registry name/kind, so malformed stored names affect discovery as well (rust:crates/ice-cli/src/packages.rs:123-166; rust:crates/ice-cli/src/packages.rs:388-421; rust:crates/ice-cli/src/packages.rs:573-626).\n\nInline tests cover backend selection, custom repositories, continuing after failures and corrupt-global-registry early abort. The name test rejects slash traversal and empty names but does not cover '.'/'..'. All tests were read only. Native package linking copies the library, not all skills/prompts/themes; the directory-discovery interface can expose those kinds only when corresponding directories exist through other means.",
+      "new_text": "TS local resource installation records an existing source path without copying it. Rust's project link command instead builds a Cargo dynamic library and installs a copied artifact under the project, so its filesystem mutation boundary must be evaluated independently.\n\nNative 'package link' accepts --path, --package/-P, --name or one positional display name, --debug, --locked and --force/-f. It resolves the source against cwd, runs cargo metadata --format-version 1 --no-deps, selects the requested Cargo package or a unique cdylib candidate (preferring the canonical source-containing manifest where unambiguous), then builds using JSON compiler-artifact messages and release by default. The build occurs before the existing target/no-force check. It selects a dynamic library artifact and targets cwd/.icers/packages/<name>/extensions. Force removes the old target before copying through a fixed adjacent temporary filename and rename. Registry parsing/updating occurs after artifact activation, so a corrupt registry or later write failure can leave changed payload without matching metadata (rust:crates/ice-cli/src/packages.rs:48-190; rust:crates/ice-cli/src/packages.rs:468-605).\n\nThe project registry is {packages:[{name, version, source, cargo_package, artifacts?}]} with missing artifacts defaulting empty. Writes use .packages.json.tmp then rename, without the global installer's mutation lock or multi-file rollback. List reads only this project registry. Update strictly reads both project and global registries before rebuilding; it relinks selected project records with force, then invokes the current executable's native install command for eligible global records. It preserves custom GitHub/prebuilt versus --build backend, excludes local-source global entries, continues after individual failures and returns aggregate failure. Project --locked/debug affect Cargo rebuilds, not every global installer invocation. Unlink validates one name, requires a matching record, removes its directory before rewriting the registry, and does not have rollback (rust:crates/ice-cli/src/packages.rs:192-467).\n\nSource-proven containment defect: valid_name accepts any nonempty ASCII alphanumeric/dash/underscore/dot sequence, including '.' and '..'. Direct app dispatch reaches package::run; a supplied --name '..' passes validation. Given a valid source/build, joining that name can direct the artifact into cwd/.icers/extensions and persist '..' if the registry write succeeds. Unlink '..' then requires that registry record and calls remove_dir_all on cwd/.icers/packages/.. before updating metadata. The audit did not execute this or establish OS-specific deletion effects for a terminal parent component. Cargo-derived selected.name uses the same validator, but Cargo's own permitted-name constraints were not independently audited. Parsed registry names have no semantic revalidation, and project_package_dirs directly joins registry name/kind, so malformed stored names affect discovery as well (rust:crates/ice-cli/src/packages.rs:123-166; rust:crates/ice-cli/src/packages.rs:388-421; rust:crates/ice-cli/src/packages.rs:573-626).\n\nInline tests cover backend selection, custom repositories, continuing after failures and corrupt-global-registry early abort. The name test rejects slash traversal and empty names but does not cover '.'/'..'. All tests were read only. Native package linking copies the library, not all skills/prompts/themes; the directory-discovery interface can expose those kinds only when corresponding directories exist through other means.",
+      "reason": "Native dot-name containment consequence follows the .icers project root; code/OS limitations are retained.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-039",
+      "field": "interfaces",
+      "old_text": "Native commands package link/list/update/unlink; .ice/packages/<name>/extensions; .ice/packages.json and fixed .packages.json.tmp; Cargo package/display-name split. Source-only preconditions for the defect are a directly supplied dot name plus successful metadata/build/link persistence, or an existing matching malformed registry record for unlink.",
+      "new_text": "Native commands package link/list/update/unlink; .icers/packages/<name>/extensions; .icers/packages.json and fixed .packages.json.tmp; Cargo package/display-name split. Source-only preconditions for the defect are a directly supplied dot name plus successful metadata/build/link persistence, or an existing matching malformed registry record for unlink.",
+      "reason": "Native project registry and artifact paths changed.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-041",
+      "field": "rust",
+      "old_text": "The implementation and inline tests are fully present in prebuilt_extensions.rs. It is a useful native-only capability absent from TS's npm/Git package transport. The helper canonicalization is internally consistent for its canonical repository inputs; the separate CLI prebuilt caller's mixed-case constant is not proof that every extension prebuilt install is broken. Native comparison source: `rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403`; `rust:crates/ice-cli/src/install.rs:155-221`.",
+      "new_text": "The implementation and inline tests are fully present in prebuilt_extensions.rs. It is a useful native-only capability absent from TS's npm/Git package transport. The helper canonicalization is internally consistent for its canonical repository inputs; the separate CLI prebuilt caller's historical mixed-case constant is corrected in the active checkout (RUST-045), and never established that every extension prebuilt install was broken. Native comparison source: `rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403`; `rust:crates/ice-cli/src/install.rs:155-221`.",
+      "reason": "Historical CLI-only defect is fixed without changing native extension protocol assessment.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-042",
+      "field": "mechanism",
+      "old_text": "TS package update discovery probes installed npm/Git packages and suppresses metadata errors. Native startup additionally retains recent successful version metadata and uses it only for transient lookup failures.\n\ncheck_startup ignores its cwd parameter for native package selection; it checks the global native registry and the CLI. ICE_OFFLINE or the presence of ICE_DISABLE_UPDATE_CHECK, even an empty value, disables remote checks while still consuming self-update status warnings. The startup HTTP client has a 1800 ms request timeout and the native user-agent configuration. Extension checks use buffer_unordered with concurrency four; the CLI version check runs concurrently outside that four-item pool. Locally sourced global native packages are excluded (rust:crates/ice-cli/src/updates.rs:120-253).\n\nRegistry results distinguish Found(version), Missing for HTTP 404/410, and Transient for other failures including throttling, timeouts and malformed metadata. Cached metadata is reused only on Transient and only when checkedAt>0 with age between zero and six hours inclusive. Fallback does not renew freshness. Missing removes the old result. The cache file is update-check.json with legacy checkedAt plus newer per-entry timestamps; cache updates lock, reread and merge sections before best-effort atomic writing so concurrent CLI/native results do not clobber each other. There is no claim that all cached metadata is freshly network-verified (rust:crates/ice-cli/src/updates.rs:254-357; rust:crates/ice-cli/src/updates.rs:445-493).\n\nCargo entries use a crate-name cache identity; prebuilt entries include the distribution backend, repository/name and target to avoid cross-publisher/platform reuse. Before reporting, the code rereads the installed registry and checks semver 'newer than', not mere string inequality. Notice commands preserve the appropriate native update/install backend and custom repository. CLI notices use 'ice update'. These semantics differ from TS npm/Git inequality probes and are native capabilities to preserve, not a missing one-to-one algorithm (rust:crates/ice-cli/src/updates.rs:358-419; rust:crates/ice-cli/src/updates.rs:474-521).\n\nExplicit offline self-update uses cached_latest_ice without this startup six-hour freshness check; that separate informational path is CLI-043. Full inline tests cover transient versus missing fallback, freshness boundaries, cache merging, publisher/platform keys, worker bounds and notice behavior. No network or startup check ran during this audit.",
+      "new_text": "TS package update discovery probes installed npm/Git packages and suppresses metadata errors. Native startup additionally retains recent successful version metadata and uses it only for transient lookup failures.\n\ncheck_startup ignores its cwd parameter for native package selection; it checks the global native registry and the CLI. ICERS_OFFLINE or the presence of ICERS_DISABLE_UPDATE_CHECK, even an empty value, disables remote checks while still consuming self-update status warnings. The startup HTTP client has a 1800 ms request timeout and the native user-agent configuration. Extension checks use buffer_unordered with concurrency four; the CLI version check runs concurrently outside that four-item pool. Locally sourced global native packages are excluded (rust:crates/ice-cli/src/updates.rs:120-253).\n\nRegistry results distinguish Found(version), Missing for HTTP 404/410, and Transient for other failures including throttling, timeouts and malformed metadata. Cached metadata is reused only on Transient and only when checkedAt>0 with age between zero and six hours inclusive. Fallback does not renew freshness. Missing removes the old result. The cache file is update-check.json with legacy checkedAt plus newer per-entry timestamps; cache updates lock, reread and merge sections before best-effort atomic writing so concurrent CLI/native results do not clobber each other. There is no claim that all cached metadata is freshly network-verified (rust:crates/ice-cli/src/updates.rs:254-357; rust:crates/ice-cli/src/updates.rs:445-493).\n\nCargo entries use a crate-name cache identity; prebuilt entries include the distribution backend, repository/name and target to avoid cross-publisher/platform reuse. Before reporting, the code rereads the installed registry and checks semver 'newer than', not mere string inequality. Notice commands preserve the appropriate native update/install backend and custom repository. CLI notices use 'icers update'. These semantics differ from TS npm/Git inequality probes and are native capabilities to preserve, not a missing one-to-one algorithm (rust:crates/ice-cli/src/updates.rs:358-419; rust:crates/ice-cli/src/updates.rs:474-521).\n\nExplicit offline self-update uses cached_latest_ice without this startup six-hour freshness check; that separate informational path is CLI-043. Full inline tests cover transient versus missing fallback, freshness boundaries, cache merging, publisher/platform keys, worker bounds and notice behavior. No network or startup check ran during this audit.\n\nIn the active checkout, the persisted freshness object uses the required icers field; the older ice field has no serde alias or field default. Reusing a pre-rename cache with that older freshness object makes read_cache return None on deserialization failure, so it contributes no cached metadata until rebuilt. The enclosing freshness field still defaults when entirely absent, and the aggregate checkedAt fallback remains. This is a source-derived compatibility consequence for reused/copied cache files; no private cache or runtime migration was examined (rust:crates/ice-cli/src/updates.rs:64-82; rust:crates/ice-cli/src/updates.rs:254-259; rust:crates/ice-cli/src/updates.rs:321-340; rust:crates/ice-cli/src/updates.rs:482-484).",
+      "reason": "Native cache identity/access and update controls changed; exact serialization consequence is distinguished from source-backend parity.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-042",
+      "field": "interfaces",
+      "old_text": "ICE_DISABLE_UPDATE_CHECK presence semantics; ICE_OFFLINE native gate; update-check.json cache; UpdateReport notices/warnings; Found/Missing/Transient classification; six-hour fallback, 1800 ms requests and concurrency four plus independent CLI request. TS ICE_SKIP_VERSION_CHECK/update-service semantics remain MISC-001.",
+      "new_text": "ICERS_DISABLE_UPDATE_CHECK presence semantics; ICERS_OFFLINE native gate; update-check.json cache; UpdateReport notices/warnings; Found/Missing/Transient classification; six-hour fallback, 1800 ms requests and concurrency four plus independent CLI request. TS ICE_SKIP_VERSION_CHECK/update-service semantics remain MISC-001.",
+      "reason": "Only native environment identities change; TS ICE_SKIP_VERSION_CHECK remains unchanged.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-044",
+      "field": "mechanism",
+      "old_text": "TS self-update delegates activation to an external package manager. Native activation validates both staged and destination files, replaces the executable through adjacent files and attempts rollback if post-replacement validation fails.\n\nThe direct plan requires a real nonempty regular current executable and owned real staging directory, creates unique adjacent new/old paths, and preflights replacement permissions with create_new probes. It validates staged --version, copies the staged executable, verifies byte equality/version, creates a hard-link backup of the current executable, checks that the destination has not changed and rejects a downgrade, then renames the replacement. Post-activation version/byte checks can trigger rollback through the backup; rollback failure is included in the returned error. Cleanup is best-effort. These are concrete preservation requirements, not a claim of crash-atomic multi-file state or universal platform support (rust:crates/ice-cli/src/updates.rs:1051-1266).\n\nvalidate_ice_executable_version invokes the candidate with --version, requires successful exit and no stderr, and accepts one exact 'ice <semver>' line with at most its allowed terminal newline. It rejects extra lines/whitespace in the version and disallowed older versions. Downloaded release validation additionally compares the declared expected version. File validation rejects symlink leaf files/directories and checks canonical paths; it does not categorically reject every symlink in an ancestor path (rust:crates/ice-cli/src/updates.rs:877-895; rust:crates/ice-cli/src/updates.rs:1875-1985).\n\nSource-proven bound defect: run_bounded_process_blocking launches a Tokio child with kill_on_drop and wraps wait_with_output in a 10-second timeout. Only after wait_with_output completes does cap_bytes truncate stdout and stderr to 4096 bytes each. Therefore the timeout limits waiting, and returned buffers are capped, but stdout/stderr can grow without that byte bound during collection. It is incorrect to call this a streaming memory cap. A child killed on timeout is not evidence of complete descendant-process cleanup (rust:crates/ice-cli/src/updates.rs:1781-1836).\n\nThe inline tests include malformed version output, file/path checks, byte mismatch, replacement failure and rollback fixtures. They were read only. No executable probe, replacement, crash simulation or platform-specific updater was run.",
+      "new_text": "TS self-update delegates activation to an external package manager. Native activation validates both staged and destination files, replaces the executable through adjacent files and attempts rollback if post-replacement validation fails.\n\nThe direct plan requires a real nonempty regular current executable and owned real staging directory, creates unique adjacent new/old paths, and preflights replacement permissions with create_new probes. It validates staged --version, copies the staged executable, verifies byte equality/version, creates a hard-link backup of the current executable, checks that the destination has not changed and rejects a downgrade, then renames the replacement. Post-activation version/byte checks can trigger rollback through the backup; rollback failure is included in the returned error. Cleanup is best-effort. These are concrete preservation requirements, not a claim of crash-atomic multi-file state or universal platform support (rust:crates/ice-cli/src/updates.rs:1051-1266).\n\nvalidate_ice_executable_version invokes the candidate with --version, requires successful exit and no stderr, and accepts one exact 'icers <semver>' line with at most its allowed terminal newline. It rejects extra lines/whitespace in the version and disallowed older versions. Downloaded release validation additionally compares the declared expected version. File validation rejects symlink leaf files/directories and checks canonical paths; it does not categorically reject every symlink in an ancestor path (rust:crates/ice-cli/src/updates.rs:877-895; rust:crates/ice-cli/src/updates.rs:1875-1985).\n\nSource-proven bound defect: run_bounded_process_blocking launches a Tokio child with kill_on_drop and wraps wait_with_output in a 10-second timeout. Only after wait_with_output completes does cap_bytes truncate stdout and stderr to 4096 bytes each. Therefore the timeout limits waiting, and returned buffers are capped, but stdout/stderr can grow without that byte bound during collection. It is incorrect to call this a streaming memory cap. A child killed on timeout is not evidence of complete descendant-process cleanup (rust:crates/ice-cli/src/updates.rs:1781-1836).\n\nThe inline tests include malformed version output, file/path checks, byte mismatch, replacement failure and rollback fixtures. They were read only. No executable probe, replacement, crash simulation or platform-specific updater was run.",
+      "reason": "Version parser uses APP_NAME→SDK HOST_NAME; helper function identifier validate_ice_executable_version is retained.",
+      "evidence": [
+        "coordinator-native-hunk-review.json",
+        "lane-exports-rpc-ai-auth-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old checkout until mechanical remap"
+    },
+    {
+      "id": "CLI-045",
+      "field": "title",
+      "old_text": "Native prebuilt CLI release verification and repository-case rejection defect",
+      "new_text": "Native prebuilt CLI release verification and corrected repository identity",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "status",
+      "old_text": "partial",
+      "new_text": "different-by-design",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "what",
+      "old_text": "Rust's default self-update path downloads a verified platform CLI executable. A mixed-case repository constant is compared against a lowercased canonical result, rejecting otherwise valid official release manifests before staging.",
+      "new_text": "Rust's default self-update path downloads and verifies a platform CLI executable. The active checkout corrects the repository-case rejection recorded as RUST-045; preserve the native verified-release backend while adding any TypeScript update-selection compatibility.",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "mechanism",
+      "old_text": "TS self-update uses a checked npm package/version. Native prebuilt self-update instead fetches an ice-release.json manifest for the exact CLI release and verifies its archive and executable before activation.\n\nThe native manifest requires schema version 1, package name ice-cli, the requested semver, v<version> tag, the fixed official repository, a 40-character lower-case source commit, exact supported target and a flat platform binary name (ice or ice.exe). The archive must be zip/tar.gz with bounded positive size, matching SHA-256 and a release asset URL on the same repository/tag. It reuses the limited-body, safe extraction, hash and object-format validation helpers from prebuilt_extensions. Manifest fetch uses 15 seconds and archive fetch uses 180 seconds. The staged binary is create_new, synced and made executable on Unix, then its --version must match the requested version before activation (rust:crates/ice-cli/src/prebuilt_release.rs:1-189).\n\nSource-proven fatal comparison: prebuilt_release::REPOSITORY is 'https://github.com/Zyk-Void/ice-rust'. validate compares canonical_repository(manifest.repository), which lowercases owner/repository, directly with that mixed-case constant. A matching official repository therefore becomes 'https://github.com/zyk-void/ice-rust' and cannot equal the constant. The rejection happens before archive staging. The release-asset URL validator also receives that mixed-case repository constant while comparing canonical repository strings, so fixing only the first comparison would leave the same class of mismatch at the URL boundary (rust:crates/ice-cli/src/prebuilt_release.rs:11; rust:crates/ice-cli/src/prebuilt_release.rs:50; rust:crates/ice-cli/src/prebuilt_release.rs:92; rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195).\n\nThe happy-path inline fixture uses the same mixed-case official constant and expects staging to succeed; the visible transformations indicate it encounters the mismatch. This is a source-derived conclusion, not a reported test execution result. An ignored real-network smoke test exists and was not run. This defect is specific to the CLI prebuilt caller and does not invalidate all native extension prebuilt distribution, whose repository values are canonicalized through its own resolver.\n\nKeep the exact manifest, hash, path, archive and executable checks after correcting repository identity. The default CLI update has no automatic Cargo fallback when the prebuilt protocol fails; users can separately select the build route.",
+      "new_text": "TS self-update uses a checked npm package/version. Native prebuilt self-update instead fetches an ice-release.json manifest for the exact CLI release and verifies its archive and executable before activation.\n\nThe native manifest requires schema version 1, package name ice-cli, the requested semver, v<version> tag, the fixed official repository, a 40-character lower-case source commit, exact supported target and a flat platform binary name (icers or icers.exe). The archive must be zip/tar.gz with bounded positive size, matching SHA-256 and a release asset URL on the same repository/tag. It reuses the limited-body, safe extraction, hash and object-format validation helpers from prebuilt_extensions. Manifest fetch uses 15 seconds and archive fetch uses 180 seconds. The staged binary is create_new, synced and made executable on Unix, then its --version must match the requested version before activation (rust:crates/ice-cli/src/prebuilt_release.rs:1-189).\n\nThe active REPOSITORY constant is the canonical lowercase https://github.com/zyk-void/ice-rust. It now agrees with canonical_repository at both manifest identity and release-asset URL validation boundaries, correcting the old checkout's source-proven case mismatch. The changelog URL uses the same lowercase owner. RUST-045 preserves the old finding and local-rebrand provenance with active_status=fixed (rust:crates/ice-cli/src/prebuilt_release.rs:11; rust:crates/ice-cli/src/prebuilt_release.rs:50; rust:crates/ice-cli/src/prebuilt_release.rs:92; rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195; rust:crates/ice-cli/src/changelog.rs:27).\n\nThe positive fixture's repository now uses the corrected constant; the flat executable fixture follows icers.exe. The ignored real-network smoke test was not run. Source verification of these corrections does not establish that remote assets exist or that a platform download/activation succeeds.\n\nKeep the exact manifest, hash, path, archive and executable checks. The default CLI update still has no automatic Cargo fallback when the prebuilt protocol fails; users can separately select the build route. The manifest filename ice-release.json and crate name ice-cli remain unchanged protocol identities.",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "interfaces",
+      "old_text": "GitHub release v<version>/ice-release.json; fixed official repository identity; schema 1 CLI release manifest; exact version/target/binary/archive/hash fields; --build as explicit alternative acquisition. The defect is independent of real network availability once the manifest has the expected official repository.",
+      "new_text": "GitHub release v<version>/ice-release.json; canonical official repository https://github.com/zyk-void/ice-rust; schema 1 CLI release manifest; exact version/target/binary/archive/hash fields; flat icers or icers.exe executable; --build as explicit alternative acquisition. Remote asset availability remains unverified.",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "rust",
+      "old_text": "The complete protocol and tests are present in prebuilt_release.rs, but the canonicalized-lowercase versus mixed-case comparison makes the nominal official-manifest success path fail. This conclusion is bounded to the frozen source and visible helper behavior. It was not reproduced with a download or application command, and no upstream fix is assumed. Native comparison source: `rust:crates/ice-cli/src/prebuilt_release.rs:1-373`; `rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195`; `rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803`.",
+      "new_text": "The complete protocol and inline tests are present. The active native source corrects the old mixed-case repository constant consistently for manifest and release-asset validation, so that specific rejection is fixed. The native prebuilt protocol remains a deliberate backend difference from TypeScript package-manager activation. Source verification was performed without a download, application command or runtime test. Native comparison source: rust:crates/ice-cli/src/prebuilt_release.rs:1-373; rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195; rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803; rust:crates/ice-cli/src/changelog.rs:27.",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "port",
+      "old_text": "Canonicalize both expected and supplied repository identities through one representation, or store the official constant in the helper's canonical form and use it consistently for manifest and asset URL checks. Preserve original casing only for display/URL construction where harmless. Recheck the existing positive fixture and negative publisher/tag/path cases in future implementation verification. Do not add a silent unverified fallback or loosen identity validation. The estimate covers the small comparison correction and consistent callers, not rebuilding the release pipeline.",
+      "new_text": "Preserve the canonical repository, publisher/tag/path constraints and positive/negative manifest fixtures when extending update command compatibility. No additional repository-case correction remains in the active checkout. Future implementation verification should exercise the retained fixtures and platform path without loosening identity checks or adding silent unverified fallback. Related acquisition, activation and command-selection work is estimated in CLI-038 and CLI-041–044.",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "priority",
+      "old_text": "P1",
+      "new_text": "P2",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "priority_reason",
+      "old_text": "The default native prebuilt CLI update path rejects valid official release metadata before download/staging.",
+      "new_text": "Preserve the verified native release boundary during compatibility work; the old default-update rejection is already fixed.",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "size_min",
+      "old_text": 15,
+      "new_text": 0,
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    },
+    {
+      "id": "CLI-045",
+      "field": "size_max",
+      "old_text": 45,
+      "new_text": 0,
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix.",
+      "evidence": [
+        "coordinator-native-hunk-review.json"
+      ],
+      "citation_coordinates": "old ranges; changed constant lines are unchanged in the active checkout"
+    }
+  ],
+  "additional_active_reads": [
+    {
+      "path": "crates/ice-cli/src/updates.rs",
+      "range": [
+        480,
+        494
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "reason": "read_cache deserialize failure maps to None; viewed through connector search_context."
+    }
+  ],
+  "no_ts_identity_replacements": true,
+  "no_application_execution": true
+}

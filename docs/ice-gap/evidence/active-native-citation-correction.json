@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:13:53.991Z",
+  "status": "applied",
+  "approved": true,
+  "owner": "/root",
+  "reviewers": [
+    "/root/native_closeout",
+    "/root"
+  ],
+  "source_only": true,
+  "application_or_test_execution": false,
+  "artifact": "evidence/rust-defects.json",
+  "pointer": "/69/sources/5",
+  "entry_id": "RUST-069",
+  "before": "rust:crates/ice-harness/src/session/storage.rs:359-383",
+  "after": "rust:crates/ice-harness/src/session/jsonl/storage.rs:359-383",
+  "before_sha256": "0efdf9dff8b1878e5152266889da693e45af023b1cc9f9f73e1964f2f242927d",
+  "after_sha256": "0c44affdbb358cebe08ccd4245f4f546ae673ab218cf72c21648a372a4e2bf62",
+  "before_archive": "evidence/closeout-corrections/rust-defects.before.json",
+  "reason": "Correct the missing jsonl path component in the immutable proposal. Saved replay_trace/1 contains lines354-384; requested359-383 is unchanged and supported. No behavior, severity, provenance, ownership, line range or other catalog byte changes.",
+  "proof_files": {
+    "lane-exports-sub-session-native-value-compatibility.json": "aaca123d8714d7b116cb87c0eb018576aef000812f7f5848603de7718077ec19",
+    "active-checkout-source-map.json": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d",
+    "lane-exports-sub-session-native-prose-replacements.json": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423",
+    "active-native-defects-accepted.json": "bf8af9e78235030dc050965b085117d9860a49007d69de981215c8e40e818dda"
+  },
+  "source_file_sha256": "29553513222ea80e8bfe8a9519b03e3113f93fa7479ac3e2a808bb5f14df7abb",
+  "source_map_status": "identical",
+  "historical_proposal_and_acceptance_unchanged": true
+}

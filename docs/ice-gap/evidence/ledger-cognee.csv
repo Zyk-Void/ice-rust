@@ -1,0 +1,9 @@
+path,lines,area,entry_ids,status,notes
+packages/coding-agent/docs/ice-cognee.md,176,cognee,,pending,
+packages/coding-agent/src/ice-cognee-client.ts,1013,cognee,,pending,
+packages/coding-agent/src/ice-cognee-env.ts,74,cognee,,pending,
+packages/coding-agent/src/ice-cognee-observer.ts,128,cognee,,pending,
+packages/coding-agent/src/ice-cognee-skills/cognee-remember/SKILL.md,32,cognee,,pending,
+packages/coding-agent/src/ice-cognee-skills/cognee-search/SKILL.md,20,cognee,,pending,
+packages/coding-agent/src/ice-cognee-skills/cognee-sync/SKILL.md,34,cognee,,pending,
+packages/coding-agent/src/ice-cognee.ts,2529,cognee,,pending,

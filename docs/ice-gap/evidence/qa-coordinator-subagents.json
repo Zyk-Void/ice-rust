@@ -1,0 +1,129 @@
+{
+  "area": "subagents",
+  "reviewer": "/root",
+  "status": "passed-for-provisional-publication",
+  "mode": "Source and document inspection only; no tests, builds, application commands or runtime reproduction.",
+  "baseline": {
+    "typescript": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "scope": "Worker closed all71 assigned files and37 TS plus7 Rust tests,121 distinct full-read files. Coordinator independently read policy derivation/evaluation, turn budget, command-policy parsing, live dispatch and native child scope/output/lifetime paths, and reviewed every entry's metadata and mechanism introduction.",
+  "corrections": [
+    "Corrected first-pass external-directory/sub-yolo claim from live parentDecision branch.",
+    "Recorded destructive queue clearing, ordinary maxTokens versus hardMaxOutputTokens, and session recovery versus provider HTTP retries.",
+    "Resolved established session/settings/agent/model dependencies; remaining bindings explicit for final reconciliation.",
+    "Normalized long mechanism openings to2–3 sentences, populated explicit dependency explanations and normalized open-question records."
+  ],
+  "entry_count": 44,
+  "candidate_count": 192,
+  "surface_count": 249,
+  "structural_checks": {
+    "missing_candidates": [],
+    "unknown_candidates": [],
+    "duplicate_candidates": [],
+    "missing_fields": [],
+    "bad_ledger": [],
+    "bad_surfaces": []
+  },
+  "independent_source_reads": [
+    {
+      "path": "ice:packages/coding-agent/src/subagents/permissions/derive-child.ts",
+      "sha256": "50a758ac39b76ddb9048c4915ddc7c3dc6edaab5ce96c923f92d34c11148a058",
+      "total_lines": 99,
+      "ranges": [
+        [
+          1,
+          99
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/subagents/permissions/evaluate.ts",
+      "sha256": "dea68ed74689d0be3e3acf604ed14ddae1d71463d3dd796791db543f83c9d209",
+      "total_lines": 113,
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/subagents/v2/turn-budget.ts",
+      "sha256": "9d8c38fa020b513e1f525718134defcd1867a21b392684252f13c51674519219",
+      "total_lines": 223,
+      "ranges": [
+        [
+          1,
+          223
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/subagents/hooks/command-hooks.ts",
+      "sha256": "01db7231fafbdaca4a9ebd380f32616af5f1211bcab75e8707b76ee7b15c382a",
+      "total_lines": 209,
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+      "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+      "total_lines": 2408,
+      "ranges": [
+        [
+          328,
+          481
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/child_agents.rs",
+      "sha256": "ae87e5dbe0cd7c851ac32e4e821e282dcc4c14c843714af0907ec6affaa5ec9d",
+      "total_lines": 418,
+      "ranges": [
+        [
+          44,
+          206
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/child_agents.rs",
+      "sha256": "ae87e5dbe0cd7c851ac32e4e821e282dcc4c14c843714af0907ec6affaa5ec9d",
+      "total_lines": 418,
+      "ranges": [
+        [
+          288,
+          418
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness/child.rs",
+      "sha256": "da74ebd086f9b56bd261448443fe4f6e03705179a0b9a31082b146cd7d312c9c",
+      "total_lines": 300,
+      "ranges": [
+        [
+          74,
+          172
+        ]
+      ]
+    },
+    {
+      "path": "rust:ICE_PORTING.md",
+      "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+      "total_lines": 678,
+      "ranges": [
+        [
+          49,
+          210
+        ]
+      ]
+    }
+  ]
+}

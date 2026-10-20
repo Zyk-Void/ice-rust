@@ -1,0 +1,149 @@
+{
+  "captured_at": "2026-10-20T03:01:08.851058+00:00",
+  "method": "Incremental mtime-gated hashes only; preserved original baselines and prior full integrity evidence. Real CSV/JSON parsers and complete final entry check.",
+  "previous_integrity": "resume-integrity-2026-10-20T005444Z.json",
+  "since": "2026-10-20T00:54:45.542094+00:00",
+  "identities": {
+    "ice": {
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "branch": "void",
+      "status": "M  .gitmodules\nA  imported_extensions/ice-btw\n m imported_extensions/pi-workgraph\n M packages/coding-agent/CHANGELOG.md\n M packages/coding-agent/src/core/agent-session.ts\n M packages/coding-agent/src/core/extensions/runner.ts\n M packages/coding-agent/src/core/tools/bash-watch.ts\n M packages/coding-agent/src/modes/interactive/components/footer.ts\n M packages/coding-agent/src/modes/interactive/components/status-line.ts\n M packages/coding-agent/src/modes/interactive/interactive-mode.ts\n M packages/coding-agent/test/bash-watch.test.ts\n M packages/coding-agent/test/extensions-input-event.test.ts\n M packages/coding-agent/test/status-line.test.ts\n M packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts\n M packages/tui/src/components/editor.ts\n M packages/tui/src/editor-component.ts\n M packages/tui/test/editor.test.ts\n"
+    },
+    "rust": {
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "branch": "main",
+      "status": "?? .icers/\n?? .least/\n?? ASTRA_GAP_AUDIT_CONTINUE.md\n?? docs/ice-gap/\n"
+    }
+  },
+  "counts": {
+    "ledger_rows": 860,
+    "mapped": 547,
+    "not_applicable": 11,
+    "pending": 302,
+    "published_entries": 596
+  },
+  "areas": {
+    "agent": {
+      "entries": 65,
+      "complete_entry_tail": true
+    },
+    "ai": {
+      "entries": 49,
+      "complete_entry_tail": true
+    },
+    "blackhole": {
+      "entries": 41,
+      "complete_entry_tail": true
+    },
+    "cli-packaging": {
+      "entries": 46,
+      "complete_entry_tail": true
+    },
+    "cognee": {
+      "entries": 68,
+      "complete_entry_tail": true
+    },
+    "extensions": {
+      "entries": 57,
+      "complete_entry_tail": true
+    },
+    "observability": {
+      "entries": 29,
+      "complete_entry_tail": true
+    },
+    "providers-auth": {
+      "entries": 33,
+      "complete_entry_tail": true
+    },
+    "rpc-remote": {
+      "entries": 36,
+      "complete_entry_tail": true
+    },
+    "safe-verify": {
+      "entries": 26,
+      "complete_entry_tail": true
+    },
+    "session": {
+      "entries": 38,
+      "complete_entry_tail": true
+    },
+    "settings": {
+      "entries": 33,
+      "complete_entry_tail": true
+    },
+    "subagents": {
+      "entries": 44,
+      "complete_entry_tail": true
+    },
+    "tools": {
+      "entries": 31,
+      "complete_entry_tail": true
+    }
+  },
+  "surfaces": {
+    "cli": {
+      "rows": 167,
+      "pending": 0
+    },
+    "environment": {
+      "rows": 272,
+      "pending": 62
+    },
+    "extension-api": {
+      "rows": 286,
+      "pending": 0
+    },
+    "hooks": {
+      "rows": 133,
+      "pending": 4
+    },
+    "keybindings": {
+      "rows": 186,
+      "pending": 167
+    },
+    "observability": {
+      "rows": 89,
+      "pending": 0
+    },
+    "paths": {
+      "rows": 270,
+      "pending": 78
+    },
+    "providers-auth": {
+      "rows": 111,
+      "pending": 1
+    },
+    "rpc": {
+      "rows": 516,
+      "pending": 0
+    },
+    "session-types": {
+      "rows": 84,
+      "pending": 2
+    },
+    "settings": {
+      "rows": 1042,
+      "pending": 329
+    },
+    "slash-commands": {
+      "rows": 55,
+      "pending": 31
+    },
+    "tools": {
+      "rows": 64,
+      "pending": 0
+    },
+    "tui": {
+      "rows": 348,
+      "pending": 335
+    }
+  },
+  "known_source_records": 1814,
+  "newer_files_checked": [],
+  "not_newer_count": 1814,
+  "missing_expected_sources": [],
+  "issues": [],
+  "passed": true,
+  "source_drift_note": "No drift since 2026-10-20T00:54:45.542094+00:00",
+  "untracked_rust_status_is_not_tracked_source_drift": true
+}

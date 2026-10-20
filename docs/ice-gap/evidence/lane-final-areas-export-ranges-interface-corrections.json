@@ -1,0 +1,45 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "scope": "Only displayed ranges independently read for export reconciliation.",
+  "files": [
+    {
+      "repo": "ice",
+      "path": "packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "total_lines": 2580,
+      "ranges": [
+        [
+          93,
+          131
+        ]
+      ],
+      "text": "93 | /**\n94 |  * Represents a chunk of text for word-wrap layout.\n95 |  * Tracks both the text content and its position in the original line.\n96 |  */\n97 | export interface TextChunk {\n98 | \ttext: string;\n99 | \tstartIndex: number;\n100 | \tendIndex: number;\n101 | }\n102 | \n103 | /**\n104 |  * Split a line into word-wrapped chunks.\n105 |  * Wraps at word boundaries when possible, falling back to character-level\n106 |  * wrapping for words longer than the available width.\n107 |  *\n108 |  * @param line - The text line to wrap\n109 |  * @param maxWidth - Maximum visible width per chunk\n110 |  * @param preSegmented - Optional pre-segmented graphemes (e.g. with paste-marker awareness).\n111 |  *                       When omitted the default Intl.Segmenter is used.\n112 |  * @returns Array of chunks with text and position information\n113 |  */\n114 | export function wordWrapLine(line: string, maxWidth: number, preSegmented?: Intl.SegmentData[]): TextChunk[] {\n115 | \tif (!line || maxWidth <= 0) {\n116 | \t\treturn [{ text: \"\", startIndex: 0, endIndex: 0 }];\n117 | \t}\n118 | \n119 | \tconst lineWidth = visibleWidth(line);\n120 | \tif (lineWidth <= maxWidth) {\n121 | \t\treturn [{ text: line, startIndex: 0, endIndex: line.length }];\n122 | \t}\n123 | \n124 | \tconst chunks: TextChunk[] = [];\n125 | \tconst segments = preSegmented ?? [...graphemeSegmenter.segment(line)];\n126 | \n127 | \tlet currentWidth = 0;\n128 | \tlet chunkStart = 0;\n129 | \n130 | \t// Wrap opportunity: the position after the last whitespace before a non-whitespace\n131 | \t// grapheme, i.e. where a line break is allowed."
+    },
+    {
+      "repo": "ice",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "total_lines": 1268,
+      "ranges": [
+        [
+          164,
+          203
+        ]
+      ],
+      "text": "164 | \n165 | /** Options for {@link OverlayHandle.unfocus}. */\n166 | export interface OverlayUnfocusOptions {\n167 | \t/** Explicit target to focus after releasing this overlay. */\n168 | \ttarget: Component | null;\n169 | }\n170 | \n171 | /**\n172 |  * Handle returned by showOverlay for controlling the overlay\n173 |  */\n174 | export interface OverlayHandle {\n175 | \t/** Permanently remove the overlay (cannot be shown again) */\n176 | \thide(): void;\n177 | \t/** Temporarily hide or show the overlay */\n178 | \tsetHidden(hidden: boolean): void;\n179 | \t/** Check if overlay is temporarily hidden */\n180 | \tisHidden(): boolean;\n181 | \t/** Focus this overlay and bring it to the visual front */\n182 | \tfocus(): void;\n183 | \t/** Release focus to the next visible capturing overlay or previous target, or to an explicit target when provided */\n184 | \tunfocus(options?: OverlayUnfocusOptions): void;\n185 | \t/** Check if this overlay currently has focus */\n186 | \tisFocused(): boolean;\n187 | }\n188 | \n189 | type OverlayStackEntry = {\n190 | \tcomponent: Component;\n191 | \toptions?: OverlayOptions;\n192 | \tpreFocus: Component | null;\n193 | \thidden: boolean;\n194 | \tfocusOrder: number;\n195 | };\n196 | \n197 | type OverlayBlockedFocusResume = { status: \"restore-overlay\" } | { status: \"focus-target\"; target: Component | null };\n198 | type EligibleOverlayFocusRestoreState = { status: \"eligible\"; overlay: OverlayStackEntry };\n199 | type BlockedOverlayFocusRestoreState = {\n200 | \tstatus: \"blocked\";\n201 | \toverlay: OverlayStackEntry;\n202 | \tblockedBy: Component;\n203 | \tresume: OverlayBlockedFocusResume;"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "total_lines": 1268,
+      "ranges": [
+        [
+          1208,
+          1268
+        ]
+      ],
+      "text": "1208 | \t\t\t}\n1209 | \t\t}\n1210 | \t\treturn null;\n1211 | \t}\n1212 | \n1213 | \t/**\n1214 | \t * Query the terminal's default background color with OSC 11 (`ESC ] 11 ; ? BEL`).\n1215 | \t * @param timeoutMs Query timeout in milliseconds.\n1216 | \t * @returns Promise containing the parsed RGB color, or undefined if it times out or fails to parse.\n1217 | \t */\n1218 | \tqueryTerminalBackgroundColor({ timeoutMs }: { timeoutMs: number }): Promise<RgbColor | undefined> {\n1219 | \t\treturn new Promise((resolve) => {\n1220 | \t\t\tconst query: PendingOsc11BackgroundQuery = {\n1221 | \t\t\t\tsettled: false,\n1222 | \t\t\t\tresolve,\n1223 | \t\t\t\ttimer: undefined,\n1224 | \t\t\t};\n1225 | \n1226 | \t\t\tquery.timer = setTimeout(() => {\n1227 | \t\t\t\tif (query.settled) {\n1228 | \t\t\t\t\treturn;\n1229 | \t\t\t\t}\n1230 | \t\t\t\tquery.settled = true;\n1231 | \t\t\t\tquery.timer = undefined;\n1232 | \t\t\t\tquery.resolve?.(undefined);\n1233 | \t\t\t\tquery.resolve = undefined;\n1234 | \t\t\t}, timeoutMs);\n1235 | \t\t\tthis.pendingOsc11BackgroundQueries.push(query);\n1236 | \t\t\tthis.pendingOsc11BackgroundReplies += 1;\n1237 | \t\t\tthis.terminal.write(\"\\x1b]11;?\\x07\");\n1238 | \t\t});\n1239 | \t}\n1240 | \n1241 | \t/**\n1242 | \t * Query the terminal's color-scheme preference with DSR (`CSI ? 996 n`).\n1243 | \t * Terminals that support the color palette notification protocol reply with\n1244 | \t * `CSI ? 997 ; 1 n` for dark or `CSI ? 997 ; 2 n` for light.\n1245 | \t */\n1246 | \tqueryTerminalColorScheme({ timeoutMs }: { timeoutMs: number }): Promise<TerminalColorScheme | undefined> {\n1247 | \t\treturn new Promise((resolve) => {\n1248 | \t\t\tlet settled = false;\n1249 | \t\t\tlet timer: NodeJS.Timeout | undefined;\n1250 | \t\t\tlet unsubscribe: () => void = () => {};\n1251 | \t\t\tconst settle = (scheme: TerminalColorScheme | undefined) => {\n1252 | \t\t\t\tif (settled) return;\n1253 | \t\t\t\tsettled = true;\n1254 | \t\t\t\tif (timer) {\n1255 | \t\t\t\t\tclearTimeout(timer);\n1256 | \t\t\t\t\ttimer = undefined;\n1257 | \t\t\t\t}\n1258 | \t\t\t\tunsubscribe();\n1259 | \t\t\t\tresolve(scheme);\n1260 | \t\t\t};\n1261 | \n1262 | \t\t\tunsubscribe = this.onTerminalColorSchemeChange(settle);\n1263 | \t\t\ttimer = setTimeout(() => settle(undefined), timeoutMs);\n1264 | \t\t\tthis.terminal.write(\"\\x1b[?996n\");\n1265 | \t\t});\n1266 | \t}\n1267 | }\n1268 | "
+    }
+  ]
+}

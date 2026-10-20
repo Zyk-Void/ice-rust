@@ -1,0 +1,162 @@
+{
+  "captured_at": "2026-10-20T06:25:04.205048+00:00",
+  "method": "Incremental mtime-gated hashes only; preserved original baselines and prior full integrity evidence. Real CSV/JSON parsers and complete final entry check.",
+  "previous_integrity": "resume-integrity-2026-10-20T030108Z.json",
+  "since": "2026-10-20T03:01:08.851058+00:00",
+  "identities": {
+    "ice": {
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "branch": "void",
+      "status": "M  .gitmodules\nA  imported_extensions/ice-btw\n m imported_extensions/pi-workgraph\n M packages/coding-agent/CHANGELOG.md\n M packages/coding-agent/src/core/agent-session.ts\n M packages/coding-agent/src/core/extensions/runner.ts\n M packages/coding-agent/src/core/tools/bash-watch.ts\n M packages/coding-agent/src/modes/interactive/components/footer.ts\n M packages/coding-agent/src/modes/interactive/components/status-line.ts\n M packages/coding-agent/src/modes/interactive/interactive-mode.ts\n M packages/coding-agent/test/bash-watch.test.ts\n M packages/coding-agent/test/extensions-input-event.test.ts\n M packages/coding-agent/test/status-line.test.ts\n M packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts\n M packages/tui/src/components/editor.ts\n M packages/tui/src/editor-component.ts\n M packages/tui/test/editor.test.ts\n"
+    },
+    "rust": {
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "branch": "main",
+      "status": "?? .icers/\n?? .least/\n?? ASTRA_GAP_AUDIT_CONTINUE.md\n?? docs/ice-gap/\n"
+    },
+    "rust-active": {
+      "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+      "branch": "main",
+      "status": ""
+    }
+  },
+  "counts": {
+    "ledger_rows": 872,
+    "mapped": 860,
+    "not_applicable": 12,
+    "pending": 0,
+    "published_entries": 791
+  },
+  "areas": {
+    "agent": {
+      "entries": 65,
+      "complete_entry_tail": true
+    },
+    "ai": {
+      "entries": 50,
+      "complete_entry_tail": true
+    },
+    "blackhole": {
+      "entries": 41,
+      "complete_entry_tail": true
+    },
+    "cli-packaging": {
+      "entries": 46,
+      "complete_entry_tail": true
+    },
+    "cognee": {
+      "entries": 68,
+      "complete_entry_tail": true
+    },
+    "extensions": {
+      "entries": 57,
+      "complete_entry_tail": true
+    },
+    "misc": {
+      "entries": 43,
+      "complete_entry_tail": true
+    },
+    "observability": {
+      "entries": 29,
+      "complete_entry_tail": true
+    },
+    "providers-auth": {
+      "entries": 33,
+      "complete_entry_tail": true
+    },
+    "rpc-remote": {
+      "entries": 36,
+      "complete_entry_tail": true
+    },
+    "safe-verify": {
+      "entries": 26,
+      "complete_entry_tail": true
+    },
+    "session": {
+      "entries": 38,
+      "complete_entry_tail": true
+    },
+    "settings": {
+      "entries": 33,
+      "complete_entry_tail": true
+    },
+    "subagents": {
+      "entries": 44,
+      "complete_entry_tail": true
+    },
+    "tools": {
+      "entries": 31,
+      "complete_entry_tail": true
+    },
+    "tui": {
+      "entries": 151,
+      "complete_entry_tail": true
+    }
+  },
+  "surfaces": {
+    "cli": {
+      "rows": 170,
+      "pending": 0
+    },
+    "environment": {
+      "rows": 284,
+      "pending": 0
+    },
+    "extension-api": {
+      "rows": 286,
+      "pending": 0
+    },
+    "hooks": {
+      "rows": 182,
+      "pending": 0
+    },
+    "keybindings": {
+      "rows": 186,
+      "pending": 0
+    },
+    "observability": {
+      "rows": 90,
+      "pending": 0
+    },
+    "paths": {
+      "rows": 254,
+      "pending": 0
+    },
+    "providers-auth": {
+      "rows": 120,
+      "pending": 0
+    },
+    "rpc": {
+      "rows": 570,
+      "pending": 0
+    },
+    "session-types": {
+      "rows": 83,
+      "pending": 0
+    },
+    "settings": {
+      "rows": 1092,
+      "pending": 0
+    },
+    "slash-commands": {
+      "rows": 67,
+      "pending": 0
+    },
+    "tools": {
+      "rows": 64,
+      "pending": 0
+    },
+    "tui": {
+      "rows": 527,
+      "pending": 0
+    }
+  },
+  "known_source_records": 2510,
+  "newer_files_checked": [],
+  "not_newer_count": 2510,
+  "missing_expected_sources": [],
+  "issues": [],
+  "passed": true,
+  "source_drift_note": "No drift since 2026-10-20T03:01:08.851058+00:00",
+  "untracked_rust_status_is_not_tracked_source_drift": true
+}

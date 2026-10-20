@@ -1,0 +1,172 @@
+{
+  "area": "extensions",
+  "frozen_ts_head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+  "method": "Read-only git show of each inspected tracked test at the frozen HEAD; git status --short; current bytes compared to recorded read hash. No tests run.",
+  "tests": [
+    {
+      "path": "ice:packages/coding-agent/test/extensions-input-event.test.ts",
+      "current_sha256": "15edb0808ae6a88477886d0c79bb21a65a94a31bae8bbe45dedd73b7d3175ede",
+      "recorded_read_sha256": "15edb0808ae6a88477886d0c79bb21a65a94a31bae8bbe45dedd73b7d3175ede",
+      "read_hash_matches": true,
+      "git_status": "M packages/coding-agent/test/extensions-input-event.test.ts",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "42f2f07b292b04162f7caec9d3355066c408717d7b111e8e401e6978ba48b6b2",
+      "matches_frozen_head": false,
+      "limitations": "Current test evidence only; historical dirty-content identity not invented."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/8423-extension-factory-transaction.test.ts",
+      "current_sha256": "65facb3d9e30395b1adca92f7c09ead15d22d9175ef402c6af4f310695edca18",
+      "recorded_read_sha256": "65facb3d9e30395b1adca92f7c09ead15d22d9175ef402c6af4f310695edca18",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "65facb3d9e30395b1adca92f7c09ead15d22d9175ef402c6af4f310695edca18",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/extension-console-capture.test.ts",
+      "current_sha256": "73dff059f098f6ec21c8816d96be1172c38266c13154274a3fb25a9487ed536b",
+      "recorded_read_sha256": "73dff059f098f6ec21c8816d96be1172c38266c13154274a3fb25a9487ed536b",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "73dff059f098f6ec21c8816d96be1172c38266c13154274a3fb25a9487ed536b",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/extensions-runner.test.ts",
+      "current_sha256": "4abefa28f1a22a6ce0bfef95a759d332fde868e69f4bcd1ab20ac99a3f379980",
+      "recorded_read_sha256": "4abefa28f1a22a6ce0bfef95a759d332fde868e69f4bcd1ab20ac99a3f379980",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "4abefa28f1a22a6ce0bfef95a759d332fde868e69f4bcd1ab20ac99a3f379980",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/extensions-discovery.test.ts",
+      "current_sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+      "recorded_read_sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/user-bash-routing.test.ts",
+      "current_sha256": "479fc9ae09cc336106db252842a55530cca652ed237247649128f6e09530db9b",
+      "recorded_read_sha256": "479fc9ae09cc336106db252842a55530cca652ed237247649128f6e09530db9b",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "479fc9ae09cc336106db252842a55530cca652ed237247649128f6e09530db9b",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/extension-factory-cache.test.ts",
+      "current_sha256": "8a5083899159418fac2d7f186fc4f7092e0a02c00ad7caf0f621c40801fd5bb9",
+      "recorded_read_sha256": "8a5083899159418fac2d7f186fc4f7092e0a02c00ad7caf0f621c40801fd5bb9",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "8a5083899159418fac2d7f186fc4f7092e0a02c00ad7caf0f621c40801fd5bb9",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/6260-inline-extension-naming.test.ts",
+      "current_sha256": "d6915ea20c00e1f7433e3eeafc5d868b6b688d1c9dbd50247d35580fc5529a54",
+      "recorded_read_sha256": "d6915ea20c00e1f7433e3eeafc5d868b6b688d1c9dbd50247d35580fc5529a54",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "d6915ea20c00e1f7433e3eeafc5d868b6b688d1c9dbd50247d35580fc5529a54",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/custom-message.test.ts",
+      "current_sha256": "fd65096cfeef46b597e58cd642d034e7b2628d8970e10b84e7177f58f91ced54",
+      "recorded_read_sha256": "fd65096cfeef46b597e58cd642d034e7b2628d8970e10b84e7177f58f91ced54",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "fd65096cfeef46b597e58cd642d034e7b2628d8970e10b84e7177f58f91ced54",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/assistant-message.test.ts",
+      "current_sha256": "86971777603aeeda0e77cb0a1ab61d0ef0ab25262f35df3d4b23ebecd05d45e5",
+      "recorded_read_sha256": "86971777603aeeda0e77cb0a1ab61d0ef0ab25262f35df3d4b23ebecd05d45e5",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "86971777603aeeda0e77cb0a1ab61d0ef0ab25262f35df3d4b23ebecd05d45e5",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/user-message.test.ts",
+      "current_sha256": "1495e98b92eefe6820e58a4c5d39322a28d03432c0534a9e4590559fc845c123",
+      "recorded_read_sha256": "1495e98b92eefe6820e58a4c5d39322a28d03432c0534a9e4590559fc845c123",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "1495e98b92eefe6820e58a4c5d39322a28d03432c0534a9e4590559fc845c123",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-status.test.ts",
+      "current_sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+      "recorded_read_sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/rpc-contract.test.ts",
+      "current_sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+      "recorded_read_sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/extension-alias-parity.test.ts",
+      "current_sha256": "1b77993ca2a76709bf821d39758b1f64f5950ce8be4f8fcc3760ceb6aa18e0f6",
+      "recorded_read_sha256": "1b77993ca2a76709bf821d39758b1f64f5950ce8be4f8fcc3760ceb6aa18e0f6",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "1b77993ca2a76709bf821d39758b1f64f5950ce8be4f8fcc3760ceb6aa18e0f6",
+      "matches_frozen_head": true,
+      "limitations": null
+    },
+    {
+      "path": "ice:packages/coding-agent/test/tool-execution-component.test.ts",
+      "current_sha256": "b097fc4023b8ef4d917fb35f66ecca0fdb785f24f2b34dce9706d620fc023f98",
+      "recorded_read_sha256": "b097fc4023b8ef4d917fb35f66ecca0fdb785f24f2b34dce9706d620fc023f98",
+      "read_hash_matches": true,
+      "git_status": "",
+      "tracked_at_frozen_head": true,
+      "frozen_head_sha256": "b097fc4023b8ef4d917fb35f66ecca0fdb785f24f2b34dce9706d620fc023f98",
+      "matches_frozen_head": true,
+      "limitations": null
+    }
+  ]
+}

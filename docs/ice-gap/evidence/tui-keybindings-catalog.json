@@ -1,0 +1,1162 @@
+{
+  "source_sha256": "18d6abc04321137bf666aadd2ebe1f62663b7e462758dc89928c003ce8afa736",
+  "entries": [
+    {
+      "id": "app.interrupt",
+      "start": 92,
+      "end": 92,
+      "raw": "\t\"app.interrupt\": { defaultKeys: \"escape\", description: \"Cancel or abort\" },",
+      "default_expression": "\"escape\"",
+      "description": "Cancel or abort",
+      "default_keys": [
+        "escape"
+      ]
+    },
+    {
+      "id": "app.clear",
+      "start": 93,
+      "end": 93,
+      "raw": "\t\"app.clear\": { defaultKeys: \"ctrl+c\", description: \"Clear editor\" },",
+      "default_expression": "\"ctrl+c\"",
+      "description": "Clear editor",
+      "default_keys": [
+        "ctrl+c"
+      ]
+    },
+    {
+      "id": "app.exit",
+      "start": 94,
+      "end": 94,
+      "raw": "\t\"app.exit\": { defaultKeys: \"ctrl+d\", description: \"Exit when editor is empty\" },",
+      "default_expression": "\"ctrl+d\"",
+      "description": "Exit when editor is empty",
+      "default_keys": [
+        "ctrl+d"
+      ]
+    },
+    {
+      "id": "app.suspend",
+      "start": 95,
+      "end": 98,
+      "raw": "\t\"app.suspend\": {\n\t\tdefaultKeys: process.platform === \"win32\" ? [] : \"ctrl+z\",\n\t\tdescription: \"Suspend to background\",\n\t},",
+      "default_expression": "process.platform === \"win32\" ? [] : \"ctrl+z\"",
+      "description": "Suspend to background",
+      "platform_defaults": {
+        "windows": [],
+        "darwin": [
+          "ctrl+z"
+        ],
+        "other": [
+          "ctrl+z"
+        ]
+      }
+    },
+    {
+      "id": "app.thinking.cycle",
+      "start": 99,
+      "end": 102,
+      "raw": "\t\"app.thinking.cycle\": {\n\t\tdefaultKeys: \"shift+tab\",\n\t\tdescription: \"Cycle thinking level\",\n\t},",
+      "default_expression": "\"shift+tab\"",
+      "description": "Cycle thinking level",
+      "default_keys": [
+        "shift+tab"
+      ]
+    },
+    {
+      "id": "app.model.cycleForward",
+      "start": 103,
+      "end": 106,
+      "raw": "\t\"app.model.cycleForward\": {\n\t\tdefaultKeys: \"ctrl+p\",\n\t\tdescription: \"Cycle to next model\",\n\t},",
+      "default_expression": "\"ctrl+p\"",
+      "description": "Cycle to next model",
+      "default_keys": [
+        "ctrl+p"
+      ]
+    },
+    {
+      "id": "app.model.cycleBackward",
+      "start": 107,
+      "end": 110,
+      "raw": "\t\"app.model.cycleBackward\": {\n\t\tdefaultKeys: \"shift+ctrl+p\",\n\t\tdescription: \"Cycle to previous model\",\n\t},",
+      "default_expression": "\"shift+ctrl+p\"",
+      "description": "Cycle to previous model",
+      "default_keys": [
+        "shift+ctrl+p"
+      ]
+    },
+    {
+      "id": "app.model.select",
+      "start": 111,
+      "end": 111,
+      "raw": "\t\"app.model.select\": { defaultKeys: \"ctrl+l\", description: \"Open model selector\" },",
+      "default_expression": "\"ctrl+l\"",
+      "description": "Open model selector",
+      "default_keys": [
+        "ctrl+l"
+      ]
+    },
+    {
+      "id": "app.model.toggleFavorite",
+      "start": 112,
+      "end": 112,
+      "raw": "\t\"app.model.toggleFavorite\": { defaultKeys: \"shift+f\", description: \"Toggle favorite in model selector\" },",
+      "default_expression": "\"shift+f\"",
+      "description": "Toggle favorite in model selector",
+      "default_keys": [
+        "shift+f"
+      ]
+    },
+    {
+      "id": "app.tools.expand",
+      "start": 113,
+      "end": 113,
+      "raw": "\t\"app.tools.expand\": { defaultKeys: \"ctrl+o\", description: \"Toggle tool output\" },",
+      "default_expression": "\"ctrl+o\"",
+      "description": "Toggle tool output",
+      "default_keys": [
+        "ctrl+o"
+      ]
+    },
+    {
+      "id": "app.tools.collapse",
+      "start": 114,
+      "end": 114,
+      "raw": "\t\"app.tools.collapse\": { defaultKeys: \"alt+o\", description: \"Collapse all tool output\" },",
+      "default_expression": "\"alt+o\"",
+      "description": "Collapse all tool output",
+      "default_keys": [
+        "alt+o"
+      ]
+    },
+    {
+      "id": "app.tools.expandLast",
+      "start": 115,
+      "end": 115,
+      "raw": "\t\"app.tools.expandLast\": { defaultKeys: \"shift+alt+o\", description: \"Toggle the newest tool call\" },",
+      "default_expression": "\"shift+alt+o\"",
+      "description": "Toggle the newest tool call",
+      "default_keys": [
+        "shift+alt+o"
+      ]
+    },
+    {
+      "id": "app.notices.show",
+      "start": 116,
+      "end": 116,
+      "raw": "\t\"app.notices.show\": { defaultKeys: \"f2\", description: \"Show warnings and notices\" },",
+      "default_expression": "\"f2\"",
+      "description": "Show warnings and notices",
+      "default_keys": [
+        "f2"
+      ]
+    },
+    {
+      "id": "app.notices.dismiss",
+      "start": 117,
+      "end": 117,
+      "raw": "\t\"app.notices.dismiss\": { defaultKeys: \"d\", description: \"Notices panel: dismiss the selected notice\" },",
+      "default_expression": "\"d\"",
+      "description": "Notices panel: dismiss the selected notice",
+      "default_keys": [
+        "d"
+      ]
+    },
+    {
+      "id": "app.notices.clear",
+      "start": 118,
+      "end": 121,
+      "raw": "\t\"app.notices.clear\": {\n\t\tdefaultKeys: \"x\",\n\t\tdescription: \"Notices panel: dismiss every notice in the selected filter\",\n\t},",
+      "default_expression": "\"x\"",
+      "description": "Notices panel: dismiss every notice in the selected filter",
+      "default_keys": [
+        "x"
+      ]
+    },
+    {
+      "id": "app.notices.copy",
+      "start": 122,
+      "end": 122,
+      "raw": "\t\"app.notices.copy\": { defaultKeys: \"c\", description: \"Notices panel: copy the selected notice\" },",
+      "default_expression": "\"c\"",
+      "description": "Notices panel: copy the selected notice",
+      "default_keys": [
+        "c"
+      ]
+    },
+    {
+      "id": "app.shortcuts.show",
+      "start": 123,
+      "end": 126,
+      "raw": "\t\"app.shortcuts.show\": {\n\t\tdefaultKeys: \"?\",\n\t\tdescription: \"Show keyboard shortcuts (only when the editor is empty)\",\n\t},",
+      "default_expression": "\"?\"",
+      "description": "Show keyboard shortcuts (only when the editor is empty)",
+      "default_keys": [
+        "?"
+      ]
+    },
+    {
+      "id": "app.tasks.background",
+      "start": 127,
+      "end": 130,
+      "raw": "\t\"app.tasks.background\": {\n\t\tdefaultKeys: \"ctrl+b\",\n\t\tdescription: \"Move a running subagent wait to the background (falls through when nothing can be backgrounded)\",\n\t},",
+      "default_expression": "\"ctrl+b\"",
+      "description": "Move a running subagent wait to the background (falls through when nothing can be backgrounded)",
+      "default_keys": [
+        "ctrl+b"
+      ]
+    },
+    {
+      "id": "app.shells.open",
+      "start": 131,
+      "end": 135,
+      "raw": "\t\"app.shells.open\": {\n\t\tdefaultKeys: \"down\",\n\t\tdescription:\n\t\t\t\"Open the Shells panel from an empty editor while background shells run (otherwise moves the cursor)\",\n\t},",
+      "default_expression": "\"down\"",
+      "description": "Open the Shells panel from an empty editor while background shells run (otherwise moves the cursor)",
+      "default_keys": [
+        "down"
+      ]
+    },
+    {
+      "id": "app.shells.stop",
+      "start": 136,
+      "end": 136,
+      "raw": "\t\"app.shells.stop\": { defaultKeys: \"x\", description: \"Shells panel: stop the selected background shell\" },",
+      "default_expression": "\"x\"",
+      "description": "Shells panel: stop the selected background shell",
+      "default_keys": [
+        "x"
+      ]
+    },
+    {
+      "id": "app.shells.follow",
+      "start": 137,
+      "end": 140,
+      "raw": "\t\"app.shells.follow\": {\n\t\tdefaultKeys: \"f\",\n\t\tdescription: \"Shells panel: follow the selected shell's live output in the foreground\",\n\t},",
+      "default_expression": "\"f\"",
+      "description": "Shells panel: follow the selected shell's live output in the foreground",
+      "default_keys": [
+        "f"
+      ]
+    },
+    {
+      "id": "app.subagents.attach",
+      "start": 141,
+      "end": 141,
+      "raw": "\t\"app.subagents.attach\": { defaultKeys: \"right\", description: \"Attach to live subagent\" },",
+      "default_expression": "\"right\"",
+      "description": "Attach to live subagent",
+      "default_keys": [
+        "right"
+      ]
+    },
+    {
+      "id": "app.subagents.open",
+      "start": 142,
+      "end": 142,
+      "raw": "\t\"app.subagents.open\": { defaultKeys: \"ctrl+shift+a\", description: \"Open the Agent Hub\" },",
+      "default_expression": "\"ctrl+shift+a\"",
+      "description": "Open the Agent Hub",
+      "default_keys": [
+        "ctrl+shift+a"
+      ]
+    },
+    {
+      "id": "app.subagents.parent",
+      "start": 143,
+      "end": 143,
+      "raw": "\t\"app.subagents.parent\": { defaultKeys: \"shift+alt+left\", description: \"Return to the main agent view\" },",
+      "default_expression": "\"shift+alt+left\"",
+      "description": "Return to the main agent view",
+      "default_keys": [
+        "shift+alt+left"
+      ]
+    },
+    {
+      "id": "app.subagents.next",
+      "start": 144,
+      "end": 147,
+      "raw": "\t\"app.subagents.next\": {\n\t\tdefaultKeys: \"alt+right\",\n\t\tdescription: \"Show the next agent view (only while subagents exist and the editor is empty)\",\n\t},",
+      "default_expression": "\"alt+right\"",
+      "description": "Show the next agent view (only while subagents exist and the editor is empty)",
+      "default_keys": [
+        "alt+right"
+      ]
+    },
+    {
+      "id": "app.subagents.previous",
+      "start": 148,
+      "end": 151,
+      "raw": "\t\"app.subagents.previous\": {\n\t\tdefaultKeys: \"alt+left\",\n\t\tdescription: \"Show the previous agent view (only while subagents exist and the editor is empty)\",\n\t},",
+      "default_expression": "\"alt+left\"",
+      "description": "Show the previous agent view (only while subagents exist and the editor is empty)",
+      "default_keys": [
+        "alt+left"
+      ]
+    },
+    {
+      "id": "app.subagents.takeControl",
+      "start": 152,
+      "end": 152,
+      "raw": "\t\"app.subagents.takeControl\": { defaultKeys: \"ctrl+shift+enter\", description: \"Take control of live subagent\" },",
+      "default_expression": "\"ctrl+shift+enter\"",
+      "description": "Take control of live subagent",
+      "default_keys": [
+        "ctrl+shift+enter"
+      ]
+    },
+    {
+      "id": "app.agents.hub",
+      "start": 153,
+      "end": 156,
+      "raw": "\t\"app.agents.hub\": {\n\t\tdefaultKeys: \"left\",\n\t\tdescription: \"Open the Agent Hub from an empty editor while subagents exist; closes it inside the Hub\",\n\t},",
+      "default_expression": "\"left\"",
+      "description": "Open the Agent Hub from an empty editor while subagents exist; closes it inside the Hub",
+      "default_keys": [
+        "left"
+      ]
+    },
+    {
+      "id": "app.agents.stop",
+      "start": 157,
+      "end": 157,
+      "raw": "\t\"app.agents.stop\": { defaultKeys: \"s\", description: \"Agent Hub: stop the selected subagent's current turn\" },",
+      "default_expression": "\"s\"",
+      "description": "Agent Hub: stop the selected subagent's current turn",
+      "default_keys": [
+        "s"
+      ]
+    },
+    {
+      "id": "app.agents.delete",
+      "start": 158,
+      "end": 158,
+      "raw": "\t\"app.agents.delete\": { defaultKeys: \"shift+d\", description: \"Agent Hub: delete the selected stopped subagent\" },",
+      "default_expression": "\"shift+d\"",
+      "description": "Agent Hub: delete the selected stopped subagent",
+      "default_keys": [
+        "shift+d"
+      ]
+    },
+    {
+      "id": "app.agents.approve",
+      "start": 159,
+      "end": 162,
+      "raw": "\t\"app.agents.approve\": {\n\t\tdefaultKeys: \"y\",\n\t\tdescription: \"Agent Hub: approve the selected pending subagent request once\",\n\t},",
+      "default_expression": "\"y\"",
+      "description": "Agent Hub: approve the selected pending subagent request once",
+      "default_keys": [
+        "y"
+      ]
+    },
+    {
+      "id": "app.agents.deny",
+      "start": 163,
+      "end": 163,
+      "raw": "\t\"app.agents.deny\": { defaultKeys: \"n\", description: \"Agent Hub: deny the selected pending subagent request\" },",
+      "default_expression": "\"n\"",
+      "description": "Agent Hub: deny the selected pending subagent request",
+      "default_keys": [
+        "n"
+      ]
+    },
+    {
+      "id": "app.agents.approveSession",
+      "start": 164,
+      "end": 167,
+      "raw": "\t\"app.agents.approveSession\": {\n\t\tdefaultKeys: \"a\",\n\t\tdescription: \"Agent Hub: always allow the selected request's rule for that subagent\",\n\t},",
+      "default_expression": "\"a\"",
+      "description": "Agent Hub: always allow the selected request's rule for that subagent",
+      "default_keys": [
+        "a"
+      ]
+    },
+    {
+      "id": "app.agents.nextApproval",
+      "start": 168,
+      "end": 172,
+      "raw": "\t\"app.agents.nextApproval\": {\n\t\tdefaultKeys: \"tab\",\n\t\tdescription: \"Agent Hub: select the next pending subagent request and its subagent\",\n\t},\n",
+      "default_expression": "\"tab\"",
+      "description": "Agent Hub: select the next pending subagent request and its subagent",
+      "default_keys": [
+        "tab"
+      ]
+    },
+    {
+      "id": "app.thinking.toggle",
+      "start": 173,
+      "end": 176,
+      "raw": "\t\"app.thinking.toggle\": {\n\t\tdefaultKeys: \"ctrl+t\",\n\t\tdescription: \"Toggle thinking blocks\",\n\t},",
+      "default_expression": "\"ctrl+t\"",
+      "description": "Toggle thinking blocks",
+      "default_keys": [
+        "ctrl+t"
+      ]
+    },
+    {
+      "id": "app.session.toggleNamedFilter",
+      "start": 177,
+      "end": 180,
+      "raw": "\t\"app.session.toggleNamedFilter\": {\n\t\tdefaultKeys: \"ctrl+n\",\n\t\tdescription: \"Toggle named session filter\",\n\t},",
+      "default_expression": "\"ctrl+n\"",
+      "description": "Toggle named session filter",
+      "default_keys": [
+        "ctrl+n"
+      ]
+    },
+    {
+      "id": "app.editor.external",
+      "start": 181,
+      "end": 184,
+      "raw": "\t\"app.editor.external\": {\n\t\tdefaultKeys: \"ctrl+g\",\n\t\tdescription: \"Open external editor\",\n\t},",
+      "default_expression": "\"ctrl+g\"",
+      "description": "Open external editor",
+      "default_keys": [
+        "ctrl+g"
+      ]
+    },
+    {
+      "id": "app.message.copy",
+      "start": 185,
+      "end": 188,
+      "raw": "\t\"app.message.copy\": {\n\t\tdefaultKeys: \"ctrl+x\",\n\t\tdescription: \"Copy message to clipboard\",\n\t},",
+      "default_expression": "\"ctrl+x\"",
+      "description": "Copy message to clipboard",
+      "default_keys": [
+        "ctrl+x"
+      ]
+    },
+    {
+      "id": "app.message.followUp",
+      "start": 189,
+      "end": 192,
+      "raw": "\t\"app.message.followUp\": {\n\t\tdefaultKeys: \"alt+enter\",\n\t\tdescription: \"Queue follow-up message\",\n\t},",
+      "default_expression": "\"alt+enter\"",
+      "description": "Queue follow-up message",
+      "default_keys": [
+        "alt+enter"
+      ]
+    },
+    {
+      "id": "app.message.sendNow",
+      "start": 193,
+      "end": 196,
+      "raw": "\t\"app.message.sendNow\": {\n\t\tdefaultKeys: \"ctrl+enter\",\n\t\tdescription: \"Send now: interrupt the current turn (running commands and subagents keep going in the background)\",\n\t},",
+      "default_expression": "\"ctrl+enter\"",
+      "description": "Send now: interrupt the current turn (running commands and subagents keep going in the background)",
+      "default_keys": [
+        "ctrl+enter"
+      ]
+    },
+    {
+      "id": "app.message.dequeue",
+      "start": 197,
+      "end": 200,
+      "raw": "\t\"app.message.dequeue\": {\n\t\tdefaultKeys: \"alt+up\",\n\t\tdescription: \"Restore queued messages\",\n\t},",
+      "default_expression": "\"alt+up\"",
+      "description": "Restore queued messages",
+      "default_keys": [
+        "alt+up"
+      ]
+    },
+    {
+      "id": "app.clipboard.pasteImage",
+      "start": 201,
+      "end": 204,
+      "raw": "\t\"app.clipboard.pasteImage\": {\n\t\tdefaultKeys: process.platform === \"win32\" ? \"alt+v\" : \"ctrl+v\",\n\t\tdescription: \"Paste image from clipboard (text fallback)\",\n\t},",
+      "default_expression": "process.platform === \"win32\" ? \"alt+v\" : \"ctrl+v\"",
+      "description": "Paste image from clipboard (text fallback)",
+      "platform_defaults": {
+        "windows": [
+          "alt+v"
+        ],
+        "darwin": [
+          "ctrl+v"
+        ],
+        "other": [
+          "ctrl+v"
+        ]
+      }
+    },
+    {
+      "id": "app.session.new",
+      "start": 205,
+      "end": 205,
+      "raw": "\t\"app.session.new\": { defaultKeys: [], description: \"Start a new session\" },",
+      "default_expression": "[]",
+      "description": "Start a new session",
+      "default_keys": []
+    },
+    {
+      "id": "app.session.tree",
+      "start": 206,
+      "end": 206,
+      "raw": "\t\"app.session.tree\": { defaultKeys: [], description: \"Open session tree\" },",
+      "default_expression": "[]",
+      "description": "Open session tree",
+      "default_keys": []
+    },
+    {
+      "id": "app.session.fork",
+      "start": 207,
+      "end": 207,
+      "raw": "\t\"app.session.fork\": { defaultKeys: [], description: \"Fork current session\" },",
+      "default_expression": "[]",
+      "description": "Fork current session",
+      "default_keys": []
+    },
+    {
+      "id": "app.session.resume",
+      "start": 208,
+      "end": 208,
+      "raw": "\t\"app.session.resume\": { defaultKeys: [], description: \"Resume a session\" },",
+      "default_expression": "[]",
+      "description": "Resume a session",
+      "default_keys": []
+    },
+    {
+      "id": "app.tree.foldOrUp",
+      "start": 209,
+      "end": 212,
+      "raw": "\t\"app.tree.foldOrUp\": {\n\t\tdefaultKeys: process.platform === \"darwin\" ? [\"alt+left\", \"ctrl+left\"] : [\"ctrl+left\", \"alt+left\"],\n\t\tdescription: \"Fold tree branch or move up\",\n\t},",
+      "default_expression": "process.platform === \"darwin\" ? [\"alt+left\", \"ctrl+left\"] : [\"ctrl+left\", \"alt+left\"]",
+      "description": "Fold tree branch or move up",
+      "platform_defaults": {
+        "windows": [
+          "ctrl+left",
+          "alt+left"
+        ],
+        "darwin": [
+          "alt+left",
+          "ctrl+left"
+        ],
+        "other": [
+          "ctrl+left",
+          "alt+left"
+        ]
+      }
+    },
+    {
+      "id": "app.tree.unfoldOrDown",
+      "start": 213,
+      "end": 216,
+      "raw": "\t\"app.tree.unfoldOrDown\": {\n\t\tdefaultKeys: process.platform === \"darwin\" ? [\"alt+right\", \"ctrl+right\"] : [\"ctrl+right\", \"alt+right\"],\n\t\tdescription: \"Unfold tree branch or move down\",\n\t},",
+      "default_expression": "process.platform === \"darwin\" ? [\"alt+right\", \"ctrl+right\"] : [\"ctrl+right\", \"alt+right\"]",
+      "description": "Unfold tree branch or move down",
+      "platform_defaults": {
+        "windows": [
+          "ctrl+right",
+          "alt+right"
+        ],
+        "darwin": [
+          "alt+right",
+          "ctrl+right"
+        ],
+        "other": [
+          "ctrl+right",
+          "alt+right"
+        ]
+      }
+    },
+    {
+      "id": "app.tree.editLabel",
+      "start": 217,
+      "end": 220,
+      "raw": "\t\"app.tree.editLabel\": {\n\t\tdefaultKeys: \"shift+l\",\n\t\tdescription: \"Edit tree label\",\n\t},",
+      "default_expression": "\"shift+l\"",
+      "description": "Edit tree label",
+      "default_keys": [
+        "shift+l"
+      ]
+    },
+    {
+      "id": "app.tree.toggleLabelTimestamp",
+      "start": 221,
+      "end": 224,
+      "raw": "\t\"app.tree.toggleLabelTimestamp\": {\n\t\tdefaultKeys: \"shift+t\",\n\t\tdescription: \"Toggle tree label timestamps\",\n\t},",
+      "default_expression": "\"shift+t\"",
+      "description": "Toggle tree label timestamps",
+      "default_keys": [
+        "shift+t"
+      ]
+    },
+    {
+      "id": "app.session.togglePath",
+      "start": 225,
+      "end": 228,
+      "raw": "\t\"app.session.togglePath\": {\n\t\tdefaultKeys: \"ctrl+p\",\n\t\tdescription: \"Toggle session path display\",\n\t},",
+      "default_expression": "\"ctrl+p\"",
+      "description": "Toggle session path display",
+      "default_keys": [
+        "ctrl+p"
+      ]
+    },
+    {
+      "id": "app.session.toggleSort",
+      "start": 229,
+      "end": 232,
+      "raw": "\t\"app.session.toggleSort\": {\n\t\tdefaultKeys: \"ctrl+s\",\n\t\tdescription: \"Toggle session sort mode\",\n\t},",
+      "default_expression": "\"ctrl+s\"",
+      "description": "Toggle session sort mode",
+      "default_keys": [
+        "ctrl+s"
+      ]
+    },
+    {
+      "id": "app.session.rename",
+      "start": 233,
+      "end": 236,
+      "raw": "\t\"app.session.rename\": {\n\t\tdefaultKeys: \"ctrl+r\",\n\t\tdescription: \"Rename session\",\n\t},",
+      "default_expression": "\"ctrl+r\"",
+      "description": "Rename session",
+      "default_keys": [
+        "ctrl+r"
+      ]
+    },
+    {
+      "id": "app.session.delete",
+      "start": 237,
+      "end": 240,
+      "raw": "\t\"app.session.delete\": {\n\t\tdefaultKeys: \"ctrl+d\",\n\t\tdescription: \"Delete session\",\n\t},",
+      "default_expression": "\"ctrl+d\"",
+      "description": "Delete session",
+      "default_keys": [
+        "ctrl+d"
+      ]
+    },
+    {
+      "id": "app.session.deleteNoninvasive",
+      "start": 241,
+      "end": 244,
+      "raw": "\t\"app.session.deleteNoninvasive\": {\n\t\tdefaultKeys: \"ctrl+backspace\",\n\t\tdescription: \"Delete session when query is empty\",\n\t},",
+      "default_expression": "\"ctrl+backspace\"",
+      "description": "Delete session when query is empty",
+      "default_keys": [
+        "ctrl+backspace"
+      ]
+    },
+    {
+      "id": "app.models.save",
+      "start": 245,
+      "end": 248,
+      "raw": "\t\"app.models.save\": {\n\t\tdefaultKeys: \"ctrl+s\",\n\t\tdescription: \"Save model selection\",\n\t},",
+      "default_expression": "\"ctrl+s\"",
+      "description": "Save model selection",
+      "default_keys": [
+        "ctrl+s"
+      ]
+    },
+    {
+      "id": "app.models.enableAll",
+      "start": 249,
+      "end": 252,
+      "raw": "\t\"app.models.enableAll\": {\n\t\tdefaultKeys: \"ctrl+a\",\n\t\tdescription: \"Enable all models\",\n\t},",
+      "default_expression": "\"ctrl+a\"",
+      "description": "Enable all models",
+      "default_keys": [
+        "ctrl+a"
+      ]
+    },
+    {
+      "id": "app.models.clearAll",
+      "start": 253,
+      "end": 256,
+      "raw": "\t\"app.models.clearAll\": {\n\t\tdefaultKeys: \"ctrl+x\",\n\t\tdescription: \"Clear all models\",\n\t},",
+      "default_expression": "\"ctrl+x\"",
+      "description": "Clear all models",
+      "default_keys": [
+        "ctrl+x"
+      ]
+    },
+    {
+      "id": "app.models.toggleProvider",
+      "start": 257,
+      "end": 260,
+      "raw": "\t\"app.models.toggleProvider\": {\n\t\tdefaultKeys: \"ctrl+p\",\n\t\tdescription: \"Toggle all models for provider\",\n\t},",
+      "default_expression": "\"ctrl+p\"",
+      "description": "Toggle all models for provider",
+      "default_keys": [
+        "ctrl+p"
+      ]
+    },
+    {
+      "id": "app.models.reorderUp",
+      "start": 261,
+      "end": 264,
+      "raw": "\t\"app.models.reorderUp\": {\n\t\tdefaultKeys: \"alt+up\",\n\t\tdescription: \"Move model up in order\",\n\t},",
+      "default_expression": "\"alt+up\"",
+      "description": "Move model up in order",
+      "default_keys": [
+        "alt+up"
+      ]
+    },
+    {
+      "id": "app.models.reorderDown",
+      "start": 265,
+      "end": 268,
+      "raw": "\t\"app.models.reorderDown\": {\n\t\tdefaultKeys: \"alt+down\",\n\t\tdescription: \"Move model down in order\",\n\t},",
+      "default_expression": "\"alt+down\"",
+      "description": "Move model down in order",
+      "default_keys": [
+        "alt+down"
+      ]
+    },
+    {
+      "id": "app.tree.filter.default",
+      "start": 269,
+      "end": 272,
+      "raw": "\t\"app.tree.filter.default\": {\n\t\tdefaultKeys: \"ctrl+d\",\n\t\tdescription: \"Tree filter: default view\",\n\t},",
+      "default_expression": "\"ctrl+d\"",
+      "description": "Tree filter: default view",
+      "default_keys": [
+        "ctrl+d"
+      ]
+    },
+    {
+      "id": "app.tree.filter.noTools",
+      "start": 273,
+      "end": 276,
+      "raw": "\t\"app.tree.filter.noTools\": {\n\t\tdefaultKeys: \"ctrl+t\",\n\t\tdescription: \"Tree filter: hide tool results\",\n\t},",
+      "default_expression": "\"ctrl+t\"",
+      "description": "Tree filter: hide tool results",
+      "default_keys": [
+        "ctrl+t"
+      ]
+    },
+    {
+      "id": "app.tree.filter.userOnly",
+      "start": 277,
+      "end": 280,
+      "raw": "\t\"app.tree.filter.userOnly\": {\n\t\tdefaultKeys: \"ctrl+u\",\n\t\tdescription: \"Tree filter: user messages only\",\n\t},",
+      "default_expression": "\"ctrl+u\"",
+      "description": "Tree filter: user messages only",
+      "default_keys": [
+        "ctrl+u"
+      ]
+    },
+    {
+      "id": "app.tree.filter.labeledOnly",
+      "start": 281,
+      "end": 284,
+      "raw": "\t\"app.tree.filter.labeledOnly\": {\n\t\tdefaultKeys: \"ctrl+l\",\n\t\tdescription: \"Tree filter: labeled entries only\",\n\t},",
+      "default_expression": "\"ctrl+l\"",
+      "description": "Tree filter: labeled entries only",
+      "default_keys": [
+        "ctrl+l"
+      ]
+    },
+    {
+      "id": "app.tree.filter.all",
+      "start": 285,
+      "end": 288,
+      "raw": "\t\"app.tree.filter.all\": {\n\t\tdefaultKeys: \"ctrl+a\",\n\t\tdescription: \"Tree filter: show all entries\",\n\t},",
+      "default_expression": "\"ctrl+a\"",
+      "description": "Tree filter: show all entries",
+      "default_keys": [
+        "ctrl+a"
+      ]
+    },
+    {
+      "id": "app.tree.filter.cycleForward",
+      "start": 289,
+      "end": 292,
+      "raw": "\t\"app.tree.filter.cycleForward\": {\n\t\tdefaultKeys: \"ctrl+o\",\n\t\tdescription: \"Tree filter: cycle forward\",\n\t},",
+      "default_expression": "\"ctrl+o\"",
+      "description": "Tree filter: cycle forward",
+      "default_keys": [
+        "ctrl+o"
+      ]
+    },
+    {
+      "id": "app.tree.filter.cycleBackward",
+      "start": 293,
+      "end": 297,
+      "raw": "\t\"app.tree.filter.cycleBackward\": {\n\t\tdefaultKeys: \"shift+ctrl+o\",\n\t\tdescription: \"Tree filter: cycle backward\",\n\t},",
+      "default_expression": "\"shift+ctrl+o\"",
+      "description": "Tree filter: cycle backward",
+      "default_keys": [
+        "shift+ctrl+o"
+      ]
+    }
+  ],
+  "migrations": [
+    {
+      "old": "cursorUp",
+      "id": "tui.editor.cursorUp",
+      "line": 300
+    },
+    {
+      "old": "cursorDown",
+      "id": "tui.editor.cursorDown",
+      "line": 301
+    },
+    {
+      "old": "cursorLeft",
+      "id": "tui.editor.cursorLeft",
+      "line": 302
+    },
+    {
+      "old": "cursorRight",
+      "id": "tui.editor.cursorRight",
+      "line": 303
+    },
+    {
+      "old": "cursorWordLeft",
+      "id": "tui.editor.cursorWordLeft",
+      "line": 304
+    },
+    {
+      "old": "cursorWordRight",
+      "id": "tui.editor.cursorWordRight",
+      "line": 305
+    },
+    {
+      "old": "cursorLineStart",
+      "id": "tui.editor.cursorLineStart",
+      "line": 306
+    },
+    {
+      "old": "cursorLineEnd",
+      "id": "tui.editor.cursorLineEnd",
+      "line": 307
+    },
+    {
+      "old": "jumpForward",
+      "id": "tui.editor.jumpForward",
+      "line": 308
+    },
+    {
+      "old": "jumpBackward",
+      "id": "tui.editor.jumpBackward",
+      "line": 309
+    },
+    {
+      "old": "pageUp",
+      "id": "tui.editor.pageUp",
+      "line": 310
+    },
+    {
+      "old": "pageDown",
+      "id": "tui.editor.pageDown",
+      "line": 311
+    },
+    {
+      "old": "deleteCharBackward",
+      "id": "tui.editor.deleteCharBackward",
+      "line": 312
+    },
+    {
+      "old": "deleteCharForward",
+      "id": "tui.editor.deleteCharForward",
+      "line": 313
+    },
+    {
+      "old": "deleteWordBackward",
+      "id": "tui.editor.deleteWordBackward",
+      "line": 314
+    },
+    {
+      "old": "deleteWordForward",
+      "id": "tui.editor.deleteWordForward",
+      "line": 315
+    },
+    {
+      "old": "deleteToLineStart",
+      "id": "tui.editor.deleteToLineStart",
+      "line": 316
+    },
+    {
+      "old": "deleteToLineEnd",
+      "id": "tui.editor.deleteToLineEnd",
+      "line": 317
+    },
+    {
+      "old": "yank",
+      "id": "tui.editor.yank",
+      "line": 318
+    },
+    {
+      "old": "yankPop",
+      "id": "tui.editor.yankPop",
+      "line": 319
+    },
+    {
+      "old": "undo",
+      "id": "tui.editor.undo",
+      "line": 320
+    },
+    {
+      "old": "newLine",
+      "id": "tui.input.newLine",
+      "line": 321
+    },
+    {
+      "old": "submit",
+      "id": "tui.input.submit",
+      "line": 322
+    },
+    {
+      "old": "tab",
+      "id": "tui.input.tab",
+      "line": 323
+    },
+    {
+      "old": "copy",
+      "id": "tui.input.copy",
+      "line": 324
+    },
+    {
+      "old": "selectUp",
+      "id": "tui.select.up",
+      "line": 325
+    },
+    {
+      "old": "selectDown",
+      "id": "tui.select.down",
+      "line": 326
+    },
+    {
+      "old": "selectPageUp",
+      "id": "tui.select.pageUp",
+      "line": 327
+    },
+    {
+      "old": "selectPageDown",
+      "id": "tui.select.pageDown",
+      "line": 328
+    },
+    {
+      "old": "selectConfirm",
+      "id": "tui.select.confirm",
+      "line": 329
+    },
+    {
+      "old": "selectCancel",
+      "id": "tui.select.cancel",
+      "line": 330
+    },
+    {
+      "old": "interrupt",
+      "id": "app.interrupt",
+      "line": 331
+    },
+    {
+      "old": "clear",
+      "id": "app.clear",
+      "line": 332
+    },
+    {
+      "old": "exit",
+      "id": "app.exit",
+      "line": 333
+    },
+    {
+      "old": "suspend",
+      "id": "app.suspend",
+      "line": 334
+    },
+    {
+      "old": "cycleThinkingLevel",
+      "id": "app.thinking.cycle",
+      "line": 335
+    },
+    {
+      "old": "cycleModelForward",
+      "id": "app.model.cycleForward",
+      "line": 336
+    },
+    {
+      "old": "cycleModelBackward",
+      "id": "app.model.cycleBackward",
+      "line": 337
+    },
+    {
+      "old": "selectModel",
+      "id": "app.model.select",
+      "line": 338
+    },
+    {
+      "old": "expandTools",
+      "id": "app.tools.expand",
+      "line": 339
+    },
+    {
+      "old": "toggleThinking",
+      "id": "app.thinking.toggle",
+      "line": 340
+    },
+    {
+      "old": "toggleSessionNamedFilter",
+      "id": "app.session.toggleNamedFilter",
+      "line": 341
+    },
+    {
+      "old": "externalEditor",
+      "id": "app.editor.external",
+      "line": 342
+    },
+    {
+      "old": "followUp",
+      "id": "app.message.followUp",
+      "line": 343
+    },
+    {
+      "old": "sendNow",
+      "id": "app.message.sendNow",
+      "line": 344
+    },
+    {
+      "old": "dequeue",
+      "id": "app.message.dequeue",
+      "line": 345
+    },
+    {
+      "old": "pasteImage",
+      "id": "app.clipboard.pasteImage",
+      "line": 346
+    },
+    {
+      "old": "newSession",
+      "id": "app.session.new",
+      "line": 347
+    },
+    {
+      "old": "tree",
+      "id": "app.session.tree",
+      "line": 348
+    },
+    {
+      "old": "fork",
+      "id": "app.session.fork",
+      "line": 349
+    },
+    {
+      "old": "resume",
+      "id": "app.session.resume",
+      "line": 350
+    },
+    {
+      "old": "treeFoldOrUp",
+      "id": "app.tree.foldOrUp",
+      "line": 351
+    },
+    {
+      "old": "treeUnfoldOrDown",
+      "id": "app.tree.unfoldOrDown",
+      "line": 352
+    },
+    {
+      "old": "treeEditLabel",
+      "id": "app.tree.editLabel",
+      "line": 353
+    },
+    {
+      "old": "treeToggleLabelTimestamp",
+      "id": "app.tree.toggleLabelTimestamp",
+      "line": 354
+    },
+    {
+      "old": "toggleSessionPath",
+      "id": "app.session.togglePath",
+      "line": 355
+    },
+    {
+      "old": "toggleSessionSort",
+      "id": "app.session.toggleSort",
+      "line": 356
+    },
+    {
+      "old": "renameSession",
+      "id": "app.session.rename",
+      "line": 357
+    },
+    {
+      "old": "deleteSession",
+      "id": "app.session.delete",
+      "line": 358
+    },
+    {
+      "old": "deleteSessionNoninvasive",
+      "id": "app.session.deleteNoninvasive",
+      "line": 359
+    }
+  ],
+  "native_application_ids": [
+    "app.interrupt",
+    "app.clear",
+    "app.exit",
+    "app.model.select",
+    "app.model.cycleForward",
+    "app.model.cycleBackward",
+    "app.tools.expand",
+    "app.thinking.toggle",
+    "app.editor.external",
+    "app.thinking.cycle",
+    "app.clipboard.pasteImage",
+    "app.suspend",
+    "app.message.followUp",
+    "app.message.dequeue",
+    "app.message.copy"
+  ],
+  "missing_native_registry_ids": [
+    "app.model.toggleFavorite",
+    "app.tools.collapse",
+    "app.tools.expandLast",
+    "app.notices.show",
+    "app.notices.dismiss",
+    "app.notices.clear",
+    "app.notices.copy",
+    "app.shortcuts.show",
+    "app.tasks.background",
+    "app.shells.open",
+    "app.shells.stop",
+    "app.shells.follow",
+    "app.subagents.attach",
+    "app.subagents.open",
+    "app.subagents.parent",
+    "app.subagents.next",
+    "app.subagents.previous",
+    "app.subagents.takeControl",
+    "app.agents.hub",
+    "app.agents.stop",
+    "app.agents.delete",
+    "app.agents.approve",
+    "app.agents.deny",
+    "app.agents.approveSession",
+    "app.agents.nextApproval",
+    "app.session.toggleNamedFilter",
+    "app.message.sendNow",
+    "app.session.new",
+    "app.session.tree",
+    "app.session.fork",
+    "app.session.resume",
+    "app.tree.foldOrUp",
+    "app.tree.unfoldOrDown",
+    "app.tree.editLabel",
+    "app.tree.toggleLabelTimestamp",
+    "app.session.togglePath",
+    "app.session.toggleSort",
+    "app.session.rename",
+    "app.session.delete",
+    "app.session.deleteNoninvasive",
+    "app.models.save",
+    "app.models.enableAll",
+    "app.models.clearAll",
+    "app.models.toggleProvider",
+    "app.models.reorderUp",
+    "app.models.reorderDown",
+    "app.tree.filter.default",
+    "app.tree.filter.noTools",
+    "app.tree.filter.userOnly",
+    "app.tree.filter.labeledOnly",
+    "app.tree.filter.all",
+    "app.tree.filter.cycleForward",
+    "app.tree.filter.cycleBackward"
+  ],
+  "native_source": {
+    "ref": "rust:crates/ice-tui/src/keybindings.rs:147-684",
+    "sha256": "e78c3932b990db2179b0bde8514b3d5299af4e125dfdb93a34064e010b3c3d67"
+  },
+  "note": "Literal declaration extraction and manually resolved four platform-sensitive expressions; no application execution. Registry omission does not assert absence of a hardcoded application action.",
+  "owner_entry": "TUI-048",
+  "source": "ice:packages/coding-agent/src/core/keybindings.ts:90-360"
+}

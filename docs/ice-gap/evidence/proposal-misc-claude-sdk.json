@@ -1,0 +1,1151 @@
+{
+  "area": "misc",
+  "fragment": "claude-sdk",
+  "owner": "coordinator",
+  "complete": false,
+  "draft_complete": true,
+  "entries": [
+    {
+      "id": "MISC-030",
+      "title": "Local Claude SDK client configuration and private bridge credentials",
+      "status": "missing",
+      "priority": "P0",
+      "priority_reason": "The bridge credential must be confined to the intended local endpoint and private files before a provider can make requests.",
+      "size_min": 100,
+      "size_max": 170,
+      "dependencies": [
+        "SET-001"
+      ]
+    },
+    {
+      "id": "MISC-031",
+      "title": "Claude SDK extension registration, model catalog and status command",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "A usable native bridge needs explicit model discovery, opt-in loading and status/cleanup integration.",
+      "size_min": 80,
+      "size_max": 140,
+      "dependencies": [
+        "MISC-030",
+        "MISC-037",
+        "EXT-018",
+        "EXT-013",
+        "EXT-022",
+        "AI-003"
+      ]
+    },
+    {
+      "id": "MISC-032",
+      "title": "Claude SDK session-handle isolation, reuse and cache limits",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "Handle isolation and honest lifecycle bounds prevent cross-session continuation and accidental replay of tool-bearing conversations.",
+      "size_min": 160,
+      "size_max": 260,
+      "dependencies": [
+        "MISC-030",
+        "MISC-037"
+      ]
+    },
+    {
+      "id": "MISC-033",
+      "title": "Claude SDK request projection, protected envelope and output authority",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "Request identity and output authority must survive hooks without changing who owns tools or permitting unauthorized continuation.",
+      "size_min": 180,
+      "size_max": 290,
+      "dependencies": [
+        "MISC-030",
+        "MISC-032",
+        "AI-006"
+      ]
+    },
+    {
+      "id": "MISC-034",
+      "title": "Claude SDK NDJSON framing, UTF-8 decoding and ingestion limits",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "A bridge response must not silently truncate, accept trailing corruption or evade documented ingestion limits.",
+      "size_min": 90,
+      "size_max": 150,
+      "dependencies": []
+    },
+    {
+      "id": "MISC-035",
+      "title": "Claude SDK terminal-turn validation and retained tool authority",
+      "status": "missing",
+      "priority": "P0",
+      "priority_reason": "An external bridge must not inject unauthorized or uncorrelated tool calls into the host agent.",
+      "size_min": 150,
+      "size_max": 250,
+      "dependencies": [
+        "MISC-034",
+        "MISC-033",
+        "AI-012"
+      ]
+    },
+    {
+      "id": "MISC-036",
+      "title": "Claude SDK preview streaming, stable block indices and final reconciliation",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "Correct streaming indices and reconciliation prevent duplicated text or tool events derived from an invalid final response.",
+      "size_min": 110,
+      "size_max": 190,
+      "dependencies": [
+        "MISC-034",
+        "MISC-035",
+        "AI-003"
+      ]
+    },
+    {
+      "id": "MISC-037",
+      "title": "Claude SDK cancellation, safe failures and shutdown limits",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "Cancellation must preserve handle ownership and safe failure semantics without replaying uncertain tool effects.",
+      "size_min": 140,
+      "size_max": 240,
+      "dependencies": [
+        "MISC-030",
+        "MISC-034",
+        "AI-006"
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/src/claude-sdk/adapter.ts",
+      "entry_ids": [
+        "MISC-030",
+        "MISC-031",
+        "MISC-032",
+        "MISC-033",
+        "MISC-034",
+        "MISC-035",
+        "MISC-036",
+        "MISC-037"
+      ],
+      "status": "mapped",
+      "notes": "Complete visible adapter body source-read (458 lines). All exported/private helpers, envelope, stream, cache and failure branches specified; external bridge remains unverified."
+    },
+    {
+      "path": "packages/coding-agent/src/claude-sdk/extension.ts",
+      "entry_ids": [
+        "MISC-030",
+        "MISC-031",
+        "MISC-037"
+      ],
+      "status": "mapped",
+      "notes": "Complete37-line optional extension factory source-read; provider/command/shutdown registration traced. No builtin-launcher import inferred."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "paths",
+      "name": "<agentDir>/claude-sdk.json",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:8",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "paths",
+      "name": "claude-sdk.tokenFile absolute private credential path",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:56",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "settings",
+      "name": "claude-sdk.json.version",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:18",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "settings",
+      "name": "claude-sdk.json.baseUrl",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "settings",
+      "name": "claude-sdk.json.tokenFile",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:20",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "settings",
+      "name": "claude-sdk.json.models",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:21",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "claude-sdk bridge token /^[a-f0-9]{64}$/",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:179",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-030",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "provider claude-sdk",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:10",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "api claude-sdk",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:12",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "model name (SDK; billing external)",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "model reasoning=true",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:20",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "model input text/image",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:21",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "model contextWindow=200000",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:22",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "model maxTokens=16384",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:23",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "providers-auth",
+      "name": "model external cost metadata=0",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:24",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "slash-commands",
+      "name": "/claude-sdk-status",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:27",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": [
+        "C000158"
+      ]
+    },
+    {
+      "category": "hooks",
+      "name": "session_shutdown: ClaudeSdkClient.close",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/extension.ts:33",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": [
+        "C000159"
+      ]
+    },
+    {
+      "category": "rpc",
+      "name": "GET /api/services/claude-sdk/status",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:208",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk status authentication.state subscription|api_auth|not_logged_in|unknown",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:218",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk status authentication.ready literal true",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:221",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "POST /api/services/claude-sdk/step",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:328",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.version",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:290",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.requestId",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:291",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.sessionId",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:292",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.handle",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:293",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.model",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:294",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.systemPrompt",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:295",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.messages",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:296",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.tools",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:297",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.thinking",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:305",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk step.maxTokens",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:306",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "hooks",
+      "name": "claude-sdk onPayload",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:308",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "hooks",
+      "name": "claude-sdk onResponse",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:339",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk NDJSON application/x-ndjson prefix",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:116",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-034",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk response wire limit 8388608 bytes",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:128",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-034",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk decoded line limit 3145728 UTF-16 units",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:134",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-034",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk record-count limit 65536 lines",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:134",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-034",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk ready",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:351",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk ready.version",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:354",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk ready.transport",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:355",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk ready.billing",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:356",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk ready.handle",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:357",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.handle",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:376",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:380",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.content",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:381",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.stopReason",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:384",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.usage",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:391",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.usage.input",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:392",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.usage.output",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:393",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.usage.cacheRead",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:394",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk turn.message.usage.cacheWrite",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:395",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk content.text",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:97",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk content.thinking",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:98",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk content.thinkingSignature",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:102",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk content.redacted",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:103",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk content.toolCall",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:105",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk toolCall.name/id",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:108",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk toolCall.arguments",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:110",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk text_delta.delta",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:363",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-036",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk preview limit 2097152 bytes",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:366",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-036",
+      "candidate_ids": []
+    },
+    {
+      "category": "observability",
+      "name": "claude-agent-sdk diagnostic billing/identityRewriting",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:246",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-036",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "POST /api/services/claude-sdk/cancel",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:184",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk cancel.version",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:188",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk cancel.sessionId",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:188",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk cancel.handle",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:188",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code subscription_required",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:153",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code unauthorized",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:155",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code session_lost",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:156",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code session_conflict",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:158",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code tool_protocol",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:159",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code capacity",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:160",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code unsupported",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:161",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code timeout",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:162",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "rpc",
+      "name": "claude-sdk error.code upstream",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:163",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-037",
+      "candidate_ids": []
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/claude-sdk/adapter.ts",
+      "ranges": [
+        [
+          1,
+          458
+        ]
+      ],
+      "total_lines": 458,
+      "sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/claude-sdk/extension.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "total_lines": 37,
+      "sha256": "5f5e6f7b06eeba5c57090c0b7698a628a35c53fc25d32c7386444c26e88b7283",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-hardening.test.mjs",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "total_lines": 46,
+      "sha256": "f6654e2552ed70d310e49ff2c00e2ddca181d1ece9a1f98805f8af94d299f023",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs",
+      "ranges": [
+        [
+          1,
+          87
+        ],
+        [
+          89,
+          89
+        ],
+        [
+          91,
+          148
+        ]
+      ],
+      "total_lines": 148,
+      "sha256": "1b2654b29b3ad6c49ec6e9ceb7b2e6221b1e6a4cd956237c2138324a7275c7f9",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [
+        88,
+        90
+      ],
+      "notes": "Every visible line reviewed; connector-redacted fixture/assertion lines excluded without reconstruction. Source only."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-live-cli.mjs",
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "total_lines": 51,
+      "sha256": "a2330f911428fd82bbdd4d22427227309ebfd9ae9f0470dcc0226a1b86576319",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/types.rs",
+      "ranges": [
+        [
+          419,
+          493
+        ]
+      ],
+      "total_lines": 1157,
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/binding.rs",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "total_lines": 104,
+      "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/provider.rs",
+      "ranges": [
+        [
+          80,
+          210
+        ]
+      ],
+      "total_lines": 1778,
+      "sha256": "ba60bcabe0571dd2b790f7f584fabe1368bce0034058817fc50cc4e7a6a86f49",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/provider.rs",
+      "ranges": [
+        [
+          461,
+          552
+        ]
+      ],
+      "total_lines": 1778,
+      "sha256": "ba60bcabe0571dd2b790f7f584fabe1368bce0034058817fc50cc4e7a6a86f49",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/registry.rs",
+      "ranges": [
+        [
+          622,
+          669
+        ]
+      ],
+      "total_lines": 1330,
+      "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "ranges": [
+        [
+          31,
+          88
+        ]
+      ],
+      "total_lines": 392,
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "ranges": [
+        [
+          149,
+          204
+        ]
+      ],
+      "total_lines": 392,
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/event_stream.rs",
+      "ranges": [
+        [
+          18,
+          172
+        ]
+      ],
+      "total_lines": 276,
+      "sha256": "244eca9d8de1dc90737bd405bdc6521cd4a8c2c4fe920b1b74916a24c54507f5",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/providers/mod.rs",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "total_lines": 47,
+      "sha256": "a8adc4d1d109ba95db09d41233691bcb6665e34bef3a08ae0ecb3f3a90dd4a32",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/model_registry.rs",
+      "ranges": [
+        [
+          113,
+          170
+        ]
+      ],
+      "total_lines": 416,
+      "sha256": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced."
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000156",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:69",
+      "reason": "file.stat is metadata on an already opened handle, not an independently enumerable pathname; exact private-file input/ownership contract is MISC-030."
+    },
+    {
+      "candidate_id": "C000157",
+      "ice_ref": "packages/coding-agent/src/claude-sdk/adapter.ts:72",
+      "reason": "The string utf8 is the readFile encoding argument, not a filesystem path; MISC-030 covers the actual token/config paths."
+    }
+  ],
+  "claims": [],
+  "dependency_requests": [],
+  "rust_only": [],
+  "open_questions": [],
+  "supplemental_ledger": [],
+  "unverified_behaviors": [
+    {
+      "entries": [
+        "MISC-030",
+        "MISC-031",
+        "MISC-032",
+        "MISC-033",
+        "MISC-034",
+        "MISC-035",
+        "MISC-036",
+        "MISC-037"
+      ],
+      "limitation": "Local OmniRoute/official Claude SDK server implementation, subscription verification, server TTL/capacity/context fingerprint and SDK process cleanup lie outside the authorized two source trees and were not exercised."
+    },
+    {
+      "entries": [
+        "MISC-030"
+      ],
+      "limitation": "Permission/ownership behavior was source-read; no OS permission matrix or real configuration/token files were accessed."
+    }
+  ],
+  "source_identity": {
+    "method": "Local Git object and working-file byte comparison; no application/test execution",
+    "rows": [
+      {
+        "path": "ice:packages/coding-agent/src/claude-sdk/adapter.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+        "head_sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+        "matches_head": true,
+        "current_lines": 458
+      },
+      {
+        "path": "ice:packages/coding-agent/src/claude-sdk/extension.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "5f5e6f7b06eeba5c57090c0b7698a628a35c53fc25d32c7386444c26e88b7283",
+        "head_sha256": "5f5e6f7b06eeba5c57090c0b7698a628a35c53fc25d32c7386444c26e88b7283",
+        "matches_head": true,
+        "current_lines": 37
+      },
+      {
+        "path": "ice:packages/coding-agent/test/claude-sdk-hardening.test.mjs",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f6654e2552ed70d310e49ff2c00e2ddca181d1ece9a1f98805f8af94d299f023",
+        "head_sha256": "f6654e2552ed70d310e49ff2c00e2ddca181d1ece9a1f98805f8af94d299f023",
+        "matches_head": true,
+        "current_lines": 46
+      },
+      {
+        "path": "ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "1b2654b29b3ad6c49ec6e9ceb7b2e6221b1e6a4cd956237c2138324a7275c7f9",
+        "head_sha256": "1b2654b29b3ad6c49ec6e9ceb7b2e6221b1e6a4cd956237c2138324a7275c7f9",
+        "matches_head": true,
+        "current_lines": 148
+      },
+      {
+        "path": "ice:packages/coding-agent/test/claude-sdk-live-cli.mjs",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "a2330f911428fd82bbdd4d22427227309ebfd9ae9f0470dcc0226a1b86576319",
+        "head_sha256": "a2330f911428fd82bbdd4d22427227309ebfd9ae9f0470dcc0226a1b86576319",
+        "matches_head": true,
+        "current_lines": 51
+      }
+    ]
+  },
+  "qa": {
+    "tests_executed": false,
+    "application_executed": false,
+    "ts_files": 5,
+    "ts_full_visible": 4,
+    "ts_redacted_files": 1,
+    "ts_visible_lines": 738,
+    "unit_test_scripts": 2,
+    "optional_live_script": 1,
+    "candidate_inventory": 4,
+    "mapped_candidates": 2,
+    "excluded_candidates": 2,
+    "authored_surfaces": 74
+  }
+}

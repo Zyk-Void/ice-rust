@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "source_only": true,
+  "area": "providers-auth",
+  "entry_id": "AUTH-007",
+  "expected_title": "Credential-blind models.json validation and ultra compatibility",
+  "append_fields": {
+    "source": " ice:packages/coding-agent/src/utils/json.ts:1-16; ice:packages/coding-agent/test/json-utils.test.ts:1-18; rust:crates/ice-cli/src/config.rs:505-554.",
+    "mechanism": "\n\nThe shared parseJsonWithComments helper first calls strict JSON.parse. Only after that throws, stripJsonComments applies two regex passes: each recognizes and preserves complete double-quoted string literals; the first removes // line comments through the next LF, and the second removes a comma followed by whitespace and a closing brace/bracket while retaining that whitespace and closer. Block comments are not stripped. The second JSON.parse failure propagates to ModelConfig's parse-diagnostic boundary. The direct suite verifies comment-like URL/string contents, line comments with trailing commas, and rejection of malformed unquoted keys (ice:packages/coding-agent/src/utils/json.ts:1-16; ice:packages/coding-agent/test/json-utils.test.ts:1-18).",
+    "rust": "\n\nThe concrete native parser is parse_models_json and its string-aware strip_line_comments/find_line_comment helpers. It preserves // inside double-quoted strings and handles escapes, but does not strip trailing commas or block comments. It returns the first strict serde error if the stripped parse also fails, whereas TS propagates its second JSON.parse error (rust:crates/ice-cli/src/config.rs:505-554)."
+  },
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/utils/json.ts",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "total_lines": 16,
+      "sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "baseline_sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/json-utils.test.ts",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "total_lines": 18,
+      "sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "baseline_sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "ranges": [
+        [
+          505,
+          554
+        ]
+      ],
+      "total_lines": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "/root",
+      "notes": "Direct independent native parse/helper body read; no execution."
+    }
+  ]
+}

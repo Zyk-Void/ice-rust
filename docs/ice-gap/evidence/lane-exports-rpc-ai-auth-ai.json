@@ -1,0 +1,3355 @@
+{
+  "area": "ai",
+  "status": "verified-proposal",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "generated_at": "2026-10-20T03:08:04.028Z",
+  "method": "All 142 QA export declarations and current owner contracts were inspected. File/line containment was a lead only; explicit owner corrections and missing utility/type contracts are recorded. Certified subsystem prose remains intact. Additional helper implementation reads were performed only where behavior was absent. No source or shared audit file was modified.",
+  "totals": {
+    "runtime": 71,
+    "type": 71,
+    "records": 142,
+    "unresolved": 0
+  },
+  "entry_updates": [
+    {
+      "id": "AI-003",
+      "source_append": "Exported symbols: `anthropicMessagesApi` (ice:packages/ai/src/api/anthropic-messages.lazy.ts:4).\nExported symbols: `azureOpenAIResponsesApi` (ice:packages/ai/src/api/azure-openai-responses.lazy.ts:4).\nExported symbols: `googleGenerativeAIApi` (ice:packages/ai/src/api/google-generative-ai.lazy.ts:4).\nExported symbols: `googleVertexApi` (ice:packages/ai/src/api/google-vertex.lazy.ts:4).\nExported symbols: `iceMessagesApi` (ice:packages/ai/src/api/ice-messages.lazy.ts:4).\nExported symbols: `LazyApiCapabilities` (ice:packages/ai/src/api/lazy.ts:68).\nExported symbols: `mistralConversationsApi` (ice:packages/ai/src/api/mistral-conversations.lazy.ts:4).\nExported symbols: `openAICodexResponsesApi` (ice:packages/ai/src/api/openai-codex-responses.lazy.ts:4).\nExported symbols: `openAICompletionsApi` (ice:packages/ai/src/api/openai-completions.lazy.ts:4).\nExported symbols: `openAIResponsesApi` (ice:packages/ai/src/api/openai-responses.lazy.ts:4).\nExported symbols: `ApiStreamFunction`, `ApiStreamSimpleFunction`, `ApiProvider`, `getApiProviders`, `registerFauxProvider` (ice:packages/ai/src/compat.ts:71; ice:packages/ai/src/compat.ts:77; ice:packages/ai/src/compat.ts:83; ice:packages/ai/src/compat.ts:144; ice:packages/ai/src/compat.ts:160).\nExported symbols: `streamAnthropic`, `streamSimpleAnthropic`, `streamAzureOpenAIResponses`, `streamSimpleAzureOpenAIResponses`, `streamGoogle`, `streamSimpleGoogle`, `streamGoogleVertex`, `streamSimpleGoogleVertex`, `streamMistral`, `streamSimpleMistral`, `streamOpenAICodexResponses`, `streamSimpleOpenAICodexResponses`, `streamOpenAICompletions`, `streamSimpleOpenAICompletions`, `streamOpenAIResponses`, `streamSimpleOpenAIResponses` (ice:packages/ai/src/legacy-api-aliases.ts:29; ice:packages/ai/src/legacy-api-aliases.ts:34; ice:packages/ai/src/legacy-api-aliases.ts:40; ice:packages/ai/src/legacy-api-aliases.ts:45; ice:packages/ai/src/legacy-api-aliases.ts:51; ice:packages/ai/src/legacy-api-aliases.ts:53; ice:packages/ai/src/legacy-api-aliases.ts:59; ice:packages/ai/src/legacy-api-aliases.ts:61; ice:packages/ai/src/legacy-api-aliases.ts:67; ice:packages/ai/src/legacy-api-aliases.ts:72; ice:packages/ai/src/legacy-api-aliases.ts:78; ice:packages/ai/src/legacy-api-aliases.ts:83; ice:packages/ai/src/legacy-api-aliases.ts:89; ice:packages/ai/src/legacy-api-aliases.ts:94; ice:packages/ai/src/legacy-api-aliases.ts:100; ice:packages/ai/src/legacy-api-aliases.ts:105).\nExported symbols: `CreateProviderOptions`, `hasApi` (ice:packages/ai/src/models.ts:739; ice:packages/ai/src/models.ts:874).\nExported symbols: `ApiOptionsMap`, `ApiStreamOptions` (ice:packages/ai/src/types.ts:251; ice:packages/ai/src/types.ts:268).\nExported symbols: `createAssistantMessageEventStream` (ice:packages/ai/src/utils/event-stream.ts:86).",
+      "mechanism_append": "The exported lazy factory names listed in field 2 return new adapter objects around the shared loader; JavaScript module caching supplies implementation-load reuse. `hasApi(model, api)` is only the equality/type guard `model.api === api`, with no auth, loading or I/O (ice:packages/ai/src/models.ts:874-876).",
+      "interfaces_append": "`ApiStreamFunction` and `ApiStreamSimpleFunction` take `(model: Model<Api>, context: Context, options?: StreamOptions | SimpleStreamOptions)` respectively and return `AssistantMessageEventStream`. `ApiOptionsMap` maps the ten built-in API literals to their concrete provider options; `ApiStreamOptions<TApi> = TApi extends keyof ApiOptionsMap ? ApiOptionsMap[TApi] : StreamOptions & Record<string, unknown>`. These imports are type-only and add no eager provider SDK loading (ice:packages/ai/src/compat.ts:71-87; ice:packages/ai/src/types.ts:246-270)."
+    },
+    {
+      "id": "AI-021",
+      "source_append": "Exported symbols: `AnthropicEffort`, `AnthropicThinkingDisplay` (ice:packages/ai/src/api/anthropic-messages.ts:172; ice:packages/ai/src/api/anthropic-messages.ts:174)."
+    },
+    {
+      "id": "AI-030",
+      "source_append": "Exported symbols: `bedrockConverseStreamApi` (ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts:26)."
+    },
+    {
+      "id": "AI-031",
+      "source_append": "Exported symbols: `BedrockThinkingDisplay` (ice:packages/ai/src/api/bedrock-converse-stream.ts:69)."
+    },
+    {
+      "id": "AUTH-013",
+      "source_append": "Exported symbols: `CLOUDFLARE_WORKERS_AI_BASE_URL`, `CLOUDFLARE_AI_GATEWAY_COMPAT_BASE_URL`, `CLOUDFLARE_AI_GATEWAY_OPENAI_BASE_URL`, `CLOUDFLARE_AI_GATEWAY_ANTHROPIC_BASE_URL` (ice:packages/ai/src/api/cloudflare.ts:2; ice:packages/ai/src/api/cloudflare.ts:6; ice:packages/ai/src/api/cloudflare.ts:10; ice:packages/ai/src/api/cloudflare.ts:14).",
+      "interfaces_append": "Exact source endpoint constants: `CLOUDFLARE_WORKERS_AI_BASE_URL = 'https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/ai/v1'`; `CLOUDFLARE_AI_GATEWAY_COMPAT_BASE_URL = 'https://gateway.ai.cloudflare.com/v1/{CLOUDFLARE_ACCOUNT_ID}/{CLOUDFLARE_GATEWAY_ID}/compat'`; the OPENAI and ANTHROPIC gateway constants use the same prefix with `/openai` and `/anthropic` respectively. Placeholder replacement remains the scoped-env materialization described above (ice:packages/ai/src/api/cloudflare.ts:1-15)."
+    },
+    {
+      "id": "AI-013",
+      "source_append": "Exported symbols: `GrammarConstrainedSampling` (ice:packages/ai/src/api/constrained-sampling.ts:9)."
+    },
+    {
+      "id": "AI-022",
+      "source_append": "Exported symbols: `inferCopilotInitiator`, `hasCopilotVisionInput`, `buildCopilotDynamicHeaders` (ice:packages/ai/src/api/github-copilot-headers.ts:5; ice:packages/ai/src/api/github-copilot-headers.ts:11; ice:packages/ai/src/api/github-copilot-headers.ts:23).",
+      "mechanism_append": "The named Copilot helpers classify an empty history or a last user message as user-initiated, and any other last role as agent-initiated. Vision detection examines only user/tool-result array content for image blocks. Dynamic headers always include `X-Initiator` and `Openai-Intent: conversation-edits`; `Copilot-Vision-Request: true` appears only when the supplied hasImages flag is true (ice:packages/ai/src/api/github-copilot-headers.ts:5-36)."
+    },
+    {
+      "id": "AI-039",
+      "source_append": "Exported symbols: `isThinkingPart`, `retainThoughtSignature`, `mapStopReason`, `mapStopReasonString` (ice:packages/ai/src/api/google-shared.ts:35; ice:packages/ai/src/api/google-shared.ts:48; ice:packages/ai/src/api/google-shared.ts:341; ice:packages/ai/src/api/google-shared.ts:373)."
+    },
+    {
+      "id": "AI-038",
+      "source_append": "Exported symbols: `supportsGoogleStrictToolSampling`, `mapToolChoice` (ice:packages/ai/src/api/google-shared.ts:304; ice:packages/ai/src/api/google-shared.ts:310)."
+    },
+    {
+      "id": "AI-029",
+      "source_append": "Exported symbols: `IceMessagesEvent`, `IceMessagesResponseError` (ice:packages/ai/src/api/ice-messages.ts:53; ice:packages/ai/src/api/ice-messages.ts:95)."
+    },
+    {
+      "id": "AI-055",
+      "source_append": "Exported symbols: `OpenAICodexWebSocketDebugStats` (ice:packages/ai/src/api/openai-codex-responses.ts:881).\nExported symbols: `SessionResourceCleanup` (ice:packages/ai/src/session-resources.ts:1).",
+      "interfaces_append": "`SessionResourceCleanup = (sessionId?: string) => void` is the named synchronous callback type; its cleanup failure aggregation is described above (ice:packages/ai/src/session-resources.ts:1-24). `OpenAICodexWebSocketDebugStats` requires requests/connectionsCreated/connectionsReused/cachedContextRequests/storeTrueRequests/fullContextRequests/deltaRequests/lastInputItems/websocketFailures/sseFallbacks; lastDeltaInputItems/lastPreviousResponseId/websocketFallbackActive/lastWebSocketError are optional (ice:packages/ai/src/api/openai-codex-responses.ts:881-896)."
+    },
+    {
+      "id": "AI-025",
+      "source_append": "Exported symbols: `ConvertCompletionsMessagesOptions` (ice:packages/ai/src/api/openai-completions.ts:146)."
+    },
+    {
+      "id": "AI-027",
+      "source_append": "Exported symbols: `OPENAI_PROMPT_CACHE_KEY_MAX_LENGTH` (ice:packages/ai/src/api/openai-prompt-cache.ts:1)."
+    },
+    {
+      "id": "AI-053",
+      "source_append": "Exported symbols: `OpenAIResponsesStreamOptions` (ice:packages/ai/src/api/openai-responses-shared.ts:105).",
+      "interfaces_append": "`OpenAIResponsesStreamOptions` is `{ serviceTier?: ResponseCreateParamsStreaming['service_tier']; grammarToolInputProperties?: ReadonlyMap<string,string>; resolveServiceTier?: (responseServiceTier, requestServiceTier) => ResponseCreateParamsStreaming['service_tier'] | undefined; applyServiceTierPricing?: (usage: Usage, serviceTier: ResponseCreateParamsStreaming['service_tier'] | undefined) => void }`. Both resolver inputs have the same service-tier type or undefined. These callbacks belong to stream usage finalization (ice:packages/ai/src/api/openai-responses-shared.ts:105-116)."
+    },
+    {
+      "id": "AI-054",
+      "source_append": "Exported symbols: `ConvertResponsesMessagesOptions`, `ConvertResponsesToolsOptions` (ice:packages/ai/src/api/openai-responses-shared.ts:118; ice:packages/ai/src/api/openai-responses-shared.ts:125)."
+    },
+    {
+      "id": "AI-057",
+      "source_append": "Exported symbols: `openrouterImagesApi` (ice:packages/ai/src/api/openrouter-images.lazy.ts:3).",
+      "mechanism_append": "`openrouterImagesApi()` returns a ProviderImages object whose async generateImages loads the implementation with dynamic import and forwards model/context/options. It does not add lazyStream's event-stream error conversion; image result/error behavior remains that of the promise-returning adapter (ice:packages/ai/src/api/openrouter-images.lazy.ts:3-10)."
+    },
+    {
+      "id": "AI-006",
+      "source_append": "Exported symbols: `clampMaxTokensToContext`, `adjustMaxTokensForThinking` (ice:packages/ai/src/api/simple-options.ts:15; ice:packages/ai/src/api/simple-options.ts:96).\nExported symbols: `ServiceTier`, `FetchFunction`, `SessionAffinityFormat`, `ProviderResponse`, `ProviderRequestOptions`, `ProviderStreamOptions`, `DeferredFetchOptions`, `DeferredCancelOptions`, `StreamFunction` (ice:packages/ai/src/types.ts:106; ice:packages/ai/src/types.ts:111; ice:packages/ai/src/types.ts:112; ice:packages/ai/src/types.ts:114; ice:packages/ai/src/types.ts:120; ice:packages/ai/src/types.ts:233; ice:packages/ai/src/types.ts:235; ice:packages/ai/src/types.ts:244; ice:packages/ai/src/types.ts:334).\nExported symbols: `headersToRecord` (ice:packages/ai/src/utils/headers.ts:3).",
+      "mechanism_append": "`headersToRecord` copies each `[key,value]` from the platform Headers iterator into an ordinary object, retaining the iterator's resulting names and values. It is distinct from `providerHeadersToRecord`, which removes null deletion markers and returns undefined when nothing remains; the response-header snapshot helper has no credential resolution or additional normalization (ice:packages/ai/src/utils/headers.ts:3-17).",
+      "interfaces_append": "Additional exact aliases: `ServiceTier = 'auto' | 'default' | 'flex' | 'scale' | 'priority' | null`; `FetchFunction = typeof globalThis.fetch`; `SessionAffinityFormat = 'openai' | 'openai-nosession' | 'openrouter'`; `ProviderResponse { status: number; headers: Record<string,string> }`. `DeferredFetchOptions.wait?: number` has documented default 0 for one status check; `DeferredCancelOptions` is the shared provider-request option type, not an independent scheduler (ice:packages/ai/src/types.ts:106-117; ice:packages/ai/src/types.ts:235-244)."
+    },
+    {
+      "id": "AUTH-015",
+      "source_append": "Exported symbols: `OAuthPrompt`, `OAuthAuthInfo`, `OAuthDeviceCodeInfo`, `OAuthSelectOption`, `OAuthSelectPrompt` (ice:packages/ai/src/compat/extension-oauth-types.ts:4; ice:packages/ai/src/compat/extension-oauth-types.ts:11; ice:packages/ai/src/compat/extension-oauth-types.ts:17; ice:packages/ai/src/compat/extension-oauth-types.ts:24; ice:packages/ai/src/compat/extension-oauth-types.ts:29).",
+      "interfaces_append": "The separate legacy extension contract is type-only: `OAuthPrompt { message: string; placeholder?: string; allowEmpty?: boolean }`; `OAuthAuthInfo { url: string; instructions?: string }`; `OAuthDeviceCodeInfo { userCode: string; verificationUri: string; intervalSeconds?: number; expiresInSeconds?: number }`; `OAuthSelectOption { id: string; label: string }`; `OAuthSelectPrompt { message: string; options: OAuthSelectOption[] }`. `OAuthLoginCallbacks` supplies onAuth/onDeviceCode void callbacks, onPrompt returning Promise<string>, optional onProgress/onManualCodeInput, required onSelect returning Promise<string | undefined>, and optional signal. These legacy declarations do not themselves perform login or polling (ice:packages/ai/src/compat/extension-oauth-types.ts:4-42)."
+    },
+    {
+      "id": "AI-015",
+      "source_append": "Exported symbols: `ImagesApiFunction`, `ImagesApiProvider` (ice:packages/ai/src/images-api-registry.ts:3; ice:packages/ai/src/images-api-registry.ts:9).\nExported symbols: `CreateImagesProviderOptions` (ice:packages/ai/src/images-models.ts:231).\nExported symbols: `KnownImagesApi`, `ImagesApi`, `KnownImagesProvider`, `ImagesProviderId`, `ProviderImages`, `ProviderImagesOptions`, `ImagesFunction`, `ImagesInputContent`, `ImagesOutputContent`, `ImagesStopReason` (ice:packages/ai/src/types.ts:30; ice:packages/ai/src/types.ts:32; ice:packages/ai/src/types.ts:76; ice:packages/ai/src/types.ts:78; ice:packages/ai/src/types.ts:297; ice:packages/ai/src/types.ts:313; ice:packages/ai/src/types.ts:340; ice:packages/ai/src/types.ts:464; ice:packages/ai/src/types.ts:465; ice:packages/ai/src/types.ts:471).",
+      "interfaces_append": "Exact image aliases and records: `KnownImagesApi = 'openrouter-images'`; `ImagesApi = KnownImagesApi | (string & {})`; `KnownImagesProvider = 'openrouter'`; `ImagesProviderId = KnownImagesProvider | string`; `ImagesInputContent = TextContent | ImageContent`; `ImagesOutputContent = TextContent | ImageContent`; `ImagesStopReason = 'stop' | 'error' | 'aborted'`. `ProviderImages.generateImages(model, context, options?)` and `ImagesFunction` return `Promise<AssistantImages>`; `ProviderImagesOptions = ImagesOptions & Record<string, unknown>`. `ImagesContext { input: ImagesInputContent[] }`; `AssistantImages` requires api/provider/model/output/stopReason/timestamp, with optional responseId/usage/errorMessage. The metadata option extends the shared request envelope (ice:packages/ai/src/types.ts:30-32; ice:packages/ai/src/types.ts:76-78; ice:packages/ai/src/types.ts:297-313; ice:packages/ai/src/types.ts:340-344; ice:packages/ai/src/types.ts:464-483)."
+    },
+    {
+      "id": "AI-002",
+      "source_append": "Exported symbols: `ModelsRefreshOptions`, `ModelsRefreshResult`, `ModelsRequestTransforms`, `ModelsApiStreamOptions`, `ModelsSimpleStreamOptions`, `ModelsDeferredFetchOptions`, `ModelsDeferredCancelOptions`, `CreateModelsOptions` (ice:packages/ai/src/models.ts:64; ice:packages/ai/src/models.ts:73; ice:packages/ai/src/models.ts:78; ice:packages/ai/src/models.ts:83; ice:packages/ai/src/models.ts:84; ice:packages/ai/src/models.ts:85; ice:packages/ai/src/models.ts:86; ice:packages/ai/src/models.ts:232).\nExported symbols: `CombinedAbortSignal`, `combineAbortSignals` (ice:packages/ai/src/utils/abort-signals.ts:1; ice:packages/ai/src/utils/abort-signals.ts:6).\nExported symbols: `raceWithAbortSignal` (ice:packages/ai/src/utils/abort.ts:17).",
+      "mechanism_append": "Cancellation helpers make the collection's generation/caller rule precise. `combineAbortSignals` drops undefined inputs, returns no signal for zero inputs, reuses the single input unchanged, and creates a controller for multiple inputs. The first observed abort preserves its reason; an already aborted input stops listener registration at that input, and the explicit cleanup closure removes every listener installed earlier. It does not cancel the input controllers. `raceWithAbortSignal` rejects an already aborted waiter while attaching a catch to the operation, otherwise settles once on operation completion/failure or abort and removes its listener. It checks again after listener installation to close the registration race. The operation remains observed after waiter cancellation; this helper does not stop its side effects. An undefined abort reason becomes Error('The operation was aborted') with name AbortError (ice:packages/ai/src/utils/abort-signals.ts:1-41; ice:packages/ai/src/utils/abort.ts:1-50).",
+      "interfaces_append": "`CombinedAbortSignal { signal?: AbortSignal; cleanup: () => void }`; `combineAbortSignals(signals: readonly (AbortSignal | undefined)[]): CombinedAbortSignal`; `raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSignal): Promise<T>`. `ModelsRequestTransforms.transformHeaders?: (headers: ProviderHeaders) => ProviderHeaders | Promise<ProviderHeaders>` is intersected into raw/simple/deferred collection request option types (ice:packages/ai/src/models.ts:78-86)."
+    },
+    {
+      "id": "AI-019",
+      "source_append": "Exported symbols: `calculateCost` (ice:packages/ai/src/models.ts:878).\nExported symbols: `KnownApi`, `KnownProvider`, `GrammarFormat`, `GrammarVariants`, `ModelCostRates`, `ModelCostTier`, `ModelCost` (ice:packages/ai/src/types.ts:16; ice:packages/ai/src/types.ts:34; ice:packages/ai/src/types.ts:488; ice:packages/ai/src/types.ts:490; ice:packages/ai/src/types.ts:791; ice:packages/ai/src/types.ts:798; ice:packages/ai/src/types.ts:803).",
+      "mechanism_append": "The exported `calculateCost(model, usage)` selects rates using total billable input `usage.input + usage.cacheRead + usage.cacheWrite`. It chooses the largest tier threshold strictly exceeded, starting matchedThreshold at -1. It mutates and returns the existing `usage.cost`: input/output/cacheRead are their counts times the respective per-million rates; cacheWrite is `(rates.cacheWrite * (usage.cacheWrite - (usage.cacheWrite1h ?? 0)) + rates.input * 2 * (usage.cacheWrite1h ?? 0)) / 1_000_000`; total sums the four resulting components. There is no validation or clamping of malformed numeric counters in this helper (ice:packages/ai/src/models.ts:878-897).",
+      "rust_append": "The native `calculate_cost` preserves the same strict highest-threshold rule and ordinary cost arithmetic, returning a new UsageCost instead of mutating the input. It clamps long cache-write count to at least zero and short cache writes to at least zero, unlike TS for inconsistent/negative counters. Retain this explicit native defensive behavior unless a malformed-input compatibility requirement is chosen; the ordinary valid-input calculation is already implemented (rust:crates/ice-ai/src/providers/anthropic/cost.rs:17-48)."
+    },
+    {
+      "id": "AUTH-033",
+      "source_append": "Exported symbols: `ChatTemplateKwargValue`, `OpenAIResponsesCompat`, `AnthropicMessagesCompat`, `BedrockCompat`, `OpenRouterRouting`, `VercelGatewayRouting` (ice:packages/ai/src/types.ts:83; ice:packages/ai/src/types.ts:625; ice:packages/ai/src/types.ts:643; ice:packages/ai/src/types.ts:699; ice:packages/ai/src/types.ts:710; ice:packages/ai/src/types.ts:784).",
+      "interfaces_append": "The public runtime type names are `ChatTemplateKwargValue`, `OpenAIResponsesCompat`, `AnthropicMessagesCompat`, `BedrockCompat`, `OpenRouterRouting`, and `VercelGatewayRouting`. The Bedrock runtime record has only optional `supportsStrictMode?: boolean`; it is not a separately tagged arm of the models.json compatibility union. The other runtime-only declaration differences, including supportsExplicitPromptCacheMode, remain as documented above (ice:packages/ai/src/types.ts:83-91; ice:packages/ai/src/types.ts:625-789)."
+    },
+    {
+      "id": "AUTH-014",
+      "source_append": "Exported symbols: `RADIUS_GATEWAY_ORIGIN`, `RADIUS_OAUTH_CLIENT_ID` (ice:packages/ai/src/utils/legacy-protocol.ts:2; ice:packages/ai/src/utils/legacy-protocol.ts:3)."
+    },
+    {
+      "id": "AI-018",
+      "source_append": "Exported symbols: `ContinuationRequestContextMode`, `ContinuationRequestDiag`, `ContinuationResponseDiag`, `ContinuationErrorDiag`, `isContinuationDiagEnabled`, `hashOpaqueId`, `nextContinuationRequestSequence`, `rememberSuccessfulResponseId`, `forgetSuccessfulResponseId`, `isStalePreviousResponseError`, `lastSuccessfulResponseIdHash`, `classifyRequestContextMode`, `logContinuationResponse`, `logContinuationError`, `extractProviderErrorFields`, `inputItemCount`, `resetContinuationDiagForTests` (ice:packages/ai/src/utils/provider-continuation-diag.ts:5; ice:packages/ai/src/utils/provider-continuation-diag.ts:7; ice:packages/ai/src/utils/provider-continuation-diag.ts:31; ice:packages/ai/src/utils/provider-continuation-diag.ts:45; ice:packages/ai/src/utils/provider-continuation-diag.ts:96; ice:packages/ai/src/utils/provider-continuation-diag.ts:104; ice:packages/ai/src/utils/provider-continuation-diag.ts:113; ice:packages/ai/src/utils/provider-continuation-diag.ts:118; ice:packages/ai/src/utils/provider-continuation-diag.ts:123; ice:packages/ai/src/utils/provider-continuation-diag.ts:128; ice:packages/ai/src/utils/provider-continuation-diag.ts:142; ice:packages/ai/src/utils/provider-continuation-diag.ts:147; ice:packages/ai/src/utils/provider-continuation-diag.ts:192; ice:packages/ai/src/utils/provider-continuation-diag.ts:196; ice:packages/ai/src/utils/provider-continuation-diag.ts:200; ice:packages/ai/src/utils/provider-continuation-diag.ts:236; ice:packages/ai/src/utils/provider-continuation-diag.ts:242)."
+    },
+    {
+      "id": "AI-014",
+      "source_append": "Exported symbols: `sanitizeSurrogates` (ice:packages/ai/src/utils/sanitize-unicode.ts:21).",
+      "mechanism_append": "Before wire serialization, `sanitizeSurrogates(text)` removes unpaired UTF-16 high surrogates and unpaired low surrogates using a non-Unicode global regular expression; it preserves valid surrogate pairs and all other text. This helper is a request-text projection and does not rewrite persisted messages (ice:packages/ai/src/utils/sanitize-unicode.ts:21-24).",
+      "rust_append": "Native `String` already excludes lone surrogate code points. Anthropic therefore implements its named sanitizer as a pass-through, while the image adapter's scalar filter cannot encounter a surrogate in a valid `&str`; these are representation differences, not a missing native text-cleaning feature (rust:crates/ice-ai/src/providers/anthropic/build_params.rs:704-709; rust:crates/ice-ai/src/images.rs:426-433)."
+    },
+    {
+      "id": "MISC-043",
+      "source_append": "Exported symbols: `contentText` (ice:packages/ai/src/utils/text.ts:6)."
+    },
+    {
+      "id": "AI-012",
+      "source_append": "Exported symbols: `StringEnum` (ice:packages/ai/src/utils/typebox-helpers.ts:14).\nExported symbols: `validateToolCall` (ice:packages/ai/src/utils/validation.ts:270).",
+      "mechanism_append": "`validateToolCall` chooses the first tool whose name exactly equals `toolCall.name`, throws `Tool \"<name>\" not found` when absent, and then calls `validateToolArguments`. `StringEnum(values, options?)` constructs a Type.Unsafe primitive schema `{ type: 'string', enum: values }`; it preserves the supplied value array and includes description/default only when each is truthy, so an empty-string default is omitted. It performs no deduplication or separate value validation. This is schema construction, not a bypass of the subsequent execution validator (ice:packages/ai/src/utils/validation.ts:270-275; ice:packages/ai/src/utils/typebox-helpers.ts:14-23)."
+    }
+  ],
+  "dispositions": [
+    {
+      "symbol": "anthropicMessagesApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/anthropic-messages.lazy.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The zero-argument factory returns the already specified lazy stream adapter for the Anthropic implementation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/anthropic-messages.lazy.ts",
+        "sha256": "5d1925e8b2664c91a11ef4c73d8c400b4075597c8c4e8beb085f8e4ba137fc08",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AnthropicEffort",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/anthropic-messages.ts:172",
+      "covering_entries": [
+        "AI-021"
+      ],
+      "entry_ids": [
+        "AI-021"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The two unions are the effort and thinking-display vocabulary explicitly implemented by this request entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/anthropic-messages.ts",
+        "sha256": "cc77875a3585aa8a9984e1851daa31a0f65bb8dbc7334a3c0fa7b1493f66a123",
+        "reviewed_range": [
+          171,
+          192
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AnthropicThinkingDisplay",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/anthropic-messages.ts:174",
+      "covering_entries": [
+        "AI-021"
+      ],
+      "entry_ids": [
+        "AI-021"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The two unions are the effort and thinking-display vocabulary explicitly implemented by this request entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/anthropic-messages.ts",
+        "sha256": "cc77875a3585aa8a9984e1851daa31a0f65bb8dbc7334a3c0fa7b1493f66a123",
+        "reviewed_range": [
+          171,
+          192
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "azureOpenAIResponsesApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/azure-openai-responses.lazy.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The factory delegates both stream forms to the documented lazy API loader.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/azure-openai-responses.lazy.ts",
+        "sha256": "de36a9a2749ac4cb45a5449356bceadb676d1a16e6d46f4fc5522a3f700aa2fd",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "bedrockConverseStreamApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts:26",
+      "covering_entries": [
+        "AI-030"
+      ],
+      "entry_ids": [
+        "AI-030"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The Bedrock-specific lazy loader chooses an injected module before Node-only dynamic loading, as described by the transport entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+        "sha256": "3ee8a1b2a2cd58927bee18ab5b4150401da810e9d5f4595822b3b10ded35de86",
+        "reviewed_range": [
+          25,
+          31
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "BedrockThinkingDisplay",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/bedrock-converse-stream.ts:69",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-031"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The summarized/omitted display union is consumed by this entry's Claude reasoning payload.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/bedrock-converse-stream.ts",
+        "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+        "reviewed_range": [
+          68,
+          117
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CLOUDFLARE_WORKERS_AI_BASE_URL",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/cloudflare.ts:2",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-013"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The four endpoint templates are materialized by the documented Cloudflare scoped-environment wrapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/cloudflare.ts",
+        "sha256": "6333a0f78e8cd6b75e408fdeb594d5e1e02605206247c5a921c2f56dd99cf96a",
+        "reviewed_range": [
+          1,
+          16
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CLOUDFLARE_AI_GATEWAY_COMPAT_BASE_URL",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/cloudflare.ts:6",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-013"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The four endpoint templates are materialized by the documented Cloudflare scoped-environment wrapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/cloudflare.ts",
+        "sha256": "6333a0f78e8cd6b75e408fdeb594d5e1e02605206247c5a921c2f56dd99cf96a",
+        "reviewed_range": [
+          1,
+          16
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CLOUDFLARE_AI_GATEWAY_OPENAI_BASE_URL",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/cloudflare.ts:10",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-013"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The four endpoint templates are materialized by the documented Cloudflare scoped-environment wrapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/cloudflare.ts",
+        "sha256": "6333a0f78e8cd6b75e408fdeb594d5e1e02605206247c5a921c2f56dd99cf96a",
+        "reviewed_range": [
+          1,
+          16
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CLOUDFLARE_AI_GATEWAY_ANTHROPIC_BASE_URL",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/cloudflare.ts:14",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-013"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The four endpoint templates are materialized by the documented Cloudflare scoped-environment wrapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/cloudflare.ts",
+        "sha256": "6333a0f78e8cd6b75e408fdeb594d5e1e02605206247c5a921c2f56dd99cf96a",
+        "reviewed_range": [
+          1,
+          16
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GrammarConstrainedSampling",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/constrained-sampling.ts:9",
+      "covering_entries": [
+        "AI-013"
+      ],
+      "entry_ids": [
+        "AI-013"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The resolved grammar record carries the format, definition and one string input property described by the constraint resolver.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/constrained-sampling.ts",
+        "sha256": "a3b93e37aae53bb24b171c49101eb0c1f0d69f6cb670ec6cf9e3b6ef4bf28487",
+        "reviewed_range": [
+          8,
+          27
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "inferCopilotInitiator",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/github-copilot-headers.ts:5",
+      "covering_entries": [
+        "AI-022"
+      ],
+      "entry_ids": [
+        "AI-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The header helpers derive request initiator and vision presence for the already documented Copilot identity arm.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/github-copilot-headers.ts",
+        "sha256": "32d154965223d746140957ca6754f69955f1c631ed5e8445dcf2be11bb4b5180",
+        "reviewed_range": [
+          4,
+          38
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "hasCopilotVisionInput",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/github-copilot-headers.ts:11",
+      "covering_entries": [
+        "AI-022"
+      ],
+      "entry_ids": [
+        "AI-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The header helpers derive request initiator and vision presence for the already documented Copilot identity arm.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/github-copilot-headers.ts",
+        "sha256": "32d154965223d746140957ca6754f69955f1c631ed5e8445dcf2be11bb4b5180",
+        "reviewed_range": [
+          4,
+          38
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "buildCopilotDynamicHeaders",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/github-copilot-headers.ts:23",
+      "covering_entries": [
+        "AI-022"
+      ],
+      "entry_ids": [
+        "AI-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The header helpers derive request initiator and vision presence for the already documented Copilot identity arm.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/github-copilot-headers.ts",
+        "sha256": "32d154965223d746140957ca6754f69955f1c631ed5e8445dcf2be11bb4b5180",
+        "reviewed_range": [
+          4,
+          38
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "googleGenerativeAIApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-generative-ai.lazy.ts:4",
+      "covering_entries": [
+        "AI-034"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This lazy wrapper imports the Gemini implementation and has no separate transport behavior beyond API-003's loader contract.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-generative-ai.lazy.ts",
+        "sha256": "ba7700f2e44838fb19da46f866f47f35f4e10f5068800be1ea698e9e95e1e1ce",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isThinkingPart",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-shared.ts:35",
+      "covering_entries": [
+        "AI-037",
+        "AI-039"
+      ],
+      "entry_ids": [
+        "AI-039"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These streaming classification, signature-retention and stop helpers implement the existing common Google event mapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-shared.ts",
+        "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+        "reviewed_range": [
+          34,
+          66
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "retainThoughtSignature",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-shared.ts:48",
+      "covering_entries": [
+        "AI-037",
+        "AI-039"
+      ],
+      "entry_ids": [
+        "AI-039"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These streaming classification, signature-retention and stop helpers implement the existing common Google event mapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-shared.ts",
+        "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+        "reviewed_range": [
+          34,
+          66
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "supportsGoogleStrictToolSampling",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-shared.ts:304",
+      "covering_entries": [
+        "AI-038"
+      ],
+      "entry_ids": [
+        "AI-038"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The Gemini major-version predicate gates this entry's strict function-call mode.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-shared.ts",
+        "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+        "reviewed_range": [
+          303,
+          328
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "mapToolChoice",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-shared.ts:310",
+      "covering_entries": [
+        "AI-038"
+      ],
+      "entry_ids": [
+        "AI-038"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The string-to-AUTO/NONE/ANY mapping implements this entry's tool-choice vocabulary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-shared.ts",
+        "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+        "reviewed_range": [
+          303,
+          328
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "mapStopReason",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-shared.ts:341",
+      "covering_entries": [
+        "AI-039"
+      ],
+      "entry_ids": [
+        "AI-039"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These streaming classification, signature-retention and stop helpers implement the existing common Google event mapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-shared.ts",
+        "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+        "reviewed_range": [
+          340,
+          359
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "mapStopReasonString",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-shared.ts:373",
+      "covering_entries": [
+        "AI-039"
+      ],
+      "entry_ids": [
+        "AI-039"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These streaming classification, signature-retention and stop helpers implement the existing common Google event mapper.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+        "path": "packages/ai/src/api/google-shared.ts",
+        "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+        "reviewed_range": [
+          372,
+          391
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "googleVertexApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/google-vertex.lazy.ts:4",
+      "covering_entries": [
+        "AI-035"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The wrapper delegates to the documented lazy API factory; Vertex authentication remains AI-035.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/google-vertex.lazy.ts",
+        "sha256": "891f0e07eaaa1bb1df97f0a2d8f067df6acbab50078242108d93b96a710c4712",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "iceMessagesApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/ice-messages.lazy.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The zero-argument factory exposes the documented ICE messages implementation through lazyApi.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/ice-messages.lazy.ts",
+        "sha256": "7003f7b27ec78b0d498ae2a3b8de681231163c41a088f859c63c6d3a87063469",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "IceMessagesEvent",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/ice-messages.ts:53",
+      "covering_entries": [
+        "AI-029"
+      ],
+      "entry_ids": [
+        "AI-029"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The wire-event union and response-error class encode the neutral gateway events and structured HTTP error diagnostics already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/ice-messages.ts",
+        "sha256": "23770ef5d114e4c6b99287c72cff7153750a46da6be6a37d8c66567939c694d3",
+        "reviewed_range": [
+          52,
+          71
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "IceMessagesResponseError",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/ice-messages.ts:95",
+      "covering_entries": [
+        "AI-029"
+      ],
+      "entry_ids": [
+        "AI-029"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The wire-event union and response-error class encode the neutral gateway events and structured HTTP error diagnostics already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/ice-messages.ts",
+        "sha256": "23770ef5d114e4c6b99287c72cff7153750a46da6be6a37d8c66567939c694d3",
+        "reviewed_range": [
+          94,
+          113
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "LazyApiCapabilities",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/lazy.ts:68",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The two optional booleans control whether deferred methods are advertised before module loading.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/lazy.ts",
+        "sha256": "ff4ce241fb72cdd1900d56865a6295815d8d073b321c2ed20435639ed74bf39a",
+        "reviewed_range": [
+          67,
+          86
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "mistralConversationsApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/mistral-conversations.lazy.ts:4",
+      "covering_entries": [
+        "AI-040"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The lazy factory imports the Mistral API implementation; its request dialect remains AI-040.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/mistral-conversations.lazy.ts",
+        "sha256": "74267bc430c0c2562d166e4ae9d05966634e91b226bc564010b2b199db52dd86",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "openAICodexResponsesApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/openai-codex-responses.lazy.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The factory exposes the Codex implementation through the shared lazy loader.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/openai-codex-responses.lazy.ts",
+        "sha256": "89e1883f937df0992b852970f574b5e1fc2a69fefaacc89628cd1d924a8af63f",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OpenAICodexWebSocketDebugStats",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/openai-codex-responses.ts:881",
+      "covering_entries": [
+        "AI-055"
+      ],
+      "entry_ids": [
+        "AI-055"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "This optional-field counter record is the WebSocket debugging state described by the socket lifecycle entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/openai-codex-responses.ts",
+        "sha256": "654cc286cc96d58de703a6d0221fa0f84e5a43e630fadd11d298572f6ff59ef5",
+        "reviewed_range": [
+          880,
+          899
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "openAICompletionsApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/openai-completions.lazy.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The factory exposes Completions stream and streamSimple through lazyApi.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/openai-completions.lazy.ts",
+        "sha256": "a1defe07f6d7bd37de3933164cc88cfeb2d46cf390d0bbb52c85b280cc58d193",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ConvertCompletionsMessagesOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/openai-completions.ts:146",
+      "covering_entries": [
+        "AI-025"
+      ],
+      "entry_ids": [
+        "AI-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The conversion-options record supplies the optional grammar-tool input-property lookup used during request projection.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/openai-completions.ts",
+        "sha256": "02be1155ed483bf695482658d264d283843180453a388c4b062f6cc39441d818",
+        "reviewed_range": [
+          145,
+          164
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OPENAI_PROMPT_CACHE_KEY_MAX_LENGTH",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/openai-prompt-cache.ts:1",
+      "covering_entries": [
+        "AI-027"
+      ],
+      "entry_ids": [
+        "AI-027"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The exact 64-code-point key limit is already specified by the Codex cache identity entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+        "path": "packages/ai/src/api/openai-prompt-cache.ts",
+        "sha256": "78727b9b42d5c5cdc47d17f44d532cdf951cbee3b158cacfb3e640d8f792e8a4",
+        "reviewed_range": [
+          1,
+          9
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OpenAIResponsesStreamOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/openai-responses-shared.ts:105",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-053"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the existing Responses stream processor's service-tier/grammar callback record; its full short signature is added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/openai-responses-shared.ts",
+        "sha256": "7864efb0fd637d114ccb6576ae3cd1a87f35f44906e2fdeeb92159c3315fd24a",
+        "reviewed_range": [
+          104,
+          153
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ConvertResponsesMessagesOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/openai-responses-shared.ts:118",
+      "covering_entries": [
+        "AI-054"
+      ],
+      "entry_ids": [
+        "AI-054"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The message/tool conversion option interfaces are the named records already enumerated by the Responses replay entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/openai-responses-shared.ts",
+        "sha256": "7864efb0fd637d114ccb6576ae3cd1a87f35f44906e2fdeeb92159c3315fd24a",
+        "reviewed_range": [
+          104,
+          153
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ConvertResponsesToolsOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/api/openai-responses-shared.ts:125",
+      "covering_entries": [
+        "AI-054"
+      ],
+      "entry_ids": [
+        "AI-054"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The message/tool conversion option interfaces are the named records already enumerated by the Responses replay entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/openai-responses-shared.ts",
+        "sha256": "7864efb0fd637d114ccb6576ae3cd1a87f35f44906e2fdeeb92159c3315fd24a",
+        "reviewed_range": [
+          104,
+          153
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "openAIResponsesApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/openai-responses.lazy.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The factory exposes Responses stream and streamSimple through lazyApi.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/openai-responses.lazy.ts",
+        "sha256": "ea6bf6019f6b2f949bce4ad248ec1e0fa25dd058a009cf70fb5eb0e99b4c94db",
+        "reviewed_range": [
+          3,
+          5
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "openrouterImagesApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/openrouter-images.lazy.ts:3",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-057"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The image factory dynamically imports generateImages per call through the module cache; it returns a promise, not an assistant event stream.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/openrouter-images.lazy.ts",
+        "sha256": "04c18f8c065779c2f705850e593cee4e0d6207a4121473540a223fc83026a8f4",
+        "reviewed_range": [
+          2,
+          11
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "clampMaxTokensToContext",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/simple-options.ts:15",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The context cap and thinking-budget helpers implement the entry's exact hard-output and reserved-headroom rules.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/simple-options.ts",
+        "sha256": "aa4616f753b9e5481986850686fded0e77ea4a75da7a96c274dca63754893b38",
+        "reviewed_range": [
+          14,
+          33
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "adjustMaxTokensForThinking",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/api/simple-options.ts:96",
+      "covering_entries": [
+        "AI-005",
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The context cap and thinking-budget helpers implement the entry's exact hard-output and reserved-headroom rules.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/api/simple-options.ts",
+        "sha256": "aa4616f753b9e5481986850686fded0e77ea4a75da7a96c274dca63754893b38",
+        "reviewed_range": [
+          95,
+          114
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ApiStreamFunction",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat.ts:71",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "These function types, registry enumeration and Faux registration wrapper form the existing legacy adapter registry boundary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat.ts",
+        "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+        "reviewed_range": [
+          70,
+          125
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ApiStreamSimpleFunction",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat.ts:77",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "These function types, registry enumeration and Faux registration wrapper form the existing legacy adapter registry boundary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat.ts",
+        "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+        "reviewed_range": [
+          70,
+          125
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ApiProvider",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat.ts:83",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These function types, registry enumeration and Faux registration wrapper form the existing legacy adapter registry boundary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat.ts",
+        "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+        "reviewed_range": [
+          70,
+          125
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "getApiProviders",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/compat.ts:144",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These function types, registry enumeration and Faux registration wrapper form the existing legacy adapter registry boundary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat.ts",
+        "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+        "reviewed_range": [
+          143,
+          178
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "registerFauxProvider",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/compat.ts:160",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These function types, registry enumeration and Faux registration wrapper form the existing legacy adapter registry boundary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat.ts",
+        "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+        "reviewed_range": [
+          143,
+          178
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OAuthPrompt",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:4",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The legacy extension prompt/link/device/select records are type-only compatibility counterparts of the login interaction contract; exact shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat/extension-oauth-types.ts",
+        "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+        "reviewed_range": [
+          3,
+          46
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OAuthAuthInfo",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:11",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The legacy extension prompt/link/device/select records are type-only compatibility counterparts of the login interaction contract; exact shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat/extension-oauth-types.ts",
+        "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+        "reviewed_range": [
+          3,
+          46
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OAuthDeviceCodeInfo",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:17",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The legacy extension prompt/link/device/select records are type-only compatibility counterparts of the login interaction contract; exact shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat/extension-oauth-types.ts",
+        "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+        "reviewed_range": [
+          3,
+          46
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OAuthSelectOption",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:24",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The legacy extension prompt/link/device/select records are type-only compatibility counterparts of the login interaction contract; exact shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat/extension-oauth-types.ts",
+        "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+        "reviewed_range": [
+          3,
+          46
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OAuthSelectPrompt",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:29",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The legacy extension prompt/link/device/select records are type-only compatibility counterparts of the login interaction contract; exact shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/compat/extension-oauth-types.ts",
+        "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+        "reviewed_range": [
+          3,
+          46
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesApiFunction",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/images-api-registry.ts:3",
+      "covering_entries": [
+        "AI-015"
+      ],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These callback/provider records describe the existing API-keyed image dispatch layer.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/images-api-registry.ts",
+        "sha256": "604636b0a4b59d1798d79aad48a1dfdd96ee79e3f16b16cdc54dbd1b81c44ffe",
+        "reviewed_range": [
+          2,
+          27
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesApiProvider",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/images-api-registry.ts:9",
+      "covering_entries": [
+        "AI-015"
+      ],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These callback/provider records describe the existing API-keyed image dispatch layer.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/images-api-registry.ts",
+        "sha256": "604636b0a4b59d1798d79aad48a1dfdd96ee79e3f16b16cdc54dbd1b81c44ffe",
+        "reviewed_range": [
+          2,
+          27
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CreateImagesProviderOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/images-models.ts:231",
+      "covering_entries": [
+        "AI-015"
+      ],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The factory configuration is the source of the initial models, auth, refresh hook and API values described by the image collection.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/images-models.ts",
+        "sha256": "9a3a2bf47263e577925850b182d2b508d0bbf0e1437124b1240bff95b8deeb3a",
+        "reviewed_range": [
+          230,
+          249
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamAnthropic",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:29",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleAnthropic",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:34",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamAzureOpenAIResponses",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:40",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleAzureOpenAIResponses",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:45",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamGoogle",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:51",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleGoogle",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:53",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamGoogleVertex",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:59",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleGoogleVertex",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:61",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamMistral",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:67",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleMistral",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:72",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamOpenAICodexResponses",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:78",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleOpenAICodexResponses",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:83",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamOpenAICompletions",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:89",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleOpenAICompletions",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:94",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamOpenAIResponses",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:100",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "streamSimpleOpenAIResponses",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/legacy-api-aliases.ts:105",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "Each symbol is a deprecated typed alias to the corresponding already specified lazy stream/streamSimple callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/legacy-api-aliases.ts",
+        "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+        "reviewed_range": [
+          28,
+          109
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsRefreshOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:64",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsRefreshResult",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:73",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsRequestTransforms",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:78",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsApiStreamOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:83",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsSimpleStreamOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:84",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsDeferredFetchOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:85",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelsDeferredCancelOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:86",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          63,
+          104
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CreateModelsOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:232",
+      "covering_entries": [
+        "AI-002"
+      ],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These named options/results and request-header-transform intersections are the collection's already documented refresh and dispatch contracts.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          231,
+          250
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CreateProviderOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/models.ts:739",
+      "covering_entries": [
+        "AI-002",
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The single-or-map API selector is the documented createProvider dispatch boundary.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          738,
+          757
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "hasApi",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/models.ts:874",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This pure type guard checks model.api===api; it adds no second dispatch mechanism.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          873,
+          926
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "calculateCost",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/models.ts:878",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The cost-schema owner gains the exact TS mutation/formula and the source-verified native returned-value/clamping difference.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+        "path": "packages/ai/src/models.ts",
+        "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+        "reviewed_range": [
+          873,
+          926
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionResourceCleanup",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/session-resources.ts:1",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-055"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The callback accepts an optional session ID and participates in the exact synchronous aggregate-error cleanup already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/session-resources.ts",
+        "sha256": "3e6d76f038d6b7fe515ede0b6650d41a7df16eb4b3a9f1aa91c9de329ff092e2",
+        "reviewed_range": [
+          1,
+          25
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "KnownApi",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:16",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "KnownImagesApi",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:30",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesApi",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:32",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "KnownProvider",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:34",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "KnownImagesProvider",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:76",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesProviderId",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:78",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ChatTemplateKwargValue",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:83",
+      "covering_entries": [
+        "AI-005",
+        "AUTH-007"
+      ],
+      "entry_ids": [
+        "AUTH-033"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the public runtime compatibility/routing declaration corresponding to the entry's exact configuration vocabulary; runtime-only distinctions remain explicit.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ServiceTier",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:106",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "FetchFunction",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:111",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionAffinityFormat",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:112",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ProviderResponse",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:114",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ProviderRequestOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:120",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          15,
+          138
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ProviderStreamOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:233",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          232,
+          286
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "DeferredFetchOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:235",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          232,
+          286
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "DeferredCancelOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:244",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          232,
+          286
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ApiOptionsMap",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:251",
+      "covering_entries": [
+        "AI-013"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The conditional mapping chooses full per-API option types or the generic custom-API fallback; this is dispatch typing, not a grammar contract.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          232,
+          286
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ApiStreamOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:268",
+      "covering_entries": [
+        "AI-013"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The conditional mapping chooses full per-API option types or the generic custom-API fallback; this is dispatch typing, not a grammar contract.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          232,
+          286
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ProviderImages",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:297",
+      "covering_entries": [
+        "AI-013"
+      ],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          296,
+          331
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ProviderImagesOptions",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:313",
+      "covering_entries": [
+        "AI-013"
+      ],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          296,
+          331
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "StreamFunction",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:334",
+      "covering_entries": [
+        "AI-006"
+      ],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The public request/response or typed callback declaration is part of the entry's common adapter envelope.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          333,
+          388
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesFunction",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:340",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          333,
+          388
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesInputContent",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:464",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          463,
+          538
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesOutputContent",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:465",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          463,
+          538
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ImagesStopReason",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:471",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-015"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is an image API/identity/content/callback type; it belongs to the image collection rather than the QA's broad grammar citation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          463,
+          538
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GrammarFormat",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:488",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          463,
+          538
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GrammarVariants",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:490",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          463,
+          538
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OpenAIResponsesCompat",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:625",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-033"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the public runtime compatibility/routing declaration corresponding to the entry's exact configuration vocabulary; runtime-only distinctions remain explicit.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          624,
+          691
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AnthropicMessagesCompat",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:643",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-033"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the public runtime compatibility/routing declaration corresponding to the entry's exact configuration vocabulary; runtime-only distinctions remain explicit.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          624,
+          691
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "BedrockCompat",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:699",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-033"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the public runtime compatibility/routing declaration corresponding to the entry's exact configuration vocabulary; runtime-only distinctions remain explicit.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          698,
+          758
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "OpenRouterRouting",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:710",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-033"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the public runtime compatibility/routing declaration corresponding to the entry's exact configuration vocabulary; runtime-only distinctions remain explicit.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          698,
+          758
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "VercelGatewayRouting",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:784",
+      "covering_entries": [],
+      "entry_ids": [
+        "AUTH-033"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This is the public runtime compatibility/routing declaration corresponding to the entry's exact configuration vocabulary; runtime-only distinctions remain explicit.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          783,
+          848
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelCostRates",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:791",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          783,
+          848
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelCostTier",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:798",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          783,
+          848
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ModelCost",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/types.ts:803",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This type belongs to the reviewed shared data contract; naming it in field 2 makes the existing exact schema traceable.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/types.ts",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+        "reviewed_range": [
+          783,
+          848
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CombinedAbortSignal",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/utils/abort-signals.ts:1",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The collection's caller-plus-generation cancellation uses this first-abort-reason combiner; exact zero/one/multiple signal cases are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/abort-signals.ts",
+        "sha256": "320d17e2354c4e66afccf48337d79d1cdb78bc3c42a6f5be993702175711f4ab",
+        "reviewed_range": [
+          1,
+          42
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "combineAbortSignals",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/abort-signals.ts:6",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The collection's caller-plus-generation cancellation uses this first-abort-reason combiner; exact zero/one/multiple signal cases are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/abort-signals.ts",
+        "sha256": "320d17e2354c4e66afccf48337d79d1cdb78bc3c42a6f5be993702175711f4ab",
+        "reviewed_range": [
+          1,
+          42
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "raceWithAbortSignal",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/abort.ts:17",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-002"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The publication waiter uses an abort race that observes the abandoned promise and does not cancel the underlying work; detailed settlement behavior is added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/abort.ts",
+        "sha256": "e81dc16de331e82d7f15759b27e38c7d0a3d28955693e0cf157dd52dadea7035",
+        "reviewed_range": [
+          16,
+          51
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "createAssistantMessageEventStream",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/event-stream.ts:86",
+      "covering_entries": [
+        "AI-003"
+      ],
+      "entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The factory allocates the same AssistantMessageEventStream whose setup/termination contract is already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/event-stream.ts",
+        "sha256": "55ddd6e6e4299f377fc3f8876ea9d8073f0051d569f1629f8817ec78e28d64e6",
+        "reviewed_range": [
+          85,
+          89
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "headersToRecord",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/headers.ts:3",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-006"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The helper creates the plain header record supplied to the common HTTP-response callback.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/headers.ts",
+        "sha256": "db52ff4621bef3e5a6b6ace56fd0ff09063ae840517c16b1690c60f89f85e106",
+        "reviewed_range": [
+          2,
+          19
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "RADIUS_GATEWAY_ORIGIN",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/legacy-protocol.ts:2",
+      "covering_entries": [
+        "AUTH-014"
+      ],
+      "entry_ids": [
+        "AUTH-014"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These are the already specified external Radius gateway/client identities, not product branding.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/legacy-protocol.ts",
+        "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+        "reviewed_range": [
+          1,
+          4
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "RADIUS_OAUTH_CLIENT_ID",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/legacy-protocol.ts:3",
+      "covering_entries": [
+        "AUTH-014"
+      ],
+      "entry_ids": [
+        "AUTH-014"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "These are the already specified external Radius gateway/client identities, not product branding.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/legacy-protocol.ts",
+        "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+        "reviewed_range": [
+          1,
+          4
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ContinuationRequestContextMode",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:5",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          4,
+          25
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ContinuationRequestDiag",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:7",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          4,
+          25
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ContinuationResponseDiag",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:31",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          30,
+          63
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ContinuationErrorDiag",
+      "kind": "type",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:45",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          30,
+          63
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isContinuationDiagEnabled",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:96",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "hashOpaqueId",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:104",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "nextContinuationRequestSequence",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:113",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "rememberSuccessfulResponseId",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:118",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "forgetSuccessfulResponseId",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:123",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isStalePreviousResponseError",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:128",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "lastSuccessfulResponseIdHash",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:142",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "classifyRequestContextMode",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:147",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          95,
+          165
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "logContinuationResponse",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:192",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          191,
+          218
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "logContinuationError",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:196",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          191,
+          218
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "extractProviderErrorFields",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:200",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          191,
+          218
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "inputItemCount",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:236",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          235,
+          246
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "resetContinuationDiagForTests",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:242",
+      "covering_entries": [
+        "AI-018"
+      ],
+      "entry_ids": [
+        "AI-018"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The records and helpers match the entry's sequence state, selective hashes, context classification, enable policy and JSONL diagnostics.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+        "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+        "reviewed_range": [
+          235,
+          246
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "sanitizeSurrogates",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/sanitize-unicode.ts:21",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-014"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The request sanitizer removes unpaired UTF-16 surrogates; its typed-Rust difference is documented without inventing a missing native Unicode routine.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/sanitize-unicode.ts",
+        "sha256": "f8ef2c957f9f13a77df45ebf344f1b852dfe8f2e3d164d815127ea7290c12e22",
+        "reviewed_range": [
+          20,
+          26
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "contentText",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/text.ts:6",
+      "covering_entries": [
+        "MISC-043"
+      ],
+      "entry_ids": [
+        "MISC-043"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The existing evaluation transcript entry already describes joining only text blocks; the helper name is added to field 2.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+        "path": "packages/ai/src/utils/text.ts",
+        "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+        "reviewed_range": [
+          5,
+          13
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "StringEnum",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/typebox-helpers.ts:14",
+      "covering_entries": [],
+      "entry_ids": [
+        "AI-012"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This helper builds a primitive string-enum schema consumed by the schema-validation boundary; exact optional-field behavior is added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-40.json",
+        "path": "packages/ai/src/utils/typebox-helpers.ts",
+        "sha256": "caf756258ce20c793dc8002cb8130a8efce18a7b5262ba0c54832b96f5a76e9f",
+        "reviewed_range": [
+          13,
+          25
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "validateToolCall",
+      "kind": "runtime",
+      "ts": "ice:packages/ai/src/utils/validation.ts:270",
+      "covering_entries": [
+        "AI-012"
+      ],
+      "entry_ids": [
+        "AI-012"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The wrapper resolves the first exact-name tool or throws, then delegates to the specified argument validator.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-40.json",
+        "path": "packages/ai/src/utils/validation.ts",
+        "sha256": "5a008e4649f269794b8070ad7d035738d6ab6ac7ba91a4beda6a98eae0e81de2",
+        "reviewed_range": [
+          269,
+          288
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    }
+  ],
+  "extra_source_reviews": [
+    {
+      "side": "ice",
+      "path": "packages/ai/src/utils/abort.ts",
+      "range": [
+        1,
+        51
+      ],
+      "sha256": "e81dc16de331e82d7f15759b27e38c7d0a3d28955693e0cf157dd52dadea7035"
+    },
+    {
+      "side": "rust",
+      "path": "crates/ice-ai/src/providers/anthropic/cost.rs",
+      "range": [
+        1,
+        70
+      ]
+    },
+    {
+      "side": "rust",
+      "path": "crates/ice-ai/src/providers/anthropic/build_params.rs",
+      "range": [
+        704,
+        709
+      ],
+      "method": "visible contextual search excerpt"
+    },
+    {
+      "side": "rust",
+      "path": "crates/ice-ai/src/images.rs",
+      "range": [
+        426,
+        433
+      ],
+      "method": "visible contextual search excerpt"
+    }
+  ],
+  "new_ids": []
+}

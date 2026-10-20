@@ -1,0 +1,528 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+isThemeColorToken,packages/coding-agent/src/modes/interactive/theme/theme.ts:232,crates/ice-tui/src/theme.rs:173,partial,TUI-001
+isThemeBgToken,packages/coding-agent/src/modes/interactive/theme/theme.ts:236,crates/ice-tui/src/theme.rs:173,partial,TUI-001
+Theme,packages/coding-agent/src/modes/interactive/theme/theme.ts:460,crates/ice-tui/src/theme.rs:242,partial,TUI-001
+getAvailableThemes,packages/coding-agent/src/modes/interactive/theme/theme.ts:622,crates/ice-tui/src/theme.rs:223,partial,TUI-003
+getAvailableThemesWithPaths,packages/coding-agent/src/modes/interactive/theme/theme.ts:631,crates/ice-tui/src/theme.rs:223,missing,TUI-003
+parseThemeJsonData,packages/coding-agent/src/modes/interactive/theme/theme.ts:734,crates/ice-tui/src/theme.rs:242,missing,TUI-001
+getThemeJsonData,packages/coding-agent/src/modes/interactive/theme/theme.ts:739,crates/ice-tui/src/theme.rs:242,missing,TUI-001
+createThemeFromData,packages/coding-agent/src/modes/interactive/theme/theme.ts:803,crates/ice-tui/src/theme.rs:242,missing,TUI-001
+loadThemeFromPath,packages/coding-agent/src/modes/interactive/theme/theme.ts:807,crates/ice-tui/src/theme.rs:343,missing,TUI-001
+getThemeByName,packages/coding-agent/src/modes/interactive/theme/theme.ts:822,crates/ice-tui/src/theme.rs:223,partial,TUI-003
+parseAutoThemeSetting,packages/coding-agent/src/modes/interactive/theme/theme.ts:832,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+resolveThemeSetting,packages/coding-agent/src/modes/interactive/theme/theme.ts:849,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+getThemeForRgbColor,packages/coding-agent/src/modes/interactive/theme/theme.ts:914,crates/ice-tui/src/theme.rs:343,missing,TUI-007
+detectTerminalBackgroundFromEnv,packages/coding-agent/src/modes/interactive/theme/theme.ts:918,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+detectTerminalBackgroundTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:939,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+detectTerminalThemeForAuto,packages/coding-agent/src/modes/interactive/theme/theme.ts:961,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+getDefaultTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:975,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+setRegisteredThemes,packages/coding-agent/src/modes/interactive/theme/theme.ts:1006,crates/ice-tui/src/theme.rs:343,missing,TUI-003
+initTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1016,crates/ice-tui/src/theme.rs:507,partial,TUI-003
+setTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1032,crates/ice-tui/src/theme.rs:343,partial,TUI-003
+setThemeInstance,packages/coding-agent/src/modes/interactive/theme/theme.ts:1055,crates/ice-tui/src/theme.rs:343,partial,TUI-003
+onThemeChange,packages/coding-agent/src/modes/interactive/theme/theme.ts:1064,crates/ice-tui/src/theme.rs:507,partial,TUI-003
+stopThemeWatcher,packages/coding-agent/src/modes/interactive/theme/theme.ts:1141,crates/ice-tui/src/theme.rs:343,missing,TUI-008
+getResolvedThemeColors,packages/coding-agent/src/modes/interactive/theme/theme.ts:1204,crates/ice-cli/src/export.rs:141,missing,TUI-004
+isLightTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1230,crates/ice-cli/src/export.rs:141,missing,TUI-004
+getThemeExportColors,packages/coding-agent/src/modes/interactive/theme/theme.ts:1239,crates/ice-cli/src/export.rs:141,missing,TUI-004
+highlightCode,packages/coding-agent/src/modes/interactive/theme/theme.ts:1320,crates/ice-tui/src/syntax_highlight.rs:212,partial,TUI-005
+getLanguageFromPath,packages/coding-agent/src/modes/interactive/theme/theme.ts:1344,crates/ice-tui/src/syntax_highlight.rs:15,partial,TUI-005
+getMarkdownTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1412,crates/ice-tui/src/markdown.rs:669,partial,TUI-005
+setInteractiveChromeThemeOverride,packages/coding-agent/src/modes/interactive/theme/theme.ts:1469,crates/ice-tui/src/theme.rs:343,partial,TUI-005
+getInteractiveScrollbarTrackStyle,packages/coding-agent/src/modes/interactive/theme/theme.ts:1473,crates/ice-tui/src/scroll_view.rs:459,partial,TUI-005
+getInteractiveScrollbarThumbStyle,packages/coding-agent/src/modes/interactive/theme/theme.ts:1477,crates/ice-tui/src/scroll_view.rs:459,partial,TUI-005
+getSelectListTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1481,crates/ice-tui/src/theme.rs:173,partial,TUI-005
+getEditorTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1494,crates/ice-tui/src/theme.rs:173,partial,TUI-005
+getSettingsListTheme,packages/coding-agent/src/modes/interactive/theme/theme.ts:1502,crates/ice-tui/src/theme.rs:173,partial,TUI-005
+getInteractiveChromeBorderStyle,packages/coding-agent/src/modes/interactive/theme/theme.ts:1518,crates/ice-tui/src/theme.rs:133,partial,TUI-005
+getInteractiveChromeBorderColor,packages/coding-agent/src/modes/interactive/theme/theme.ts:1524,crates/ice-tui/src/theme.rs:173,partial,TUI-005
+parseCustomColorToRgb,packages/coding-agent/src/modes/interactive/appearance/appearance-colors.ts:77,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+customForeground,packages/coding-agent/src/modes/interactive/appearance/appearance-colors.ts:84,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+customBackground,packages/coding-agent/src/modes/interactive/appearance/appearance-colors.ts:90,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+InteractiveAppearanceController,packages/coding-agent/src/modes/interactive/appearance/appearance-controller.ts:12,crates/ice-cli/src/interactive_tui/settings.rs:120,missing,TUI-024
+defaultTextPresentation,packages/coding-agent/src/modes/interactive/appearance/appearance-defaults.ts:22,crates/ice-tui/src/theme.rs:15,missing,TUI-009
+createDefaultAppearance,packages/coding-agent/src/modes/interactive/appearance/appearance-defaults.ts:45,crates/ice-tui/src/theme.rs:15,missing,TUI-009
+migrateAppearanceV1ToV2,packages/coding-agent/src/modes/interactive/appearance/appearance-migrate.ts:16,crates/ice-tui/src/theme.rs:15,missing,TUI-009
+migrateProfileV1ToV2,packages/coding-agent/src/modes/interactive/appearance/appearance-migrate.ts:80,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+mergeAppearancePartial,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:54,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+validateThemeSetting,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:74,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+listProfiles,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:104,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+readProfile,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:120,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+saveProfile,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:134,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+deleteProfile,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:166,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+renameProfile,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:176,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+duplicateProfile,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:192,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+applyProfileToAppearance,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:205,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+validateAppearancePartial,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:249,crates/ice-tui/src/theme.rs:343,missing,TUI-011
+importBundle,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:326,crates/ice-tui/src/theme.rs:499,missing,TUI-012
+exportBundle,packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:474,crates/ice-tui/src/theme.rs:499,missing,TUI-012
+resolveAppearanceColorFn,packages/coding-agent/src/modes/interactive/appearance/appearance-resolve.ts:18,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+resolveAppearanceColorDecoration,packages/coding-agent/src/modes/interactive/appearance/appearance-resolve.ts:50,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+parseAppearanceThemeSetting,packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:303,crates/ice-tui/src/theme.rs:15,missing,TUI-009
+serializeAppearanceThemeSetting,packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:316,crates/ice-tui/src/theme.rs:15,missing,TUI-009
+validateAppearance,packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts:419,crates/ice-tui/src/theme.rs:15,missing,TUI-009
+resolveAppearanceColor,packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts:1047,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+CustomizationDraftSession,packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:92,crates/ice-cli/src/interactive_tui/commands.rs:311,missing,TUI-016
+computeHighlightSpans,packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:102,crates/ice-tui/src/theme.rs:15,missing,TUI-017
+spanToDecoration,packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:145,crates/ice-tui/src/theme.rs:15,missing,TUI-017
+applyHighlightSpans,packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:152,crates/ice-tui/src/theme.rs:15,missing,TUI-017
+ProfileDraftSession,packages/coding-agent/src/modes/interactive/appearance/profile-draft-session.ts:20,crates/ice-tui/src/theme.rs:343,missing,TUI-015
+applyTextPresentation,packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:26,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+markdownThemeWithAppearance,packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:52,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+toolStateBackground,packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:82,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+statusIndicatorColors,packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:90,crates/ice-tui/src/theme.rs:173,partial,TUI-010
+ThemeDraftSession,packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:46,crates/ice-cli/src/interactive_tui/commands.rs:311,missing,TUI-014
+isCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:34,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+readCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:38,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+isValidThemeColorValue,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:50,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+saveCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:79,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+cloneTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:92,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+renameCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:114,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+deleteCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:129,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+setThemeTokenValue,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:139,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+resetThemeToken,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:154,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+exportCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:168,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+importCustomTheme,packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:177,crates/ice-tui/src/theme.rs:343,missing,TUI-013
+ThinkingVerbSelector,packages/coding-agent/src/modes/interactive/appearance/thinking-presentation.ts:4,crates/ice-tui/src/loader.rs:11,partial,TUI-018
+applyThinkingVerbFormat,packages/coding-agent/src/modes/interactive/appearance/thinking-presentation.ts:27,crates/ice-tui/src/loader.rs:11,partial,TUI-018
+getThinkingIndicatorFrames,packages/coding-agent/src/modes/interactive/appearance/thinking-presentation.ts:31,crates/ice-tui/src/loader.rs:11,partial,TUI-018
+styleThinkingBlockText,packages/coding-agent/src/modes/interactive/appearance/thinking-presentation.ts:42,crates/ice-tui/src/loader.rs:11,partial,TUI-018
+applyUserMessageFormat,packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:20,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+resolveUserMessagePresentation,packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:58,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+renderUserMessageBorder,packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:140,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+Bundled theme palette: alabaster,packages/coding-agent/src/modes/interactive/theme/alabaster.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: amethyst,packages/coding-agent/src/modes/interactive/theme/amethyst.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: anthracite,packages/coding-agent/src/modes/interactive/theme/anthracite.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: basalt,packages/coding-agent/src/modes/interactive/theme/basalt.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: birch,packages/coding-agent/src/modes/interactive/theme/birch.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-abyss,packages/coding-agent/src/modes/interactive/theme/dark-abyss.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-arctic,packages/coding-agent/src/modes/interactive/theme/dark-arctic.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-aurora,packages/coding-agent/src/modes/interactive/theme/dark-aurora.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-catppuccin,packages/coding-agent/src/modes/interactive/theme/dark-catppuccin.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-cavern,packages/coding-agent/src/modes/interactive/theme/dark-cavern.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-copper,packages/coding-agent/src/modes/interactive/theme/dark-copper.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-cosmos,packages/coding-agent/src/modes/interactive/theme/dark-cosmos.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-cyberpunk,packages/coding-agent/src/modes/interactive/theme/dark-cyberpunk.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-dracula,packages/coding-agent/src/modes/interactive/theme/dark-dracula.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-eclipse,packages/coding-agent/src/modes/interactive/theme/dark-eclipse.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-ember,packages/coding-agent/src/modes/interactive/theme/dark-ember.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-equinox,packages/coding-agent/src/modes/interactive/theme/dark-equinox.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-forest,packages/coding-agent/src/modes/interactive/theme/dark-forest.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-github,packages/coding-agent/src/modes/interactive/theme/dark-github.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-gruvbox,packages/coding-agent/src/modes/interactive/theme/dark-gruvbox.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-lavender,packages/coding-agent/src/modes/interactive/theme/dark-lavender.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-lunar,packages/coding-agent/src/modes/interactive/theme/dark-lunar.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-midnight,packages/coding-agent/src/modes/interactive/theme/dark-midnight.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-monochrome,packages/coding-agent/src/modes/interactive/theme/dark-monochrome.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-monokai,packages/coding-agent/src/modes/interactive/theme/dark-monokai.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-nebula,packages/coding-agent/src/modes/interactive/theme/dark-nebula.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-nord,packages/coding-agent/src/modes/interactive/theme/dark-nord.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-ocean,packages/coding-agent/src/modes/interactive/theme/dark-ocean.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-one,packages/coding-agent/src/modes/interactive/theme/dark-one.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-poimandres,packages/coding-agent/src/modes/interactive/theme/dark-poimandres.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-rainforest,packages/coding-agent/src/modes/interactive/theme/dark-rainforest.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-reef,packages/coding-agent/src/modes/interactive/theme/dark-reef.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-retro,packages/coding-agent/src/modes/interactive/theme/dark-retro.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-rose-pine,packages/coding-agent/src/modes/interactive/theme/dark-rose-pine.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-sakura,packages/coding-agent/src/modes/interactive/theme/dark-sakura.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-slate,packages/coding-agent/src/modes/interactive/theme/dark-slate.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-solarized,packages/coding-agent/src/modes/interactive/theme/dark-solarized.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-solstice,packages/coding-agent/src/modes/interactive/theme/dark-solstice.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-starfall,packages/coding-agent/src/modes/interactive/theme/dark-starfall.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-sunset,packages/coding-agent/src/modes/interactive/theme/dark-sunset.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-swamp,packages/coding-agent/src/modes/interactive/theme/dark-swamp.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-synthwave,packages/coding-agent/src/modes/interactive/theme/dark-synthwave.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-taiga,packages/coding-agent/src/modes/interactive/theme/dark-taiga.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-terminal,packages/coding-agent/src/modes/interactive/theme/dark-terminal.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-tokyo-night,packages/coding-agent/src/modes/interactive/theme/dark-tokyo-night.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-tundra,packages/coding-agent/src/modes/interactive/theme/dark-tundra.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-twilight,packages/coding-agent/src/modes/interactive/theme/dark-twilight.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark-volcanic,packages/coding-agent/src/modes/interactive/theme/dark-volcanic.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: dark,packages/coding-agent/src/modes/interactive/theme/dark.json:1,crates/ice-tui/src/theme.rs:223,partial,TUI-002
+Bundled theme palette: graphite,packages/coding-agent/src/modes/interactive/theme/graphite.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-arctic,packages/coding-agent/src/modes/interactive/theme/light-arctic.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-aurora-day,packages/coding-agent/src/modes/interactive/theme/light-aurora-day.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-canyon,packages/coding-agent/src/modes/interactive/theme/light-canyon.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-catppuccin,packages/coding-agent/src/modes/interactive/theme/light-catppuccin.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-cirrus,packages/coding-agent/src/modes/interactive/theme/light-cirrus.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-coral,packages/coding-agent/src/modes/interactive/theme/light-coral.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-cyberpunk,packages/coding-agent/src/modes/interactive/theme/light-cyberpunk.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-dawn,packages/coding-agent/src/modes/interactive/theme/light-dawn.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-dunes,packages/coding-agent/src/modes/interactive/theme/light-dunes.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-eucalyptus,packages/coding-agent/src/modes/interactive/theme/light-eucalyptus.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-forest,packages/coding-agent/src/modes/interactive/theme/light-forest.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-frost,packages/coding-agent/src/modes/interactive/theme/light-frost.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-github,packages/coding-agent/src/modes/interactive/theme/light-github.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-glacier,packages/coding-agent/src/modes/interactive/theme/light-glacier.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-gruvbox,packages/coding-agent/src/modes/interactive/theme/light-gruvbox.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-haze,packages/coding-agent/src/modes/interactive/theme/light-haze.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-honeycomb,packages/coding-agent/src/modes/interactive/theme/light-honeycomb.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-lagoon,packages/coding-agent/src/modes/interactive/theme/light-lagoon.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-lavender,packages/coding-agent/src/modes/interactive/theme/light-lavender.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-meadow,packages/coding-agent/src/modes/interactive/theme/light-meadow.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-mint,packages/coding-agent/src/modes/interactive/theme/light-mint.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-monochrome,packages/coding-agent/src/modes/interactive/theme/light-monochrome.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-ocean,packages/coding-agent/src/modes/interactive/theme/light-ocean.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-one,packages/coding-agent/src/modes/interactive/theme/light-one.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-opal,packages/coding-agent/src/modes/interactive/theme/light-opal.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-orchard,packages/coding-agent/src/modes/interactive/theme/light-orchard.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-paper,packages/coding-agent/src/modes/interactive/theme/light-paper.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-poimandres,packages/coding-agent/src/modes/interactive/theme/light-poimandres.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-prism,packages/coding-agent/src/modes/interactive/theme/light-prism.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-retro,packages/coding-agent/src/modes/interactive/theme/light-retro.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-sand,packages/coding-agent/src/modes/interactive/theme/light-sand.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-savanna,packages/coding-agent/src/modes/interactive/theme/light-savanna.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-solarized,packages/coding-agent/src/modes/interactive/theme/light-solarized.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-soleil,packages/coding-agent/src/modes/interactive/theme/light-soleil.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-sunset,packages/coding-agent/src/modes/interactive/theme/light-sunset.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-synthwave,packages/coding-agent/src/modes/interactive/theme/light-synthwave.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-tokyo-night,packages/coding-agent/src/modes/interactive/theme/light-tokyo-night.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-wetland,packages/coding-agent/src/modes/interactive/theme/light-wetland.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light-zenith,packages/coding-agent/src/modes/interactive/theme/light-zenith.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: light,packages/coding-agent/src/modes/interactive/theme/light.json:1,crates/ice-tui/src/theme.rs:223,partial,TUI-002
+Bundled theme palette: limestone,packages/coding-agent/src/modes/interactive/theme/limestone.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: mahogany,packages/coding-agent/src/modes/interactive/theme/mahogany.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: marble,packages/coding-agent/src/modes/interactive/theme/marble.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: obsidian,packages/coding-agent/src/modes/interactive/theme/obsidian.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: onyx,packages/coding-agent/src/modes/interactive/theme/onyx.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: pearl,packages/coding-agent/src/modes/interactive/theme/pearl.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: porcelain,packages/coding-agent/src/modes/interactive/theme/porcelain.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: quartz,packages/coding-agent/src/modes/interactive/theme/quartz.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: sandstone,packages/coding-agent/src/modes/interactive/theme/sandstone.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+Bundled theme palette: titanium,packages/coding-agent/src/modes/interactive/theme/titanium.json:1,crates/ice-tui/src/theme.rs:223,missing,TUI-002
+CombinedAutocompleteProvider,packages/tui/src/autocomplete.ts:273,crates/ice-tui/src/autocomplete.rs:36,partial,TUI-238
+chromeBorderGlyphs,packages/tui/src/chrome-border.ts:45,crates/ice-tui/src/select_list.rs:421,missing,TUI-267
+applyChromeBorder,packages/tui/src/chrome-border.ts:54,crates/ice-tui/src/select_list.rs:421,missing,TUI-267
+AltScreenFlashContainer,packages/tui/src/components/alt-screen-flash.ts:13,crates/ice-tui/src/tui_alt_screen.rs:1,missing,TUI-232
+Box,packages/tui/src/components/box.ts:14,crates/ice-tui/src/box_component.rs:29,partial,TUI-205
+CancellableLoader,packages/tui/src/components/cancellable-loader.ts:13,crates/ice-tui/src/loader.rs:193,partial,TUI-231
+wordWrapLine,packages/tui/src/components/editor.ts:114,crates/ice-tui/src/editor.rs:195,partial,TUI-250
+Editor,packages/tui/src/components/editor.ts:301,crates/ice-tui/src/editor.rs:269,partial,TUI-242
+HStack,packages/tui/src/components/h-stack.ts:5,crates/ice-tui/src/hstack.rs:11,partial,TUI-211
+Image,packages/tui/src/components/image.ts:25,crates/ice-tui/src/image.rs:36,partial,TUI-229
+Input,packages/tui/src/components/input.ts:19,crates/ice-tui/src/input.rs:17,partial,TUI-236
+Loader,packages/tui/src/components/loader.ts:17,crates/ice-tui/src/loader.rs:24,partial,TUI-230
+StrictStrikethroughTokenizer,packages/tui/src/components/markdown.ts:8,crates/ice-tui/src/markdown.rs:410,partial,TUI-261
+setDefaultTableStyle,packages/tui/src/components/markdown.ts:156,crates/ice-tui/src/markdown.rs:746,partial,TUI-265
+getDefaultTableStyle,packages/tui/src/components/markdown.ts:160,crates/ice-tui/src/markdown.rs:746,partial,TUI-265
+Markdown,packages/tui/src/components/markdown.ts:180,crates/ice-tui/src/markdown.rs:20,partial,TUI-260
+ScrollView,packages/tui/src/components/scroll-view.ts:17,crates/ice-tui/src/scroll_view.rs:12,partial,TUI-213
+SelectList,packages/tui/src/components/select-list.ts:44,crates/ice-tui/src/select_list.rs:238,partial,TUI-256
+SettingsList,packages/tui/src/components/settings-list.ts:38,crates/ice-tui/src/settings_list.rs:17,partial,TUI-258
+Spacer,packages/tui/src/components/spacer.ts:6,crates/ice-tui/src/spacer.rs:12,partial,TUI-205
+Stack,packages/tui/src/components/stack.ts:32,crates/ice-tui/src/vstack.rs:11,partial,TUI-211
+visibleStackEntries,packages/tui/src/components/stack.ts:82,crates/ice-tui/src/vstack.rs:11,partial,TUI-211
+allocateStackSizes,packages/tui/src/components/stack.ts:135,crates/ice-tui/src/vstack.rs:11,partial,TUI-211
+Text,packages/tui/src/components/text.ts:7,crates/ice-tui/src/text.rs:28,partial,TUI-205
+TruncatedText,packages/tui/src/components/truncated-text.ts:7,crates/ice-tui/src/truncated_text.rs:19,partial,TUI-205
+VStack,packages/tui/src/components/v-stack.ts:3,crates/ice-tui/src/vstack.rs:11,partial,TUI-211
+fuzzyMatch,packages/tui/src/fuzzy.ts:12,crates/ice-tui/src/fuzzy.rs:35,partial,TUI-235
+fuzzyFilter,packages/tui/src/fuzzy.ts:99,crates/ice-tui/src/fuzzy.rs:35,partial,TUI-235
+KeybindingsManager,packages/tui/src/keybindings.ts:185,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+setKeybindings,packages/tui/src/keybindings.ts:265,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+getKeybindings,packages/tui/src/keybindings.ts:269,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+setKittyProtocolActive,packages/tui/src/keys.ts:31,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+isKittyProtocolActive,packages/tui/src/keys.ts:38,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+isKeyRelease,packages/tui/src/keys.ts:527,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+isKeyRepeat,packages/tui/src/keys.ts:557,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+matchesKey,packages/tui/src/keys.ts:820,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+parseKey,packages/tui/src/keys.ts:1251,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+decodeKittyPrintable,packages/tui/src/keys.ts:1350,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+decodePrintableKey,packages/tui/src/keys.ts:1399,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+KillRing,packages/tui/src/kill-ring.ts:8,crates/ice-tui/src/kill_ring.rs:10,partial,TUI-234
+getLayoutNode,packages/tui/src/layout-node.ts:48,crates/ice-tui/src/layout.rs:128,partial,TUI-212
+getScrollbarGeometry,packages/tui/src/layout.ts:286,crates/ice-tui/src/scroll_view.rs:193,partial,TUI-214
+renderLayoutFrame,packages/tui/src/layout.ts:383,crates/ice-tui/src/layout.rs:128,partial,TUI-212
+getScrollViewBox,packages/tui/src/layout.ts:418,crates/ice-tui/src/layout.rs:128,partial,TUI-212
+getScrollViewsAt,packages/tui/src/layout.ts:430,crates/ice-tui/src/layout.rs:128,partial,TUI-212
+normalizeCursorMarkers,packages/tui/src/legacy-compat.ts:3,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+getTuiEnv,packages/tui/src/legacy-compat.ts:7,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+isNativeModifierPressed,packages/tui/src/native-modifiers.ts:51,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+StdinBuffer,packages/tui/src/stdin-buffer.ts:274,crates/ice-tui/src/stdin_buffer.rs:1,partial,TUI-207
+isOsc11BackgroundColorResponse,packages/tui/src/terminal-colors.ts:31,crates/ice-tui/src/terminal_colors.rs:1,partial,TUI-220
+parseOsc11BackgroundColor,packages/tui/src/terminal-colors.ts:35,crates/ice-tui/src/terminal_colors.rs:1,partial,TUI-220
+parseTerminalColorSchemeReport,packages/tui/src/terminal-colors.ts:67,crates/ice-tui/src/terminal_colors.rs:1,partial,TUI-220
+getCellDimensions,packages/tui/src/terminal-image.ts:39,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+setCellDimensions,packages/tui/src/terminal-image.ts:43,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+detectCapabilities,packages/tui/src/terminal-image.ts:68,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+getCapabilities,packages/tui/src/terminal-image.ts:138,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+resetCapabilitiesCache,packages/tui/src/terminal-image.ts:145,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+setCapabilities,packages/tui/src/terminal-image.ts:150,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+isImageLine,packages/tui/src/terminal-image.ts:157,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+allocateImageId,packages/tui/src/terminal-image.ts:171,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+encodeKitty,packages/tui/src/terminal-image.ts:176,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+deleteKittyImage,packages/tui/src/terminal-image.ts:226,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+deleteAllKittyImages,packages/tui/src/terminal-image.ts:234,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+deleteAllKittyPlacements,packages/tui/src/terminal-image.ts:239,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+encodeITerm2,packages/tui/src/terminal-image.ts:243,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+registerKittyImageMetadata,packages/tui/src/terminal-image.ts:295,crates/ice-tui/src/terminal_image.rs:249,missing,TUI-227
+getKittyImageMetadata,packages/tui/src/terminal-image.ts:312,crates/ice-tui/src/terminal_image.rs:249,missing,TUI-227
+getKittyImagePlacement,packages/tui/src/terminal-image.ts:345,crates/ice-tui/src/terminal_image.rs:249,missing,TUI-227
+cropKittyImageLine,packages/tui/src/terminal-image.ts:379,crates/ice-tui/src/terminal_image.rs:249,missing,TUI-227
+calculateImageCellSize,packages/tui/src/terminal-image.ts:393,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+calculateImageRows,packages/tui/src/terminal-image.ts:419,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+getPngDimensions,packages/tui/src/terminal-image.ts:427,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+getJpegDimensions,packages/tui/src/terminal-image.ts:448,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+getGifDimensions,packages/tui/src/terminal-image.ts:491,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+getWebpDimensions,packages/tui/src/terminal-image.ts:513,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+getImageDimensions,packages/tui/src/terminal-image.ts:552,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+renderImage,packages/tui/src/terminal-image.ts:568,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+hyperlink,packages/tui/src/terminal-image.ts:623,crates/ice-tui/src/utils.rs:384,partial,TUI-204
+imageFallback,packages/tui/src/terminal-image.ts:641,crates/ice-tui/src/image.rs:36,partial,TUI-229
+parseKeyboardProtocolNegotiationSequence,packages/tui/src/terminal.ts:24,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+isAppleTerminalSession,packages/tui/src/terminal.ts:41,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+normalizeAppleTerminalInput,packages/tui/src/terminal.ts:45,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+ProcessTerminal,packages/tui/src/terminal.ts:100,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+TuiAltScreen,packages/tui/src/tui-alt-screen.ts:115,crates/ice-tui/src/tui_alt_screen.rs:908,partial,TUI-222
+TuiMainScreen,packages/tui/src/tui-main-screen.ts:58,crates/ice-tui/src/tui_alt_screen.rs:663,partial,TUI-221
+isFocusable,packages/tui/src/tui.ts:70,crates/ice-tui/src/component.rs:1,partial,TUI-217
+Container,packages/tui/src/tui.ts:212,crates/ice-tui/src/container.rs:16,partial,TUI-205
+compositeTuiLine,packages/tui/src/tui.ts:254,crates/ice-tui/src/layout.rs:550,partial,TUI-215
+isViewportTUI,packages/tui/src/tui.ts:330,crates/ice-tui/src/tui_alt_screen.rs:349,partial,TUI-222
+TuiBase,packages/tui/src/tui.ts:335,crates/ice-tui/src/tui_alt_screen.rs:1,partial,TUI-216
+UndoStack,packages/tui/src/undo-stack.ts:7,crates/ice-tui/src/undo_stack.rs:1,partial,TUI-234
+getGraphemeSegmenter,packages/tui/src/utils.ts:10,crates/ice-tui/src/utils.rs:9,partial,TUI-201
+getWordSegmenter,packages/tui/src/utils.ts:17,crates/ice-tui/src/word_navigation.rs:5,partial,TUI-233
+visibleWidth,packages/tui/src/utils.ts:239,crates/ice-tui/src/utils.rs:9,partial,TUI-201
+stripTerminalSequences,packages/tui/src/utils.ts:297,crates/ice-tui/src/utils.rs:9,partial,TUI-201
+getGraphemeCellRange,packages/tui/src/utils.ts:319,crates/ice-tui/src/utils.rs:9,partial,TUI-201
+getOsc8LinkAtColumn,packages/tui/src/utils.ts:343,crates/ice-tui/src/utils.rs:384,partial,TUI-204
+stripOsc8Links,packages/tui/src/utils.ts:406,crates/ice-tui/src/utils.rs:384,partial,TUI-204
+styleOsc8Link,packages/tui/src/utils.ts:415,crates/ice-tui/src/utils.rs:384,partial,TUI-204
+normalizeTerminalOutput,packages/tui/src/utils.ts:434,crates/ice-tui/src/utils.rs:9,partial,TUI-201
+extractAnsiCode,packages/tui/src/utils.ts:461,crates/ice-tui/src/utils.rs:275,partial,TUI-202
+AnsiCodeTracker,packages/tui/src/utils.ts:540,crates/ice-tui/src/utils.rs:275,partial,TUI-202
+wrapTextWithAnsi,packages/tui/src/utils.ts:865,crates/ice-tui/src/utils.rs:275,partial,TUI-202
+isWhitespaceChar,packages/tui/src/utils.ts:976,crates/ice-tui/src/word_navigation.rs:5,partial,TUI-233
+isPunctuationChar,packages/tui/src/utils.ts:983,crates/ice-tui/src/word_navigation.rs:5,partial,TUI-233
+applyBackgroundToLine,packages/tui/src/utils.ts:1083,crates/ice-tui/src/ansi.rs:93,partial,TUI-203
+truncateToWidth,packages/tui/src/utils.ts:1114,crates/ice-tui/src/ansi.rs:93,partial,TUI-203
+sliceByColumn,packages/tui/src/utils.ts:1256,crates/ice-tui/src/ansi.rs:93,partial,TUI-203
+sliceWithWidth,packages/tui/src/utils.ts:1261,crates/ice-tui/src/ansi.rs:93,partial,TUI-203
+extractSegments,packages/tui/src/utils.ts:1316,crates/ice-tui/src/ansi.rs:93,partial,TUI-203
+findWordBackward,packages/tui/src/word-navigation.ts:22,crates/ice-tui/src/word_navigation.rs:5,partial,TUI-233
+findWordForward,packages/tui/src/word-navigation.ts:78,crates/ice-tui/src/word_navigation.rs:5,partial,TUI-233
+Consistent grapheme cell widths and output-only normalization,packages/tui/src/utils.ts:239,crates/ice-tui/src/utils.rs:9,partial,TUI-201
+ANSI-aware word wrapping and stable style carry across rows,packages/tui/src/utils.ts:865,crates/ice-tui/src/utils.rs:275,partial,TUI-202
+"Bounded column slicing, ellipsis truncation and background continuation",packages/tui/src/utils.ts:1256,crates/ice-tui/src/ansi.rs:93,partial,TUI-203
+"OSC8 hyperlink hit-testing, selective removal and hover styling",packages/tui/src/utils.ts:343,crates/ice-tui/src/utils.rs:384,partial,TUI-204
+"Padded Text, Box, Spacer and first-line truncated components",packages/tui/src/components/text.ts:7,crates/ice-tui/src/text.rs:28,partial,TUI-205
+"Legacy, Kitty and modifyOtherKeys key identity and printable decoding",packages/tui/src/keys.ts:820,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+Incremental sequence framing and bracketed-paste assembly,packages/tui/src/stdin-buffer.ts:274,crates/ice-tui/src/stdin_buffer.rs:1,partial,TUI-207
+"Keyboard negotiation, platform modifier helpers and fallback input",packages/tui/src/terminal.ts:178,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+"Terminal shutdown, input draining, progress and output contract",packages/tui/src/terminal.ts:369,crates/ice-tui/src/terminal.rs:299,partial,TUI-209
+"Generic keybinding registry, defaults and conflict semantics",packages/tui/src/keybindings.ts:185,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+"Stack allocation, visibility and direct rendering",packages/tui/src/components/stack.ts:135,crates/ice-tui/src/vstack.rs:11,partial,TUI-211
+Extensible constrained layout tree and nested scroll geometry,packages/tui/src/layout.ts:383,crates/ice-tui/src/layout.rs:128,partial,TUI-212
+"Scroll state, follow-end and render notifications",packages/tui/src/components/scroll-view.ts:17,crates/ice-tui/src/scroll_view.rs:12,partial,TUI-213
+"Transient scrollbars, proportional geometry and cell-preserving style",packages/tui/src/layout.ts:286,crates/ice-tui/src/scroll_view.rs:193,partial,TUI-214
+"ANSI-safe row composition, blank clearing and image protection",packages/tui/src/tui.ts:254,crates/ice-tui/src/layout.rs:550,partial,TUI-215
+"Renderer lifecycle, frame scheduling and restart ownership",packages/tui/src/tui.ts:695,crates/ice-tui/src/tui_alt_screen.rs:1,partial,TUI-216
+"Input interception, focusable delivery and hardware cursor markers",packages/tui/src/tui.ts:830,crates/ice-tui/src/component.rs:1,partial,TUI-217
+"Overlay focus stack, hidden-state transitions and deferred restoration",packages/tui/src/tui.ts:431,crates/ice-tui/src/overlay.rs:99,partial,TUI-218
+"Overlay size resolution, screen anchoring and passive placement",packages/tui/src/tui.ts:966,crates/ice-tui/src/tui.rs:40,partial,TUI-219
+Terminal background queries and color-scheme reply ownership,packages/tui/src/tui.ts:1208,crates/ice-tui/src/terminal_colors.rs:1,partial,TUI-220
+"Main-screen differential rendering, shrink policy and transcript cursor accounting",packages/tui/src/tui-main-screen.ts:58,crates/ice-tui/src/tui_main_screen.rs:143,partial,TUI-221
+"Alternate-screen frame assembly, teardown transcript and mode ownership",packages/tui/src/tui-alt-screen.ts:851,crates/ice-tui/src/tui_alt_screen.rs:349,partial,TUI-222
+"Viewport wheel routing, prompt navigation and scrollbar dragging",packages/tui/src/tui-alt-screen.ts:446,crates/ice-cli/src/interactive_tui.rs:1752,partial,TUI-223
+"Application text selection, OSC52 copy and internal hyperlink activation",packages/tui/src/tui-alt-screen.ts:574,crates/ice-tui/src/tui_alt_screen.rs:1,partial,TUI-224
+"Terminal image, color and hyperlink capability detection",packages/tui/src/terminal-image.ts:68,crates/ice-tui/src/terminal_image.rs:15,partial,TUI-225
+Kitty and iTerm2 image serialization and deletion,packages/tui/src/terminal-image.ts:176,crates/ice-tui/src/terminal_image.rs:178,partial,TUI-226
+"Kitty metadata generations, placement reuse and vertical cropping",packages/tui/src/terminal-image.ts:345,crates/ice-tui/src/terminal_image.rs:249,missing,TUI-227
+Image dimensions and aspect-preserving cell fitting,packages/tui/src/terminal-image.ts:393,crates/ice-tui/src/terminal_image.rs:289,partial,TUI-228
+"Image component, row reservation and informative fallback",packages/tui/src/components/image.ts:25,crates/ice-tui/src/image.rs:36,partial,TUI-229
+"Loader animation, configurable frames and render scheduling",packages/tui/src/components/loader.ts:17,crates/ice-tui/src/loader.rs:24,partial,TUI-230
+Cancellable loader signal and configured cancel input,packages/tui/src/components/cancellable-loader.ts:13,crates/ice-tui/src/loader.rs:193,partial,TUI-231
+Transient alternate-screen flash messages,packages/tui/src/components/alt-screen-flash.ts:13,crates/ice-tui/src/tui_alt_screen.rs:1,missing,TUI-232
+Unicode word navigation and atomic segments,packages/tui/src/word-navigation.ts:22,crates/ice-tui/src/word_navigation.rs:5,partial,TUI-233
+Kill-ring and undo snapshot semantics,packages/tui/src/kill-ring.ts:8,crates/ice-tui/src/kill_ring.rs:10,partial,TUI-234
+"Fuzzy score precision, token matching and alphanumeric fallback",packages/tui/src/fuzzy.ts:12,crates/ice-tui/src/fuzzy.rs:35,partial,TUI-235
+"Single-line input mutation, paste and undo integration",packages/tui/src/components/input.ts:19,crates/ice-tui/src/input.rs:17,partial,TUI-236
+Single-line input horizontal window and focus cursor rendering,packages/tui/src/components/input.ts:384,crates/ice-tui/src/input.rs:598,partial,TUI-237
+Asynchronous autocomplete provider and slash-command contracts,packages/tui/src/autocomplete.ts:273,crates/ice-tui/src/autocomplete.rs:36,partial,TUI-238
+"Direct filesystem completion, quoted tokens and display paths",packages/tui/src/autocomplete.ts:559,crates/ice-tui/src/autocomplete.rs:124,partial,TUI-239
+"Recursive @ attachment search, ranking and cancellation",packages/tui/src/autocomplete.ts:695,crates/ice-tui/src/autocomplete.rs:124,missing,TUI-240
+Autocomplete application and quoted directory caret placement,packages/tui/src/autocomplete.ts:375,crates/ice-tui/src/autocomplete.rs:93,partial,TUI-241
+Editor state access and atomic programmatic replacement,packages/tui/src/components/editor.ts:1178,crates/ice-tui/src/editor.rs:269,partial,TUI-242
+"Editor paste framing, sanitization and large-paste folding",packages/tui/src/components/editor.ts:1346,crates/ice-tui/src/editor.rs:452,partial,TUI-243
+"Paste-marker ownership, deletion and collision-free registry renumbering",packages/tui/src/components/editor.ts:1909,crates/ice-tui/src/editor.rs:167,partial,TUI-244
+Editor undo transaction boundaries and full snapshot restoration,packages/tui/src/components/editor.ts:2181,crates/ice-tui/src/editor.rs:592,partial,TUI-245
+Editor history browsing with preserved draft and visual-boundary routing,packages/tui/src/components/editor.ts:474,crates/ice-tui/src/editor.rs:258,partial,TUI-246
+"Editor input precedence, newline workarounds and submit lifecycle",packages/tui/src/components/editor.ts:780,crates/ice-tui/src/editor.rs:1158,partial,TUI-247
+Editor grapheme edits and Unicode-safe word cursor operations,packages/tui/src/components/editor.ts:1468,crates/ice-tui/src/editor.rs:859,partial,TUI-248
+Editor kill accumulation and multiline yank-pop replacement,packages/tui/src/components/editor.ts:2079,crates/ice-tui/src/editor.rs:592,partial,TUI-249
+Editor marker-aware word wrapping and logical-to-visual ranges,packages/tui/src/components/editor.ts:114,crates/ice-tui/src/editor.rs:195,partial,TUI-250
+Editor render-only decorations and concealed source prefixes,packages/tui/src/components/editor.ts:557,crates/ice-tui/src/editor.rs:1390,missing,TUI-251
+"Editor prompt gutter, borders, viewport and caret rendering",packages/tui/src/components/editor.ts:636,crates/ice-tui/src/editor.rs:1390,partial,TUI-252
+"Editor visual-row movement, sticky column and paste continuation traversal",packages/tui/src/components/editor.ts:1571,crates/ice-tui/src/editor.rs:965,partial,TUI-253
+Editor character-jump mode and UTF-8-safe search boundaries,packages/tui/src/components/editor.ts:2253,crates/ice-tui/src/editor.rs:1098,partial,TUI-254
+"Editor asynchronous completion scheduling, stale-result checks and menu acceptance",packages/tui/src/components/editor.ts:2304,crates/ice-tui/src/editor.rs:1,partial,TUI-255
+"SelectList filtering, configured navigation and callback lifetime",packages/tui/src/components/select-list.ts:124,crates/ice-tui/src/select_list.rs:238,partial,TUI-256
+"SelectList adaptive columns, custom truncation and shared chrome",packages/tui/src/components/select-list.ts:151,crates/ice-tui/src/select_list.rs:421,partial,TUI-257
+"SettingsList search, live item patching, value cycling and submenu ownership",packages/tui/src/components/settings-list.ts:205,crates/ice-tui/src/settings_list.rs:17,partial,TUI-258
+"SettingsList responsive layout, selected descriptions and hint chrome",packages/tui/src/components/settings-list.ts:110,crates/ice-tui/src/settings_list.rs:378,partial,TUI-259
+"Markdown transform, cache, padding and default-style lifecycle",packages/tui/src/components/markdown.ts:180,crates/ice-tui/src/markdown.rs:20,partial,TUI-260
+"Markdown inline syntax, inherited styles and capability-aware hyperlinks",packages/tui/src/components/markdown.ts:564,crates/ice-tui/src/markdown.rs:410,partial,TUI-261
+"Markdown nested blocks, list markers, quote continuation and spacing",packages/tui/src/components/markdown.ts:663,crates/ice-tui/src/markdown.rs:175,partial,TUI-262
+"Markdown fenced code streaming, highlighting and native Mermaid preservation",packages/tui/src/components/markdown.ts:450,crates/ice-tui/src/markdown.rs:197,partial,TUI-263
+Markdown table column budgets and lossless multiline cells,packages/tui/src/components/markdown.ts:728,crates/ice-tui/src/markdown.rs:720,partial,TUI-264
+Markdown table style policy and default invalidation,packages/tui/src/components/markdown.ts:874,crates/ice-tui/src/markdown.rs:746,partial,TUI-265
+Bounded Kitty upload reuse and placement redraw transactions,packages/tui/src/tui-alt-screen.ts:270,crates/ice-tui/src/tui_alt_screen.rs:908,missing,TUI-266
+Shared chrome border families and narrow-width gate,packages/tui/src/chrome-border.ts:54,crates/ice-tui/src/select_list.rs:421,missing,TUI-267
+EditorComponent required and optional capabilities,packages/tui/src/editor-component.ts:11,crates/ice-tui/src/editor.rs:269,partial,TUI-242
+findGitPaths,packages/coding-agent/src/core/footer-data-provider.ts:16,crates/ice-cli/src/interactive_tui/sessions.rs:628,partial,TUI-037
+parseGitStatusPorcelainV2,packages/coding-agent/src/core/footer-data-provider.ts:91,crates/ice-cli/src/interactive_tui/sessions.rs:628,partial,TUI-037
+FooterDataProvider,packages/coding-agent/src/core/footer-data-provider.ts:123,crates/ice-cli/src/interactive_tui/sessions.rs:628,partial,TUI-037
+migrateKeybindingsConfig,packages/coding-agent/src/core/keybindings.ts:380,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+KeybindingsManager,packages/coding-agent/src/core/keybindings.ts:431,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+AppearanceCustomizerComponent,packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:210,crates/ice-cli/src/interactive_tui/settings.rs:51,missing,TUI-019
+AppearancePreviewComponent,packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:49,crates/ice-cli/src/interactive_tui/settings.rs:51,missing,TUI-023
+ArminComponent,packages/coding-agent/src/modes/interactive/components/armin.ts:60,crates/ice-cli/src/extras.rs:35,missing,TUI-071
+AssistantMessageComponent,packages/coding-agent/src/modes/interactive/components/assistant-message.ts:24,crates/ice-tui/src/assistant_message.rs:27,partial,TUI-028
+BulletBlock,packages/coding-agent/src/modes/interactive/components/assistant-message.ts:298,crates/ice-tui/src/assistant_message.rs:27,partial,TUI-028
+BashExecutionComponent,packages/coding-agent/src/modes/interactive/components/bash-execution.ts:24,crates/ice-tui/src/bash_execution.rs:23,partial,TUI-035
+BorderedLoader,packages/coding-agent/src/modes/interactive/components/bordered-loader.ts:7,crates/ice-tui/src/bordered_loader.rs:19,partial,TUI-042
+BranchSummaryMessageComponent,packages/coding-agent/src/modes/interactive/components/branch-summary-message.ts:10,crates/ice-cli/src/interactive_tui/sessions.rs:399,partial,TUI-030
+CompactionSummaryMessageComponent,packages/coding-agent/src/modes/interactive/components/compaction-summary-message.ts:10,crates/ice-cli/src/interactive_tui/sessions.rs:399,partial,TUI-030
+ConfigSelectorHeader,packages/coding-agent/src/modes/interactive/components/config-selector.ts:187,crates/ice-cli/src/interactive_tui/settings.rs:59,missing,TUI-068
+ResourceList,packages/coding-agent/src/modes/interactive/components/config-selector.ts:228,crates/ice-cli/src/interactive_tui/settings.rs:59,missing,TUI-068
+ConfigSelectorComponent,packages/coding-agent/src/modes/interactive/components/config-selector.ts:872,crates/ice-cli/src/interactive_tui/settings.rs:59,missing,TUI-068
+allocateCells,packages/coding-agent/src/modes/interactive/components/context-usage.ts:69,crates/ice-cli/src/interactive_tui/commands.rs:738,partial,TUI-058
+ContextUsageComponent,packages/coding-agent/src/modes/interactive/components/context-usage.ts:103,crates/ice-cli/src/interactive_tui/commands.rs:738,partial,TUI-058
+CountdownTimer,packages/coding-agent/src/modes/interactive/components/countdown-timer.ts:7,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+CustomEditor,packages/coding-agent/src/modes/interactive/components/custom-editor.ts:15,crates/ice-tui/src/editor.rs:20,partial,TUI-049
+CustomEntryComponent,packages/coding-agent/src/modes/interactive/components/custom-entry.ts:11,crates/ice-cli/src/interactive_tui/events.rs:252,partial,TUI-029
+CustomMessageComponent,packages/coding-agent/src/modes/interactive/components/custom-message.ts:53,crates/ice-cli/src/interactive_tui/events.rs:252,partial,TUI-029
+DaxnutsComponent,packages/coding-agent/src/modes/interactive/components/daxnuts.ts:57,crates/ice-cli/src/extras.rs:35,missing,TUI-071
+setDiffAppearance,packages/coding-agent/src/modes/interactive/components/diff.ts:10,crates/ice-tui/src/diff.rs:1,partial,TUI-036
+renderDiff,packages/coding-agent/src/modes/interactive/components/diff.ts:137,crates/ice-tui/src/diff.rs:1,partial,TUI-036
+DynamicBorder,packages/coding-agent/src/modes/interactive/components/dynamic-border.ts:11,crates/ice-tui/src/syntax_highlight.rs:15,partial,TUI-005
+ExtensionEditorComponent,packages/coding-agent/src/modes/interactive/components/extension-editor.ts:22,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+ExtensionInputComponent,packages/coding-agent/src/modes/interactive/components/extension-input.ts:17,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+ExtensionSelectorComponent,packages/coding-agent/src/modes/interactive/components/extension-selector.ts:19,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+FirstTimeSetupComponent,packages/coding-agent/src/modes/interactive/components/first-time-setup.ts:32,crates/ice-cli/src/extras.rs:35,partial,TUI-070
+formatTokens,packages/coding-agent/src/modes/interactive/components/footer.ts:42,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+formatCwdForFooter,packages/coding-agent/src/modes/interactive/components/footer.ts:58,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+FooterComponent,packages/coding-agent/src/modes/interactive/components/footer.ts:76,crates/ice-tui/src/footer.rs:29,partial,TUI-038
+formatKeyText,packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:17,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+keyText,packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:34,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+keyDisplayText,packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:38,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+keyHint,packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:42,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+rawKeyHint,packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:46,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+LoginDialogComponent,packages/coding-agent/src/modes/interactive/components/login-dialog.ts:11,crates/ice-cli/src/interactive_tui/settings.rs:821,partial,TUI-047
+createMarkdownTransform,packages/coding-agent/src/modes/interactive/components/markdown-transform.ts:3,crates/ice-tui/src/assistant_message.rs:27,partial,TUI-028
+ModelSelectorComponent,packages/coding-agent/src/modes/interactive/components/model-selector.ts:35,crates/ice-cli/src/interactive_tui/settings.rs:530,partial,TUI-044
+NewMessagesPill,packages/coding-agent/src/modes/interactive/components/new-messages-pill.ts:10,crates/ice-cli/src/transcript_navigation.rs:7,partial,TUI-057
+formatAge,packages/coding-agent/src/modes/interactive/components/notices-view.ts:69,crates/ice-cli/src/interactive_tui/state.rs:42,missing,TUI-054
+NoticesViewComponent,packages/coding-agent/src/modes/interactive/components/notices-view.ts:88,crates/ice-cli/src/interactive_tui/state.rs:42,missing,TUI-054
+formatAuthSelectorProviderType,packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:22,crates/ice-cli/src/interactive_tui/settings.rs:698,partial,TUI-046
+OAuthSelectorComponent,packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:29,crates/ice-cli/src/interactive_tui/settings.rs:698,partial,TUI-046
+markOsc133Zone,packages/coding-agent/src/modes/interactive/components/osc133-zone.ts:10,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+formatRunSummary,packages/coding-agent/src/modes/interactive/components/run-summary.ts:25,crates/ice-cli/src/interactive_tui/state.rs:987,missing,TUI-043
+createRunSummary,packages/coding-agent/src/modes/interactive/components/run-summary.ts:30,crates/ice-cli/src/interactive_tui/state.rs:987,missing,TUI-043
+ScopedModelsSelectorComponent,packages/coding-agent/src/modes/interactive/components/scoped-models-selector.ts:92,crates/ice-cli/src/interactive_tui/settings.rs:1858,partial,TUI-045
+middleTruncate,packages/coding-agent/src/modes/interactive/components/session-header.ts:37,crates/ice-cli/src/interactive_tui/rendering.rs:9,partial,TUI-040
+SessionHeaderComponent,packages/coding-agent/src/modes/interactive/components/session-header.ts:52,crates/ice-cli/src/interactive_tui/rendering.rs:9,partial,TUI-040
+hasSessionName,packages/coding-agent/src/modes/interactive/components/session-selector-search.ts:30,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-062
+parseSearchQuery,packages/coding-agent/src/modes/interactive/components/session-selector-search.ts:39,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-062
+matchSession,packages/coding-agent/src/modes/interactive/components/session-selector-search.ts:116,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-062
+filterAndSortSessions,packages/coding-agent/src/modes/interactive/components/session-selector-search.ts:156,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-062
+SessionSelectorHeader,packages/coding-agent/src/modes/interactive/components/session-selector.ts:53,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-063
+SessionList,packages/coding-agent/src/modes/interactive/components/session-selector.ts:280,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-063
+SessionSelectorComponent,packages/coding-agent/src/modes/interactive/components/session-selector.ts:642,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-064
+WarningSettingsSubmenu,packages/coding-agent/src/modes/interactive/components/settings-selector.ts:154,crates/ice-cli/src/interactive_tui/settings.rs:51,partial,TUI-025
+SelectSubmenu,packages/coding-agent/src/modes/interactive/components/settings-selector.ts:196,crates/ice-cli/src/interactive_tui/settings.rs:385,partial,TUI-026
+ThemeSubmenu,packages/coding-agent/src/modes/interactive/components/settings-selector.ts:295,crates/ice-cli/src/interactive_tui/settings.rs:385,partial,TUI-026
+SettingsSelectorComponent,packages/coding-agent/src/modes/interactive/components/settings-selector.ts:506,crates/ice-cli/src/interactive_tui/settings.rs:51,partial,TUI-025
+ShellsPanelComponent,packages/coding-agent/src/modes/interactive/components/shells-panel.ts:73,crates/ice-cli/src/interactive_tui.rs:559,missing,TUI-055
+ShortcutsViewComponent,packages/coding-agent/src/modes/interactive/components/shortcuts-view.ts:15,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+ShowImagesSelectorComponent,packages/coding-agent/src/modes/interactive/components/show-images-selector.ts:13,crates/ice-cli/src/interactive_tui/settings.rs:385,partial,TUI-026
+SkillInvocationMessageComponent,packages/coding-agent/src/modes/interactive/components/skill-invocation-message.ts:11,crates/ice-cli/src/interactive_tui/sessions.rs:399,partial,TUI-030
+StatusIndicator,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:13,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+formatElapsed,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:57,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+WorkingStatusIndicator,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:65,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+RetryStatusIndicator,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:132,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+CompactionStatusIndicator,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:183,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+BranchSummaryStatusIndicator,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:218,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+IdleStatus,packages/coding-agent/src/modes/interactive/components/status-indicator.ts:248,crates/ice-tui/src/status_indicator.rs:23,partial,TUI-041
+layoutStatusLine,packages/coding-agent/src/modes/interactive/components/status-line.ts:32,crates/ice-tui/src/footer.rs:301,missing,TUI-039
+TranscriptDocument,packages/coding-agent/src/modes/interactive/components/sticky-prompt.ts:18,crates/ice-cli/src/transcript_navigation.rs:7,missing,TUI-056
+StickyPromptHeader,packages/coding-agent/src/modes/interactive/components/sticky-prompt.ts:50,crates/ice-cli/src/transcript_navigation.rs:7,missing,TUI-056
+createSubagentFooterSnapshot,packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:151,crates/ice-cli/src/child_agents.rs:36,missing,TUI-060
+formatAgentSwitcherLabel,packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:201,crates/ice-cli/src/child_agents.rs:36,missing,TUI-060
+SubagentFooterSwitcher,packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:228,crates/ice-cli/src/child_agents.rs:36,missing,TUI-060
+ThemeSelectorComponent,packages/coding-agent/src/modes/interactive/components/theme-selector.ts:13,crates/ice-cli/src/interactive_tui/settings.rs:385,partial,TUI-026
+ThinkingSelectorComponent,packages/coding-agent/src/modes/interactive/components/thinking-selector.ts:25,crates/ice-cli/src/interactive_tui/settings.rs:385,partial,TUI-026
+ToolExecutionComponent,packages/coding-agent/src/modes/interactive/components/tool-execution.ts:57,crates/ice-tui/src/tool_execution.rs:24,partial,TUI-031
+ToolGroupComponent,packages/coding-agent/src/modes/interactive/components/tool-group.ts:23,crates/ice-tui/src/tool_execution.rs:269,missing,TUI-033
+classifyShellCommand,packages/coding-agent/src/modes/interactive/components/tool-summary.ts:36,crates/ice-tui/src/tool_execution.rs:269,missing,TUI-033
+describeExploration,packages/coding-agent/src/modes/interactive/components/tool-summary.ts:64,crates/ice-tui/src/tool_execution.rs:269,missing,TUI-033
+resultTextLines,packages/coding-agent/src/modes/interactive/components/tool-summary.ts:107,crates/ice-tui/src/tool_execution.rs:361,partial,TUI-032
+summarizeToolResult,packages/coding-agent/src/modes/interactive/components/tool-summary.ts:127,crates/ice-tui/src/tool_execution.rs:361,partial,TUI-032
+isIceActionUrl,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:13,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+setToolToggleLinks,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:21,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+clickOrKeyHint,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:26,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+expandHint,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:31,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+linkIceAction,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:36,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+linkToolToggleLine,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:42,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+linkToolToggle,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:47,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+parseToolToggleUrl,packages/coding-agent/src/modes/interactive/components/tool-toggle-link.ts:56,crates/ice-cli/src/interactive_tui.rs:2282,partial,TUI-034
+TreeList,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:106,crates/ice-cli/src/interactive_tui/selectors.rs:372,partial,TUI-065
+SearchLine,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:1157,crates/ice-cli/src/interactive_tui/selectors.rs:372,partial,TUI-065
+TreeHelp,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:1178,crates/ice-cli/src/interactive_tui/selectors.rs:381,partial,TUI-066
+LabelInput,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:1271,crates/ice-cli/src/interactive_tui/selectors.rs:381,partial,TUI-066
+TreeSelectorComponent,packages/coding-agent/src/modes/interactive/components/tree-selector.ts:1328,crates/ice-cli/src/interactive_tui/selectors.rs:372,partial,TUI-065
+TrustSelectorComponent,packages/coding-agent/src/modes/interactive/components/trust-selector.ts:32,crates/ice-cli/src/interactive_tui/commands.rs:590,partial,TUI-059
+UserMessageList,packages/coding-agent/src/modes/interactive/components/user-message-selector.ts:14,crates/ice-cli/src/interactive_tui/sessions.rs:198,partial,TUI-061
+UserMessageSelectorComponent,packages/coding-agent/src/modes/interactive/components/user-message-selector.ts:110,crates/ice-cli/src/interactive_tui/sessions.rs:198,partial,TUI-061
+UserMessageComponent,packages/coding-agent/src/modes/interactive/components/user-message.ts:22,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+fitLineToWidth,packages/coding-agent/src/modes/interactive/components/user-message.ts:149,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+fitTargetWidth,packages/coding-agent/src/modes/interactive/components/user-message.ts:162,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+fitLinesToContent,packages/coding-agent/src/modes/interactive/components/user-message.ts:171,crates/ice-tui/src/user_message.rs:25,partial,TUI-027
+truncateToVisualLines,packages/coding-agent/src/modes/interactive/components/visual-truncate.ts:27,crates/ice-tui/src/bash_execution.rs:23,partial,TUI-035
+editInExternalEditor,packages/coding-agent/src/modes/interactive/external-editor.ts:13,crates/ice-cli/src/interactive_tui/run.rs:72,partial,TUI-050
+ExpandableText,packages/coding-agent/src/modes/interactive/interactive-mode.ts:231,crates/ice-cli/src/interactive_tui/rendering.rs:9,partial,TUI-040
+formatResumeCommand,packages/coding-agent/src/modes/interactive/interactive-mode.ts:291,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+createInteractiveTui,packages/coding-agent/src/modes/interactive/interactive-mode.ts:424,crates/ice-cli/src/interactive_tui.rs:990,partial,TUI-079
+createInteractiveTuiReference,packages/coding-agent/src/modes/interactive/interactive-mode.ts:442,crates/ice-cli/src/interactive_tui.rs:990,partial,TUI-079
+InteractiveMode,packages/coding-agent/src/modes/interactive/interactive-mode.ts:464,crates/ice-cli/src/interactive_tui.rs:1398,partial,TUI-074
+getModelSearchText,packages/coding-agent/src/modes/interactive/model-search.ts:7,crates/ice-cli/src/interactive_tui/settings.rs:530,partial,TUI-044
+getModelSelectorSearchText,packages/coding-agent/src/modes/interactive/model-search.ts:17,crates/ice-cli/src/interactive_tui/settings.rs:530,partial,TUI-044
+orderNotices,packages/coding-agent/src/modes/interactive/notice-center.ts:76,crates/ice-cli/src/interactive_tui/state.rs:157,missing,TUI-052
+NoticeCenter,packages/coding-agent/src/modes/interactive/notice-center.ts:86,crates/ice-cli/src/interactive_tui/state.rs:157,missing,TUI-052
+isMcpName,packages/coding-agent/src/modes/interactive/notice-sources.ts:31,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+extensionNoticeCategory,packages/coding-agent/src/modes/interactive/notice-sources.ts:35,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+noticeForSessionEvent,packages/coding-agent/src/modes/interactive/notice-sources.ts:63,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+subagentNotices,packages/coding-agent/src/modes/interactive/notice-sources.ts:167,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+resourceNotices,packages/coding-agent/src/modes/interactive/notice-sources.ts:235,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+formatNoticesReport,packages/coding-agent/src/modes/interactive/notice-sources.ts:284,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+resolveDefaultSymbolPreset,packages/coding-agent/src/modes/interactive/theme/symbols.ts:88,crates/ice-tui/src/theme.rs:133,missing,TUI-006
+setSymbolPreset,packages/coding-agent/src/modes/interactive/theme/symbols.ts:97,crates/ice-tui/src/theme.rs:133,missing,TUI-006
+getSymbolPreset,packages/coding-agent/src/modes/interactive/theme/symbols.ts:101,crates/ice-tui/src/theme.rs:133,missing,TUI-006
+sym,packages/coding-agent/src/modes/interactive/theme/symbols.ts:105,crates/ice-tui/src/theme.rs:133,missing,TUI-006
+getSymbolTable,packages/coding-agent/src/modes/interactive/theme/symbols.ts:109,crates/ice-tui/src/theme.rs:133,missing,TUI-006
+InteractiveThemeController,packages/coding-agent/src/modes/interactive/theme/theme-controller.ts:18,crates/ice-cli/src/interactive_tui.rs:972,missing,TUI-007
+UiMode.regular/fullscreen,packages/coding-agent/src/modes/interactive/interactive-mode.ts:424,crates/ice-cli/src/interactive_tui.rs:990,partial,TUI-079
+SIGTERM,packages/coding-agent/src/modes/interactive/interactive-mode.ts:5079,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+SIGHUP,packages/coding-agent/src/modes/interactive/interactive-mode.ts:5081,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+SIGCONT,packages/coding-agent/src/modes/interactive/interactive-mode.ts:5140,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+SIGTSTP,packages/coding-agent/src/modes/interactive/interactive-mode.ts:5152,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+SIGINT,packages/coding-agent/src/modes/interactive/interactive-mode.ts:5137,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+uncaughtException,packages/coding-agent/src/modes/interactive/interactive-mode.ts:5112,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+EIO/EPIPE/ENOTCONN,packages/coding-agent/src/modes/interactive/interactive-mode.ts:263,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076
+ExtensionSelectorComponent options: timeout/content/onExpand,packages/coding-agent/src/modes/interactive/components/extension-selector.ts:12,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+ExtensionInputComponent initialValue/timeout,packages/coding-agent/src/modes/interactive/components/extension-input.ts:11,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+ExtensionEditorComponent externalEditor,packages/coding-agent/src/modes/interactive/components/extension-editor.ts:12,crates/ice-cli/src/interactive_tui/extensions.rs:77,partial,TUI-073
+Agent Hub roster/child inspector/approval inbox,packages/coding-agent/src/subagents/ui/hub.ts:106,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+parent/live/history child view bridge,packages/coding-agent/src/ice-agent-view-bridge.ts:584,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+Browser observation UI: Activity tape/search/filter,packages/coding-agent/src/observe/observe-dashboard.html:758,,missing,OBS-020
+Browser observation UI: Forensic inspector,packages/coding-agent/src/observe/observe-dashboard.html:767,,missing,OBS-021
+Browser observation UI: 42-bin activity pulse,packages/coding-agent/src/observe/observe-dashboard.html:741,,missing,OBS-022
+Browser observation UI: Run selector/follow,packages/coding-agent/src/observe/observe-dashboard.html:1785,,missing,OBS-023
+Browser observation UI: Knowledge view,packages/coding-agent/src/observe/observe-dashboard.html:772,,missing,OBS-024
+Browser observation UI: Documents/sessions/query,packages/coding-agent/src/observe/observe-dashboard.html:2250,,missing,OBS-025
+Browser observation UI: Datasets summary,packages/coding-agent/src/observe/observe-dashboard.html:2495,,missing,OBS-026
+Browser observation UI: Knowledge graph types/reload,packages/coding-agent/src/observe/observe-dashboard.html:2538,,missing,OBS-027
+Browser observation UI: Knowledge graph canvas layout,packages/coding-agent/src/observe/observe-dashboard.html:2796,,missing,OBS-028
+Browser observation UI: Knowledge graph navigation,packages/coding-agent/src/observe/observe-dashboard.html:3067,,missing,OBS-029
+Cognee status/activity line,packages/coding-agent/src/ice-cognee.ts:1359,,missing,COG-061

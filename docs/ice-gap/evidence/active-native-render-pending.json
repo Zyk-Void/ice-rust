@@ -1,0 +1,113 @@
+{
+  "source_only": true,
+  "complete": true,
+  "areas": [
+    "cli-packaging",
+    "rpc-remote",
+    "providers-auth",
+    "session",
+    "subagents",
+    "tui",
+    "observability",
+    "blackhole",
+    "misc",
+    "settings"
+  ],
+  "spec_files": [
+    {
+      "path": "evidence/spec-cli-packaging.json",
+      "before_sha256": "403574e532caa9060cfa7b8e2f44a272a939d8e99e697c44fb0f60eeae7143bb",
+      "after_sha256": "b8fb2b25e785233ebf0169b02f08c8c638a03d86ea87a6178014aade8d50d0a0"
+    },
+    {
+      "path": "evidence/spec-rpc-remote.json",
+      "before_sha256": "6759704aab32f695feb8692ff31d047fc59045ea3625b7bad00dab46f136dc30",
+      "after_sha256": "2285698a6e97290a70cb65016dfea4aa190cb6777e438c807a6623999b04e766"
+    },
+    {
+      "path": "evidence/spec-providers-auth.json",
+      "before_sha256": "fbcdfce045d732e829d8a441aa5feafaa1677246102d8901c661535de2a999f3",
+      "after_sha256": "30d6970865fa997d2a7379b2477801256e406e32586a4831bae2526681200da6"
+    },
+    {
+      "path": "evidence/spec-session.json",
+      "before_sha256": "39fe1d5309e3f6c1595b23efb860483fc0950f7e0d13462d30fc6edc6625bf62",
+      "after_sha256": "b1af0cf4ce44197e4bf87d16290d3de96f26194ea262d1cc226866c5320976a6"
+    },
+    {
+      "path": "evidence/spec-subagents.json",
+      "before_sha256": "2cfde1f08908159705bf491c796f41c3a4fdb9275a59025177d6aa6eb77c0538",
+      "after_sha256": "9a4907c25aa409cf8f69cdb6eff97de1470f2e33bc80b6a9b4335e938c020a0b"
+    },
+    {
+      "path": "evidence/spec-tui.json",
+      "before_sha256": "6576b944c18fbffb46360fde3e9a1cf2bc42ad03c5ba48b995274e585b711ff0",
+      "after_sha256": "aae91d897198883733eec48642839ad157551fc3955b150a138d0d9d26e6af98"
+    },
+    {
+      "path": "evidence/spec-observability.json",
+      "before_sha256": "b94898d2a861c1ab29c7b4d34a06fa93462818918a69e6cd509ff690312d42b6",
+      "after_sha256": "c4f4227102ddc2acea68c5ece85910c37a1613e44555265ee4a840f00cd35088"
+    },
+    {
+      "path": "evidence/spec-blackhole.json",
+      "before_sha256": "b5301fadfb69465649bc5068a3e41015c6b1b65eefbc49fe99f7488756eb0aa2",
+      "after_sha256": "52b87872e9f0cb5cf1ec4dae68ad8455d51656bbc288fa9f8208eca0f2b4405c"
+    },
+    {
+      "path": "evidence/spec-misc.json",
+      "before_sha256": "dd574eddd1365a856743b9a891b202e384ac2f46a990d69945606b9914f80497",
+      "after_sha256": "3b785c94ba2652f7ed5cb87421add6ac196ceb5415d9209f4f573c06efaeddb1"
+    },
+    {
+      "path": "evidence/spec-settings.json",
+      "before_sha256": "ee712d80e9d7c7efe79e020cd42e721b63f33b9461ab4986da30c45b18fab488",
+      "after_sha256": "5ab72a4e1ba824aceb3ec871bd27ccecf28e05c3839cf2504b18a3a0ba5a7ebd"
+    }
+  ],
+  "reason": "Native changes are applied after citation remap and before helper migration. Run this helper in render-pending mode after the renderer is migrated.",
+  "rendered_at": "2026-10-20T07:05:47.711Z",
+  "renderer_sha256": "0e724fadfabd882e4e67cd8cd58e31ed0b709434ea4db2eb37833f2baad91924",
+  "outputs": [
+    {
+      "path": "cli-packaging.md",
+      "sha256": "2768eec20db2f84f110605ed3944e9c8a058b8e0ae1f76aebf2f65f48ec0465a"
+    },
+    {
+      "path": "rpc-remote.md",
+      "sha256": "f2c5f652f27a5494b357246a06dda4424471876d18031e06e90e05cfb8bdb4b7"
+    },
+    {
+      "path": "providers-auth.md",
+      "sha256": "9faf4dc4733c1735dafffcb63305192b2844d3dff2c93668c710f1769e4c0602"
+    },
+    {
+      "path": "session.md",
+      "sha256": "54dbb47251fce26cce2c65c647f75c65b4df448c0e3db2e067d6be28266ad1fd"
+    },
+    {
+      "path": "subagents.md",
+      "sha256": "bb82f847621078689fdef8ba10f58c6438f0b053cdcafcae33846792929134d8"
+    },
+    {
+      "path": "tui.md",
+      "sha256": "3a025fdcadac9f6845a1df7a8362914e5dc3c026aa144c25a2895b91c5f840c8"
+    },
+    {
+      "path": "observability.md",
+      "sha256": "ea9589d660fc870ab7cd81528f917f3dac67b49d5cd60d7fb5bb5a5444ac245f"
+    },
+    {
+      "path": "blackhole.md",
+      "sha256": "60c39dc0030703190652cf6fb8eaa6f0254f73e4120f26bdef5f9b917a2ee10e"
+    },
+    {
+      "path": "misc.md",
+      "sha256": "d86b0e619662dff3432b66be97647a2deae21d4678deeac6f9cdc27faa9ea8e4"
+    },
+    {
+      "path": "settings.md",
+      "sha256": "5285fe60d42fc56069b72d6cbb23992a10094c52b8fcc68cec2a591ae80ed2ad"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "captured_at": "2026-10-20T03:48:04.001Z",
+  "misc_metadata": {
+    "title": "Miscellaneous utilities and integrations",
+    "introduction": "Source-only specification of shared utilities, evaluation workflows and Claude SDK integration. The 43 accepted entries retain exact TypeScript contracts, native counterparts, source/test evidence and explicit external-system limits. Application code, tests, evaluation runners and SDK integrations were read without executing them."
+  },
+  "matrix_changes": [
+    {
+      "id": "FPC-091",
+      "key": "evidence",
+      "before": "ice:packages/coding-agent/src/core/agent-session.ts:1425-1436,3217-3222",
+      "after": "ice:packages/coding-agent/src/core/agent-session.ts:1425-1436; ice:packages/coding-agent/src/core/agent-session.ts:3217-3222"
+    },
+    {
+      "id": "FPC-092",
+      "key": "evidence",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:496-557,1333-1389",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:496-557; ice:packages/coding-agent/src/core/settings-manager.ts:1333-1389"
+    },
+    {
+      "id": "FPC-093",
+      "key": "evidence",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:26-184,989-1141,1391-1611",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:26-184; ice:packages/coding-agent/src/core/settings-manager.ts:989-1141; ice:packages/coding-agent/src/core/settings-manager.ts:1391-1611"
+    },
+    {
+      "id": "FPC-160",
+      "key": "evidence",
+      "before": "ice:packages/coding-agent/src/core/agent-session.ts:1425-1436,3217-3222",
+      "after": "ice:packages/coding-agent/src/core/agent-session.ts:1425-1436; ice:packages/coding-agent/src/core/agent-session.ts:3217-3222"
+    }
+  ]
+}

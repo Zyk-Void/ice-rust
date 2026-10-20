@@ -1,0 +1,2129 @@
+{
+  "schema_version": 1,
+  "owner": "/root/helper_migration",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "support_files": [
+    "tools/lane-exports-rpc-ai-auth-audit-paths.mjs",
+    "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+    "tools/lane-exports-rpc-ai-auth-migration-core.mjs",
+    "tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+    "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+    "tools/lane-exports-rpc-ai-auth-prepare-migration.mjs",
+    "tools/lane-exports-rpc-ai-auth-relocated-validation.mjs"
+  ],
+  "scripts": [
+    {
+      "source": "audit-util.mjs",
+      "destination": "tools/audit-util.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "record-reads"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust'",
+          "new_text": "auditHelperNative",
+          "expected_occurrences": 1,
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-agent-common.mjs",
+      "destination": "tools/author-agent-common.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-agent-env.mjs",
+      "destination": "tools/author-agent-env.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-agent-loop.mjs",
+      "destination": "tools/author-agent-loop.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-agent-resources.mjs",
+      "destination": "tools/author-agent-resources.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-agent-runtime.mjs",
+      "destination": "tools/author-agent-runtime.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-blackhole-rest.mjs",
+      "destination": "tools/author-blackhole-rest.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-blackhole.mjs",
+      "destination": "tools/author-blackhole.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-cognee-client.mjs",
+      "destination": "tools/author-cognee-client.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-cognee-runtime.mjs",
+      "destination": "tools/author-cognee-runtime.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-extensions-common.mjs",
+      "destination": "tools/author-extensions-common.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-extensions-dispatch.mjs",
+      "destination": "tools/author-extensions-dispatch.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-extensions-loader.mjs",
+      "destination": "tools/author-extensions-loader.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "author-safe-verify.mjs",
+      "destination": "tools/author-safe-verify.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "compare-blackhole-copies.mjs",
+      "destination": "tools/compare-blackhole-copies.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence/blackhole-copies.json'",
+          "new_text": "auditHelperEvidence+'/blackhole-copies.json'",
+          "expected_occurrences": 1,
+          "reason": "Write only beside the current audit evidence."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "direct-source.mjs",
+      "destination": "tools/direct-source.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "read",
+          "integrity"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust'",
+          "new_text": "auditHelperNative",
+          "expected_occurrences": 1,
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        },
+        {
+          "old_text": "path.join(roots.rust,'docs/ice-gap')",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Separate output directory from source identity."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/active-checkout-compare.mjs",
+      "destination": "tools/active-checkout-compare.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 9,
+          "text": "const roots={old:'/home/mewtwo/Zks/ice-rust',active:'/home/mewtwo/Zykairotis/ice-rust'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "evidence/ai-schema-read.mjs",
+      "destination": "tools/ai-schema-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/cli-packaging-supplement-read.mjs",
+      "destination": "tools/cli-packaging-supplement-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/extensions-coverage-gaps.mjs",
+      "destination": "tools/extensions-coverage-gaps.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "\"/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence\"",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 5,
+          "text": "const roots={ice:\"/home/mewtwo/Zks/ice\",rust:\"/home/mewtwo/Zks/ice-rust\"};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "evidence/extensions-final-review.mjs",
+      "destination": "tools/extensions-final-review.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "\"/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence\"",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 6,
+          "text": "const roots={ice:\"/home/mewtwo/Zks/ice\",rust:\"/home/mewtwo/Zks/ice-rust\"};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "evidence/extensions-review-apply.mjs",
+      "destination": "tools/extensions-review-apply.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "apply"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [
+        {
+          "old_text": "\"/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence\"",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 5,
+          "text": "const roots={ice:\"/home/mewtwo/Zks/ice\",rust:\"/home/mewtwo/Zks/ice-rust\"};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "evidence/extensions-review-read.mjs",
+      "destination": "tools/extensions-review-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 6,
+          "text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "evidence/qa-observability-independent-helper.mjs",
+      "destination": "tools/qa-observability-independent-helper.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/semantic-dependency-read.mjs",
+      "destination": "tools/semantic-dependency-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/subagents-read.mjs",
+      "destination": "tools/subagents-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tools-read-metadata.mjs",
+      "destination": "tools/tools-read-metadata.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tools-read.mjs",
+      "destination": "tools/tools-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-candidates-read.mjs",
+      "destination": "tools/tui-candidates-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-closeout-build-proposal.mjs",
+      "destination": "tools/tui-closeout-build-proposal.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-closeout-inspect.mjs",
+      "destination": "tools/tui-closeout-inspect.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-closeout-merge-spec.mjs",
+      "destination": "tools/tui-closeout-merge-spec.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-closeout-normalize.mjs",
+      "destination": "tools/tui-closeout-normalize.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-closeout-read.mjs",
+      "destination": "tools/tui-closeout-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-owned-evidence-read.mjs",
+      "destination": "tools/tui-owned-evidence-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.resolve(\"docs/ice-gap/evidence\")",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Read saved evidence independently of the process working directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-publication-readonly-review.mjs",
+      "destination": "tools/tui-publication-readonly-review.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "path.dirname(fileURLToPath(import.meta.url))",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "evidence/tui-review-read.mjs",
+      "destination": "tools/tui-review-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 7,
+          "text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "evidence/tui-terminal-read.mjs",
+      "destination": "tools/tui-terminal-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "extract-surfaces.mjs",
+      "destination": "tools/extract-surfaces.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "path.join(rustRoot,'docs/ice-gap')",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Retain frozen historical source root while confining output to relocated audit."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 7,
+          "text": "const rustRoot='/home/mewtwo/Zks/ice-rust';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "finalize-agent.mjs",
+      "destination": "tools/finalize-agent.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": [
+        {
+          "source_line": 35,
+          "text": "function line(file,needle,side='ice'){const full=path.join(side==='ice'?root:'/home/mewtwo/Zks/ice-rust',file);const ls=fs.readFileSync(full,'utf8').split('\\n');const i=ls.findIndex(x=>x.includes(needle));if(i<0)throw Error('Surface anchor missing '+file+' '+needle);return i+1;}",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        },
+        {
+          "source_line": 54,
+          "text": "const read_evidence=[...fullReadsIce.map(file=>({path:'ice:'+file,ranges:[[1,fs.readFileSync(path.join(root,file),'utf8').split('\\n').length]],notes:'Full content read in this direct audit; tests were not executed.'})),...fullReadsRust.map(file=>({path:'rust:'+file,ranges:[[1,fs.readFileSync(path.join('/home/mewtwo/Zks/ice-rust',file),'utf8').split('\\n').length]],notes:'Full source and embedded tests read, not executed.'})),{path:'rust:crates/ice-harness/src/agent_harness.rs',ranges:[[649,810],[2005,2190]],notes:'Only these contiguous slices were read; the rest belongs to the session audit.'}];",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "finalize-blackhole.mjs",
+      "destination": "tools/finalize-blackhole.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "finalize-cognee.mjs",
+      "destination": "tools/finalize-cognee.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "finalize-extension-core-text.mjs",
+      "destination": "tools/finalize-extension-core-text.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "finalize-safe-verify.mjs",
+      "destination": "tools/finalize-safe-verify.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "inspect-blackhole.mjs",
+      "destination": "tools/inspect-blackhole.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "inspect-evidence.mjs",
+      "destination": "tools/inspect-evidence.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "inspect-spec.mjs",
+      "destination": "tools/inspect-spec.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust'",
+          "new_text": "auditHelperNative",
+          "expected_occurrences": 1,
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "inventory.mjs",
+      "destination": "tools/inventory.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "path.join(rustRoot, 'docs/ice-gap')",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Retain frozen historical source root while confining output to relocated audit."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 8,
+          "text": "const rustRoot = '/home/mewtwo/Zks/ice-rust';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "merge-progress.mjs",
+      "destination": "tools/merge-progress.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "prepare-workers.mjs",
+      "destination": "tools/prepare-workers.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 27,
+          "text": "Read-only boundary: read source/tests/docs from /home/mewtwo/Zks/ice and /home/mewtwo/Zks/ice-rust. Write ONLY your AREA.md, evidence/AREA.json, and scratch artifacts under workers/AREA/ inside /home/mewtwo/Zks/ice-rust/docs/ice-gap/. Do not write elsewhere, including /tmp, source directories, ~/.ice, .git or .ai-bridge outside this audit directory. No test creation, test runs, builds, package installs, commits, git fetch/push or network requests. Do not launch more agents. Do not run source executables that may contact providers. Do not read or reproduce user credential values. Preserve all pre-existing changes. No permission questions; record unresolved intent as open questions.",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "publish-area.mjs",
+      "destination": "tools/publish-area.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust'",
+          "new_text": "auditHelperNative",
+          "expected_occurrences": 1,
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        },
+        {
+          "old_text": "path.join(root,'docs/ice-gap')",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Current audit root is derived from tools."
+        },
+        {
+          "old_text": "path.join(base,script)",
+          "new_text": "path.join(auditHelperTools,script)",
+          "expected_occurrences": 1,
+          "reason": "Run the helpers from tools after relocation."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "read-evidence.mjs",
+      "destination": "tools/read-evidence.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust'",
+          "new_text": "auditHelperNative",
+          "expected_occurrences": 1,
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "refine-blackhole-evidence.mjs",
+      "destination": "tools/refine-blackhole-evidence.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "old_text": "path.join(base,'finalize-blackhole.mjs')",
+          "new_text": "path.join(auditHelperTools,'finalize-blackhole.mjs')",
+          "expected_occurrences": 2,
+          "reason": "Historical helper rewrites target the relocated helper in tools."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "render-area.mjs",
+      "destination": "tools/render-area.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "repair-extensions-dispatch.mjs",
+      "destination": "tools/repair-extensions-dispatch.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "resolve-extension-test-refs.mjs",
+      "destination": "tools/resolve-extension-test-refs.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap'",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "old_text": "base+'/author-extensions-common.mjs'",
+          "new_text": "auditHelperTools+'/author-extensions-common.mjs'",
+          "expected_occurrences": 1,
+          "reason": "Historical helper rewrites target tools."
+        },
+        {
+          "old_text": "base+'/author-extensions-dispatch.mjs'",
+          "new_text": "auditHelperTools+'/author-extensions-dispatch.mjs'",
+          "expected_occurrences": 1,
+          "reason": "Historical helper rewrites target tools."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "resume-integrity.py",
+      "destination": "tools/resume-integrity.py",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "supplement-surfaces.mjs",
+      "destination": "tools/supplement-surfaces.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "path.join(root,'docs/ice-gap')",
+          "new_text": "auditHelperBase",
+          "expected_occurrences": 1,
+          "reason": "Retain historical source root while confining output to relocated audit."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 6,
+          "text": "const root='/home/mewtwo/Zks/ice-rust';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "tools/accept-canonical-read-coverage.mjs",
+      "destination": "tools/accept-canonical-read-coverage.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/accept-final-area.mjs",
+      "destination": "tools/accept-final-area.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [
+        {
+          "old_text": "path.join(base,'publish-area.mjs')",
+          "new_text": "path.join(base,'tools/publish-area.mjs')",
+          "expected_occurrences": 1,
+          "reason": "Publication helper relocated to tools."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/append-native-queue-defect.mjs",
+      "destination": "tools/append-native-queue-defect.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/apply-auth-json-precision.mjs",
+      "destination": "tools/apply-auth-json-precision.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/apply-native-command-provenance.mjs",
+      "destination": "tools/apply-native-command-provenance.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/build-final-index.py",
+      "destination": "tools/build-final-index.py",
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/clean-session-audit-aliases.mjs",
+      "destination": "tools/clean-session-audit-aliases.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-active-closeout.mjs",
+      "destination": "tools/coordinator-active-closeout.mjs",
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "operations": [],
+      "preserved_roots": [
+        {
+          "source_line": 3,
+          "text": "const B=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),E=path.join(B,'evidence'),oldBase='/home/mewtwo/Zks/ice-rust/docs/ice-gap',activeBase='/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "tools/coordinator-build-root-export-proposal.mjs",
+      "destination": "tools/coordinator-build-root-export-proposal.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-checkpoint.mjs",
+      "destination": "tools/coordinator-checkpoint.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-closeout-inspect.mjs",
+      "destination": "tools/coordinator-closeout-inspect.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "declarations",
+          "source"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-complete-original-publication.mjs",
+      "destination": "tools/coordinator-complete-original-publication.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-fast-preflight.py",
+      "destination": "tools/coordinator-fast-preflight.py",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-inspect-relocation.mjs",
+      "destination": "tools/coordinator-inspect-relocation.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-merge-exports.mjs",
+      "destination": "tools/coordinator-merge-exports.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-normalize-tui-metadata.mjs",
+      "destination": "tools/coordinator-normalize-tui-metadata.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [
+        {
+          "old_text": "path.join(B,'publish-area.mjs')",
+          "new_text": "path.join(B,'tools/publish-area.mjs')",
+          "expected_occurrences": 1,
+          "reason": "Publication helper relocated to tools."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-prepare-native-prose.mjs",
+      "destination": "tools/coordinator-prepare-native-prose.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-publish-closeout.mjs",
+      "destination": "tools/coordinator-publish-closeout.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [
+        {
+          "old_text": "run('publish-area.mjs',['ai'])",
+          "new_text": "run('tools/publish-area.mjs',['ai'])",
+          "expected_occurrences": 1,
+          "reason": "Publication helper relocated to tools."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-record-native-hunks.mjs",
+      "destination": "tools/coordinator-record-native-hunks.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/coordinator-relocate-audit.mjs",
+      "destination": "tools/coordinator-relocate-audit.mjs",
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "operations": [],
+      "preserved_roots": [
+        {
+          "source_line": 3,
+          "text": "const source='/home/mewtwo/Zks/ice-rust/docs/ice-gap',destination='/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "tools/extend-relocation-map.mjs",
+      "destination": "tools/extend-relocation-map.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/finalize-audit-metadata.mjs",
+      "destination": "tools/finalize-audit-metadata.mjs",
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/fix-spacing.mjs",
+      "destination": "tools/fix-spacing.mjs",
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/inspect-authored.mjs",
+      "destination": "tools/inspect-authored.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/inspect-closeout.mjs",
+      "destination": "tools/inspect-closeout.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/inspect-final-structure.mjs",
+      "destination": "tools/inspect-final-structure.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/inspect-global-audit.mjs",
+      "destination": "tools/inspect-global-audit.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/inspect-prose-queues.mjs",
+      "destination": "tools/inspect-prose-queues.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/integrate-ai-schema-supplement.mjs",
+      "destination": "tools/integrate-ai-schema-supplement.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "\"docs/ice-gap/evidence/\"",
+          "new_text": "auditHelperEvidence+'/'",
+          "expected_occurrences": 1,
+          "reason": "Read evidence independently of cwd."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "batch"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "\"docs/ice-gap/evidence/\"",
+          "new_text": "auditHelperEvidence+'/'",
+          "expected_occurrences": 1,
+          "reason": "Read evidence independently of cwd."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "\"docs/ice-gap/evidence/\"",
+          "new_text": "auditHelperEvidence+'/'",
+          "expected_occurrences": 1,
+          "reason": "Read evidence independently of cwd."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-sub-session-batch.mjs",
+      "destination": "tools/lane-exports-sub-session-batch.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/tools/lane-exports-sub-session-inspect.mjs'",
+          "new_text": "auditHelperTools+'/lane-exports-sub-session-inspect.mjs'",
+          "expected_occurrences": 1,
+          "reason": "Invoke the relocated, guarded lane inspector."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-sub-session-decls.mjs",
+      "destination": "tools/lane-exports-sub-session-decls.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-sub-session-inspect.mjs",
+      "destination": "tools/lane-exports-sub-session-inspect.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "source"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-sub-session-match.mjs",
+      "destination": "tools/lane-exports-sub-session-match.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "destination": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json'",
+          "new_text": "auditHelperEvidence+'/active-checkout-diff-hunks-complete.json'",
+          "expected_occurrences": 1,
+          "reason": "Read historical hunk evidence independently of cwd."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-exports-sub-session-native-prose.mjs",
+      "destination": "tools/lane-exports-sub-session-native-prose.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [
+        {
+          "old_text": "'/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "destination": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-active-identity.mjs",
+      "destination": "tools/lane-final-areas-active-identity.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "candidates",
+          "first-pass-findings"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "destination": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-active-review.mjs",
+      "destination": "tools/lane-final-areas-active-review.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-build-misc.mjs",
+      "destination": "tools/lane-final-areas-build-misc.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-exports.mjs",
+      "destination": "tools/lane-final-areas-exports.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "review"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "destination": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-inspect.mjs",
+      "destination": "tools/lane-final-areas-inspect.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-prepare.mjs",
+      "destination": "tools/lane-final-areas-prepare.mjs",
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "tui-qa"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "destination": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "destination": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-read-coverage.mjs",
+      "destination": "tools/lane-final-areas-read-coverage.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../..'), ev=path.join(root,'docs/ice-gap/evidence');",
+          "new_text": "const root='/home/mewtwo/Zks/ice-rust', ev=auditHelperEvidence;",
+          "expected_occurrences": 1,
+          "reason": "This historical canonical coverage generator explicitly describes old captured source roots; retain old Rust input and use current audit output."
+        }
+      ],
+      "preserved_roots": [
+        {
+          "source_line": 13,
+          "text": " if(p.startsWith('/home/mewtwo/Zks/ice-rust/'))p='rust:'+p.slice('/home/mewtwo/Zks/ice-rust/'.length);",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "tools/lane-final-areas-read-ranges.mjs",
+      "destination": "tools/lane-final-areas-read-ranges.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'docs/ice-gap/evidence/lane-final-areas-export-ranges-'",
+          "new_text": "auditHelperEvidence+'/lane-final-areas-export-ranges-'",
+          "expected_occurrences": 1,
+          "reason": "Historical read-credit output stays inside this audit."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-readme-limits-review.mjs",
+      "destination": "tools/lane-final-areas-readme-limits-review.mjs",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-remap-review.mjs",
+      "destination": "tools/lane-final-areas-remap-review.mjs",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-type-contracts.mjs",
+      "destination": "tools/lane-final-areas-type-contracts.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [
+        {
+          "old_text": "'docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Saved evidence root follows relocated helper."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-verify-exports.mjs",
+      "destination": "tools/lane-final-areas-verify-exports.mjs",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [
+        {
+          "old_text": "'docs/ice-gap/evidence'",
+          "new_text": "auditHelperEvidence",
+          "expected_occurrences": 1,
+          "reason": "Saved evidence root follows relocated helper."
+        }
+      ],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lane-final-areas-verify.mjs",
+      "destination": "tools/lane-final-areas-verify.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/lookup-read-credit.mjs",
+      "destination": "tools/lookup-read-credit.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/merge-cli-fragments.mjs",
+      "destination": "tools/merge-cli-fragments.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/normalize-citations.mjs",
+      "destination": "tools/normalize-citations.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/normalize-final-handoff.mjs",
+      "destination": "tools/normalize-final-handoff.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": [
+        {
+          "source_line": 20,
+          "text": "  c.first_pass_source={path:r.version==='old'?'/home/mewtwo/Zks/ice-rust/ICE_PORTING.md':'/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md',sha256:r.version==='old'?'d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc':'43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "tools/normalize-final-schema.mjs",
+      "destination": "tools/normalize-final-schema.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/prepare-citation-normalizer.mjs",
+      "destination": "tools/prepare-citation-normalizer.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/qa-first-pass-read.mjs",
+      "destination": "tools/qa-first-pass-read.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/read-audit-json-part.mjs",
+      "destination": "tools/read-audit-json-part.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/reconcile-final-dependencies.mjs",
+      "destination": "tools/reconcile-final-dependencies.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/reconcile-final-first-pass.mjs",
+      "destination": "tools/reconcile-final-first-pass.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/reconcile-first-pass-records.mjs",
+      "destination": "tools/reconcile-first-pass-records.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": [
+        {
+          "source_line": 20,
+          "text": "tc.first_pass_source={path:'/home/mewtwo/Zks/ice-rust/ICE_PORTING.md',sha256:'d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ]
+    },
+    {
+      "source": "tools/reconcile-readability.mjs",
+      "destination": "tools/reconcile-readability.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/remap-rust-citations.mjs",
+      "destination": "tools/remap-rust-citations.mjs",
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/repair-agent57-literal.mjs",
+      "destination": "tools/repair-agent57-literal.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/review-spacing.mjs",
+      "destination": "tools/review-spacing.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/verify-area-evidence.mjs",
+      "destination": "tools/verify-area-evidence.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/verify-complete-audit.py",
+      "destination": "tools/verify-complete-audit.py",
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/verify-defect-provenance.mjs",
+      "destination": "tools/verify-defect-provenance.mjs",
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "operations": [],
+      "preserved_roots": []
+    },
+    {
+      "source": "tools/verify-supplemental-baseline.mjs",
+      "destination": "tools/verify-supplemental-baseline.mjs",
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "operations": [],
+      "preserved_roots": []
+    }
+  ]
+}

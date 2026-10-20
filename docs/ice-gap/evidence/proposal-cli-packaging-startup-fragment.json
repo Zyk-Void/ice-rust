@@ -1,0 +1,3584 @@
+{
+  "area": "cli-packaging",
+  "complete": false,
+  "draft_complete": false,
+  "own_startup_entries_complete": true,
+  "entries": [
+    {
+      "id": "CLI-001",
+      "title": "Executable identity, stock launcher and Bun bootstrap ordering",
+      "status": "partial",
+      "priority": "P2",
+      "priority_reason": "Launch identity is a small compatibility boundary; Bun-specific workarounds should remain runtime-specific rather than inflate the native gap.",
+      "size_min": 35,
+      "size_max": 80,
+      "dependencies": [
+        "CLI-002",
+        "CLI-018",
+        "AI-003",
+        "AUTH-012",
+        "AUTH-015",
+        "SET-013"
+      ]
+    },
+    {
+      "id": "CLI-002",
+      "title": "ICE distribution preflight, early agent commands and builtin factory order",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Distribution policy and subagent integrations must be installed before user extensions and session execution; a parser-only port does not provide this behavior.",
+      "size_min": 130,
+      "size_max": 280,
+      "dependencies": [
+        "CLI-001",
+        "CLI-005",
+        "AUTH-028",
+        "AUTH-032",
+        "SUB-005",
+        "SUB-007",
+        "SUB-019",
+        "SUB-035",
+        "SUB-036",
+        "EXT-002"
+      ]
+    },
+    {
+      "id": "CLI-003",
+      "title": "Argument token grammar, complete flag surface and diagnostic semantics",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Incorrect token consumption can discard a user prompt or reinterpret options; missing flag names are only part of the actual parser gap.",
+      "size_min": 180,
+      "size_max": 360,
+      "dependencies": [
+        "CLI-004",
+        "CLI-006",
+        "CLI-007",
+        "CLI-011",
+        "CLI-017",
+        "CLI-019",
+        "AI-005",
+        "SET-003"
+      ]
+    },
+    {
+      "id": "CLI-004",
+      "title": "Run-mode resolution and metadata short-circuit precedence",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Metadata and mode precedence affect scripts, startup side effects and protocol ownership; stale comments currently obscure implemented native behavior.",
+      "size_min": 100,
+      "size_max": 200,
+      "dependencies": [
+        "CLI-003",
+        "CLI-005",
+        "CLI-006",
+        "CLI-017",
+        "CLI-019",
+        "RPC-016",
+        "AUTH-026"
+      ]
+    },
+    {
+      "id": "CLI-005",
+      "title": "Cwd-bound runtime factory, trust staging and startup service composition",
+      "status": "partial",
+      "priority": "P0",
+      "priority_reason": "Startup service composition determines which project code and policy enter a session; wrong cwd or trust staging creates functional and authority mismatches.",
+      "size_min": 220,
+      "size_max": 430,
+      "dependencies": [
+        "CLI-002",
+        "CLI-004",
+        "CLI-006",
+        "CLI-007",
+        "CLI-013",
+        "CLI-014",
+        "SESSION-021",
+        "SESSION-028",
+        "SESSION-035",
+        "SET-003",
+        "SET-007",
+        "SET-009",
+        "AUTH-024",
+        "AUTH-026",
+        "EXT-009",
+        "EXT-031",
+        "SET-008",
+        "SET-013",
+        "SET-021",
+        "SET-022"
+      ]
+    },
+    {
+      "id": "CLI-006",
+      "title": "Startup session selection, exact-ID validation, naming and missing-cwd recovery",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Incorrect session precedence or cwd selection can append to the wrong conversation or execute in an unintended project; naming timing is independently tested.",
+      "size_min": 220,
+      "size_max": 390,
+      "dependencies": [
+        "CLI-003",
+        "CLI-005",
+        "CLI-016",
+        "SESSION-029",
+        "SESSION-031",
+        "SESSION-032",
+        "SESSION-033"
+      ]
+    },
+    {
+      "id": "CLI-007",
+      "title": "CLI model, thinking, fast-mode and tool-option precedence",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Model/scope precedence changes the provider used for a prompt and currently mutates saved native scope unexpectedly compared with TS.",
+      "size_min": 120,
+      "size_max": 240,
+      "dependencies": [
+        "CLI-003",
+        "CLI-005",
+        "AUTH-005",
+        "AUTH-024",
+        "AUTH-025",
+        "AUTH-026",
+        "AI-005",
+        "SESSION-023",
+        "SESSION-036",
+        "SET-011"
+      ]
+    },
+    {
+      "id": "CLI-008",
+      "title": "Piped stdin ownership, complete-input collection and read failures",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Silently dropping a failed piped prompt can execute an unintended partial request; complete-input semantics are directly covered by TS test source.",
+      "size_min": 50,
+      "size_max": 110,
+      "dependencies": [
+        "CLI-004",
+        "CLI-010",
+        "CLI-019",
+        "RPC-016"
+      ]
+    },
+    {
+      "id": "CLI-009",
+      "title": "CLI file attachments, typed text failures and image preprocessing",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Attachment preprocessing controls usable image dimensions, format support and prompt provenance; native raw-image support is present but incomplete.",
+      "size_min": 110,
+      "size_max": 230,
+      "dependencies": [
+        "CLI-008",
+        "CLI-010",
+        "RPC-021",
+        "SESSION-019",
+        "TOOLS-020",
+        "TOOLS-023",
+        "MISC-003"
+      ]
+    },
+    {
+      "id": "CLI-010",
+      "title": "Initial prompt concatenation and remaining-message ownership",
+      "status": "different-by-design",
+      "priority": "P2",
+      "priority_reason": "The live native assembly already matches the meaningful startup behavior; only helper representation/empty-option edges differ.",
+      "size_min": 0,
+      "size_max": 25,
+      "dependencies": [
+        "CLI-008",
+        "CLI-009",
+        "SESSION-019"
+      ]
+    },
+    {
+      "id": "CLI-011",
+      "title": "Credential-print command grammar, output discipline and duration parsing defect",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "Scripts need a deterministic credential-only command; parser errors and incidental startup output can otherwise break integrations or expose diagnostics.",
+      "size_min": 100,
+      "size_max": 190,
+      "dependencies": [
+        "CLI-003",
+        "CLI-012",
+        "AUTH-004"
+      ]
+    },
+    {
+      "id": "CLI-012",
+      "title": "Credential-print provider inference, refresh policy and ambiguity handling",
+      "status": "missing",
+      "priority": "P1",
+      "priority_reason": "Returning a credential from the wrong provider or skipping refresh breaks consumers; the inference and failure rules are more specific than ordinary auth readiness checks.",
+      "size_min": 100,
+      "size_max": 190,
+      "dependencies": [
+        "CLI-011",
+        "AUTH-003",
+        "AUTH-004",
+        "AUTH-024",
+        "AUTH-025"
+      ]
+    },
+    {
+      "id": "CLI-013",
+      "title": "Credential startup migration and recoverable native layout migration",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Migration failure can strand credentials or remove their last normal lookup location; startup must remain recoverable without silently claiming success.",
+      "size_min": 130,
+      "size_max": 240,
+      "dependencies": [
+        "CLI-014",
+        "CLI-018",
+        "AUTH-001",
+        "AUTH-002",
+        "SET-005",
+        "SET-006"
+      ]
+    },
+    {
+      "id": "CLI-014",
+      "title": "Session, managed-binary, prompt-directory and keybinding startup migrations",
+      "status": "partial",
+      "priority": "P2",
+      "priority_reason": "Legacy users need predictable migration, but the current functions contain swallowed failures and a Windows path defect that should not be preserved.",
+      "size_min": 160,
+      "size_max": 300,
+      "dependencies": [
+        "CLI-005",
+        "CLI-013",
+        "CLI-018",
+        "SESSION-029",
+        "SESSION-032",
+        "SET-003",
+        "TUI-048"
+      ]
+    },
+    {
+      "id": "CLI-015",
+      "title": "Official first-run gate and startup theme bootstrap",
+      "status": "partial",
+      "priority": "P2",
+      "priority_reason": "Onboarding is conditional rather than a universal startup gap, but terminal lifetime and preference persistence need precise behavior.",
+      "size_min": 130,
+      "size_max": 250,
+      "dependencies": [
+        "CLI-005",
+        "CLI-016",
+        "SET-007",
+        "SET-009",
+        "TUI-048",
+        "TUI-070",
+        "SET-017",
+        "SET-018",
+        "TUI-007",
+        "TUI-220"
+      ]
+    },
+    {
+      "id": "CLI-016",
+      "title": "Startup selectors, config wrapper and resume-picker terminal lifetime",
+      "status": "partial",
+      "priority": "P2",
+      "priority_reason": "A native resume picker exists, but startup configuration and consistent temporary-terminal cleanup need additional integration.",
+      "size_min": 100,
+      "size_max": 220,
+      "dependencies": [
+        "CLI-006",
+        "CLI-015",
+        "TUI-048",
+        "TUI-062",
+        "TUI-063",
+        "TUI-064",
+        "TUI-068",
+        "TUI-069",
+        "TUI-073"
+      ]
+    },
+    {
+      "id": "CLI-017",
+      "title": "Available-model listing, fuzzy filtering and stable tabular output",
+      "status": "partial",
+      "priority": "P2",
+      "priority_reason": "Both list models, but filtering and availability semantics differ enough to mislead users about which model can actually run.",
+      "size_min": 65,
+      "size_max": 130,
+      "dependencies": [
+        "CLI-003",
+        "CLI-004",
+        "AUTH-006",
+        "AUTH-024",
+        "AI-002",
+        "TUI-235"
+      ]
+    },
+    {
+      "id": "CLI-018",
+      "title": "Exact identity helpers, canonical paths and deliberately limited legacy compatibility",
+      "status": "different-by-design",
+      "priority": "P2",
+      "priority_reason": "The main audit correction is avoiding an invented migration feature; actual alias support and small identity boundaries remain important.",
+      "size_min": 20,
+      "size_max": 80,
+      "dependencies": [
+        "CLI-001",
+        "CLI-002",
+        "CLI-013",
+        "CLI-014",
+        "EXT-002",
+        "SET-001",
+        "SET-005",
+        "SET-010"
+      ]
+    },
+    {
+      "id": "CLI-019",
+      "title": "Offline normalization, startup diagnostics, output ownership and shutdown integration",
+      "status": "partial",
+      "priority": "P1",
+      "priority_reason": "Startup output contamination and mismatched cleanup can break RPC/scripts; several native lifecycle pieces already exist and should be preserved.",
+      "size_min": 140,
+      "size_max": 280,
+      "dependencies": [
+        "CLI-003",
+        "CLI-004",
+        "CLI-005",
+        "CLI-008",
+        "CLI-014",
+        "AI-002",
+        "EXT-007",
+        "SET-013",
+        "OBS-002",
+        "OBS-003",
+        "OBS-004",
+        "OBS-014",
+        "OBS-016",
+        "RPC-017",
+        "RPC-020",
+        "MISC-001",
+        "MISC-002"
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/docs/development.md",
+      "entry_ids": [
+        "CLI-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete local documentation read; CLI instructions are mapped to their implementation owners. External linked pages/install commands were not accessed or executed. Platform helper cross-links will be completed in MISC."
+    },
+    {
+      "path": "packages/coding-agent/docs/packages.md",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": "Package supplement assigned to /root/audit_tools, CLI-020–049; full body reading completed by that worker, authored handoff still pending."
+    },
+    {
+      "path": "packages/coding-agent/docs/quickstart.md",
+      "entry_ids": [
+        "CLI-001",
+        "CLI-003",
+        "CLI-004",
+        "CLI-006",
+        "CLI-009"
+      ],
+      "status": "mapped",
+      "notes": "Complete local documentation read; CLI instructions are mapped to their implementation owners. External linked pages/install commands were not accessed or executed. Platform helper cross-links will be completed in MISC."
+    },
+    {
+      "path": "packages/coding-agent/docs/shell-aliases.md",
+      "entry_ids": [
+        "SET-014"
+      ],
+      "status": "mapped",
+      "notes": "Complete local documentation read; CLI instructions are mapped to their implementation owners. External linked pages/install commands were not accessed or executed. Platform helper cross-links will be completed in MISC."
+    },
+    {
+      "path": "packages/coding-agent/docs/termux.md",
+      "entry_ids": [
+        "CLI-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete local documentation read; CLI instructions are mapped to their implementation owners. External linked pages/install commands were not accessed or executed. Platform helper cross-links will be completed in MISC."
+    },
+    {
+      "path": "packages/coding-agent/docs/usage.md",
+      "entry_ids": [
+        "CLI-003",
+        "CLI-004",
+        "CLI-006",
+        "CLI-007",
+        "CLI-009",
+        "CLI-016"
+      ],
+      "status": "mapped",
+      "notes": "Complete local documentation read; CLI instructions are mapped to their implementation owners. External linked pages/install commands were not accessed or executed. Platform helper cross-links will be completed in MISC."
+    },
+    {
+      "path": "packages/coding-agent/docs/windows.md",
+      "entry_ids": [
+        "SET-014"
+      ],
+      "status": "mapped",
+      "notes": "Complete local documentation read; CLI instructions are mapped to their implementation owners. External linked pages/install commands were not accessed or executed. Platform helper cross-links will be completed in MISC."
+    },
+    {
+      "path": "packages/coding-agent/src/bun/cli.ts",
+      "entry_ids": [
+        "CLI-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/bun/register-bedrock.ts",
+      "entry_ids": [
+        "CLI-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/bun/restore-sandbox-env.ts",
+      "entry_ids": [
+        "CLI-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli.ts",
+      "entry_ids": [
+        "CLI-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/args.ts",
+      "entry_ids": [
+        "CLI-003",
+        "CLI-004"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/config-selector.ts",
+      "entry_ids": [
+        "CLI-016"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/credential-print.ts",
+      "entry_ids": [
+        "CLI-011",
+        "CLI-012"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/file-processor.ts",
+      "entry_ids": [
+        "CLI-009"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/initial-message.ts",
+      "entry_ids": [
+        "CLI-010"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/list-models.ts",
+      "entry_ids": [
+        "CLI-017"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/piped-stdin.ts",
+      "entry_ids": [
+        "CLI-008"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/session-picker.ts",
+      "entry_ids": [
+        "CLI-016"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/cli/startup-ui.ts",
+      "entry_ids": [
+        "CLI-015",
+        "CLI-016"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/bootstrap.ts",
+      "entry_ids": [
+        "CLI-001",
+        "CLI-018"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "entry_ids": [
+        "CLI-018"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/env.ts",
+      "entry_ids": [
+        "CLI-018"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+      "entry_ids": [
+        "CLI-018",
+        "EXT-002"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/identity.ts",
+      "entry_ids": [
+        "CLI-018"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/paths.ts",
+      "entry_ids": [
+        "CLI-018"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": "Package supplement assigned to /root/audit_tools, CLI-020–049; full body reading completed by that worker, authored handoff still pending."
+    },
+    {
+      "path": "packages/coding-agent/src/ice.ts",
+      "entry_ids": [
+        "CLI-002"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/main.ts",
+      "entry_ids": [
+        "CLI-004",
+        "CLI-005",
+        "CLI-006",
+        "CLI-007",
+        "CLI-019"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/migrations.ts",
+      "entry_ids": [
+        "CLI-013",
+        "CLI-014"
+      ],
+      "status": "mapped",
+      "notes": "Complete assigned source body read with frozen identity. Concrete native counterpart and tests are credited in cli-source-review.json."
+    },
+    {
+      "path": "packages/coding-agent/src/package-manager-cli.ts",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": "Package supplement assigned to /root/audit_tools, CLI-020–049; full body reading completed by that worker, authored handoff still pending."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "paths",
+      "name": "\"/proc/self/environ\"",
+      "ice_ref": "packages/coding-agent/src/bun/restore-sandbox-env.ts:26",
+      "rust_ref": "crates/ice-cli/src/bin/ice.rs:16",
+      "status": "partial",
+      "entry_id": "CLI-001",
+      "candidate_ids": [
+        "C000154"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_CODING_AGENT",
+      "ice_ref": "packages/coding-agent/src/cli.ts:13",
+      "rust_ref": "crates/ice-cli/src/bin/ice.rs:16",
+      "status": "partial",
+      "entry_id": "CLI-001",
+      "candidate_ids": [
+        "C000160"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "AI_AGENT",
+      "ice_ref": "packages/coding-agent/src/cli.ts:14",
+      "rust_ref": "crates/ice-cli/src/bin/ice.rs:16",
+      "status": "partial",
+      "entry_id": "CLI-001",
+      "candidate_ids": [
+        "C000161"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--help",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:80",
+      "rust_ref": "crates/ice-cli/src/args.rs:322",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000162"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--version",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:82",
+      "rust_ref": "crates/ice-cli/src/args.rs:323",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000163"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--print-system-template",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:84",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000164"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--mode",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:86",
+      "rust_ref": "crates/ice-cli/src/args.rs:338",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000165"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--observe",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:91",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000166"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--observe",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:92",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000167"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--continue",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:102",
+      "rust_ref": "crates/ice-cli/src/args.rs:367",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000168"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--resume",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:104",
+      "rust_ref": "crates/ice-cli/src/args.rs:368",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000169"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--provider",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:106",
+      "rust_ref": "crates/ice-cli/src/args.rs:385",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000170"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--model",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:108",
+      "rust_ref": "crates/ice-cli/src/args.rs:386",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000171"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--api-key",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:110",
+      "rust_ref": "crates/ice-cli/src/args.rs:387",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000172"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--system-prompt",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:112",
+      "rust_ref": "crates/ice-cli/src/args.rs:401",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000173"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--append-system-prompt",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:114",
+      "rust_ref": "crates/ice-cli/src/args.rs:402",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000174"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--name",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:117",
+      "rust_ref": "crates/ice-cli/src/args.rs:407",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000175"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-session",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:123",
+      "rust_ref": "crates/ice-cli/src/args.rs:369",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000176"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--session",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:125",
+      "rust_ref": "crates/ice-cli/src/args.rs:408",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000177"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--session-id",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:127",
+      "rust_ref": "crates/ice-cli/src/args.rs:409",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000178"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--fork",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:129",
+      "rust_ref": "crates/ice-cli/src/args.rs:410",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000179"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--session-dir",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:131",
+      "rust_ref": "crates/ice-cli/src/args.rs:431",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000180"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--models",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:133",
+      "rust_ref": "crates/ice-cli/src/args.rs:411",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000181"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-tools",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:135",
+      "rust_ref": "crates/ice-cli/src/args.rs:370",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000182"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-builtin-tools",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:137",
+      "rust_ref": "crates/ice-cli/src/args.rs:371",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000183"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--tools",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:139",
+      "rust_ref": "crates/ice-cli/src/args.rs:447",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000184"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--exclude-tools",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:144",
+      "rust_ref": "crates/ice-cli/src/args.rs:452",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000185"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--thinking",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:149",
+      "rust_ref": "crates/ice-cli/src/args.rs:436",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000186"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--fast",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:159",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000187"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-fast",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:161",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000188"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--print",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:163",
+      "rust_ref": "crates/ice-cli/src/args.rs:324",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000189"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--export",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:170",
+      "rust_ref": "crates/ice-cli/src/args.rs:472",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000190"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--extension",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:172",
+      "rust_ref": "crates/ice-cli/src/args.rs:416",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000191"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-extensions",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:175",
+      "rust_ref": "crates/ice-cli/src/args.rs:375",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000192"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--skill",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:177",
+      "rust_ref": "crates/ice-cli/src/args.rs:421",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000193"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--prompt-template",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:180",
+      "rust_ref": "crates/ice-cli/src/args.rs:426",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000194"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--theme",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:183",
+      "rust_ref": "crates/ice-cli/src/args.rs:503",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000195"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-skills",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:186",
+      "rust_ref": "crates/ice-cli/src/args.rs:372",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000196"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-prompt-templates",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:188",
+      "rust_ref": "crates/ice-cli/src/args.rs:373",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000197"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-themes",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:190",
+      "rust_ref": "crates/ice-cli/src/args.rs:506",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000198"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-context-files",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:192",
+      "rust_ref": "crates/ice-cli/src/args.rs:374",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000199"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--list-models",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:194",
+      "rust_ref": "crates/ice-cli/src/args.rs:457",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000200"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--ui-mode",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:201",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000201"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--verbose",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:215",
+      "rust_ref": "crates/ice-cli/src/args.rs:383",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000202"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--approve",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:217",
+      "rust_ref": "crates/ice-cli/src/args.rs:477",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000203"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--no-approve",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:219",
+      "rust_ref": "crates/ice-cli/src/args.rs:478",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000204"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--offline",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:221",
+      "rust_ref": "crates/ice-cli/src/args.rs:471",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [
+        "C000205"
+      ],
+      "notes": "Exact public spelling; token consumption, repeats, invalid/missing values and downstream behavior are described in CLI-003 and its consumer entries. Native reference, when present, identifies its actual parser branch."
+    },
+    {
+      "category": "cli",
+      "name": "--help",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:20",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-011",
+      "candidate_ids": [
+        "C000206"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--min-expiry",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:46",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-011",
+      "candidate_ids": [
+        "C000207"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "paths",
+      "name": "absolutePath",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:50",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [
+        "C000217"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "paths",
+      "name": "absolutePath",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:63",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [
+        "C000218"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "paths",
+      "name": "absolutePath",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:90",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [
+        "C000219"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "paths",
+      "name": ".ice",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:28",
+      "rust_ref": "crates/ice-cli/src/extras.rs:35",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [
+        "C000220"
+      ],
+      "notes": "Official-distribution metadata or override gate, not a general legacy-home discovery path."
+    },
+    {
+      "category": "environment",
+      "name": "<dynamic env: ENV_AGENT_DIR>",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:128",
+      "rust_ref": "crates/ice-cli/src/extras.rs:35",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [
+        "C000221"
+      ],
+      "notes": "Official-distribution metadata or override gate, not a general legacy-home discovery path."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_CODING_AGENT",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/bootstrap.ts:5",
+      "rust_ref": "crates/ice-cli/src/bin/ice.rs:16",
+      "status": "partial",
+      "entry_id": "CLI-001",
+      "candidate_ids": [
+        "C000527"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "paths",
+      "name": ".ice",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/paths.ts:4",
+      "rust_ref": "crates/ice-cli/src/config.rs:93",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [
+        "C000528"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_CODING_AGENT",
+      "ice_ref": "packages/coding-agent/src/ice.ts:25",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000914"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "AI_AGENT",
+      "ice_ref": "packages/coding-agent/src/ice.ts:26",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000915"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "PI_CODING_AGENT_DIR",
+      "ice_ref": "packages/coding-agent/src/ice.ts:29",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000916"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--import-agent-pack",
+      "ice_ref": "packages/coding-agent/src/ice.ts:34",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000917"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--import-agent-pack",
+      "ice_ref": "packages/coding-agent/src/ice.ts:41",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000918"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_OFFLINE",
+      "ice_ref": "packages/coding-agent/src/ice.ts:76",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000919"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--offline",
+      "ice_ref": "packages/coding-agent/src/ice.ts:77",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000920"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--help",
+      "ice_ref": "packages/coding-agent/src/ice.ts:79",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000921"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--version",
+      "ice_ref": "packages/coding-agent/src/ice.ts:79",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000922"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "hooks",
+      "name": "session_shutdown",
+      "ice_ref": "packages/coding-agent/src/ice.ts:117",
+      "rust_ref": "crates/ice-cli/src/app.rs:138",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [
+        "C000923"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "cli",
+      "name": "--session",
+      "ice_ref": "packages/coding-agent/src/main.ts:259",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000924"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--continue",
+      "ice_ref": "packages/coding-agent/src/main.ts:260",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000925"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--resume",
+      "ice_ref": "packages/coding-agent/src/main.ts:261",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000926"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--no-session",
+      "ice_ref": "packages/coding-agent/src/main.ts:262",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000927"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--session",
+      "ice_ref": "packages/coding-agent/src/main.ts:275",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000928"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--continue",
+      "ice_ref": "packages/coding-agent/src/main.ts:276",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000929"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--resume",
+      "ice_ref": "packages/coding-agent/src/main.ts:277",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000930"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--offline",
+      "ice_ref": "packages/coding-agent/src/main.ts:533",
+      "rust_ref": "crates/ice-cli/src/app.rs:100",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [
+        "C000931"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_OFFLINE",
+      "ice_ref": "packages/coding-agent/src/main.ts:533",
+      "rust_ref": "crates/ice-cli/src/app.rs:100",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [
+        "C000932"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_OFFLINE",
+      "ice_ref": "packages/coding-agent/src/main.ts:535",
+      "rust_ref": "crates/ice-cli/src/app.rs:100",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [
+        "C000933"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_SKIP_VERSION_CHECK",
+      "ice_ref": "packages/coding-agent/src/main.ts:536",
+      "rust_ref": "crates/ice-cli/src/app.rs:100",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [
+        "C000934"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "environment",
+      "name": "<dynamic env: ENV_SESSION_DIR>",
+      "ice_ref": "packages/coding-agent/src/main.ts:648",
+      "rust_ref": "crates/ice-cli/src/session.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-006",
+      "candidate_ids": [
+        "C000935"
+      ],
+      "notes": "Session option validation/directory precedence; native reference is selection logic, not proof of matching behavior."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_STARTUP_BENCHMARK",
+      "ice_ref": "packages/coding-agent/src/main.ts:890",
+      "rust_ref": "crates/ice-cli/src/app.rs:100",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [
+        "C000936"
+      ],
+      "notes": "Source-derived launcher/input/identity surface; native reference identifies the actual adjacent boundary and the entry states the precise difference."
+    },
+    {
+      "category": "paths",
+      "name": "oauthPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:35",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-013",
+      "candidate_ids": [
+        "C000937"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "oauthPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:40",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-013",
+      "candidate_ids": [
+        "C000938"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "settingsPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:49",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-013",
+      "candidate_ids": [
+        "C000939"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "settingsPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:59",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-013",
+      "candidate_ids": [
+        "C000940"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "dirname(authPath)",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:67",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-013",
+      "candidate_ids": [
+        "C000941"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "authPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:68",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-013",
+      "candidate_ids": [
+        "C000942"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "agentDir",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:89",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000943"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "file",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:101",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000944"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "correctDir",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:116",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000945"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "file",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:125",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000946"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "commandsDir",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:142",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000947"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "configPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:161",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000948"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "configPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:167",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000949"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "binDir",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:192",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000950"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "oldPath",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:196",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000951"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "toolsDir",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:233",
+      "rust_ref": "crates/ice-cli/src/config.rs:195",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [
+        "C000952"
+      ],
+      "notes": "Filesystem action in the ordered startup migration contract; source/destination, catches and recovery semantics are specified in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "-h",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:80",
+      "rust_ref": "crates/ice-cli/src/args.rs:322",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-v",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:82",
+      "rust_ref": "crates/ice-cli/src/args.rs:323",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-c",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:102",
+      "rust_ref": "crates/ice-cli/src/args.rs:367",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-r",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:104",
+      "rust_ref": "crates/ice-cli/src/args.rs:368",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-n",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:117",
+      "rust_ref": "crates/ice-cli/src/args.rs:407",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-nt",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:135",
+      "rust_ref": "crates/ice-cli/src/args.rs:370",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-nbt",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:137",
+      "rust_ref": "crates/ice-cli/src/args.rs:371",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-t",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:139",
+      "rust_ref": "crates/ice-cli/src/args.rs:447",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-xt",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:144",
+      "rust_ref": "crates/ice-cli/src/args.rs:452",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-p",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:163",
+      "rust_ref": "crates/ice-cli/src/args.rs:324",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-e",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:172",
+      "rust_ref": "crates/ice-cli/src/args.rs:416",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-ne",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:175",
+      "rust_ref": "crates/ice-cli/src/args.rs:375",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-ns",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:186",
+      "rust_ref": "crates/ice-cli/src/args.rs:372",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-np",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:188",
+      "rust_ref": "crates/ice-cli/src/args.rs:373",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-nc",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:192",
+      "rust_ref": "crates/ice-cli/src/args.rs:374",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-a",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:217",
+      "rust_ref": "crates/ice-cli/src/args.rs:477",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "-na",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:219",
+      "rust_ref": "crates/ice-cli/src/args.rs:478",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Manually added short alias omitted from mechanical long-flag inventory; exact branch shares the canonical option contract."
+    },
+    {
+      "category": "cli",
+      "name": "unknownFlags",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:59",
+      "rust_ref": "crates/ice-cli/src/args.rs:271",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Public parser/result boundary; detailed ordering and errors are specified, not inferred from field names."
+    },
+    {
+      "category": "cli",
+      "name": "diagnostics",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:60",
+      "rust_ref": "crates/ice-cli/src/args.rs:271",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Public parser/result boundary; detailed ordering and errors are specified, not inferred from field names."
+    },
+    {
+      "category": "cli",
+      "name": "parseArgs",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:69",
+      "rust_ref": "crates/ice-cli/src/args.rs:271",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Public parser/result boundary; detailed ordering and errors are specified, not inferred from field names."
+    },
+    {
+      "category": "cli",
+      "name": "isValidThinkingLevel",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:65",
+      "rust_ref": "crates/ice-cli/src/args.rs:271",
+      "status": "partial",
+      "entry_id": "CLI-003",
+      "candidate_ids": [],
+      "notes": "Public parser/result boundary; detailed ordering and errors are specified, not inferred from field names."
+    },
+    {
+      "category": "cli",
+      "name": "auth print-api-key",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:36",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-011",
+      "candidate_ids": [],
+      "notes": "Credential-print grammar or resolver boundary; native auth dispatch lacks the corresponding value-print command."
+    },
+    {
+      "category": "cli",
+      "name": "auth print-bearer-token",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:36",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-011",
+      "candidate_ids": [],
+      "notes": "Credential-print grammar or resolver boundary; native auth dispatch lacks the corresponding value-print command."
+    },
+    {
+      "category": "cli",
+      "name": "validateCredentialPrintArgs",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:66",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-011",
+      "candidate_ids": [],
+      "notes": "Credential-print grammar or resolver boundary; native auth dispatch lacks the corresponding value-print command."
+    },
+    {
+      "category": "cli",
+      "name": "resolveCredentialForPrint",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:84",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-012",
+      "candidate_ids": [],
+      "notes": "Credential-print grammar or resolver boundary; native auth dispatch lacks the corresponding value-print command."
+    },
+    {
+      "category": "cli",
+      "name": "minOAuthValidityMs",
+      "ice_ref": "packages/coding-agent/src/cli/credential-print.ts:123",
+      "rust_ref": "crates/ice-cli/src/auth.rs:48",
+      "status": "missing",
+      "entry_id": "CLI-012",
+      "candidate_ids": [],
+      "notes": "Credential-print grammar or resolver boundary; native auth dispatch lacks the corresponding value-print command."
+    },
+    {
+      "category": "cli",
+      "name": "autoResizeImages",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:19",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [],
+      "notes": "Attachment helper option/error surface; default, branch order and failure behavior are recorded in CLI-009."
+    },
+    {
+      "category": "cli",
+      "name": "cwd",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:21",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [],
+      "notes": "Attachment helper option/error surface; default, branch order and failure behavior are recorded in CLI-009."
+    },
+    {
+      "category": "cli",
+      "name": "maxTextBytes",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:23",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [],
+      "notes": "Attachment helper option/error surface; default, branch order and failure behavior are recorded in CLI-009."
+    },
+    {
+      "category": "cli",
+      "name": "FileArgumentError.code",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:28",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [],
+      "notes": "Attachment helper option/error surface; default, branch order and failure behavior are recorded in CLI-009."
+    },
+    {
+      "category": "cli",
+      "name": "processFileArguments",
+      "ice_ref": "packages/coding-agent/src/cli/file-processor.ts:38",
+      "rust_ref": "crates/ice-cli/src/app.rs:807",
+      "status": "partial",
+      "entry_id": "CLI-009",
+      "candidate_ids": [],
+      "notes": "Attachment helper option/error surface; default, branch order and failure behavior are recorded in CLI-009."
+    },
+    {
+      "category": "environment",
+      "name": "getCompatibleConfigEnv",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:3",
+      "rust_ref": "crates/ice-cli/src/config.rs:93",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Exact-name lookup/copy/delete semantics; no implicit PI/PIV environment promotion."
+    },
+    {
+      "category": "environment",
+      "name": "getIceEnv",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:13",
+      "rust_ref": "crates/ice-cli/src/config.rs:93",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Exact-name lookup/copy/delete semantics; no implicit PI/PIV environment promotion."
+    },
+    {
+      "category": "environment",
+      "name": "normalizeLegacyEnvironment",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:17",
+      "rust_ref": "crates/ice-cli/src/config.rs:93",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Exact-name lookup/copy/delete semantics; no implicit PI/PIV environment promotion."
+    },
+    {
+      "category": "environment",
+      "name": "clearSessionEnvironment",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:29",
+      "rust_ref": "crates/ice-cli/src/config.rs:93",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Exact-name lookup/copy/delete semantics; no implicit PI/PIV environment promotion."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_SESSION_ID",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:22",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "These are the exact names removed by clearSessionEnvironment, not reads or startup credential variables."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_SESSION_FILE",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:23",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "These are the exact names removed by clearSessionEnvironment, not reads or startup credential variables."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_PROVIDER",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:24",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "These are the exact names removed by clearSessionEnvironment, not reads or startup credential variables."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_MODEL",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:25",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "These are the exact names removed by clearSessionEnvironment, not reads or startup credential variables."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_REASONING_LEVEL",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/env.ts:26",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "These are the exact names removed by clearSessionEnvironment, not reads or startup credential variables."
+    },
+    {
+      "category": "paths",
+      "name": "compatibleConfigRoot",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/paths.ts:4",
+      "rust_ref": "crates/ice-cli/src/config.rs:93",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "matchesEntryType",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/identity.ts:1",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "normalizeLegacySettings",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/identity.ts:5",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "compatibleCogneeStorageDir",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/cognee.ts:3",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "compatibleBlackholeConfigPath",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/cognee.ts:7",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "LEGACY_PI_EXTENSION_ALIASES",
+      "ice_ref": "packages/coding-agent/src/core/legacy-compat/extension-aliases.ts:17",
+      "rust_ref": "",
+      "status": "different-by-design",
+      "entry_id": "CLI-018",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "buildInitialMessage",
+      "ice_ref": "packages/coding-agent/src/cli/initial-message.ts:20",
+      "rust_ref": "crates/ice-cli/src/app.rs:863",
+      "status": "different-by-design",
+      "entry_id": "CLI-010",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "readPipedStdin",
+      "ice_ref": "packages/coding-agent/src/cli/piped-stdin.ts:7",
+      "rust_ref": "crates/ice-cli/src/app.rs:776",
+      "status": "partial",
+      "entry_id": "CLI-008",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "listModels",
+      "ice_ref": "packages/coding-agent/src/cli/list-models.ts:29",
+      "rust_ref": "crates/ice-cli/src/app.rs:654",
+      "status": "partial",
+      "entry_id": "CLI-017",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "selectConfig",
+      "ice_ref": "packages/coding-agent/src/cli/config-selector.ts:20",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-016",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "selectSession",
+      "ice_ref": "packages/coding-agent/src/cli/session-picker.ts:15",
+      "rust_ref": "crates/ice-cli/src/resume_picker.rs:16",
+      "status": "partial",
+      "entry_id": "CLI-016",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "showStartupSelector",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:134",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-016",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "showStartupInput",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:207",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-016",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "shouldRunFirstTimeSetup",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:115",
+      "rust_ref": "crates/ice-cli/src/extras.rs:35",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "showFirstTimeSetup",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:166",
+      "rust_ref": "crates/ice-cli/src/extras.rs:35",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "createStartupTui",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:77",
+      "rust_ref": "crates/ice-cli/src/resume_picker.rs:102",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "startStartupTui",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:87",
+      "rust_ref": "crates/ice-cli/src/resume_picker.rs:110",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "runMigrations",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:304",
+      "rust_ref": "crates/ice-cli/src/config.rs:176",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "showDeprecationWarnings",
+      "ice_ref": "packages/coding-agent/src/migrations.ts:276",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-014",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "main",
+      "ice_ref": "packages/coding-agent/src/main.ts:530",
+      "rust_ref": "crates/ice-cli/src/app.rs:82",
+      "status": "partial",
+      "entry_id": "CLI-005",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "globalFirstSettings",
+      "ice_ref": "packages/coding-agent/src/main.ts:547",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-005",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "cli",
+      "name": "agentViewBridge",
+      "ice_ref": "packages/coding-agent/src/ice.ts:101",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-002",
+      "candidate_ids": [],
+      "notes": "Manually inventoried helper/caller surface. Runtime and dependency ownership are explicit in the entry."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_EXPERIMENTAL",
+      "ice_ref": "packages/coding-agent/src/cli/startup-ui.ts:125",
+      "rust_ref": "crates/ice-cli/src/extras.rs:35",
+      "status": "partial",
+      "entry_id": "CLI-015",
+      "candidate_ids": [],
+      "notes": "First-run eligibility delegates to experimental-feature check; native sentinel banner has a different gate."
+    },
+    {
+      "category": "paths",
+      "name": "observability.sqlite",
+      "ice_ref": "packages/coding-agent/src/main.ts:911",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [],
+      "notes": "Always-on recording startup location; OBS-003/011 own store schema and lifetime."
+    },
+    {
+      "category": "paths",
+      "name": "observe.token",
+      "ice_ref": "packages/coding-agent/src/main.ts:935",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-019",
+      "candidate_ids": [],
+      "notes": "Dashboard token caller; OBS-014 owns token file and auth semantics."
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/bun/cli.ts",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "sha256": "d4e2f847548edf90e151792327a7bbe0c63579ac8d73201ce463a2796efa963b",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/bun/register-bedrock.ts",
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "sha256": "cf6e24e4cc32a8d485af113e7cb7c693056283ba181ebce90b658b8bf49b974b",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/bun/restore-sandbox-env.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "sha256": "4dbbbc01b6e701457651c1c116d37a0a4f3f0143bc52047fc49c0891464c6194",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli.ts",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "sha256": "8248c666b01d3c8f167f600ce6550fca18a6f75cb89d7cb2119379e7d647fabc",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/bootstrap.ts",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "sha256": "b0d8a088813c1efbb7b05873b6f04009bf3f74ee11232ebe91841c7e13c167a6",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "sha256": "10b11ba53257cc7245f5fb6d30c1011649a360446c7e34823c572aeb14a269af",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/env.ts",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "sha256": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/identity.ts",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "sha256": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "sha256": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/paths.ts",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "sha256": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/initial-message.ts",
+      "ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/piped-stdin.ts",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "sha256": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/config-selector.ts",
+      "ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "sha256": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/session-picker.ts",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "sha256": "fde66d460850f578ee3926cee9f0f443e3b9013576cc75149becaf6cc5cafc97",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice.ts",
+      "ranges": [
+        [
+          1,
+          131
+        ]
+      ],
+      "sha256": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/args.ts",
+      "ranges": [
+        [
+          1,
+          444
+        ]
+      ],
+      "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/list-models.ts",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "sha256": "89ca421d0b27f8f2f70d42f31f183fa215ffdf43970fecd83fe2e0519b486151",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/startup-ui.ts",
+      "ranges": [
+        [
+          1,
+          240
+        ]
+      ],
+      "sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/migrations.ts",
+      "ranges": [
+        [
+          1,
+          315
+        ]
+      ],
+      "sha256": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "ranges": [
+        [
+          1,
+          1008
+        ]
+      ],
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/args.rs",
+      "ranges": [
+        [
+          1,
+          1121
+        ]
+      ],
+      "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "ranges": [
+        [
+          1,
+          95
+        ],
+        [
+          97,
+          1015
+        ]
+      ],
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/lib.rs",
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "sha256": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/bin/ice.rs",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/development.md",
+      "ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "sha256": "6b5c261120d71c3f21cc3fdee2390c41216989bb0f198d7f2dacb19e377c9f9b",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/quickstart.md",
+      "ranges": [
+        [
+          1,
+          166
+        ]
+      ],
+      "sha256": "26e42dd657e3126f7cca243f315f87ad9d550c3ea9ef4d87f01f7a511e0088a5",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/shell-aliases.md",
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "sha256": "52bfdc758316c8506919ca8e438da63f3e97caa51156ec60c86e425eea4ff604",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/windows.md",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "sha256": "d5186e93218c89923525215b808394a834c6f4f0d3cea2ce55afffc8b2d9e478",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/termux.md",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "sha256": "3ec1ab10e1687b9f38e383a81429f249214eae0e42e58becb9ac497abfe091dd",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/usage.md",
+      "ranges": [
+        [
+          1,
+          324
+        ]
+      ],
+      "sha256": "dfa824ebbf9756824d50a25542a0c303ba25197ada24c4c492e98d37999e1456",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/file-processor.ts",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "ranges": [
+        [
+          60,
+          250
+        ],
+        [
+          260,
+          275
+        ],
+        [
+          402,
+          428
+        ],
+        [
+          1560,
+          1612
+        ]
+      ],
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/credential-print.test.ts",
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/initial-message.test.ts",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "sha256": "8b95eb212ced64c20423f7dd5ffa9a972652f6d5ab1abb205a424cff2e17b356",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/piped-stdin.test.ts",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "sha256": "8d7ec91cd814d9cf580f0bd599418a017ab8cfc319f663ccd47e32abccbbc33a",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/first-time-setup.test.ts",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "sha256": "c66796eaa8e4ec21000169fc1f6671d68a16acb707c10686f5121173e021480e",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "sha256": "84442c2875ec70c0536b984a3a192faeabb4976012fd535f9934087483f56a2d",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/startup-session-name.test.ts",
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "sha256": "671c91057777d97bfa4f06ac6efc9afdefa71c70e36b26401dd5e7bb3b5eb806",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/args.test.ts",
+      "ranges": [
+        [
+          1,
+          467
+        ]
+      ],
+      "sha256": "258fac826243fe9696f75f781ece605f6303649e03d339f973a8c8aabea5910d",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/paths-and-cli.test.ts",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "sha256": "1e2d67f18efe1784abaa16110cdb2b92a58a566d3193fb211d23e8ae59496c55",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/restore-sandbox-env.test.ts",
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "sha256": "14485f0f5f478475206f15ebd48191090c437f40b79ebfdf2d652d4681e71d02",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/identity-inputs.test.ts",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "sha256": "21d7d4b216ea53f9cf6229ac1ec34ddf20d19cd92f8b2ada473648cdd1419eed",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/config-references.test.ts",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "sha256": "76fa0181c59191bec4bdc1698981837c615ca18162338a476239f099636739ff",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "sha256": "d3eca3a0f570ad39503615a18d765ec9d97c6d9a6ebcaf2901a81d61f522ca71",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "sha256": "9d0837d33c091fba4164442168e630cebe30f32aa6da7c0d29c6191ac3e374cc",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/max-thinking.test.ts",
+      "ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "sha256": "be1cc17b81c7f1c3268d4f978c73654a4142880a7e0a2f26aea67bcf14bc528d",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-resize-callers.test.ts",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "sha256": "f77a92109158e558cc26430a80f82351bd1ef4884d494ab643c29652c00bc25c",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/block-images.test.ts",
+      "ranges": [
+        [
+          1,
+          149
+        ]
+      ],
+      "sha256": "739ffc6dc4c9cc9de971e8bac12cd73e3e6e5b9f266a56228238f66ccb4673b8",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/extras.rs",
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "sha256": "61e83e2da92a4751cb60d0bf70ea624f6907604cb7eeed9679c70cf187f749f5",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/session.rs",
+      "ranges": [
+        [
+          100,
+          240
+        ],
+        [
+          328,
+          466
+        ],
+        [
+          2050,
+          2340
+        ],
+        [
+          2480,
+          2544
+        ],
+        [
+          2676,
+          2735
+        ],
+        [
+          3670,
+          3915
+        ]
+      ],
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "ranges": [
+        [
+          992,
+          1030
+        ]
+      ],
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/resume_picker.rs",
+      "ranges": [
+        [
+          1,
+          247
+        ]
+      ],
+      "sha256": "ea7e40fd60897a161c3550c403ff10f01891ff0ba8dab6cc9a307cc932eae97d",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/auth.rs",
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/config-value-migration.test.ts",
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "sha256": "9ac59f1e2fd11d0e7ef1bdd980727e4b8c5a73c22ba7ca3baa515e9ad90648f5",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5661-uppercase-header-values.test.ts",
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "sha256": "0ffc9a48b0f980339bd8748d7064ea2e832e7a817441de29f68ad94695ac7149",
+      "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/keybindings-migration.test.ts",
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "sha256": "c4a60d6014e09c645855ae377b8a63459d97ed2dfde34462f8e0cf2480c39d31",
+      "notes": "TUI-048 owns pure transformation; CLI owns on-disk caller."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/extensions-discovery.test.ts",
+      "ranges": [
+        [
+          1,
+          531
+        ]
+      ],
+      "sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+      "notes": "Coordinator confirmed full frozen source read; extension discovery implementation remains EXT ownership."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-subagent-task-contract.test.ts",
+      "ranges": [
+        [
+          1,
+          500
+        ]
+      ],
+      "sha256": "d1d91048cfe0d24015e6764c79d6f81c5f7e870b2f66110f35fc077a32e62367",
+      "notes": "Coordinator confirmed full clean tracked frozen Git revision body, absent initial manifest; SUB owns task contract."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-test-utils.ts",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "notes": "Reused complete helper source read from RPC pass; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/harness.ts",
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "sha256": "c8cd19cf5f20fe394f404f128b793fc5b3bb3f79bd7f74d9a88ee6e1c1fcc347",
+      "notes": "Reused complete source-only helper read from RPC pass."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "ranges": [
+        [
+          3080,
+          3110
+        ],
+        [
+          4452,
+          4505
+        ]
+      ],
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "notes": "Bounded complete visible-body read by this worker through read-evidence.mjs during MISC tracing. Adds later image normalization credit; no application or tests executed."
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000155",
+      "ice_ref": "packages/coding-agent/src/bun/restore-sandbox-env.ts:30",
+      "reason": "Mechanical indexed-env-read classification is false: this line assigns restored names into process.env. The actual environment restoration/write contract and raw /proc input are covered by CLI-001; no independent environment lookup exists at this candidate."
+    }
+  ],
+  "claims": [
+    {
+      "first_pass_lines": [
+        426,
+        427
+      ],
+      "claim": "Package resource selector is missing in native.",
+      "verdict": "partly confirmed; wrapper/component ownership distinguished",
+      "finding": "TS selectConfig owns temporary terminal startup, scope parameters and stop/watch cleanup; its resource mutations are TUI-068/069 and package routing is the package supplement. Native startup dispatcher has no equivalent config command wrapper, but native generic session/settings selectors are real and should not be called absent.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/config-selector.ts:20-55",
+        "rust:crates/ice-cli/src/app.rs:138-172"
+      ],
+      "entry_ids": [
+        "CLI-016"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        438,
+        438
+      ],
+      "claim": "--fast/--no-fast are absent from native args and request the priority tier.",
+      "verdict": "confirmed parser gap; downstream behavior delegated",
+      "finding": "Native parser lacks these builtin spellings. TS carries a defined true/false fastMode through buildSessionOptions; actual provider/session support and service-tier behavior belongs to SESSION/AI, so a parser flag alone is not completion.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/args.ts:159-162",
+        "ice:packages/coding-agent/src/main.ts:471-477",
+        "rust:crates/ice-cli/src/args.rs:271-555"
+      ],
+      "entry_ids": [
+        "CLI-003",
+        "CLI-007"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        439,
+        439
+      ],
+      "claim": "--observe[=port] is a dashboard gap.",
+      "verdict": "confirmed with startup distinction",
+      "finding": "The flag grammar is bare true or Number-converted integer1..65535; it adds an optional dashboard to an always-on recorder rather than enabling all observability. OBS-003/014/016 own the native service gap.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/args.ts:91-100",
+        "ice:packages/coding-agent/src/main.ts:906-946",
+        "rust:crates/ice-cli/src/args.rs:271-555"
+      ],
+      "entry_ids": [
+        "CLI-003",
+        "CLI-019"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        440,
+        440
+      ],
+      "claim": "--print-system-template prints the template and exits; missing in native.",
+      "verdict": "confirmed with exact short-circuit order",
+      "finding": "TS outputs DEFAULT_BASE_TEMPLATE plus LF after parser-error/version checks and before export/migrations/runtime. Native has debug-system-prompt but no same builtin flag/output route.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/args.ts:84-85",
+        "ice:packages/coding-agent/src/main.ts:576-604",
+        "rust:crates/ice-cli/src/args.rs:271-555"
+      ],
+      "entry_ids": [
+        "CLI-003",
+        "CLI-004"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        441,
+        441
+      ],
+      "claim": "--ui-mode regular/fullscreen is missing in native.",
+      "verdict": "qualified: spelling/default/validation differ, native mode exists",
+      "finding": "Native --tui-mode supports regular/fullscreen, case-insensitively, with platform-specific default. The exact TS --ui-mode spelling is not builtin; that does not mean the native renderer lacks either mode. TUI owns actual renderer differences.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/args.ts:201-213",
+        "rust:crates/ice-cli/src/args.rs:76-105",
+        "rust:crates/ice-cli/src/args.rs:271-555"
+      ],
+      "entry_ids": [
+        "CLI-003",
+        "CLI-004"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        442,
+        443
+      ],
+      "claim": "ICE guarded-mode/subagent flags and agents/import-pack commands are missing from native.",
+      "verdict": "caller routing confirmed; authority semantics cross-owned",
+      "finding": "The ICE wrapper explicitly runs import-pack and agents early, validates normalized distribution flags and installs four builtin integrations. Native app has different early commands. Full policy/agent-definition semantics are SUB and SAFE ownership, with CLI-002 tracking the actual invocation/order.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice.ts:34-73",
+        "ice:packages/coding-agent/src/ice.ts:88-130",
+        "rust:crates/ice-cli/src/app.rs:104-172"
+      ],
+      "entry_ids": [
+        "CLI-002"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        637,
+        637
+      ],
+      "claim": "Legacy compatibility maps old pi/ice environment variables, paths and extension names and is irrelevant until users migrate.",
+      "verdict": "corrected",
+      "finding": "Current env/path/identity helpers intentionally do not promote historical namespaces or discover .pi trees. They use exact own names, shallow copies and canonical path joins. Fourteen exact module aliases and concrete startup migrations remain active current behavior. Migration failures require repair, not a blanket n/a label.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-31",
+        "ice:packages/coding-agent/src/core/legacy-compat/identity.ts:1-10",
+        "ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-6",
+        "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts:17-36",
+        "ice:packages/coding-agent/src/migrations.ts:304-314"
+      ],
+      "entry_ids": [
+        "CLI-013",
+        "CLI-014",
+        "CLI-018"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        638,
+        638
+      ],
+      "claim": "PI_CODING_AGENT_DIR bridge lets Pi packages use ICE state; Rust cannot load Pi TS packages.",
+      "verdict": "TS marker confirmed; categorical native claim requires bridge-specific comparison",
+      "finding": "TS uses nullish assignment and preserves an existing empty value. This marker is not broad home-state import. Native package/bridge capability must be determined by EXT-001/002 and the package supplement; the absence of this launcher assignment does not prove all native Pi interoperation impossible.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice.ts:24-31",
+        "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts:14-36",
+        "rust:crates/ice-cli/src/app.rs:82-172"
+      ],
+      "entry_ids": [
+        "CLI-002",
+        "CLI-018"
+      ]
+    }
+  ],
+  "dependency_requests": [
+    {
+      "entry_id": "CLI-001",
+      "area": "settings-resources",
+      "capability": "Global HTTP dispatcher implementation and replacement lifetime",
+      "confirmed_entry_ids": [
+        "SET-013"
+      ],
+      "status": "Confirmed complete algorithm and lifetime ownership by root."
+    },
+    {
+      "entry_id": "CLI-002",
+      "area": "subagents",
+      "capability": "Early agent CLI/import commands, normalized distribution flags and live bridge registration",
+      "confirmed_entry_ids": [
+        "SUB-005",
+        "SUB-007",
+        "SUB-019",
+        "SUB-035",
+        "SUB-036"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-002",
+      "area": "safe-verify",
+      "capability": "Safe-verify factory and current mode/capability callbacks",
+      "confirmed_entry_ids": [],
+      "status": "Coordinator to supply precise SAFE IDs."
+    },
+    {
+      "entry_id": "CLI-002",
+      "area": "cognee-blackhole",
+      "capability": "Builtin Cognee integration factory installation",
+      "confirmed_entry_ids": [],
+      "status": "Coordinator to supply actual factory owner; CLI owns only order."
+    },
+    {
+      "entry_id": "CLI-005",
+      "area": "settings",
+      "capability": "Global-first settings, trust/bootstrap reuse and proxy application",
+      "confirmed_entry_ids": [
+        "SET-003",
+        "SET-008",
+        "SET-013",
+        "SET-021",
+        "SET-022"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-009",
+      "area": "tools",
+      "capability": "Shared image MIME/conversion/resize processing invoked by file attachments",
+      "confirmed_entry_ids": [
+        "TOOLS-020",
+        "TOOLS-023"
+      ],
+      "status": "Confirmed against authored TOOLS-020/023 and independent complete MISC helper reads; later normalizer MISC-003."
+    },
+    {
+      "entry_id": "CLI-009",
+      "area": "tools",
+      "capability": "resolveReadPath normalization",
+      "confirmed_entry_ids": [],
+      "status": "Coordinator/package worker to confirm Tools ID."
+    },
+    {
+      "entry_id": "CLI-013",
+      "area": "providers-auth",
+      "capability": "Credential schema and serialized persistence",
+      "confirmed_entry_ids": [
+        "AUTH-001",
+        "AUTH-002"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-014",
+      "area": "tui",
+      "capability": "Pure keybindings migration",
+      "confirmed_entry_ids": [
+        "TUI-048"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-014",
+      "area": "misc",
+      "capability": "Managed fd/rg install paths and tool installation",
+      "confirmed_entry_ids": [],
+      "status": "Pending MISC full review."
+    },
+    {
+      "entry_id": "CLI-015",
+      "area": "tui",
+      "capability": "Theme detection and first-time questionnaire presentation",
+      "confirmed_entry_ids": [
+        "TUI-007",
+        "TUI-220",
+        "TUI-070"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-015",
+      "area": "cli-packaging",
+      "capability": "Global-only startup theme resource resolution",
+      "confirmed_entry_ids": [],
+      "status": "Pending worker CLI-020–049 supplement."
+    },
+    {
+      "entry_id": "CLI-016",
+      "area": "tui",
+      "capability": "Config mutation/presentation, rich session picker and generic extension input/selector widgets",
+      "confirmed_entry_ids": [
+        "TUI-062",
+        "TUI-063",
+        "TUI-064",
+        "TUI-068",
+        "TUI-069",
+        "TUI-073"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-017",
+      "area": "tui",
+      "capability": "fuzzyFilter key/ordering utility",
+      "confirmed_entry_ids": [
+        "TUI-235"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-018",
+      "area": "extensions",
+      "capability": "Exact aliases and ABI/bridge boundary",
+      "confirmed_entry_ids": [
+        "EXT-001",
+        "EXT-002"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-019",
+      "area": "observability",
+      "capability": "Caller order for durable recorder, dashboard token/listener and timings",
+      "confirmed_entry_ids": [
+        "OBS-002",
+        "OBS-003",
+        "OBS-004",
+        "OBS-014",
+        "OBS-016"
+      ],
+      "status": "Confirmed owner IDs; coordinator to reconcile final semantics."
+    },
+    {
+      "entry_id": "CLI-019",
+      "area": "misc",
+      "capability": "Windows self-update quarantine cleanup and version gate helpers",
+      "confirmed_entry_ids": [
+        "MISC-001",
+        "MISC-002"
+      ],
+      "status": "Stable IDs reserved; helpers fully read, MISC draft underway."
+    }
+  ],
+  "rust_only": [
+    {
+      "capability": "Native dev/dev-local wrapper, custom ABI extension staging and cleanup",
+      "ts_comparison": "The TS distribution launcher installs factories and routes agent commands; native dev helper behavior is retained as an extra, not treated as a TS requirement.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:104-128",
+        "rust:crates/ice-cli/src/app.rs:581-615",
+        "rust:crates/ice-cli/src/app.rs:509-519"
+      ]
+    },
+    {
+      "capability": "Native plugin stdio ownership with lifecycle validation",
+      "ts_comparison": "Native startup defers stdin until extensions can claim it, then forces the headless lifecycle even over ICE_FORCE_TUI. TS CLI's rpc skip is narrower.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:315-381",
+        "rust:crates/ice-cli/src/app.rs:460-491"
+      ]
+    },
+    {
+      "capability": "Unauthenticated native full-catalog listing",
+      "ts_comparison": "TS --list-models queries runtime availability; native catalog inspection before credentials is a useful deliberate extra.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:197-203",
+        "rust:crates/ice-cli/src/app.rs:654-768"
+      ]
+    },
+    {
+      "capability": "Native flat-layout migration with confirmed recovery/count defect",
+      "ts_comparison": "Different from TS oauth/settings credential conversion; native folder-existence gate prevents retry after failed transfer and increments attempts as moves.",
+      "evidence": [
+        "rust:crates/ice-cli/src/config.rs:195-225",
+        "rust:crates/ice-cli/src/config.rs:260-269",
+        "rust:crates/ice-cli/src/config.rs:408-416"
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "CLI-Q001",
+      "entries": [
+        "CLI-003",
+        "CLI-004",
+        "CLI-017"
+      ],
+      "question": "Should the native compatibility surface retain stricter missing-value diagnostics, --tui-mode/platform default and unauthenticated catalog listing, or expose explicit aliases/options for the TS spellings and available-model mode? Both current behaviors are documented; no undocumented default is assumed."
+    },
+    {
+      "id": "CLI-Q002",
+      "entries": [
+        "CLI-006",
+        "CLI-014"
+      ],
+      "question": "What mode-aware authorization interface should replace TS's unguarded cross-project readline prompt, and at what trust stage should project commands→prompts migration occur? The current source order is documented; no policy change was executed."
+    },
+    {
+      "id": "CLI-Q003",
+      "entries": [
+        "CLI-011",
+        "CLI-013",
+        "CLI-014",
+        "CLI-015"
+      ],
+      "question": "Implementation should repair the documented uppercase duration, pre-publication credential mutation, Windows basename and async dialog-finalization defects rather than preserving them as compatibility requirements. Coordinator to record chosen native behavior during implementation planning."
+    }
+  ],
+  "supplemental_ledger": [],
+  "comparison_notes": [
+    "Native comments claiming CLI images/RPC are absent conflict with live call sites; implementation and inline tests were inspected.",
+    "First-pass CLI flags are only a subset of parser and startup behavior; manual aliases/functions/options expand the surface inventory.",
+    "Source-only artifact validation checks schema/citations and read coverage; it does not execute application code or tests.",
+    {
+      "entries": [
+        "CLI-001",
+        "CLI-009",
+        "CLI-015",
+        "CLI-019"
+      ],
+      "note": "Coordinator review resolved dispatcher ownership SET-013, path/image algorithms TOOLS-020/023, later native image preprocessing, and normal SettingsManager.flush recorded-write-error behavior. Unexpected finalizer rejection is distinct from ordinary recorded write failure."
+    }
+  ],
+  "limitations": [
+    "Package CLI-020–049 supplement is pending, including 3 assigned ledger rows and 26 candidates; do not publish this partial proposal.",
+    "MISC helper dependency IDs and platform documentation cross-links remain pending.",
+    "Connector-redacted native app.rs line96 is excluded. Other native files were deliberately read only in the relevant bounded ranges; shared owners retain their full subsystem reviews.",
+    "No builds/tests/application/network/install commands or actual user credential/state directories were accessed."
+  ],
+  "source_identity": {
+    "ice": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "first_pass": {
+      "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+      "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d",
+      "ranges": [
+        [
+          395,
+          444
+        ],
+        [
+          628,
+          651
+        ]
+      ]
+    }
+  },
+  "qa": {
+    "own_entries": 19,
+    "own_candidates": 96,
+    "mapped_own_candidates": 95,
+    "excluded_own_candidates": 1,
+    "pending_package_candidates": 26,
+    "own_surface_rows": 160,
+    "claims": 8,
+    "citation_range_errors": []
+  }
+}

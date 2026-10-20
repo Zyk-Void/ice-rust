@@ -1,0 +1,53 @@
+{
+  "area": "subagents",
+  "draft_only": true,
+  "verification": "source-read only; no application execution",
+  "identity": "frozen coordinator manifest",
+  "rust": {
+    "child_service": "crates/ice-cli/src/child_agents.rs read 1-418. Plugin owner u64, jobs mutex/hashmap, revocation set, atomic active permit. 16 retained handles and 16 active/cleanup permits. 4MiB cumulative delta+final budget,8192 delta count, polling64KiB target permits one larger delta. Parent/invocation/scope/timeout cancellation,2s run grace, execution_scope.wait_idle retains permit. InMemorySessionStorage; no persistent V2 identity/names/definitions/result acceptance. Full create_child inherited-context path still needs read. Full create_child1-300 read: active-tool subset, no nested children, parent model/prompt/resources/retry/compaction/hooks inherited; distinct side_question tool-free helper retained.",
+    "search": "Across crates no matches AgentDefinition|agent_definition|ChildRuntimeContract|agent_control|agent_patch|subagent_completed|permissionMode; structured search saved in functions store."
+  },
+  "findings": [
+    {
+      "topic": "docs",
+      "notes": "Architecture/migration state SDK/RPC deferred; current main guide describes SDK and get_subagents/respond_subagent_approval and session switching/prune integrations. Reference has duplicated header/body inserted at line128 and malformed agent-name description at254; reference plan/review Bash asks contradicts current guide hard-deny. Runtime source decides; no doc/source edits."
+    },
+    {
+      "topic": "definitions",
+      "notes": "Native strict schema name[a-z0-9][a-z0-9-]{0,63}; description1024, prompt schema65536 maxLength,initial4096,models8x256,list64x256,tags8x32, temp0..2/topP0..1, pack provenance3fields. Markdown no frontmatter.name=>not-agent;invalidYAML=>invalid;emptytrim bodyinvalid; sourceHash exactcontent. Native Markdown body bytecap64KiB is documented but parser does not check; discovery128KiB wholefile. JSON uses mapname,strictschema, prompt nottrimmed,hashcanonicalfields. Need runtime bytebound read."
+    },
+    {
+      "topic": "compat",
+      "notes": "Opt-in project-compat. Tool mapping Read/read,Grep/grep,Glob/find,LS/ls,Bash/bash,Edit and MultiEdit/edit,Write/write. Aliasinherit case-insensitive; globalalias then provider/modelslash elselimited. Effort validthinking only; permission onlyplan/bubble,defaultignored;otherwarn. background/initialPrompt pass,skillsnormalize,worktree only;colors red/error green/success yellow|orange/warning blue|purple|pink|cyan/accent. mcpServers/hooks/memory warnignored. unknowncompatwarn. Native legacykey replacements retainedincluding stale startupTimeoutMs→removed defaults path."
+    },
+    {
+      "topic": "discovery",
+      "notes": "Walk atmost64 ancestors excludinghomedir;noGit=>cwdonly;nearestnestedrepo boundarywidens tosessionroot;linkedworktreefallbackmain ifownrootagentsabsent. Recursive depth<=8,skiphiddens,case-sensitive.md,512uniquephysicalfilesperroot,files>128KiBskipdiagnostic,count/inodeseenbeforeoversize/read. Follow symlinks onlycanonicalwithinroot;device/inode dedupcrossroots withcanonicalfallback."
+    },
+    {
+      "topic": "precedence",
+      "notes": "builtin<package<user<user-settings<project-compat<project<project-settings<flag<managed. same-sourcefirstinputwins byreverseindexsortthenoverwrite;wholereplacement,shadowhistory. managedcannotdisabled. Actualcollectionmanaged,project,compat,user,package (inodededup precedence matters);untrustedprojectparsed/read butexposeonlyname/path/untrusteddiag andneveractivate;invaliduntrustedJSONissuesomitted. Singleentrycache keyedbycaller noautowatch."
+    },
+    {
+      "topic": "builtins_listing",
+      "notes": "general/explore/plan/review/worker;explore andplan toolsreadgrepfindls,planmode,contextFilesfalse;reviewreadtools reviewmode;workerbuildworktree;allspawns[]. Listinghidden/limitedremoved,requiredMcpServerscase-insensitivesubstring notglob. State sourceHash,name;addition/change/removal.8KiB full then80char descriptions thennames-only;finalnames-only/removedline notstrictlyrecapped. Needcaller/guardreadbeforeclassifydefect."
+    },
+    {
+      "topic": "api_contract",
+      "notes": "agent tasks1..8 strictfields agent,name,resume,description1..120,promptmaxLength65536,model256,thinking,isolation,scope1..32 roots/targets<=32,outputSchema record,acceptance16x1024,context16{id64,kind4vals,content32768}; exclusivity/preflightbyteboundsnotTypeBox. control9actions withrefs,ids1..8,msg65536,timeout1..1800000,offset0..4194304,length1..49152. patchinspect/apply/reject."
+    },
+    {
+      "topic": "frozen_contract",
+      "notes": "version2 IDsag_26base32,groupagg_,names1..40andnounderscore. random17bytes→26base32 symbols(130bits;comment128). buildchecksIDdepth<=max,structuredClone,redactsystem/initial,createdAtISO,recursiveObject.freeze. hashcanonicalJSONsortedobjectkeysomitundefined props,preservearrays. parsechecksobjectversion,id,hashonlynotfullschemavalidation. resume checksowner/tombstone,activechildSafe/accessclassification/fingerprint+adapterid,subyolopersistence,build→planmutation,modelavailable;runtimeadditionaltrust/policychecksneedread."
+    },
+    {
+      "topic": "permissions_settings_hooks",
+      "notes": "Full permissions, V2 settings, settings.ts916 hooks, command-hooks208,extension-support243,types812,tools paths60/resolve98 read. Detailed current contracts now SUB005009. Hook parse/dispatch/command notes remain in worker summary pending entries010012. Command policy approval String(value) validation vs raw assignment conditional malformed ['ask'] passes and skips ===ask prompt; needs test/runtime source bounded claim. Tool selection sole* excludesMCP but mixedglob list canmatchMCP. resolve delegationTools bypasseligible/disallowed; runtimecallerawaited."
+    },
+    {
+      "topic": "runtime_and_dispatch",
+      "notes": "Full V2 runtime2407/sessionfactory176/turnbudget222 andregistry469 read. Source edges: package/user agent-definition rules map scopeuser andcanraise ceiling (carrierdiscardedbyfreezeRules); factory storesbutdoesnotapplytemperature/topP; observer true onisErrorresolved; recursion gatecanfreezemanagementbutfactorymissingimplrejects. FullcompletionclaimAFTERsend/message_end despitehelperdocbefore; crashgapnoexactlyonceproof. runtimeacquireFIFOwakehint notstrict reservation; permitfreedonabandon10sdespiteinnerstillrunning,Rustretainsuntilscopeidle. sendinterrupt awaitsinnerunbounded unlike stop10.5s/shutdown20.5s. Needentriesforbudgets/preflight/controls/results/worktrees."
+    }
+  ],
+  "remaining": "All 71 ledger files must be covered; current actual ranges recorded separately. No proposal yet."
+}

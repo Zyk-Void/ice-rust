@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const [which,...files]=process.argv.slice(2);
+if(!['ice','rust'].includes(which)||!files.length||files.length>250)throw Error('Usage: verify-supplemental-baseline.mjs ice|rust tracked/path...');
+const root=which==='ice'?'/home/mewtwo/Zks/ice':path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../..');
+const git=(args)=>execFileSync('git',args,{cwd:root,maxBuffer:12*1024*1024});
+const head=git(['rev-parse','HEAD']).toString().trim();
+const sha=(buf)=>crypto.createHash('sha256').update(buf).digest('hex');
+const rows=files.map(file=>{
+ if(path.isAbsolute(file)||file.split('/').some(x=>x==='..'||x.startsWith('.')))throw Error('Only explicit visible repository files');
+ const target=path.resolve(root,file);
+ if(!fs.realpathSync(target).startsWith(fs.realpathSync(root)+path.sep))throw Error('Out-of-root path');
+ git(['ls-files','--error-unmatch','--',file]);
+ const working=fs.readFileSync(target);
+ const committed=git(['show',head+':'+file]);
+ return {path:which+':'+file,head,current_sha256:sha(working),head_sha256:sha(committed),matches_head:working.equals(committed),current_lines:working.toString('utf8').split('\n').length};
+});
+process.stdout.write(JSON.stringify({method:'Local Git object and working-file byte comparison; no application/test execution',rows},null,2)+'\n');

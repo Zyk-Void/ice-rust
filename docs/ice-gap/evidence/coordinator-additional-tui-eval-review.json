@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "captured_at": "2026-10-20T02:01:13.585Z",
+  "scope": "Independent source-only review of native image/loader/editor risks already surfaced in TUI, and exact JavaScript eval hashing/finally behavior. No application execution or tests.",
+  "read_evidence": [
+    {
+      "path": "rust:crates/ice-tui/src/terminal_image.rs",
+      "sha256": "af496a5584604ebf3f48cbd39bf13ff1517a907824d8e4fcbd9fbefed50d1d8f",
+      "total_lines": 559,
+      "ranges": [
+        [
+          289,
+          425
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/loader.rs",
+      "sha256": "b1e56d91181d913395adf848fcc661c2f5e7d00c2b94362833810185d4f3a4e7",
+      "total_lines": 428,
+      "ranges": [
+        [
+          1,
+          191
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/autocomplete.rs",
+      "sha256": "40e60df66f1c97eb5e04f81a3940c21b5e0c988964729285345c725e85857ec1",
+      "total_lines": 202,
+      "ranges": [
+        [
+          12,
+          201
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "total_lines": 2420,
+      "ranges": [
+        [
+          170,
+          415
+        ],
+        [
+          475,
+          565
+        ],
+        [
+          1400,
+          1501
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/tui/src/terminal-image.ts",
+      "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+      "total_lines": 655,
+      "ranges": [
+        [
+          489,
+          565
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "total_lines": 194,
+      "ranges": [
+        [
+          66,
+          112
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+      "total_lines": 260,
+      "ranges": [
+        [
+          151,
+          243
+        ]
+      ],
+      "owners": [
+        "/root"
+      ],
+      "fully_read": false
+    }
+  ],
+  "read_only_caller_search": {
+    "command": "rg -n 'calculate_image_rows|get_webp_dimensions|Loader::with_options|insert_cursor_marker' crates/ice-tui/src crates/ice-cli/src",
+    "stdout": "crates/ice-tui/src/lib.rs:137:    allocate_image_id, calculate_image_rows, delete_all_kitty_images, delete_kitty_image,\ncrates/ice-tui/src/lib.rs:140:    get_webp_dimensions, hyperlink, image_fallback, render_image, reset_capabilities_cache,\ncrates/ice-tui/src/editor.rs:218:fn insert_cursor_marker(text: &str, column: usize) -> String {\ncrates/ice-tui/src/editor.rs:1480:                    rendered = insert_cursor_marker(&rendered, self.options.padding_x + cursor_col);\ncrates/ice-tui/src/terminal_image.rs:365:pub fn get_webp_dimensions(data: &[u8]) -> Option<ImageDimensions> {\ncrates/ice-tui/src/terminal_image.rs:416:    if let Some(dims) = get_webp_dimensions(data) {\ncrates/ice-tui/src/terminal_image.rs:424:pub fn calculate_image_rows(height: u32, cell_height: u16) -> u16 {\n"
+  },
+  "findings": [
+    "TUI-228 native VP8L dimensions use chunk-length/signature bytes instead of dimension bytes; direct row calculation can divide by zero, overflow or narrow.",
+    "TUI-230 empty public spinner frames cause modulo zero; public option path observed, no production with_options caller established.",
+    "TUI-255 completion preserves marker text but clears payload registry; it also appends completion space after the entire suffix.",
+    "TUI-253 insert_cursor_marker treats '[' as an escape final byte and can count or split SGR parameters; focused selection/placeholder render calls this helper.",
+    "MISC-042 an abort rejection from inner finally replaces an earlier propagating error; MISC-045 JSON.stringify integer-key ordering/number serialization governs the eventual hash."
+  ],
+  "tests_executed": false,
+  "source_modified": false
+}

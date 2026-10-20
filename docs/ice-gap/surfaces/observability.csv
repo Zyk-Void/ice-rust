@@ -1,0 +1,91 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+activity,packages/coding-agent/src/observe/observe-recorder.ts:135,,missing,OBS-004
+activity_update,packages/coding-agent/src/observe/observe-recorder.ts:136,,missing,OBS-004
+lane,packages/coding-agent/src/observe/observe-recorder.ts:137,,missing,OBS-004
+thread,packages/coding-agent/src/observe/observe-recorder.ts:138,,missing,OBS-004
+header,packages/coding-agent/src/observe/observe-recorder.ts:139,,missing,OBS-004
+cognee_observation,packages/coding-agent/src/observe/observe-recorder.ts:171,,missing,OBS-008
+header,packages/coding-agent/src/observe/observe-store.ts:50,,missing,OBS-011
+ObserveItem,packages/coding-agent/src/observe/observe-recorder.ts:71,,missing,OBS-004
+ObserveHeader,packages/coding-agent/src/observe/observe-recorder.ts:115,,missing,OBS-004
+ObserveState,packages/coding-agent/src/observe/observe-recorder.ts:128,,missing,OBS-004
+ObserveLane,packages/coding-agent/src/observe/observe-recorder.ts:97,,missing,OBS-004
+ObserveThread,packages/coding-agent/src/observe/observe-recorder.ts:65,,missing,OBS-004
+ObserveRecorder,packages/coding-agent/src/observe/observe-recorder.ts:141,,missing,OBS-004
+ObservePersistence,packages/coding-agent/src/observe/observe-recorder.ts:149,,missing,OBS-011
+ObserveRecorderOptions.pollMs=1000,packages/coding-agent/src/observe/observe-recorder.ts:156,,missing,OBS-004
+ObserveSessionLike,packages/coding-agent/src/observe/observe-recorder.ts:179,,missing,OBS-004
+recorder projection: message_end,packages/coding-agent/src/observe/observe-recorder.ts:625,,missing,OBS-005
+recorder projection: tool_execution_start,packages/coding-agent/src/observe/observe-recorder.ts:654,,missing,OBS-006
+recorder projection: tool_execution_update,packages/coding-agent/src/observe/observe-recorder.ts:667,,missing,OBS-006
+recorder projection: tool_execution_end,packages/coding-agent/src/observe/observe-recorder.ts:677,,missing,OBS-006
+recorder projection: compaction_start,packages/coding-agent/src/observe/observe-recorder.ts:702,,missing,OBS-007
+recorder projection: compaction_end,packages/coding-agent/src/observe/observe-recorder.ts:711,,missing,OBS-007
+recorder projection: auto_retry_start,packages/coding-agent/src/observe/observe-recorder.ts:740,,missing,OBS-007
+recorder projection: auto_retry_end,packages/coding-agent/src/observe/observe-recorder.ts:749,,missing,OBS-007
+recorder projection: queue_update,packages/coding-agent/src/observe/observe-recorder.ts:759,,missing,OBS-007
+recorder projection: custom:ice-goals-state,packages/coding-agent/src/observe/observe-recorder.ts:514,,missing,OBS-009
+recorder projection: custom:ice-safe-verify-state,packages/coding-agent/src/observe/observe-recorder.ts:515,,missing,OBS-009
+recorder projection: custom:ice-subagent-v2-child,packages/coding-agent/src/observe/observe-recorder.ts:516,,missing,OBS-010
+recorder projection: entry_appended,packages/coding-agent/src/observe/observe-recorder.ts:497,,missing,OBS-009
+store:observe_runs,packages/coding-agent/src/observe/observe-store.ts:108,,missing,OBS-011
+store:observe_events,packages/coding-agent/src/observe/observe-store.ts:121,,missing,OBS-011
+store:ObserveReplayEvent,packages/coding-agent/src/observe/observe-store.ts:46,,missing,OBS-011
+store:getEvents,packages/coding-agent/src/observe/observe-store.ts:225,,missing,OBS-013
+store:getState,packages/coding-agent/src/observe/observe-store.ts:249,,missing,OBS-013
+store:listLiveRuns,packages/coding-agent/src/observe/observe-store.ts:198,,missing,OBS-013
+HTTP / and /index* (HTML),packages/coding-agent/src/observe/observe-server.ts:438,,missing,OBS-014
+HTTP /state,packages/coding-agent/src/observe/observe-server.ts:448,,missing,OBS-015
+HTTP /runs,packages/coding-agent/src/observe/observe-server.ts:466,,missing,OBS-015
+HTTP /replay,packages/coding-agent/src/observe/observe-server.ts:470,,missing,OBS-015
+HTTP /replay/events,packages/coding-agent/src/observe/observe-server.ts:470,,missing,OBS-015
+HTTP /replay/:runId,packages/coding-agent/src/observe/observe-server.ts:472,,missing,OBS-015
+SSE /events,packages/coding-agent/src/observe/observe-server.ts:516,,missing,OBS-015
+SSE snapshot,packages/coding-agent/src/observe/observe-server.ts:524,,missing,OBS-016
+SSE runs,packages/coding-agent/src/observe/observe-server.ts:392,,missing,OBS-016
+SSE activity,packages/coding-agent/src/observe/observe-server.ts:415,,missing,OBS-015
+SSE activity_update,packages/coding-agent/src/observe/observe-server.ts:416,,missing,OBS-015
+SSE lane,packages/coding-agent/src/observe/observe-server.ts:417,,missing,OBS-015
+SSE thread,packages/coding-agent/src/observe/observe-server.ts:418,,missing,OBS-015
+SSE header,packages/coding-agent/src/observe/observe-server.ts:419,,missing,OBS-015
+SSE comment heartbeat15000ms,packages/coding-agent/src/observe/observe-server.ts:536,,missing,OBS-015
+loadObserveToken,packages/coding-agent/src/observe/observe-server.ts:93,,missing,OBS-014
+Host allowlist,packages/coding-agent/src/observe/observe-server.ts:83,,missing,OBS-014
+token query/Bearer/cookie auth,packages/coding-agent/src/observe/observe-server.ts:430,,missing,OBS-014
+shared listener EADDRINUSE,packages/coding-agent/src/observe/observe-server.ts:553,,missing,OBS-016
+Cognee request body max16384bytes,packages/coding-agent/src/observe/observe-server.ts:132,,missing,OBS-019
+GET /cognee/overview,packages/coding-agent/src/observe/observe-server.ts:212,,missing,OBS-019
+GET /cognee/summary,packages/coding-agent/src/observe/observe-server.ts:213,,missing,OBS-019
+GET /cognee/status,packages/coding-agent/src/observe/observe-server.ts:216,,missing,OBS-019
+GET /cognee/datasets/:id/data,packages/coding-agent/src/observe/observe-server.ts:221,,missing,OBS-019
+GET /cognee/datasets/:id/data/:dataId,packages/coding-agent/src/observe/observe-server.ts:223,,missing,OBS-019
+GET /cognee/datasets/:id/graph,packages/coding-agent/src/observe/observe-server.ts:227,,missing,OBS-019
+GET /cognee/datasets/:id/sessions,packages/coding-agent/src/observe/observe-server.ts:230,,missing,OBS-019
+GET /cognee/sessions/:id,packages/coding-agent/src/observe/observe-server.ts:233,,missing,OBS-019
+POST /cognee/search,packages/coding-agent/src/observe/observe-server.ts:234,,missing,OBS-019
+POST /cognee/recall,packages/coding-agent/src/observe/observe-server.ts:241,,missing,OBS-019
+ObserveCogneeSource.createObserveCogneeSource,packages/coding-agent/src/observe/observe-cognee.ts:98,,missing,OBS-017
+ObserveCogneeSource.overview,packages/coding-agent/src/observe/observe-cognee.ts:184,,missing,OBS-017
+ObserveCogneeSource.summary,packages/coding-agent/src/observe/observe-cognee.ts:192,,missing,OBS-018
+ObserveCogneeSource.datasetData,packages/coding-agent/src/observe/observe-cognee.ts:203,,missing,OBS-018
+ObserveCogneeSource.datasetStatus,packages/coding-agent/src/observe/observe-cognee.ts:206,,missing,OBS-018
+ObserveCogneeSource.dataItem,packages/coding-agent/src/observe/observe-cognee.ts:209,,missing,OBS-018
+ObserveCogneeSource.search,packages/coding-agent/src/observe/observe-cognee.ts:217,,missing,OBS-018
+ObserveCogneeSource.datasetGraph,packages/coding-agent/src/observe/observe-cognee.ts:220,,missing,OBS-018
+ObserveCogneeSource.datasetSessions,packages/coding-agent/src/observe/observe-cognee.ts:231,,missing,OBS-018
+ObserveCogneeSource.session,packages/coding-agent/src/observe/observe-cognee.ts:237,,missing,OBS-018
+ObserveCogneeSource.recall,packages/coding-agent/src/observe/observe-cognee.ts:240,,missing,OBS-017
+recorder projection: message_start,packages/coding-agent/src/observe/observe-recorder.ts:602,,missing,OBS-005
+recorder projection: custom:ice-subagent-v2-completion,packages/coding-agent/src/observe/observe-recorder.ts:517,,missing,OBS-010
+Cognee operation:session,packages/coding-agent/src/ice-cognee-observer.ts:12,,missing,COG-059
+Cognee operation:recall,packages/coding-agent/src/ice-cognee-observer.ts:13,,missing,COG-059
+Cognee operation:remember_entry,packages/coding-agent/src/ice-cognee-observer.ts:14,,missing,COG-059
+Cognee operation:remember,packages/coding-agent/src/ice-cognee-observer.ts:15,,missing,COG-059
+Cognee operation:trace,packages/coding-agent/src/ice-cognee-observer.ts:16,,missing,COG-059
+Cognee operation:improve,packages/coding-agent/src/ice-cognee-observer.ts:17,,missing,COG-059
+Cognee operation:queue,packages/coding-agent/src/ice-cognee-observer.ts:18,,missing,COG-059
+Cognee phase:started,packages/coding-agent/src/ice-cognee-observer.ts:19,,missing,COG-059
+Cognee phase:queued,packages/coding-agent/src/ice-cognee-observer.ts:19,,missing,COG-059
+Cognee phase:succeeded,packages/coding-agent/src/ice-cognee-observer.ts:19,,missing,COG-059
+Cognee phase:failed,packages/coding-agent/src/ice-cognee-observer.ts:19,,missing,COG-059
+claude-agent-sdk diagnostic billing/identityRewriting,packages/coding-agent/src/claude-sdk/adapter.ts:246,,missing,MISC-036

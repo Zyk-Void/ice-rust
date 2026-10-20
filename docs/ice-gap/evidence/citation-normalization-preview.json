@@ -1,0 +1,3637 @@
+{
+  "captured_at": "2026-10-20T03:19:39.306Z",
+  "mode": "preview",
+  "fields": [
+    {
+      "area": "ai",
+      "id": "AI-012",
+      "field": "rust",
+      "before_sha256": "9ad03f3fa4ac6c468c00295c987e9a3a848f4b5d5c3c3ffe7068b5ea20d124fa",
+      "after_sha256": "afa52c3e8948015d48252a905e1181f8476aa1ff95496a48c55ca56c414ff305"
+    },
+    {
+      "area": "ai",
+      "id": "AI-021",
+      "field": "rust",
+      "before_sha256": "94da0f092e010ed9fa6b562c063e205d6cd5d6a4356d290aebe28fa0a8d39261",
+      "after_sha256": "9305bbfb41fd59cbdca9b3c8f75888d39ec990dc22dbc4403e33856d3c3fe6fe"
+    },
+    {
+      "area": "ai",
+      "id": "AI-022",
+      "field": "rust",
+      "before_sha256": "2427c4b086f51cc5c2cf565219414a81206dad106e9446f62226d5ccd924fcff",
+      "after_sha256": "affc569effafce77351a9fd93595cdc731c0b13c67629821f44b339ac9902c3e"
+    },
+    {
+      "area": "ai",
+      "id": "AI-023",
+      "field": "rust",
+      "before_sha256": "987e5cdaa6bb846c0c20f4089009b95be1bcd3359543e2f04a791eeaaada6aa9",
+      "after_sha256": "0e27fb86c30ba9f3d62d4f4c13b2153699a5e314d21d68fcfe8a3d46a873de9d"
+    },
+    {
+      "area": "ai",
+      "id": "AI-024",
+      "field": "rust",
+      "before_sha256": "17c1b266d8a16a0fb799dd272194552a78056ab6ecfc9942cb294f7cfbb236b9",
+      "after_sha256": "97bd4b4c08c643a95e5a0d15f5a0fbbab92c41308073cb200ee96e67a0010caa"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-003",
+      "field": "rust",
+      "before_sha256": "8d72b1a9dc04f108e4cd71c709f7e5cf3ee9df2b12f032c6ed7f19eeedfbd9f1",
+      "after_sha256": "86ae8ccdcb8e4a699873c8687b286c21bbfec169413798a9966d7b453a55d8d0"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-008",
+      "field": "source",
+      "before_sha256": "eb1d7c4baed4e51aafad5f7e310a143f57aa3289d6ffade94e41e822fed9f7da",
+      "after_sha256": "474e9fb95e54bf2d7be115c21b04b50e01d8e63186db29defb5bf14160651658"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-009",
+      "field": "source",
+      "before_sha256": "64ddf60531cd014eaf480a49622a4d9e6b1d2b6b3bb1ac0d5efcf8ac4e1402e4",
+      "after_sha256": "bd7a59deb126e57b5f3007dc776be62e4b94f0d2143e2dd9b6acae2ea66ef0cd"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-009",
+      "field": "rust",
+      "before_sha256": "cf0acc1a5bf3e10c41f232283051b5f30e9b13c5931c1e74f77f90f77650cd88",
+      "after_sha256": "65008e20b648031dec764e2edb90fb0d165917bd081643facb83b9cbe1fbe584"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-010",
+      "field": "source",
+      "before_sha256": "9822b978f95b252bc32f5d9bf298a3e6a214a17187f8456dd5927bd6bff16529",
+      "after_sha256": "50803a471c56db07f7c1d03d6edaf6aa590f96886795122f56bef9552d82a3bb"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-010",
+      "field": "rust",
+      "before_sha256": "151dc9df4f037395640a75275f01bb0cc46261ac62dce0b370ad01d8f75e8a95",
+      "after_sha256": "6260614d60c7bfa8f4a340e2df89d65b4a52b12987b9d549a0f4e4ddfc139a39"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-011",
+      "field": "source",
+      "before_sha256": "ac3945cfd74e15397c04e2b14073a4539649093b0afc4c560951c056f302485e",
+      "after_sha256": "6559d17d474435b7e17ca88526fa39fdf413315231ea895833606edf3ce36888"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-012",
+      "field": "source",
+      "before_sha256": "b520fdcf43de4e2a92b319f21fe35265b8e42c126bb73d93409ab66e2093ef39",
+      "after_sha256": "9f2459443016c89211acb4f0025b323e0f75482bd720e287e73333c757576b99"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-013",
+      "field": "source",
+      "before_sha256": "66ab69e8fd2929f625d1b9625b02921367959cc911823cd68e5fb9e81ec0e3d1",
+      "after_sha256": "abdc2fd01996e2acf7dce7d2abeb51dab90443baacbfd44fc0ae5d868b5c7216"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-013",
+      "field": "mechanism",
+      "before_sha256": "248bb1dcbd56fc5cf5a0338640ee6feaaf5a3294ed6c5e36476c7c82a9c13e4c",
+      "after_sha256": "36a8004a16b57e30cb3af6fee5b5a0ede4e1c6a068aea47fa8bdac9a39b70053"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-014",
+      "field": "source",
+      "before_sha256": "ede8bf0ee901e29fc50e1904ebb8645470e1ba3fd496d7f336fde70d38b18aba",
+      "after_sha256": "4e135233ad04e96139bd131d6eb93b2e961591701f49994dec79a3d16f9d5ae2"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-014",
+      "field": "rust",
+      "before_sha256": "fe379adc8089dfdafdb2e75b4dcf77c18f2bdccf1d0593813dc4cab2723bc7a3",
+      "after_sha256": "3f63e55167dd9258fc2247be722599d8b6220a59d86673779819fe26beadf9ca"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-021",
+      "field": "rust",
+      "before_sha256": "53ce410d30b19820f300a659eb96b4e6fb65751597f0af26760eacf0476047f6",
+      "after_sha256": "69c685ca5a559caf7b9bf91d9aa78528a64cffa768e29d60f36a12e54fa8c9ba"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-026",
+      "field": "rust",
+      "before_sha256": "d9a02038178a663d54808e0c0c82c26c84d84b59690f20e4476e4464740bbfa0",
+      "after_sha256": "4a4130bc2b0a237b94998ca3ca4f315e1feb8a6c368547a758291e5be8222005"
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-027",
+      "field": "rust",
+      "before_sha256": "3d4d7640177e4a1816322ea46af46b990099cc1a0df581cca3e8c698d474c745",
+      "after_sha256": "5a55a36bbb49574f99b9f679f7d544191b29c098ecb85cd6e205c0fd64b28820"
+    },
+    {
+      "area": "settings",
+      "id": "SET-001",
+      "field": "source",
+      "before_sha256": "d1d8d719dda489bb8864b0e89d0346c567bf1b8c0d63efbd2bceccdb736f8797",
+      "after_sha256": "b9f51f58d13ffaab0990a0c8d33d1ce2cb0c284e5b791cec891f06297bce87ef"
+    },
+    {
+      "area": "settings",
+      "id": "SET-001",
+      "field": "rust",
+      "before_sha256": "d854837ab38eef9a4477c0e29e9e3dd26513c3ba0c181f5ff7484dc18077ab4f",
+      "after_sha256": "5840679d1bd821f0c21a5b8aad7e897f6493a1673f56cceeb6b9a9a3391640aa"
+    },
+    {
+      "area": "settings",
+      "id": "SET-002",
+      "field": "interfaces",
+      "before_sha256": "1abea82b50f9c181686793487f738d9ef5790af892d32d12b81efd500a3189f9",
+      "after_sha256": "75d80ec8c17736805035f9375550861c47dc24ec1e151559482c8d5b4cf612e7"
+    },
+    {
+      "area": "settings",
+      "id": "SET-011",
+      "field": "source",
+      "before_sha256": "32de3cc3f31dae262bfd54dccc28b10c81417c31f40fc923b594a9b1ff4df2ac",
+      "after_sha256": "8a836e9825d8be741a2b868086cd5f672afe4cb7cbe5d2fbd8781f9a0200bfe6"
+    },
+    {
+      "area": "settings",
+      "id": "SET-011",
+      "field": "rust",
+      "before_sha256": "57dda6e6c3a5538f19e333778d369f2f4ccc1e63ada7e16a677d2ce5c9c1fd64",
+      "after_sha256": "da8544f31ec61dd6e723db7ea59d65775b474002f6d0afddfd95ea5c7e783562"
+    },
+    {
+      "area": "settings",
+      "id": "SET-012",
+      "field": "source",
+      "before_sha256": "01367529045c2b754d8e8375b1bcd5701c89ad0e6dd50d4e127372060701d988",
+      "after_sha256": "8987cd844981ef9e1e13bcda3d2682ad450bf5e67c31ce1e1d152a8a81619e3b"
+    },
+    {
+      "area": "settings",
+      "id": "SET-012",
+      "field": "rust",
+      "before_sha256": "2b5b273215b11e199e321d3b33e2f24fa470660f8f0c11a6139fd41bedcb6de1",
+      "after_sha256": "677e95c085d6c15ea35ba10b89f3d8557c92f90bcdc478a6cc6bd39cc5a69a6f"
+    },
+    {
+      "area": "settings",
+      "id": "SET-013",
+      "field": "rust",
+      "before_sha256": "bc13dd3e1b36d60080c3fad214170712129cc55d58797489826947b514c0f762",
+      "after_sha256": "226577094eb546fcb07a4a5c7f71ab68a66b7085371bd6ca7b257bf96a70a376"
+    },
+    {
+      "area": "settings",
+      "id": "SET-014",
+      "field": "source",
+      "before_sha256": "fee57e2bde773e86a72db0a65e2ed84f6dd179ad159c737270b0e582e3870cdb",
+      "after_sha256": "772534f9934a83c9c30eb3a8b85f8dd422b56d0f80be6d1ab23a9eae9225aec3"
+    },
+    {
+      "area": "settings",
+      "id": "SET-014",
+      "field": "rust",
+      "before_sha256": "5b537047eb71eac35fc479657bad715c27faabc398c9a086cf165ec55920609f",
+      "after_sha256": "edc1a728d017d1bb0e4f92e9298966ed2ca50d3f05cf06e3ad9a07b41c3b2438"
+    },
+    {
+      "area": "settings",
+      "id": "SET-015",
+      "field": "source",
+      "before_sha256": "c601f41497cf27d918d075fa3b017ca2ee9fd14684447426908302069dd7ed71",
+      "after_sha256": "09fbaea2565070a052c45e1cb24166099e164d6ac21e17b100b13175961ea52a"
+    },
+    {
+      "area": "settings",
+      "id": "SET-015",
+      "field": "rust",
+      "before_sha256": "ff4b49abd7a917f6e28009f01fe6a2da70f418e8711459b0f8954b404bbf0929",
+      "after_sha256": "576c4317081c02f35278c9c3905ec2783a41c622b83ad6e259f131ce7771c668"
+    },
+    {
+      "area": "settings",
+      "id": "SET-016",
+      "field": "source",
+      "before_sha256": "3c6856432da80f12ee8ea441f457ddb9308defc4c318ee375e2617e90b065f88",
+      "after_sha256": "ca019d3285ff8393cc93b05e9f557f0c41cdfd54ec7c9f7757cf2d74994d4170"
+    },
+    {
+      "area": "settings",
+      "id": "SET-016",
+      "field": "rust",
+      "before_sha256": "5d5e33ca4e4474d53a162dfc9a3f7cf33470a87353e1218e2e2d96018e5c12d0",
+      "after_sha256": "8f4ab01daf06199b72f4871b4e7caf7819653e4ffca4248d603a081b80ea7461"
+    },
+    {
+      "area": "settings",
+      "id": "SET-017",
+      "field": "source",
+      "before_sha256": "a581dd166ed7d8d5c6e351c00b38a5ba8b07d98a63c2dd18aaedb6c018bd84fc",
+      "after_sha256": "b6b2bcefcbd4ef521d2f770381f37fd99fc127154fc10b19bbcc2fa54a12bf4e"
+    },
+    {
+      "area": "settings",
+      "id": "SET-017",
+      "field": "rust",
+      "before_sha256": "0b67b78fc7ba4d9444e2f078f1093fa460f12a4a632e1fb54c7730e897c6e851",
+      "after_sha256": "7cdda1d1a527cac25e5158de9455cff9904f6e6aa6931e7af96846ebb99ebe80"
+    },
+    {
+      "area": "settings",
+      "id": "SET-018",
+      "field": "source",
+      "before_sha256": "5f42a0171564bde4b2255f66d15540809401131a74977ec0c495ad445efb71fe",
+      "after_sha256": "773aaa098abdb5111f84fe5776d11420c504e429253ac37538680f682990e9df"
+    },
+    {
+      "area": "settings",
+      "id": "SET-018",
+      "field": "rust",
+      "before_sha256": "d5d99a91ed219a0dc366877badc0852331ecf31d3561a52c632bac49f5008c4b",
+      "after_sha256": "e37c0aae316a6b44ab8f4c03e6601bf21b708b8feb39787d70130be68987c2eb"
+    },
+    {
+      "area": "settings",
+      "id": "SET-019",
+      "field": "source",
+      "before_sha256": "3cb20fe6ec2509276a9adcd43c5932bf7a41648a09479677bf6cb02e2631d21e",
+      "after_sha256": "268d5ba1b44b75e7f6d68c31e0e06f13818fd5558cd7affee739d8077bdcb7c0"
+    },
+    {
+      "area": "settings",
+      "id": "SET-019",
+      "field": "rust",
+      "before_sha256": "34adad39506edf22d15a42eea7d8071fe43fd091c86e014fb3f1b3be98c27adf",
+      "after_sha256": "1ec07bbcf3b09a3995ff2945db71f5145f7433d6964681b1ee3cfd547b25ac0d"
+    },
+    {
+      "area": "settings",
+      "id": "SET-020",
+      "field": "source",
+      "before_sha256": "3dcacf02acc623b5cc3f8bf3e55af51fe0d272d30f0654b582fdc6aec459c2cd",
+      "after_sha256": "cda763d194619beecf1d01be93955e5c5176397c742b5beb9baf3d16cdf7eb4a"
+    },
+    {
+      "area": "settings",
+      "id": "SET-020",
+      "field": "rust",
+      "before_sha256": "afde88b102be365a691871f677e44468e654915a44aafbab3962f43151d35d1c",
+      "after_sha256": "f55e6db0966fcf6fd0a266ac9cc6cf88524d49d94c6eda017106a522df3b2d11"
+    },
+    {
+      "area": "settings",
+      "id": "SET-021",
+      "field": "source",
+      "before_sha256": "4785dd2b9485f39e7fb79f8baadca27899ca169bfdc6d237017dd1cd3ef27e76",
+      "after_sha256": "98333e1c06d41d40a75d28a141dfd694b60cb4550e401453fbd694c0d00060cf"
+    },
+    {
+      "area": "settings",
+      "id": "SET-021",
+      "field": "rust",
+      "before_sha256": "daf356fca51c3a70ce08a26a07a64ddb5ca637771ac39575dc826fc3ffa7de74",
+      "after_sha256": "340beb103c353d005d35582340b4c4a89b5087ad5b85a1de9b04d2aa383a625d"
+    },
+    {
+      "area": "settings",
+      "id": "SET-022",
+      "field": "source",
+      "before_sha256": "e1419d1424afaddbaf87f3793b2176978b0f6e9fd14ce7447493191b7538299b",
+      "after_sha256": "2c80aedd67264cfe8f802be4dd1102d43073ac54fa9ecc3ae51f830647e3061d"
+    },
+    {
+      "area": "settings",
+      "id": "SET-023",
+      "field": "source",
+      "before_sha256": "dca35f7f21b909d09cb2760b4ffe09a92184a90885f1a15c14f547227dd0cd22",
+      "after_sha256": "b32166d747d4d8cb6664a373ac23c37a5e544d6cf443e415ac6a9353cfd1ace3"
+    },
+    {
+      "area": "settings",
+      "id": "SET-023",
+      "field": "rust",
+      "before_sha256": "d91ffe45bbb6e326fdfc0ce42cc0f1c7fe10f4f9108193eed21037796a27a858",
+      "after_sha256": "f0473cef9b245bafea49b9cc21e1ade68fff851a2b37dbc32f15a17fd5dd58a3"
+    },
+    {
+      "area": "settings",
+      "id": "SET-024",
+      "field": "source",
+      "before_sha256": "c2b87331c892d904e42c86b7ad33abb7bb5c2040b3eb6892f7dc492e90c5eb42",
+      "after_sha256": "89dc4e33cf7f423e12d25da31793d98326add5548908cb49e552d9a2115767ed"
+    },
+    {
+      "area": "settings",
+      "id": "SET-024",
+      "field": "rust",
+      "before_sha256": "88797170b8bb3763121b9c20b93201c4f4679b5db9468e1abeab550a7106aaa7",
+      "after_sha256": "924a2147c7d117a277588ca60be633a6ab521df3be43d6de27db8631d0e7c56b"
+    },
+    {
+      "area": "settings",
+      "id": "SET-025",
+      "field": "source",
+      "before_sha256": "5462cee252aa73af5cae55385b39d2055658cea1f9920861c2505029a957337a",
+      "after_sha256": "7f54ac1082221b6be569133994b186f414e274dc743c0dda5e79f535c2d10e88"
+    },
+    {
+      "area": "settings",
+      "id": "SET-025",
+      "field": "rust",
+      "before_sha256": "3f02c45419ff653c71220d2a36256f74aa989f08189165b937299cd506cf2411",
+      "after_sha256": "56e9ff42895e20be56a65cc3c07a137ba13ec70c4d220b53b769c280549fbbe9"
+    },
+    {
+      "area": "settings",
+      "id": "SET-026",
+      "field": "source",
+      "before_sha256": "4787bcfbed8a9564dfc904904be066e499a84273a0f2a319013c0a1c13179c3b",
+      "after_sha256": "3a70afd47484069a4176ae3717c9b007e3b73279ad740f23e2ec30a04e2e28c8"
+    },
+    {
+      "area": "settings",
+      "id": "SET-028",
+      "field": "source",
+      "before_sha256": "ebbd6381720bcc5ee78bf9cea5837fec0aea6705128a0c8113f7c2d73fad0b28",
+      "after_sha256": "3a3d30cb55955c2af03c147f7ae905065640797d51218c337a963813a47fa3d6"
+    },
+    {
+      "area": "settings",
+      "id": "SET-029",
+      "field": "source",
+      "before_sha256": "ebb022e538f6ae537ced8ef9aa48f2679eb9a80f43b46a43c5aadf0d6afaf278",
+      "after_sha256": "13d8bd850c6d3a95812372cc68fd7a60ece3001dd163ac8a8175a9d026268858"
+    },
+    {
+      "area": "settings",
+      "id": "SET-030",
+      "field": "source",
+      "before_sha256": "2b31e21301fd24538e9840e421acd87c05ba9979ba9fb133be37548fef55df8c",
+      "after_sha256": "5c0e2b2fcef1f002d6e753ec4d956ca4ab45f74991131df740e5cc810f18d80c"
+    },
+    {
+      "area": "settings",
+      "id": "SET-030",
+      "field": "rust",
+      "before_sha256": "c71061fa3175e65dceeefd3d0bd42f9ee5f0e1eaf3e5324254de2975860bd021",
+      "after_sha256": "bf878e5e0e06c6034bdd452b28634d2a9d55386cd9d815a0c5b3f7646870d8f0"
+    },
+    {
+      "area": "settings",
+      "id": "SET-031",
+      "field": "source",
+      "before_sha256": "f5ef15e14b17decab1706bd9506e819ef08eeb2cb6762777dc30120b1227e914",
+      "after_sha256": "7cbb23099a48b0f232eaacc72d40c92fc579d4a1b8142e8ac38cc8f08929f911"
+    },
+    {
+      "area": "settings",
+      "id": "SET-032",
+      "field": "source",
+      "before_sha256": "049bfff442fe708c6c3a6259f5cf565b3746c024973f2f439b36c32b308b468e",
+      "after_sha256": "6faae5e4cd72ff1fd3b9a0098b1d93ad268bc79c1a886aae2fb763f9f9e8578e"
+    },
+    {
+      "area": "settings",
+      "id": "SET-033",
+      "field": "source",
+      "before_sha256": "66a4bbc1b0b7936ac80e326ab81d6570242e8ad358186f9dc4cd13af1796dc7e",
+      "after_sha256": "586a323212889205319c64dd37d0026cd78e9fcde1fc13c2d0d89bdfe460d87c"
+    },
+    {
+      "area": "extensions",
+      "id": "EXT-020",
+      "field": "rust",
+      "before_sha256": "8a87d7251b2d8c5eb023e321b98c232dadd5b3422203bb47011975b7651113c3",
+      "after_sha256": "c520663112fea2b8ed162b1f65591079c0b6901619f8f3a43d59159902c60048"
+    },
+    {
+      "area": "extensions",
+      "id": "EXT-037",
+      "field": "rust",
+      "before_sha256": "f8437349a45106084a266dd65be622a2dbec7835b776569a15d5893f74e198b2",
+      "after_sha256": "8aff2725ae647fa1abd8a0400ba38da615b848c2057e880efb3025ca594c18b8"
+    },
+    {
+      "area": "extensions",
+      "id": "EXT-038",
+      "field": "rust",
+      "before_sha256": "2e895b515eb8ceb5f0c3626dc605b668ec9a952ad176a853cae3f330b307d7f7",
+      "after_sha256": "0c7fcac832e509ac4c5d1c2a894dd05e19431b641fc75bdd820010a3c0b9cb41"
+    },
+    {
+      "area": "extensions",
+      "id": "EXT-039",
+      "field": "rust",
+      "before_sha256": "4eb4edc60b384b8d189629d82d2cac494f000eba05776a690f6f95cb66b4b7ce",
+      "after_sha256": "c6afa4a80e428f68927da291b446d46c66686205bba18c93e9d419efb0168c93"
+    },
+    {
+      "area": "extensions",
+      "id": "EXT-053",
+      "field": "interfaces",
+      "before_sha256": "7098a734d5bbb558b4f58075dfafe9a0dd75d3d95ff85a82e3f88b5af74ef60b",
+      "after_sha256": "767d497b3b90e1a908e215d40b87381efa4060ecb3c0b563a3200107c620f158"
+    },
+    {
+      "area": "rpc-remote",
+      "id": "RPC-015",
+      "field": "rust",
+      "before_sha256": "65183b3897bb08160e1f67f27c1cd4ca4fffc4e65a52796e98dd057e905e8833",
+      "after_sha256": "68a8287f8aa8daf2d9ae055ff2de5493b94ddcf7e36eaa5d45a42efca7a3da3a"
+    },
+    {
+      "area": "rpc-remote",
+      "id": "RPC-017",
+      "field": "rust",
+      "before_sha256": "138ef8f1f96edf7bbd9af0222754edad2d2c3f77ae1a45de46e3bf2c08ceceee",
+      "after_sha256": "6b04fb7afa37e6c5b3fbe8dc55ca402195af6e8ae5a0b5cb19505f636236c3ea"
+    },
+    {
+      "area": "rpc-remote",
+      "id": "RPC-036",
+      "field": "rust",
+      "before_sha256": "e52ae4c33d654d027ef1e7fed810637061bb7cf942ab6fce8f0316ed811f3c62",
+      "after_sha256": "3e5ae3b5c7443bb914ea1d3631f5c9c5ed5bb9c82e111da08eb406cbd906fdce"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-009",
+      "field": "interfaces",
+      "before_sha256": "8fa9ba84f1186fe7893e9ec0926acafd400c2d8c6df65ad7aec47bf85d9f282a",
+      "after_sha256": "6ca09bdb8df4200a530a3a75d6e379bc949bcf127fd9d314e8f9cd65c6578ea0"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-201",
+      "field": "rust",
+      "before_sha256": "588927fdf54297c020c7e01b085005a5335271aeb6a736fce652ccda88bb3893",
+      "after_sha256": "864bc2f09529af06b6cd6eacc0229010abb35de3500d0083c15118ccbc8f9a9f"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-202",
+      "field": "rust",
+      "before_sha256": "610916627730fb22b841509d23eb50a4d3ff964a19363634513355ac8d2d4fd6",
+      "after_sha256": "afb5dbd25f04e5737735bc6d9f2660db0a565e09ce13548c4028d021fb0df419"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-203",
+      "field": "rust",
+      "before_sha256": "f6e62bd8f1716ef08546348718ac7862eaa11586d0ac4caf05fd74b306fb9de8",
+      "after_sha256": "a52c129a2237a8717809274a72d5e9d0c3e0c74d8b57d5d4407d028aa6d34214"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-204",
+      "field": "rust",
+      "before_sha256": "fbe79a61e6880bbf97faeddf7f718093b011d4531d7baa04baaf095a0ff2e422",
+      "after_sha256": "ec94ba86b5dd29c2f5e499369a30e931cbf18e99d2c28d36df2250a1f1903728"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-206",
+      "field": "rust",
+      "before_sha256": "b0452d133cff836eab53f2d777186c9b2364f37f485f93e567a600bce188f344",
+      "after_sha256": "c7a2c04fb52b1979076a084190163a999376a5a2ad2773ee37a9763304442b6c"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-207",
+      "field": "rust",
+      "before_sha256": "04ea89a7750c239be673bc98d9b4319504b8dd55d7fea5a89f1a438294f5fa0c",
+      "after_sha256": "43b001cf10f8fa3ed4263879ce0a5297b4a482658a41917983ed9974896ccbad"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-208",
+      "field": "rust",
+      "before_sha256": "f50a71dd383011c0ae8923c43b604fa629bda89cf7d7864d385c69edc54b2dad",
+      "after_sha256": "9704c0eb0b0d8aaebdfc14c8f62121eaad8e0f57ebda2c6c5a459f1cd9f4461c"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-211",
+      "field": "rust",
+      "before_sha256": "2af28752833b1bbc920dc83b893560380fc31d7bdfbe94a4dac8a45894e8115e",
+      "after_sha256": "7695ad9e898d852493156e41bdd588ba67816456d03bba74bb957431f3880b53"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-214",
+      "field": "rust",
+      "before_sha256": "79726993713f6b6d6d21517054e90cc6431877edea48b137dddd845c85fbb361",
+      "after_sha256": "57ccd649de30d0b76906967d38d1e37700a5977f203a727a1696c0ab0846bbd4"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-215",
+      "field": "rust",
+      "before_sha256": "6c4c9ac8a4b1fa5ce8c30af39d76f23f7b97ace33689277b522a3c8fdfc5c354",
+      "after_sha256": "84449557312ac558bf666d0eda8cd53dcab75fc8cd1fc7a7213810245dc4cd1f"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-218",
+      "field": "rust",
+      "before_sha256": "57487fc356aee16eb8a923b09c5aa5693a67d6f66f27a284ae305efd887e70a6",
+      "after_sha256": "df555a16017a80721ead2154371c483d4c76c4cf1170fae21fdc30a7b0d80cf9"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-222",
+      "field": "rust",
+      "before_sha256": "71c662afd0de1d18be90f7745920d715acb585764f413904d7c5a992fa94c10f",
+      "after_sha256": "059b25710b60b683b056bdc30a5a72e786982719ddf126205f34249b6195000f"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-226",
+      "field": "rust",
+      "before_sha256": "989a80b73b5a375ae31ba7bf1a753014ed05c4af6434b34255deb10a74c61ca7",
+      "after_sha256": "09d6257d77fda889d94a67b84455460127d1efbb0613cee422fd47905f2cf45d"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-228",
+      "field": "rust",
+      "before_sha256": "de1f0b856630b30bc37e3cf0e06f322a499128db91bfe6f84091be15981efcce",
+      "after_sha256": "ef219e2600fa932e1b83ddc1d109b9be3a3cca46f127e7caa7db1f4b74791ffb"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-260",
+      "field": "rust",
+      "before_sha256": "11e795266660bdfb103c94552129658929e0706c40713a3def14d06ed0986ec2",
+      "after_sha256": "a9a27d560901a588511d7ff0081e66de6f75e22dedc5fc839d2336e3ac116958"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-262",
+      "field": "rust",
+      "before_sha256": "7739cbf282ed9f95174c46f6d2ce64c217ee5a5397e089e5498e93b6762f6473",
+      "after_sha256": "5c35f3e12f9d4d5b04cc72d2668790fd21a10d5302f1ec82fae117465e2a74c3"
+    },
+    {
+      "area": "tui",
+      "id": "TUI-263",
+      "field": "rust",
+      "before_sha256": "78e9fff353b0bba8c7e1fa7b94c4d9ce9a87766f4ab49bb32aaa61486b0c1ab3",
+      "after_sha256": "d6554cf57f685fbb7a92b56405055a1b348b5517cb825726740e2e29b92f6f81"
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-002",
+      "field": "source",
+      "before_sha256": "9fda50f854e0fce1ba0fcfa7e55a4258791f03be64955494110bd07076c8e97c",
+      "after_sha256": "1c8fff9a6b19a6350c808a9d42e380c6559264dab9fb3ae66701cdccc1ddc292"
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-004",
+      "field": "source",
+      "before_sha256": "b193076427d94624bf8a4a736056eb068be7a1536a84e7c95bf23a40609eb5ce",
+      "after_sha256": "6dccb8090fbc7e30fd91f76302bfcf45dacc2bfabb87588c1b8cf1779a333af0"
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-021",
+      "field": "mechanism",
+      "before_sha256": "70b86fe423b6edd78048ed723ece7cdc0dff364f417497a1fb3359a001aff6cf",
+      "after_sha256": "e276d3a069a1db2ff54bde45978f528f84dd4cb91a2af59ce98d593ef2633586"
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-034",
+      "field": "rust",
+      "before_sha256": "0a20faa3c3b0e8d94541a12d600d7d4f6a5439d8d91f94c3edbf8d8a6bc551e0",
+      "after_sha256": "ad3e2597e72f3ce3b7412d550e95e7d02a1c02ff1365a7b56b0a46d48c34e7b0"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-001",
+      "field": "rust",
+      "before_sha256": "1b4b2debc11e4c87aa50cbaa72cc30f3f81272653dd9b3dd3535104f0c2284dc",
+      "after_sha256": "e432893f28fbba75aab35634fb84a53c459956acab7db9ef0635dd127fcf1923"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-003",
+      "field": "rust",
+      "before_sha256": "8852a7c84b54b388460f995af13d7cb48f83b1c49e7a3b187e4819c1339194fb",
+      "after_sha256": "839de4278b2c998bbf1f705e70ae0cd08f564b45e41f04a94c00102310466f78"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-004",
+      "field": "rust",
+      "before_sha256": "1d8eb52d669a9100b89755acb3fbf40f48dc294115c90da01d6557c36632c24d",
+      "after_sha256": "901a7d97ab465d9ce6423b8a2545e48fd427cc5d3482dd9bd94e7092853d30d5"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-006",
+      "field": "rust",
+      "before_sha256": "9ce87a8bfc10b24f0883c51246e76c48262152bba9695a6e2094982ecedcd2a8",
+      "after_sha256": "50f2a20956220cdb977a76fc3a84d9448a5e40c0c74994d9b38c5904a0600ca2"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-007",
+      "field": "rust",
+      "before_sha256": "5fd022711adfe57856da0f060d50fef069589058ad4a896e3daf8b485f28fe89",
+      "after_sha256": "91f15badf496c1e31caa390c9c039f1dd31cedcaec0905c1838ce77edbd2bc03"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-008",
+      "field": "rust",
+      "before_sha256": "540716a6936a8ebd6f511e2d9432c09c0d380873258b119da00ef3e7dda3c53e",
+      "after_sha256": "961e47f9ee448259670e14fa1bd2ea9fd0e4028132f8814992eb34b11a5731a8"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-010",
+      "field": "rust",
+      "before_sha256": "3c2cad88a9f0128a5222ae8871eaf10676b1e2136ed7635636b0e87aaa9e3f20",
+      "after_sha256": "74f62330f167264ac54e0415f9d9abbe03160e082b8d3a125935b33b524fe5b2"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-011",
+      "field": "rust",
+      "before_sha256": "bc55a10a9b55a438ff2a6b268a7fdf814687689f9000099701018f0f473361fe",
+      "after_sha256": "9a1774c2a2ec021df0a6ed2b1e4f40aafa61e0ed9da28a360decf4b37120d6d8"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-012",
+      "field": "rust",
+      "before_sha256": "173df4820e88b4e7d91e7ac1e37f7ff0f319b2e069a3e45d09080f411686d4b3",
+      "after_sha256": "9b55b09eec3b4b465068a844b7f45504d0c042316db13ed23622ba90639e258e"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-014",
+      "field": "rust",
+      "before_sha256": "99d18f091c820a7d94aacc2f7859786633e9df0e66900e983837a28d4091726e",
+      "after_sha256": "1dbcdc7a45d36259a8022cfe5ac60549214a893311cb34cdab1a1ffc84934e88"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-015",
+      "field": "rust",
+      "before_sha256": "09d60c481cf2854455cc7496aa82ed1d5d3042ce93e2ed95ec753faa1a538b75",
+      "after_sha256": "514ca28ae9fb4704179cb6d1810c649ab75fb72dfe50bfe35ae098c10fd975c9"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-016",
+      "field": "rust",
+      "before_sha256": "673bbf262c5fce658e6447fbbb04cffb8a9d633d325424de9c9deab32330b862",
+      "after_sha256": "7929b6305e0b439346928f685fc5e808d3e8cfe1a3e177a8912c7236a75d9d11"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-017",
+      "field": "rust",
+      "before_sha256": "c292031f3c1ac750a77155c44d1bd88530674cdc46d91777e79606d1041e8e95",
+      "after_sha256": "bb7eeb88938ee25d9d075033d0189929802f7489a7a077c3120e7ca68c2592e5"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-019",
+      "field": "rust",
+      "before_sha256": "64a5b519136487b9c006038b60897d672b9e2ea86939ef5d8aa453f5a1068f90",
+      "after_sha256": "9d2acf6110cd709ae52128b63439b9c849449b71f6aac516587371248186895d"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-023",
+      "field": "rust",
+      "before_sha256": "c172d0daa0b2f9a0500cea7753d126d31aebaa2247489295532c3845c8151306",
+      "after_sha256": "c9c9c133220782451c693dbeac3b2fd3fde6881470bd66106fb962efd18a2bb6"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-024",
+      "field": "rust",
+      "before_sha256": "e05fe073988f627c4f61809973b05d950769b9087eb63cacce11d8d68eac647f",
+      "after_sha256": "912da6755f9bcc2ed40b8e338f98cd609794db84e75a45517e9b1c483486b560"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-025",
+      "field": "rust",
+      "before_sha256": "a18ee85848e4ab5cee973211cef4868dd9f27033498917dd347f4381e543eae9",
+      "after_sha256": "3bcc102f017d518542f108a27af1b7fde5dfec739485eeaa6d49a95fb092a4c7"
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-026",
+      "field": "rust",
+      "before_sha256": "2f57610a9804d7e3cdf16ea9b0a689bfb3692457e367431478aa804446050c65",
+      "after_sha256": "54ff9045d967efb90a10da01aed039d791527b22c6242552fbb23ca915a885a9"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-001",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-002",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-003",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-004",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-005",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-006",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-007",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-008",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-009",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-010",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-011",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-012",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-013",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-014",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-015",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-016",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-017",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-018",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-019",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-020",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-021",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-022",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-023",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-024",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-025",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-026",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-027",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-028",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-029",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-030",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-031",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-032",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-033",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-034",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-035",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-036",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-037",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-038",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-039",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-040",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-041",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-042",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-043",
+      "field": "rust",
+      "before_sha256": "036a0b640887a16cac564bf5acb5a62b81a29071a73b997daaf1cedda91004f9",
+      "after_sha256": "65b7ba3883af0e6ece3294f3f3d6163302c026a74d82fecb7466fbd5b0c57dba"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-044",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-045",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-046",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-047",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-048",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-049",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-050",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-051",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-052",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-053",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-054",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-055",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-056",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-057",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-058",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-059",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-060",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-061",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-062",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-063",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-064",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-065",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-066",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-067",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "cognee",
+      "id": "COG-068",
+      "field": "rust",
+      "before_sha256": "4ded5d3eb503cafa263dd1347ca2631561470b2c16e0a2eeac6b110599acd920",
+      "after_sha256": "a518001cd62f0573c3c251dfb6aa478100f75ea5570c895b5d42379c1e071524"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-002",
+      "field": "rust",
+      "before_sha256": "b1b5f1021839e0d874d3ce17bd6ea76bad2745d4301484e455dec58637410001",
+      "after_sha256": "9faee8faf07ac5af8e6d55bbc59acb830025b58f8358b06952878a8eb17b7707"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-008",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-009",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-010",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-011",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-012",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-013",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-014",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-015",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-016",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-017",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-018",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-019",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-020",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-021",
+      "field": "rust",
+      "before_sha256": "1c28a04346700448dddbffde084c62e0d85745e9cfda4d6c1591b74d0ab3bee9",
+      "after_sha256": "5613346b987d9037a6af80389b2adb41418b9861bb853bca97c3089638e22b45"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-023",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-024",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-025",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-026",
+      "field": "rust",
+      "before_sha256": "a8051f1ca810410bb3372ab8ed61b70d1a83a126df2e971ecfa61bb3d8973b77",
+      "after_sha256": "385ccb43a806b5a7151db8e597f1698c1ed5e745f49ce421c9e5f8720383f8f4"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-027",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-028",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-029",
+      "field": "rust",
+      "before_sha256": "ebe9cc66e9e592f49a5b624a79b792fdf6b03d2ca77b42db3173d496274d054c",
+      "after_sha256": "8d737ff84c937a2386021273872dc054b59d0ecb07aeb31d45de0c976807fe50"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-030",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-031",
+      "field": "rust",
+      "before_sha256": "1bcaf853d8de94d93ae61841e590922fa1a9d3f19d722d05df652d17e0b94956",
+      "after_sha256": "541842d436bbb1426602c10fee9fbe6656a5a31c74d422933ceb12127b98e890"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-036",
+      "field": "rust",
+      "before_sha256": "b627100a987d3823a7f450359c158ae0db68847e42853a2bf2acd12aa9afab62",
+      "after_sha256": "c27c10043127751ab826981d4447c7462b8f689df4e0307bee02bba7f8b84cf8"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-039",
+      "field": "source",
+      "before_sha256": "039553bd79690f02d7c74a595c56f3b0dd2252783bd478d282518bedc2b6096f",
+      "after_sha256": "d1ff60f556d20b5f23c8a4885bfa7ea7692a3e339ccf24441f6d78259fe6dcd7"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-039",
+      "field": "rust",
+      "before_sha256": "cf9feb795fae150d418cdcfed2d2024be8d84fcc0ede8961d0b6c7574358739a",
+      "after_sha256": "ffa2d3114700ec7ac02eff4ff606070b6d6a2173d02114f79791ea7d79b94935"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-040",
+      "field": "rust",
+      "before_sha256": "b2e6671a8d878fa3d50dab65743e67d38cebb813af43bcd5b1a1787ac2dcbaff",
+      "after_sha256": "5079a398b8c87bcee133c2857cf97cda61731ea2c9fce7e6986912d44a8038cd"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-041",
+      "field": "source",
+      "before_sha256": "a114f0255d42764e6e0278ac5491496478e940058f5c5e2bf4c98a75536f89d7",
+      "after_sha256": "4bfa0518984c54207277f8dfe404341b6e7db3f471b1a7a33133f8b8110a3793"
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-041",
+      "field": "rust",
+      "before_sha256": "105a92efe7c572cdbaf45b36e508b4e3c78e64111b3307941e336f4e004a3438",
+      "after_sha256": "ddef2b10644cf2c3cff844dc1121fb619362306c14eda1f4e992c60c5f7b4b0c"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-009",
+      "field": "mechanism",
+      "before_sha256": "d02da5726c4f7166681981d8e74d4c7a5d7aaa9a25e4fe3e67478718d2f23f2e",
+      "after_sha256": "4025e6e2583bf5f80213b80d0d227c512bfed870f434cd30bdd33717da14f8db"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-023",
+      "field": "mechanism",
+      "before_sha256": "a3db9fe6f227f31936a5adac6688c76aa4db8ebeb2a663adcaf6adeb22940ceb",
+      "after_sha256": "0360f122c7d16970f9a8eda926166b5ce7db818fb947141e49efd1f2f0b26502"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-023",
+      "field": "rust",
+      "before_sha256": "8cc5cf9cc0db23d96bb5d18fa7e661159b5cb7dfaa3259f6505e9dff81c4bc41",
+      "after_sha256": "41fa22fea81bda8231ef3672d7e4144a000bd33c36907e8eb5e8aa03f6cf0deb"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-025",
+      "field": "mechanism",
+      "before_sha256": "4198b2091294989e22243c8d79dccceb5856326e11ab9634d4ed4e1e0161481e",
+      "after_sha256": "bf36ac2e5887a2f6cab883662919be2bcf1e88d52e0220ac4e78337c54eacdbf"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-025",
+      "field": "rust",
+      "before_sha256": "3dc5dc98942cbe06caa8e2ce2381df7189aedc79af9b362bbf304d46f87b7b92",
+      "after_sha256": "de045fc812f69cae78b7d68d18b473899b5e7362b06aee9393b9f8268e5ea3b8"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-026",
+      "field": "rust",
+      "before_sha256": "66b032f9c7e89e753f52a684086b29e9d7df912e8a8eb369a12491eb8fcbce76",
+      "after_sha256": "8ba250d9b883ea1872568b0a5378de17c6fffd3f6c93d14a4afcb5c75c87b479"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-027",
+      "field": "mechanism",
+      "before_sha256": "6cd7ba75c626de868c79aeba33689d604639ecab7d3bf8bdf57c29ce77e7adf7",
+      "after_sha256": "07ba19e879f7d50a9e995e53d8ac4be4cdcc0d473cbcb69cc95045f607755d94"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-027",
+      "field": "rust",
+      "before_sha256": "a888e2b82bdae5c67ed04469f79a298f7416809bf2bf5fa9f16a2d71c6f5969b",
+      "after_sha256": "c36f74fce101200a6057443bde63426aa9ed70b26afe740b1b97c8cbd88e03ef"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-028",
+      "field": "mechanism",
+      "before_sha256": "01360d1365373cc0fa9758948b97875fd888713f5dcacec2f2533735dc7270b8",
+      "after_sha256": "d16e0deb90b67859ed4e10178c5f4d378760a8c2e3a074b5c9ecd23f046eb9ac"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-029",
+      "field": "source",
+      "before_sha256": "64a5bc3c72e85fea50f0e5645f289e4d09340dfa42215e4064aa56060686ff8c",
+      "after_sha256": "6f3a7b1f190d1577d3c8b87207628affe7939c1b30624e94db90ce4075ed4b43"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-029",
+      "field": "mechanism",
+      "before_sha256": "823594c042193ef70588469f156ebc9ef3e689a73b81fe98d3d9ba3046983e31",
+      "after_sha256": "1f84e8afcdf22448977ba9a8c909a62b0a2d4578af1cd3173cf09db63e8c9d1a"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-029",
+      "field": "rust",
+      "before_sha256": "3af4f434b282db6bea3118f8de7fe401e462ff9d98e23402febb5160b0e3655c",
+      "after_sha256": "216c8930392b8acd6c7e56ee0db36dbf91ea0e6f96b93b2ce1f895519761fee3"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-030",
+      "field": "mechanism",
+      "before_sha256": "d6c1d727b5dda7ad2fb134a7a84aa5e531fba5f45aaee9eb452f8b61a8cb2f91",
+      "after_sha256": "04427cd1bb62382511a91e9e9fe5cd1f1b524847c07bd79f85b05d5833d929df"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-030",
+      "field": "rust",
+      "before_sha256": "3b31460955a5f1176ecc0d67b16387a3eb8c28c50bfe838f48f9229ba666a0f6",
+      "after_sha256": "e407126d5af37c70424074187c6415263085573a113f06d5adcb5b086c6cea65"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-031",
+      "field": "mechanism",
+      "before_sha256": "416627d3833b569bfc22e15784510f26644b5e34c5075a6dc32ecab0d3dd1a7c",
+      "after_sha256": "1901347c125bb430a85f494def72c5e33853f831c1c2d2c212ede91e2af1e5ff"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-031",
+      "field": "rust",
+      "before_sha256": "c82639e9cd67fddeee72efeb74a43359c3cd0ffd4f849a5659c729e12d1ffaab",
+      "after_sha256": "a2dd17b0372989eaa4096004c4aa14d9997bd94cdae9c8e6a49d5ea383845f1e"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-032",
+      "field": "mechanism",
+      "before_sha256": "e6ae8d111a52c72588d6f130b190948154e1df12f28e494b752763729d94aba9",
+      "after_sha256": "3915ee0785ab417325ccd5f660e65430a50101597ec515ee5450d127d90c7ae8"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-032",
+      "field": "rust",
+      "before_sha256": "5d3f30f0c38c8046e93193d69b371d5c84ee1da0bb5c76c646761b76b0dc0523",
+      "after_sha256": "1c70f7bdd68e3a5861a033936647eca0ac19ebad7cc805002985003fac8f025f"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-033",
+      "field": "mechanism",
+      "before_sha256": "05b4b6b703b1b8468c0127ac87ebdfb6d4b3dfaeead88e3968217866837c3efe",
+      "after_sha256": "63d2bb2a75b7a0a90d192e1eddf23347105bb068abdee82fcd266e4a610a0711"
+    },
+    {
+      "area": "providers-auth",
+      "id": "AUTH-033",
+      "field": "rust",
+      "before_sha256": "ef9d5bad4e60ed8f2bfcb66ae1a18aa527822ec120c2af714ae9130589c5fcbd",
+      "after_sha256": "e4dec1033ba2f65e29c1f85510f13c28c6eb758502f3027b714e1f4ce2262607"
+    },
+    {
+      "area": "cli-packaging",
+      "id": "CLI-039",
+      "field": "rust",
+      "before_sha256": "e5c658d8713280481abc3dd2b957ef482fa9d37c39b4a4b11ece1bf445b9e7af",
+      "after_sha256": "cbdec612ab5fffc536eb6c2bc37aa880850609c9afe8bc05cd433dbc38daea91"
+    }
+  ],
+  "unresolved_short_citations": [],
+  "changes": [
+    {
+      "id": "AI-012",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "schema.rs:299-365",
+      "after": "rust:crates/ice-ai/src/schema.rs:299-365"
+    },
+    {
+      "id": "AI-021",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "build_params.rs:1110-1133",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/build_params.rs:1110-1133"
+    },
+    {
+      "id": "AI-021",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "models.rs:1-239",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/models.rs:1-239"
+    },
+    {
+      "id": "AI-022",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "build_params.rs:1349-1374",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/build_params.rs:1349-1374"
+    },
+    {
+      "id": "AI-023",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "mapper.rs:718-827",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/mapper.rs:718-827"
+    },
+    {
+      "id": "AI-024",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "build_params.rs:1008-1039",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/build_params.rs:1008-1039"
+    },
+    {
+      "id": "AI-024",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "build_params.rs:609-647",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/build_params.rs:609-647"
+    },
+    {
+      "id": "AI-024",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "cache_control.rs:90-140",
+      "after": "rust:crates/ice-ai/src/providers/anthropic/cache_control.rs:90-140"
+    },
+    {
+      "id": "TOOLS-003",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/tools/bash.rs:38-46,136-302",
+      "after": "rust:crates/ice-tools/src/tools/bash.rs:38-46; rust:crates/ice-tools/src/tools/bash.rs:136-302"
+    },
+    {
+      "id": "TOOLS-008",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash-background.ts:275-298,523-588,608-641",
+      "after": "ice:packages/coding-agent/src/core/tools/bash-background.ts:275-298; ice:packages/coding-agent/src/core/tools/bash-background.ts:523-588; ice:packages/coding-agent/src/core/tools/bash-background.ts:608-641"
+    },
+    {
+      "id": "TOOLS-009",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash-background.ts:15-18,285-351",
+      "after": "ice:packages/coding-agent/src/core/tools/bash-background.ts:15-18; ice:packages/coding-agent/src/core/tools/bash-background.ts:285-351"
+    },
+    {
+      "id": "TOOLS-009",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash.ts:123-199,375-701",
+      "after": "ice:packages/coding-agent/src/core/tools/bash.ts:123-199; ice:packages/coding-agent/src/core/tools/bash.ts:375-701"
+    },
+    {
+      "id": "TOOLS-009",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/tools/bash.rs:16-32,81-112",
+      "after": "rust:crates/ice-tools/src/tools/bash.rs:16-32; rust:crates/ice-tools/src/tools/bash.rs:81-112"
+    },
+    {
+      "id": "TOOLS-010",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash.ts:410-502,526-701",
+      "after": "ice:packages/coding-agent/src/core/tools/bash.ts:410-502; ice:packages/coding-agent/src/core/tools/bash.ts:526-701"
+    },
+    {
+      "id": "TOOLS-010",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/shell_output.rs:319-343,404-420",
+      "after": "rust:crates/ice-tools/src/shell_output.rs:319-343; rust:crates/ice-tools/src/shell_output.rs:404-420"
+    },
+    {
+      "id": "TOOLS-010",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/shell_output.rs:175-236,257-304",
+      "after": "rust:crates/ice-tools/src/shell_output.rs:175-236; rust:crates/ice-tools/src/shell_output.rs:257-304"
+    },
+    {
+      "id": "TOOLS-010",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/os_env.rs:929-982,1069-1075",
+      "after": "rust:crates/ice-tools/src/os_env.rs:929-982; rust:crates/ice-tools/src/os_env.rs:1069-1075"
+    },
+    {
+      "id": "TOOLS-011",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:1-364,428-492",
+      "after": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:1-364; ice:packages/coding-agent/src/core/tools/bash-watch.ts:428-492"
+    },
+    {
+      "id": "TOOLS-012",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:238-274,389-448",
+      "after": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:238-274; ice:packages/coding-agent/src/core/tools/bash-watch.ts:389-448"
+    },
+    {
+      "id": "TOOLS-013",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:17-92,238-274,323-387,405-492",
+      "after": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:17-92; ice:packages/coding-agent/src/core/tools/bash-watch.ts:238-274; ice:packages/coding-agent/src/core/tools/bash-watch.ts:323-387; ice:packages/coding-agent/src/core/tools/bash-watch.ts:405-492"
+    },
+    {
+      "id": "TOOLS-013",
+      "field": "mechanism",
+      "kind": "expand-local-citation",
+      "before": "bash-watch.ts:17-25",
+      "after": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:17-25"
+    },
+    {
+      "id": "TOOLS-014",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/tools/bash.ts:258-373,410-551,675-749",
+      "after": "ice:packages/coding-agent/src/core/tools/bash.ts:258-373; ice:packages/coding-agent/src/core/tools/bash.ts:410-551; ice:packages/coding-agent/src/core/tools/bash.ts:675-749"
+    },
+    {
+      "id": "TOOLS-014",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/tools/bash.rs:35-36,136-258",
+      "after": "rust:crates/ice-tools/src/tools/bash.rs:35-36; rust:crates/ice-tools/src/tools/bash.rs:136-258"
+    },
+    {
+      "id": "TOOLS-014",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/src/tools/bash.rs:22-32,307-402",
+      "after": "rust:crates/ice-tools/src/tools/bash.rs:22-32; rust:crates/ice-tools/src/tools/bash.rs:307-402"
+    },
+    {
+      "id": "TOOLS-021",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tools/tests/edit_mutation_queue_sharing.rs:1-13,53-110",
+      "after": "rust:crates/ice-tools/tests/edit_mutation_queue_sharing.rs:1-13; rust:crates/ice-tools/tests/edit_mutation_queue_sharing.rs:53-110"
+    },
+    {
+      "id": "TOOLS-026",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/tool_execution.rs:18-26,218-225,548-616",
+      "after": "rust:crates/ice-tui/src/tool_execution.rs:18-26; rust:crates/ice-tui/src/tool_execution.rs:218-225; rust:crates/ice-tui/src/tool_execution.rs:548-616"
+    },
+    {
+      "id": "TOOLS-027",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/tool_execution.rs:197-239,628-713",
+      "after": "rust:crates/ice-tui/src/tool_execution.rs:197-239; rust:crates/ice-tui/src/tool_execution.rs:628-713"
+    },
+    {
+      "id": "SET-001",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/config.ts:21-25,369-605",
+      "after": "ice:packages/coding-agent/src/config.ts:21-25; ice:packages/coding-agent/src/config.ts:369-605"
+    },
+    {
+      "id": "SET-001",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/config.rs:42-108,123-166",
+      "after": "rust:crates/ice-cli/src/config.rs:42-108; rust:crates/ice-cli/src/config.rs:123-166"
+    },
+    {
+      "id": "SET-002",
+      "field": "interfaces",
+      "kind": "expand-local-citation",
+      "before": "config.ts:33-41",
+      "after": "ice:packages/coding-agent/src/config.ts:33-41"
+    },
+    {
+      "id": "SET-011",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:126-184,877-924,959-987,1391-1393,1502-1521",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:126-184; ice:packages/coding-agent/src/core/settings-manager.ts:877-924; ice:packages/coding-agent/src/core/settings-manager.ts:959-987; ice:packages/coding-agent/src/core/settings-manager.ts:1391-1393; ice:packages/coding-agent/src/core/settings-manager.ts:1502-1521"
+    },
+    {
+      "id": "SET-011",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/settings.rs:28-110,256-329,387-418",
+      "after": "rust:crates/ice-cli/src/settings.rs:28-110; rust:crates/ice-cli/src/settings.rs:256-329; rust:crates/ice-cli/src/settings.rs:387-418"
+    },
+    {
+      "id": "SET-011",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:28-238",
+      "after": "rust:crates/ice-cli/src/settings.rs:28-238"
+    },
+    {
+      "id": "SET-012",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:25-49,989-1094,1131-1137",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:25-49; ice:packages/coding-agent/src/core/settings-manager.ts:989-1094; ice:packages/coding-agent/src/core/settings-manager.ts:1131-1137"
+    },
+    {
+      "id": "SET-012",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/settings.rs:28-79,266-329",
+      "after": "rust:crates/ice-cli/src/settings.rs:28-79; rust:crates/ice-cli/src/settings.rs:266-329"
+    },
+    {
+      "id": "SET-012",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:925-1009",
+      "after": "rust:crates/ice-cli/src/settings.rs:925-1009"
+    },
+    {
+      "id": "SET-013",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/settings.rs:125-130,231-263",
+      "after": "rust:crates/ice-cli/src/settings.rs:125-130; rust:crates/ice-cli/src/settings.rs:231-263"
+    },
+    {
+      "id": "SET-013",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "http.rs:183-213",
+      "after": "rust:crates/ice-ai/src/http.rs:183-213"
+    },
+    {
+      "id": "SET-014",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:1096-1116,1179-1188,1231-1250",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:1096-1116; ice:packages/coding-agent/src/core/settings-manager.ts:1179-1188; ice:packages/coding-agent/src/core/settings-manager.ts:1231-1250"
+    },
+    {
+      "id": "SET-014",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/test/settings-manager.test.ts:308-388,514-601",
+      "after": "ice:packages/coding-agent/test/settings-manager.test.ts:308-388; ice:packages/coding-agent/test/settings-manager.test.ts:514-601"
+    },
+    {
+      "id": "SET-014",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:897-910",
+      "after": "rust:crates/ice-cli/src/settings.rs:897-910"
+    },
+    {
+      "id": "SET-015",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:1143-1177,1190-1229,1425-1474,1523-1587,1602-1610",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:1143-1177; ice:packages/coding-agent/src/core/settings-manager.ts:1190-1229; ice:packages/coding-agent/src/core/settings-manager.ts:1425-1474; ice:packages/coding-agent/src/core/settings-manager.ts:1523-1587; ice:packages/coding-agent/src/core/settings-manager.ts:1602-1610"
+    },
+    {
+      "id": "SET-015",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:1094-1155",
+      "after": "rust:crates/ice-cli/src/settings.rs:1094-1155"
+    },
+    {
+      "id": "SET-016",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:53-63,1395-1423,1476-1500",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:53-63; ice:packages/coding-agent/src/core/settings-manager.ts:1395-1423; ice:packages/coding-agent/src/core/settings-manager.ts:1476-1500"
+    },
+    {
+      "id": "SET-016",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/settings.rs:223-253,339-351",
+      "after": "rust:crates/ice-cli/src/settings.rs:223-253; rust:crates/ice-cli/src/settings.rs:339-351"
+    },
+    {
+      "id": "SET-016",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "interactive_tui.rs:849-852",
+      "after": "rust:crates/ice-cli/src/interactive_tui.rs:849-852"
+    },
+    {
+      "id": "SET-016",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:1130-1155",
+      "after": "rust:crates/ice-cli/src/settings.rs:1130-1155"
+    },
+    {
+      "id": "SET-017",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:925-957,1589-1600",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:925-957; ice:packages/coding-agent/src/core/settings-manager.ts:1589-1600"
+    },
+    {
+      "id": "SET-017",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/settings.rs:86-110,387-418,539-563",
+      "after": "rust:crates/ice-cli/src/settings.rs:86-110; rust:crates/ice-cli/src/settings.rs:387-418; rust:crates/ice-cli/src/settings.rs:539-563"
+    },
+    {
+      "id": "SET-018",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:128,151-154,862-870,1262-1299",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:128; ice:packages/coding-agent/src/core/settings-manager.ts:151-154; ice:packages/coding-agent/src/core/settings-manager.ts:862-870; ice:packages/coding-agent/src/core/settings-manager.ts:1262-1299"
+    },
+    {
+      "id": "SET-018",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/settings.rs:170-196,539-670",
+      "after": "rust:crates/ice-cli/src/settings.rs:170-196; rust:crates/ice-cli/src/settings.rs:539-670"
+    },
+    {
+      "id": "SET-018",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:1030-1068",
+      "after": "rust:crates/ice-cli/src/settings.rs:1030-1068"
+    },
+    {
+      "id": "SET-019",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:84-99,155-160,1301-1389",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:84-99; ice:packages/coding-agent/src/core/settings-manager.ts:155-160; ice:packages/coding-agent/src/core/settings-manager.ts:1301-1389"
+    },
+    {
+      "id": "SET-019",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "resource_dirs.rs:44-228",
+      "after": "rust:crates/ice-cli/src/resource_dirs.rs:44-228"
+    },
+    {
+      "id": "SET-019",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "resource_dirs.rs:232-294",
+      "after": "rust:crates/ice-cli/src/resource_dirs.rs:232-294"
+    },
+    {
+      "id": "SET-020",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/settings-manager.ts:101-124,558-631",
+      "after": "ice:packages/coding-agent/src/core/settings-manager.ts:101-124; ice:packages/coding-agent/src/core/settings-manager.ts:558-631"
+    },
+    {
+      "id": "SET-020",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "settings.rs:506-670",
+      "after": "rust:crates/ice-cli/src/settings.rs:506-670"
+    },
+    {
+      "id": "SET-021",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:36-65,172-322,363-625",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:36-65; ice:packages/coding-agent/src/core/resource-loader.ts:172-322; ice:packages/coding-agent/src/core/resource-loader.ts:363-625"
+    },
+    {
+      "id": "SET-021",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "session.rs:499-607",
+      "after": "rust:crates/ice-cli/src/session.rs:499-607"
+    },
+    {
+      "id": "SET-021",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "session.rs:1395-1452",
+      "after": "rust:crates/ice-cli/src/session.rs:1395-1452"
+    },
+    {
+      "id": "SET-022",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:403-426,576-699,1019-1042",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:403-426; ice:packages/coding-agent/src/core/resource-loader.ts:576-699; ice:packages/coding-agent/src/core/resource-loader.ts:1019-1042"
+    },
+    {
+      "id": "SET-023",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:363-401,435-499,701-935",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:363-401; ice:packages/coding-agent/src/core/resource-loader.ts:435-499; ice:packages/coding-agent/src/core/resource-loader.ts:701-935"
+    },
+    {
+      "id": "SET-023",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "skills.rs:241-280",
+      "after": "rust:crates/ice-harness/src/skills.rs:241-280"
+    },
+    {
+      "id": "SET-023",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "resource_dirs.rs:232-294",
+      "after": "rust:crates/ice-cli/src/resource_dirs.rs:232-294"
+    },
+    {
+      "id": "SET-023",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "session.rs:1395-1443",
+      "after": "rust:crates/ice-cli/src/session.rs:1395-1443"
+    },
+    {
+      "id": "SET-024",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:692-699,1138-1175",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:692-699; ice:packages/coding-agent/src/core/resource-loader.ts:1138-1175"
+    },
+    {
+      "id": "SET-024",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "resource_dirs.rs:232-294",
+      "after": "rust:crates/ice-cli/src/resource_dirs.rs:232-294"
+    },
+    {
+      "id": "SET-025",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:84-170,548-557",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:84-170; ice:packages/coding-agent/src/core/resource-loader.ts:548-557"
+    },
+    {
+      "id": "SET-025",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "resource-loader.ts:548-557",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:548-557"
+    },
+    {
+      "id": "SET-026",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:67-82,559-595,1097-1127",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:67-82; ice:packages/coding-agent/src/core/resource-loader.ts:559-595; ice:packages/coding-agent/src/core/resource-loader.ts:1097-1127"
+    },
+    {
+      "id": "SET-028",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/prompt-templates.ts:12-19,105-264",
+      "after": "ice:packages/coding-agent/src/core/prompt-templates.ts:12-19; ice:packages/coding-agent/src/core/prompt-templates.ts:105-264"
+    },
+    {
+      "id": "SET-028",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:768-790,1044-1068",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:768-790; ice:packages/coding-agent/src/core/resource-loader.ts:1044-1068"
+    },
+    {
+      "id": "SET-029",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/prompt-templates.ts:25-103,270-287",
+      "after": "ice:packages/coding-agent/src/core/prompt-templates.ts:25-103; ice:packages/coding-agent/src/core/prompt-templates.ts:270-287"
+    },
+    {
+      "id": "SET-030",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/skills.ts:17-66,130-276,434-549",
+      "after": "ice:packages/coding-agent/src/core/skills.ts:17-66; ice:packages/coding-agent/src/core/skills.ts:130-276; ice:packages/coding-agent/src/core/skills.ts:434-549"
+    },
+    {
+      "id": "SET-030",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/skills.rs:1-280,296-567",
+      "after": "rust:crates/ice-harness/src/skills.rs:1-280; rust:crates/ice-harness/src/skills.rs:296-567"
+    },
+    {
+      "id": "SET-031",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/skills.ts:11-15,68-128,278-326,397-432",
+      "after": "ice:packages/coding-agent/src/core/skills.ts:11-15; ice:packages/coding-agent/src/core/skills.ts:68-128; ice:packages/coding-agent/src/core/skills.ts:278-326; ice:packages/coding-agent/src/core/skills.ts:397-432"
+    },
+    {
+      "id": "SET-032",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/agent-session.ts:1425-1436,3210-3228",
+      "after": "ice:packages/coding-agent/src/core/agent-session.ts:1425-1436; ice:packages/coding-agent/src/core/agent-session.ts:3210-3228"
+    },
+    {
+      "id": "SET-033",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/resource-loader.ts:539-546,792-811,938-1017,1070-1095",
+      "after": "ice:packages/coding-agent/src/core/resource-loader.ts:539-546; ice:packages/coding-agent/src/core/resource-loader.ts:792-811; ice:packages/coding-agent/src/core/resource-loader.ts:938-1017; ice:packages/coding-agent/src/core/resource-loader.ts:1070-1095"
+    },
+    {
+      "id": "EXT-020",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "actions.rs:1198-1205",
+      "after": "rust:crates/ice-extensions/src/actions.rs:1198-1205"
+    },
+    {
+      "id": "EXT-020",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "actions.rs:860-868",
+      "after": "rust:crates/ice-extensions/src/actions.rs:860-868"
+    },
+    {
+      "id": "EXT-037",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/registry.rs:255-275,705-718,1016-1026",
+      "after": "rust:crates/ice-extensions/src/registry.rs:255-275; rust:crates/ice-extensions/src/registry.rs:705-718; rust:crates/ice-extensions/src/registry.rs:1016-1026"
+    },
+    {
+      "id": "EXT-038",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/registry.rs:255-275,705-718,1016-1026",
+      "after": "rust:crates/ice-extensions/src/registry.rs:255-275; rust:crates/ice-extensions/src/registry.rs:705-718; rust:crates/ice-extensions/src/registry.rs:1016-1026"
+    },
+    {
+      "id": "EXT-039",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/registry.rs:255-275,705-718,1016-1026",
+      "after": "rust:crates/ice-extensions/src/registry.rs:255-275; rust:crates/ice-extensions/src/registry.rs:705-718; rust:crates/ice-extensions/src/registry.rs:1016-1026"
+    },
+    {
+      "id": "EXT-053",
+      "field": "interfaces",
+      "kind": "expand-local-citation",
+      "before": "types.ts:1640-1644",
+      "after": "ice:packages/coding-agent/src/core/extensions/types.ts:1640-1644"
+    },
+    {
+      "id": "EXT-053",
+      "field": "interfaces",
+      "kind": "expand-local-citation",
+      "before": "types.ts:1667",
+      "after": "ice:packages/coding-agent/src/core/extensions/types.ts:1667"
+    },
+    {
+      "id": "RPC-015",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "app.rs:96",
+      "after": "rust:crates/ice-cli/src/app.rs:96"
+    },
+    {
+      "id": "RPC-017",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "modes.rs:345",
+      "after": "rust:crates/ice-cli/src/modes.rs:345"
+    },
+    {
+      "id": "RPC-036",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "client.rs:160",
+      "after": "rust:crates/ice-cli/src/remote/client.rs:160"
+    },
+    {
+      "id": "TUI-009",
+      "field": "interfaces",
+      "kind": "expand-local-citation",
+      "before": "appearance-types.ts:52-287",
+      "after": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:52-287"
+    },
+    {
+      "id": "TUI-009",
+      "field": "interfaces",
+      "kind": "expand-local-citation",
+      "before": "appearance-defaults.ts:45-208",
+      "after": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-defaults.ts:45-208"
+    },
+    {
+      "id": "TUI-201",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "ansi.rs:135-142",
+      "after": "rust:crates/ice-tui/src/ansi.rs:135-142"
+    },
+    {
+      "id": "TUI-201",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "utils.rs:354-377",
+      "after": "rust:crates/ice-tui/src/utils.rs:354-377"
+    },
+    {
+      "id": "TUI-202",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "line_diff.rs:111-178",
+      "after": "rust:crates/ice-tui/src/line_diff.rs:111-178"
+    },
+    {
+      "id": "TUI-203",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "utils.rs:159-224",
+      "after": "rust:crates/ice-tui/src/utils.rs:159-224"
+    },
+    {
+      "id": "TUI-203",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "utils.rs:444-453",
+      "after": "rust:crates/ice-tui/src/utils.rs:444-453"
+    },
+    {
+      "id": "TUI-203",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "line_diff.rs:238-269",
+      "after": "rust:crates/ice-tui/src/line_diff.rs:238-269"
+    },
+    {
+      "id": "TUI-204",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "line_diff.rs:181-197",
+      "after": "rust:crates/ice-tui/src/line_diff.rs:181-197"
+    },
+    {
+      "id": "TUI-206",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "keybindings.rs:686-703",
+      "after": "rust:crates/ice-tui/src/keybindings.rs:686-703"
+    },
+    {
+      "id": "TUI-207",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "windows_paste.rs:22-119",
+      "after": "rust:crates/ice-tui/src/windows_paste.rs:22-119"
+    },
+    {
+      "id": "TUI-208",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/terminal.rs:16-65,187-290,340-369,469-506",
+      "after": "rust:crates/ice-tui/src/terminal.rs:16-65; rust:crates/ice-tui/src/terminal.rs:187-290; rust:crates/ice-tui/src/terminal.rs:340-369; rust:crates/ice-tui/src/terminal.rs:469-506"
+    },
+    {
+      "id": "TUI-211",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "layout_node.rs:82-237",
+      "after": "rust:crates/ice-tui/src/layout_node.rs:82-237"
+    },
+    {
+      "id": "TUI-214",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/scroll_view.rs:193-216,379-462",
+      "after": "rust:crates/ice-tui/src/scroll_view.rs:193-216; rust:crates/ice-tui/src/scroll_view.rs:379-462"
+    },
+    {
+      "id": "TUI-215",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "render.rs:52-94",
+      "after": "rust:crates/ice-tui/src/render.rs:52-94"
+    },
+    {
+      "id": "TUI-218",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/tui_main_screen.rs:120-141,235-265",
+      "after": "rust:crates/ice-tui/src/tui_main_screen.rs:120-141; rust:crates/ice-tui/src/tui_main_screen.rs:235-265"
+    },
+    {
+      "id": "TUI-222",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/tui_alt_screen.rs:349-652,908-1054,1216-1349",
+      "after": "rust:crates/ice-tui/src/tui_alt_screen.rs:349-652; rust:crates/ice-tui/src/tui_alt_screen.rs:908-1054; rust:crates/ice-tui/src/tui_alt_screen.rs:1216-1349"
+    },
+    {
+      "id": "TUI-226",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "terminal_image.rs:429-445",
+      "after": "rust:crates/ice-tui/src/terminal_image.rs:429-445"
+    },
+    {
+      "id": "TUI-228",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "image.rs:192-235",
+      "after": "rust:crates/ice-tui/src/image.rs:192-235"
+    },
+    {
+      "id": "TUI-260",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/markdown.rs:20-173,923-958",
+      "after": "rust:crates/ice-tui/src/markdown.rs:20-173; rust:crates/ice-tui/src/markdown.rs:923-958"
+    },
+    {
+      "id": "TUI-262",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/markdown.rs:175-408,579-645",
+      "after": "rust:crates/ice-tui/src/markdown.rs:175-408; rust:crates/ice-tui/src/markdown.rs:579-645"
+    },
+    {
+      "id": "TUI-263",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-tui/src/markdown.rs:197-284,647-707",
+      "after": "rust:crates/ice-tui/src/markdown.rs:197-284; rust:crates/ice-tui/src/markdown.rs:647-707"
+    },
+    {
+      "id": "SUB-002",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/test/subagents-v2-definitions.test.ts:105-124,266-282",
+      "after": "ice:packages/coding-agent/test/subagents-v2-definitions.test.ts:105-124; ice:packages/coding-agent/test/subagents-v2-definitions.test.ts:266-282"
+    },
+    {
+      "id": "SUB-004",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/test/subagents-v2-definitions.test.ts:195-209,295-355",
+      "after": "ice:packages/coding-agent/test/subagents-v2-definitions.test.ts:195-209; ice:packages/coding-agent/test/subagents-v2-definitions.test.ts:295-355"
+    },
+    {
+      "id": "SUB-021",
+      "field": "mechanism",
+      "kind": "expand-local-citation",
+      "before": "turn-budget.ts:95",
+      "after": "ice:packages/coding-agent/src/subagents/v2/turn-budget.ts:95"
+    },
+    {
+      "id": "SUB-034",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "lifetime.rs:3-63",
+      "after": "rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63"
+    },
+    {
+      "id": "SAFE-001",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/args.rs:107-230,271-545",
+      "after": "rust:crates/ice-cli/src/args.rs:107-230; rust:crates/ice-cli/src/args.rs:271-545"
+    },
+    {
+      "id": "SAFE-001",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-003",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:393-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:393-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-004",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-agent/src/hooks.rs:73-84,99-130",
+      "after": "rust:crates/ice-agent/src/hooks.rs:73-84; rust:crates/ice-agent/src/hooks.rs:99-130"
+    },
+    {
+      "id": "SAFE-004",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:400-405,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:400-405; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-006",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:400-405,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:400-405; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-006",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/transcript_view.rs:348,400,524",
+      "after": "rust:crates/ice-cli/src/transcript_view.rs:348; rust:crates/ice-cli/src/transcript_view.rs:400; rust:crates/ice-cli/src/transcript_view.rs:524"
+    },
+    {
+      "id": "SAFE-007",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:406-414,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:406-414; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-008",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:391-399,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:391-399; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-010",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:393-395,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:393-395; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-011",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:99-360,381-499",
+      "after": "rust:crates/ice-extensions/src/actions.rs:99-360; rust:crates/ice-extensions/src/actions.rs:381-499"
+    },
+    {
+      "id": "SAFE-012",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:99-360,415-431,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:99-360; rust:crates/ice-extensions/src/actions.rs:415-431; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-014",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-agent/src/hooks.rs:29-34,99-130",
+      "after": "rust:crates/ice-agent/src/hooks.rs:29-34; rust:crates/ice-agent/src/hooks.rs:99-130"
+    },
+    {
+      "id": "SAFE-015",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:415-416,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:415-416; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "SAFE-016",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-agent/src/hooks.rs:66-69,99-130",
+      "after": "rust:crates/ice-agent/src/hooks.rs:66-69; rust:crates/ice-agent/src/hooks.rs:99-130"
+    },
+    {
+      "id": "SAFE-017",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-plugin-sdk/src/events.rs:14-19,95-113",
+      "after": "rust:crates/ice-plugin-sdk/src/events.rs:14-19; rust:crates/ice-plugin-sdk/src/events.rs:95-113"
+    },
+    {
+      "id": "SAFE-019",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/args.rs:107-230,271-545",
+      "after": "rust:crates/ice-cli/src/args.rs:107-230; rust:crates/ice-cli/src/args.rs:271-545"
+    },
+    {
+      "id": "SAFE-023",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:586-614,1189-1220",
+      "after": "rust:crates/ice-extensions/src/actions.rs:586-614; rust:crates/ice-extensions/src/actions.rs:1189-1220"
+    },
+    {
+      "id": "SAFE-024",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:559-614,759-777,984-1019,1126-1163",
+      "after": "rust:crates/ice-extensions/src/actions.rs:559-614; rust:crates/ice-extensions/src/actions.rs:759-777; rust:crates/ice-extensions/src/actions.rs:984-1019; rust:crates/ice-extensions/src/actions.rs:1126-1163"
+    },
+    {
+      "id": "SAFE-025",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:586-614,1126-1163",
+      "after": "rust:crates/ice-extensions/src/actions.rs:586-614; rust:crates/ice-extensions/src/actions.rs:1126-1163"
+    },
+    {
+      "id": "SAFE-026",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:881-923,2008-2068",
+      "after": "rust:crates/ice-extensions/src/actions.rs:881-923; rust:crates/ice-extensions/src/actions.rs:2008-2068"
+    },
+    {
+      "id": "COG-001",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-002",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-003",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-004",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-005",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-006",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-007",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-008",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-009",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-010",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-011",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-012",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-013",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-014",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-015",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-016",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-017",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-018",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-019",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-020",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-021",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-022",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-023",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-024",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-025",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-026",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-027",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-028",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-029",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-030",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-031",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-032",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-033",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-034",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-035",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-036",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-037",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-038",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-039",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-040",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-041",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-042",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-043",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-044",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-045",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-046",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-047",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-048",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-049",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-050",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-051",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-052",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-053",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-054",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-055",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-056",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-057",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-058",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-059",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-060",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-061",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-062",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-063",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-064",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-065",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-066",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-067",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "COG-068",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-extensions/src/actions.rs:381-499,881-923",
+      "after": "rust:crates/ice-extensions/src/actions.rs:381-499; rust:crates/ice-extensions/src/actions.rs:881-923"
+    },
+    {
+      "id": "BLACK-002",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/settings.rs:10-33,77-80",
+      "after": "rust:crates/ice-harness/src/compaction/settings.rs:10-33; rust:crates/ice-harness/src/compaction/settings.rs:77-80"
+    },
+    {
+      "id": "BLACK-008",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-009",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-010",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-011",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-012",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-013",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-014",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-015",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-016",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-017",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-018",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-019",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-020",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-021",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-023",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-024",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-025",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-026",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:54-60,791-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:54-60; rust:crates/ice-harness/src/compaction/compaction.rs:791-804"
+    },
+    {
+      "id": "BLACK-026",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "tokens.rs:89-110",
+      "after": "rust:crates/ice-harness/src/compaction/tokens.rs:89-110"
+    },
+    {
+      "id": "BLACK-027",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-028",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-029",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "tokens.rs:74-110",
+      "after": "rust:crates/ice-harness/src/compaction/tokens.rs:74-110"
+    },
+    {
+      "id": "BLACK-030",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-031",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:125-147,273-383,795-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:125-147; rust:crates/ice-harness/src/compaction/compaction.rs:273-383; rust:crates/ice-harness/src/compaction/compaction.rs:795-804"
+    },
+    {
+      "id": "BLACK-036",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683,744-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:620-683; rust:crates/ice-harness/src/compaction/compaction.rs:744-804"
+    },
+    {
+      "id": "BLACK-039",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313,2643-2687",
+      "after": "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313; ice:packages/coding-agent/src/core/agent-session.ts:2643-2687"
+    },
+    {
+      "id": "BLACK-039",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363,459-507",
+      "after": "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363; ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:459-507"
+    },
+    {
+      "id": "BLACK-039",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/compaction.rs:125-147,749-804",
+      "after": "rust:crates/ice-harness/src/compaction/compaction.rs:125-147; rust:crates/ice-harness/src/compaction/compaction.rs:749-804"
+    },
+    {
+      "id": "BLACK-039",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "agent_harness.rs:3899-3909",
+      "after": "rust:crates/ice-harness/src/agent_harness.rs:3899-3909"
+    },
+    {
+      "id": "BLACK-040",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/compaction/tokens.rs:117-135,186-194",
+      "after": "rust:crates/ice-harness/src/compaction/tokens.rs:117-135; rust:crates/ice-harness/src/compaction/tokens.rs:186-194"
+    },
+    {
+      "id": "BLACK-041",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:83-209,365-457",
+      "after": "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:83-209; ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:365-457"
+    },
+    {
+      "id": "BLACK-041",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-harness/src/agent_harness.rs:3867-3915,3957-3969",
+      "after": "rust:crates/ice-harness/src/agent_harness.rs:3867-3915; rust:crates/ice-harness/src/agent_harness.rs:3957-3969"
+    },
+    {
+      "id": "AUTH-009",
+      "field": "mechanism",
+      "kind": "expand-local-citation",
+      "before": "provider-composer.ts:79",
+      "after": "ice:packages/coding-agent/src/core/provider-composer.ts:79"
+    },
+    {
+      "id": "AUTH-009",
+      "field": "mechanism",
+      "kind": "expand-local-citation",
+      "before": "model-registry.ts:26",
+      "after": "ice:packages/coding-agent/src/core/model-registry.ts:26"
+    },
+    {
+      "id": "AUTH-023",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/provider-attribution.ts:5-34,64-68",
+      "after": "ice:packages/coding-agent/src/core/provider-attribution.ts:5-34; ice:packages/coding-agent/src/core/provider-attribution.ts:64-68"
+    },
+    {
+      "id": "AUTH-023",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/provider.rs:190-273,289-330",
+      "after": "rust:crates/ice-cli/src/provider.rs:190-273; rust:crates/ice-cli/src/provider.rs:289-330"
+    },
+    {
+      "id": "AUTH-025",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/model-resolver.ts:173-187,568-604",
+      "after": "ice:packages/coding-agent/src/core/model-resolver.ts:173-187; ice:packages/coding-agent/src/core/model-resolver.ts:568-604"
+    },
+    {
+      "id": "AUTH-025",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/provider.rs:374-500,1050-1203",
+      "after": "rust:crates/ice-cli/src/provider.rs:374-500; rust:crates/ice-cli/src/provider.rs:1050-1203"
+    },
+    {
+      "id": "AUTH-025",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/provider.rs:374-500,1050-1385",
+      "after": "rust:crates/ice-cli/src/provider.rs:374-500; rust:crates/ice-cli/src/provider.rs:1050-1385"
+    },
+    {
+      "id": "AUTH-026",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/provider.rs:90-103,1344-1385",
+      "after": "rust:crates/ice-cli/src/provider.rs:90-103; rust:crates/ice-cli/src/provider.rs:1344-1385"
+    },
+    {
+      "id": "AUTH-026",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/provider.rs:502-558,1308-1325",
+      "after": "rust:crates/ice-cli/src/provider.rs:502-558; rust:crates/ice-cli/src/provider.rs:1308-1325"
+    },
+    {
+      "id": "AUTH-027",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/ice-provider.ts:73-78,177-202,235-250",
+      "after": "ice:packages/coding-agent/src/ice-provider.ts:73-78; ice:packages/coding-agent/src/ice-provider.ts:177-202; ice:packages/coding-agent/src/ice-provider.ts:235-250"
+    },
+    {
+      "id": "AUTH-027",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/ice-provider.ts:80-103,141-155,203-231",
+      "after": "ice:packages/coding-agent/src/ice-provider.ts:80-103; ice:packages/coding-agent/src/ice-provider.ts:141-155; ice:packages/coding-agent/src/ice-provider.ts:203-231"
+    },
+    {
+      "id": "AUTH-027",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/config.rs:343-493,760-975",
+      "after": "rust:crates/ice-cli/src/config.rs:343-493; rust:crates/ice-cli/src/config.rs:760-975"
+    },
+    {
+      "id": "AUTH-028",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/ice-provider-settings.ts:22-105,107-150",
+      "after": "ice:packages/coding-agent/src/ice-provider-settings.ts:22-105; ice:packages/coding-agent/src/ice-provider-settings.ts:107-150"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "source",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/test/faux-provider.test.ts:31-213,371-640",
+      "after": "ice:packages/ai/test/faux-provider.test.ts:31-213; ice:packages/ai/test/faux-provider.test.ts:371-640"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/src/providers/faux.ts:23-99,437-487,645-652",
+      "after": "ice:packages/ai/src/providers/faux.ts:23-99; ice:packages/ai/src/providers/faux.ts:437-487; ice:packages/ai/src/providers/faux.ts:645-652"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/src/providers/faux.ts:107-154,282-291,489-563,654-672",
+      "after": "ice:packages/ai/src/providers/faux.ts:107-154; ice:packages/ai/src/providers/faux.ts:282-291; ice:packages/ai/src/providers/faux.ts:489-563; ice:packages/ai/src/providers/faux.ts:654-672"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/src/providers/faux.ts:270-280,331-337,437-446",
+      "after": "ice:packages/ai/src/providers/faux.ts:270-280; ice:packages/ai/src/providers/faux.ts:331-337; ice:packages/ai/src/providers/faux.ts:437-446"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/test/faux-provider.test.ts:406-434,506-630",
+      "after": "ice:packages/ai/test/faux-provider.test.ts:406-434; ice:packages/ai/test/faux-provider.test.ts:506-630"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-ai/src/providers/faux.rs:23-389,478-569,678-885",
+      "after": "rust:crates/ice-ai/src/providers/faux.rs:23-389; rust:crates/ice-ai/src/providers/faux.rs:478-569; rust:crates/ice-ai/src/providers/faux.rs:678-885"
+    },
+    {
+      "id": "AUTH-029",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-ai/src/providers/faux.rs:87-96,192-226,328-389,478-550,678-928",
+      "after": "rust:crates/ice-ai/src/providers/faux.rs:87-96; rust:crates/ice-ai/src/providers/faux.rs:192-226; rust:crates/ice-ai/src/providers/faux.rs:328-389; rust:crates/ice-ai/src/providers/faux.rs:478-550; rust:crates/ice-ai/src/providers/faux.rs:678-928"
+    },
+    {
+      "id": "AUTH-030",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/src/providers/faux.ts:156-218,229-268,489-501",
+      "after": "ice:packages/ai/src/providers/faux.ts:156-218; ice:packages/ai/src/providers/faux.ts:229-268; ice:packages/ai/src/providers/faux.ts:489-501"
+    },
+    {
+      "id": "AUTH-030",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/src/providers/faux.ts:220-268,437-461,664-666",
+      "after": "ice:packages/ai/src/providers/faux.ts:220-268; ice:packages/ai/src/providers/faux.ts:437-461; ice:packages/ai/src/providers/faux.ts:664-666"
+    },
+    {
+      "id": "AUTH-030",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-ai/src/providers/faux.rs:175-186,575-674",
+      "after": "rust:crates/ice-ai/src/providers/faux.rs:175-186; rust:crates/ice-ai/src/providers/faux.rs:575-674"
+    },
+    {
+      "id": "AUTH-031",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/ai/src/providers/faux.ts:294-306,437-461,504-550",
+      "after": "ice:packages/ai/src/providers/faux.ts:294-306; ice:packages/ai/src/providers/faux.ts:437-461; ice:packages/ai/src/providers/faux.ts:504-550"
+    },
+    {
+      "id": "AUTH-031",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-ai/src/providers/faux.rs:328-469,478-550",
+      "after": "rust:crates/ice-ai/src/providers/faux.rs:328-469; rust:crates/ice-ai/src/providers/faux.rs:478-550"
+    },
+    {
+      "id": "AUTH-032",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/ice-provider.ts:10-17,42-71",
+      "after": "ice:packages/coding-agent/src/ice-provider.ts:10-17; ice:packages/coding-agent/src/ice-provider.ts:42-71"
+    },
+    {
+      "id": "AUTH-032",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/provider.rs:374-558,621-1047",
+      "after": "rust:crates/ice-cli/src/provider.rs:374-558; rust:crates/ice-cli/src/provider.rs:621-1047"
+    },
+    {
+      "id": "AUTH-033",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/model-config.ts:73-127,144-198",
+      "after": "ice:packages/coding-agent/src/core/model-config.ts:73-127; ice:packages/coding-agent/src/core/model-config.ts:144-198"
+    },
+    {
+      "id": "AUTH-033",
+      "field": "mechanism",
+      "kind": "expand-citation-ranges",
+      "before": "ice:packages/coding-agent/src/core/model-config.ts:66-71,100-121",
+      "after": "ice:packages/coding-agent/src/core/model-config.ts:66-71; ice:packages/coding-agent/src/core/model-config.ts:100-121"
+    },
+    {
+      "id": "AUTH-033",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-ai/src/model.rs:10-64,94-157",
+      "after": "rust:crates/ice-ai/src/model.rs:10-64; rust:crates/ice-ai/src/model.rs:94-157"
+    },
+    {
+      "id": "AUTH-033",
+      "field": "rust",
+      "kind": "expand-citation-ranges",
+      "before": "rust:crates/ice-cli/src/config.rs:359-405,917-927",
+      "after": "rust:crates/ice-cli/src/config.rs:359-405; rust:crates/ice-cli/src/config.rs:917-927"
+    },
+    {
+      "id": "CLI-039",
+      "field": "rust",
+      "kind": "expand-local-citation",
+      "before": "app.rs:157",
+      "after": "rust:crates/ice-cli/src/app.rs:157"
+    },
+    {
+      "id": "CLI-040",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/install.rs:1-1928`."
+    },
+    {
+      "id": "CLI-041",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403`; `rust:crates/ice-cli/src/install.rs:155-221`."
+    },
+    {
+      "id": "CLI-042",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/updates.rs:1-521`; `rust:crates/ice-cli/src/updates.rs:2404-3527`."
+    },
+    {
+      "id": "CLI-043",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/updates.rs:522-1090`; `rust:crates/ice-cli/src/updates.rs:2404-3527`."
+    },
+    {
+      "id": "CLI-044",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/updates.rs:877-895`; `rust:crates/ice-cli/src/updates.rs:1051-1266`; `rust:crates/ice-cli/src/updates.rs:1760-1985`; `rust:crates/ice-cli/src/updates.rs:2404-3527`."
+    },
+    {
+      "id": "CLI-045",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/prebuilt_release.rs:1-373`; `rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195`; `rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803`."
+    },
+    {
+      "id": "CLI-046",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-cli/src/updates.rs:99-119`; `rust:crates/ice-cli/src/updates.rs:1295-1779`; `rust:crates/ice-cli/src/updates.rs:1986-2403`; `rust:crates/ice-cli/src/updates.rs:2404-3527`."
+    },
+    {
+      "id": "MISC-040",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:Cargo.toml:1-24`; `rust:crates/ice-harness/Cargo.toml:1-43`."
+    },
+    {
+      "id": "MISC-045",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-harness/src/lib.rs:11-32`; `rust:crates/ice-harness/tests/harness_run_e2e.rs:51-128`."
+    },
+    {
+      "id": "MISC-047",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-harness/src/lib.rs:11-32`; `rust:crates/ice-harness/src/agent_harness.rs:1583-1588`."
+    },
+    {
+      "id": "MISC-048",
+      "field": "rust",
+      "kind": "repeat-native-anchor-in-required-field",
+      "before": "",
+      "after": " Native comparison source: `rust:crates/ice-harness/tests/harness_run_e2e.rs:51-454`."
+    }
+  ],
+  "inputs": [
+    {
+      "area": "ai",
+      "name": "spec-ai.json",
+      "sha256": "6cf900123fbcfca47472b553df7660bc69167822915615c71a1b80a269570b73"
+    },
+    {
+      "area": "agent",
+      "name": "spec-agent.json",
+      "sha256": "d760cb5c27b2ffda345f1de80b95d79abad3462faad19ba9c590804f29e9e93a"
+    },
+    {
+      "area": "tools",
+      "name": "spec-tools.json",
+      "sha256": "7369d4c82c00b4ef563d5835390d900beab6dda84561028f1338f5b74ee93652"
+    },
+    {
+      "area": "session",
+      "name": "spec-session.json",
+      "sha256": "70c408e006f962b0092d56e0230c5ec41e188eac9c13e091fab5c0b2bc715dfd"
+    },
+    {
+      "area": "settings",
+      "name": "spec-settings.json",
+      "sha256": "f802277b026124e8fbe4ea8251a2debf4b289c0199e1bb9b09d8073a7154e0de"
+    },
+    {
+      "area": "extensions",
+      "name": "spec-extensions.json",
+      "sha256": "d21606d24b07ffef4cc14df0253fd496a6cd10128382ad5f5021d3d113765fa3"
+    },
+    {
+      "area": "rpc-remote",
+      "name": "spec-rpc-remote.json",
+      "sha256": "d72425ccb74112b5ec1ed8ba4e06fb032d963005eca69f076682517031d6b255"
+    },
+    {
+      "area": "tui",
+      "name": "spec-tui.json",
+      "sha256": "42af49f14382553699c68d2725d0a4f3dab902b1f2a68c5b659d3f3d206f59df"
+    },
+    {
+      "area": "subagents",
+      "name": "spec-subagents.json",
+      "sha256": "ea628cd8a13da76e04ccc9377e3be90100ea02d7b5f771f139c0e63d30225d26"
+    },
+    {
+      "area": "safe-verify",
+      "name": "spec-safe-verify.json",
+      "sha256": "cf2a755aa3cfded90e482055f591faa3703d096bcb8b2607837e499330cb2a4d"
+    },
+    {
+      "area": "observability",
+      "name": "spec-observability.json",
+      "sha256": "fddc3d0f462adcd039bc93b71ba0ba2614840103dfa44fde968d5e7ff6dc15b4"
+    },
+    {
+      "area": "cognee",
+      "name": "spec-cognee.json",
+      "sha256": "dec6d452c8e7de21e1ca0ecff40af853e293e31fd00a3f29bf7e5a5b78c3cd27"
+    },
+    {
+      "area": "blackhole",
+      "name": "spec-blackhole.json",
+      "sha256": "dfa2fc556e61d2b9501b808e60e4dcaaede9cde64f503cd1feb7c283a46c83ed"
+    },
+    {
+      "area": "providers-auth",
+      "name": "spec-providers-auth.json",
+      "sha256": "6f3d2e4b3ce332b0ed060688037434a57779428f454cb7780d35668510a0e921"
+    },
+    {
+      "area": "cli-packaging",
+      "name": "spec-cli-packaging.json",
+      "sha256": "260d16578cc838f1c980e936c08e2f3251c457f6f64b34f5d60e4827d3137e43"
+    },
+    {
+      "area": "misc",
+      "name": "spec-misc.json",
+      "sha256": "feb91b57a4ff53fa0e2821765c6503da6b9d78544910ec5397818a2fd33f44f1"
+    }
+  ],
+  "summary": {
+    "areas": 16,
+    "changed_fields": 226,
+    "replacements": 279,
+    "by_kind": {
+      "expand-local-citation": 58,
+      "expand-citation-ranges": 210,
+      "repeat-native-anchor-in-required-field": 11
+    },
+    "unresolved_short_citations": 0
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "area": "tui",
+  "owner": "coordinator",
+  "assigned_task": "Close remaining native interactive controller test body ranges",
+  "tests_executed": false,
+  "application_executed": false,
+  "source_reads": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          1,
+          330
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          331,
+          660
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          661,
+          990
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          991,
+          1320
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          1321,
+          1650
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          1651,
+          1815
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          2065,
+          2289
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          2499,
+          2828
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          2829,
+          3158
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+      "total_lines": 3485,
+      "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+      "ranges": [
+        [
+          3159,
+          3485
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "All numbered lines in the requested range displayed and source-read; no connector redaction markers. Source field named redacted is ordinary visible fixture data. No code execution."
+    }
+  ],
+  "reviewed_lines": 3027,
+  "combined_coverage": {
+    "path": "rust:crates/ice-cli/src/interactive_tui/tests.rs",
+    "sha256": "5c2b4babd174784216fbe468906d93cda705574381e1ee73b04c8c590e26c610",
+    "total_lines": 3485,
+    "other_owner": "audit_extensions",
+    "other_owner_ranges": [
+      [
+        1816,
+        2064
+      ],
+      [
+        2290,
+        2498
+      ]
+    ],
+    "union": [
+      [
+        1,
+        3485
+      ]
+    ],
+    "limits": "Full-file coverage is the union of explicitly attributed reviews. The coordinator independently reviewed only its listed 3,027 lines."
+  },
+  "findings": [
+    {
+      "topic": "Changelog persistence and rendering",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:1-121"
+      ],
+      "behavior": "Reads include subprocess-fixture assertions for native changelog marker persistence, preserving legacy and unrelated settings, and refusing stale-snapshot downgrade. These test bodies were inspected, not executed. Collapsed versus full content and current versus historical release selection are separately asserted."
+    },
+    {
+      "topic": "Draft injection, key ownership, and auto-send",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:123-403"
+      ],
+      "behavior": "Image-only queued messages retain images; path attachment retains a draft and pending-image restoration appends. The external monitor-DLL case is ignored and requires an explicit fixture environment; it proves no installed DLL availability. Stub callbacks test claimed press/release events, modal rejection of new claims, and forwarding an already-owned release. Pure auto-send decisions cover deadline, unchanged text, manual edit/clear/whitespace, and busy cancellation."
+    },
+    {
+      "topic": "Editor change attribution and queue restoration",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:405-668"
+      ],
+      "behavior": "Tests distinguish extension-injected editor changes from subsequent user edits and programmatic submit clear; the programmatic marker is consumed even without a subscriber. Helpers are checked for live-panel detection, merging queued and typed text, and setting a multiline UTF-8 caret using byte offsets."
+    },
+    {
+      "topic": "Settings menu and startup precedence",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:670-774,876-1009"
+      ],
+      "behavior": "The exact 15 wired menu rows are asserted; submenu rows have no cycle values and value rows include their current value. Tests cover live hide-thinking/images/cache notices, persisted padding/double-Escape/completion size, disabled or one-minute HTTP timeout, and ignored unknown keys. Trusted project settings merge per field with explicit false and zero retained; untrusted project fields are ignored; flat display keys take precedence over nested terminal fallback."
+    },
+    {
+      "topic": "Startup, trust and context refresh",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:776-875,1066-1297"
+      ],
+      "behavior": "User bubbles, verbose-versus-quiet startup, resume command rendering, quoting and captured session-cwd trust are covered. Rendering helpers assert brand/capability lists and empty states. Resource reload tests replace context paths in both header and panel and remove stale data. Update notices cover failures, package-only updates, and empty reports. Fixture-generated subprocesses were not run."
+    },
+    {
+      "topic": "Bash state and input decisions",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:1011-1064,3156-3318"
+      ],
+      "behavior": "Tests cover viewport overlap, ! versus !! parsing, bare bang fallback, cancellation without prematurely freeing the Bash run slot, and key press/repeat rather than release dispatch. Double-Escape and Ctrl-C helper windows include exactly 500 ms and exclude 501 ms. Windows paste tests synthesize burst timing and queued events, normalize CRLF, and ignore an Enter release in lookahead; they are not live Windows console integration."
+    },
+    {
+      "topic": "Completion and streaming reconciliation",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:1299-1442,2606-2696,2895-3145"
+      ],
+      "behavior": "Final assistant content updates the component and cached tail before detachment. Tab rendering and UTF-8 cursor helpers, slash suggestions, plain-text clearing, selection beyond five visible rows, ordinary draft arrow ownership, and @ paths after Chinese text are covered. The early Tab test manually reproduces replacement logic and its comment mentions a space while its assertion expects /model; later tests call accept_top_suggestion and check only starts_with, so neither is evidence of an exact trailing-space contract."
+    },
+    {
+      "topic": "Command registry and synthetic event evidence limit",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:1444-1746"
+      ],
+      "behavior": "Tests resolve canonical slash commands and aliases and assert a visible subset plus hidden entries. The test named test_agent_event_mapping_creates_assistant_and_tool explicitly manually applies message/tool mutations after saying a real terminal is unavailable; it does not invoke the event drain. It checks assistant text/thinking, tool registration and result removal, working-slot exclusion, retry display, editor-border loader and abort state."
+    },
+    {
+      "topic": "History and context usage",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:1748-1815,2698-2893"
+      ],
+      "behavior": "Fresh args do not restore old history while continue/session args do. Aborted and errored assistant usage do not overwrite the last successful context badge. Selector tests round-trip one child and the selector flag. History skips consecutive duplicates and whitespace, browses without wrapping, and restores the user's prior draft."
+    },
+    {
+      "topic": "Provider form and live selection",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:2065-2289"
+      ],
+      "behavior": "Root continuation covers form serialization with literal environment references, duplicate detection, HTTP-scheme validation and configured-provider deletion. Test helper changes are isolated to temporary fixture directories. Provider switching checks matching default provider/model, configured protocol selection for duplicate model IDs, actual lane update before persistence, and preserving defaults on unknown/unavailable provider or closed-lane failure; selector status marks the live provider instead of the saved default. Adjacent function boundaries are owned by audit_extensions."
+    },
+    {
+      "topic": "Diagnostics, model cycling, and configuration parsing",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:2499-2604,3147-3154"
+      ],
+      "behavior": "Provider errors and aborts keep a useful diagnostic or fallback text. Sanitization removes terminal controls, normalizes CRLF, preserves tabs, caps long text with an ellipsis, and substitutes a blank-message fallback. Model-cycle helpers wrap, fall back for unknown IDs, and handle empty catalogs. Configured key parsing covers Ctrl+G and shift+tab."
+    },
+    {
+      "topic": "ask_user and extension dialog lifecycle",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:3320-3485"
+      ],
+      "behavior": "Input/editor submit callbacks try-lock both dialog slots, establishing those helpers release locks before invoking callbacks. Prompt parsing covers flat and questions shapes, options/descriptions, multiple/freeform defaults, suggestions and confirm choices. Bridge tests correlate two queued requests, occupy one input slot at a time, answer/cancel by request ID, cancel queued work, and reject new requests after detach."
+    }
+  ]
+}

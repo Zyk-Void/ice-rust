@@ -1,0 +1,4399 @@
+{
+  "area": "misc",
+  "draft_complete": false,
+  "method": "Source-only comparison; no application or tests executed; no network requests, installs, or source edits.",
+  "baseline": {
+    "ice_head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust_head": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "read_ranges": [
+    {
+      "path": "ice:packages/coding-agent/src/core/http-dispatcher.ts",
+      "total_lines": 112,
+      "ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "sha256": "9d04472e90684fbe783b0f11e5ca40a533f3775ad4dfc3bce222421797a18477",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUpdateSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/version-check.ts",
+      "total_lines": 85,
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "sha256": "dff17c50f8779bce49a57eceaa4132825da16c4b22a6c16192f13aa4e8ed3e32",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUpdateSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/windows-self-update.ts",
+      "total_lines": 85,
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "sha256": "0ae6304be01951f6bbc522099aa6129aa28eb9e3d5f2fa2733df57af372c68c0",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUpdateSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/ice-user-agent.ts",
+      "total_lines": 5,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "sha256": "6571a61f3c00d9351ed5f8a8ebece06f708ebffc1e540253eebb543e3fcf1763",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUpdateSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/diagnostics.ts",
+      "total_lines": 16,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "sha256": "1914431098db1b4638e4fb3582ac22e8125356c4ab024671494f565c6d5ffb39",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUpdateSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/experimental.ts",
+      "total_lines": 6,
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "sha256": "78188595ccedd441f49d741931b022cd614bb0df3f41f6e691b30e1be8315c2b",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUpdateSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/version-check.test.ts",
+      "total_lines": 129,
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "sha256": "b2587bd6f313b028f8c759f3064a314303c70e37f57613fba963628e05bd82c4",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscVersionTests"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-user-agent.test.ts",
+      "total_lines": 13,
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "sha256": "2d288fa730d779e0250994e5d6615bb55deb92ab87b83071201406c3cfcbdd78",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscVersionTests"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/mime.ts",
+      "total_lines": 117,
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "sha256": "00893b8a5089c217405b5a9b2d316b3392a1845966f8d4aad8fb31c156e4d922",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-process.ts",
+      "total_lines": 120,
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-convert.ts",
+      "total_lines": 50,
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "sha256": "791f2a134995ecd2d337c5e881971bc257889615c1245ea54013203af1ef8e16",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/exif-orientation.ts",
+      "total_lines": 184,
+      "ranges": [
+        [
+          1,
+          184
+        ]
+      ],
+      "sha256": "9ca969cd6226c14ff09f3f620c18ec26f148df3e2e13ae316291744637f0f265",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize-core.ts",
+      "total_lines": 165,
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore1"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize.ts",
+      "total_lines": 124,
+      "ranges": [
+        [
+          1,
+          124
+        ]
+      ],
+      "sha256": "d93a007eb45a02b73b1a4777d193614dae5fbcadd9139c8b755ea35c1d649757",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore1"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize-worker.ts",
+      "total_lines": 43,
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "sha256": "c77213875e45d2aea46deb67b6cc03bcfb57cba84c8a17ccc2158aa3e79873c7",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore1"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/photon.ts",
+      "total_lines": 140,
+      "ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "sha256": "806c3941b96e09705e26cd2d449ee8971b3498bbde495f7512b20906120d96a9",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore1"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/tool-result-images.ts",
+      "total_lines": 63,
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "sha256": "fa013df57d97cd75b93ab8331f2803b37c35354a93c422186ddd0acb071914d7",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageCore1"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-tools/src/image_processing.rs",
+      "total_lines": 485,
+      "ranges": [
+        [
+          1,
+          485
+        ]
+      ],
+      "sha256": "4c2113df834a0c124435ae386fd4253c9b0ae91d8d23e3f7df82faa9bf7ce2b5",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeImageCore1",
+        "miscNativeImageCore0"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-harness/src/image_tool.rs",
+      "total_lines": 126,
+      "ranges": [
+        [
+          1,
+          126
+        ]
+      ],
+      "sha256": "bcf3eaff84c26b98c50ed50e35673a2f325b59f9396410b2a0c3d4a101739d02",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeImageCore0"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "total_lines": 3527,
+      "ranges": [
+        [
+          1,
+          169
+        ],
+        [
+          430,
+          485
+        ],
+        [
+          1295,
+          1392
+        ]
+      ],
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeWindows",
+        "miscNativeImageCore0",
+        "miscNativeClipboardCopy"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-tools/src/image.rs",
+      "total_lines": 236,
+      "ranges": [
+        [
+          1,
+          236
+        ]
+      ],
+      "sha256": "6571d2d4c16a0b71571b8c2b6ee0da62061f37f4e17e66b1f3c8f29169e65555",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeImageCore1"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "total_lines": 725,
+      "ranges": [
+        [
+          346,
+          443
+        ]
+      ],
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeClipboardCopy",
+        "miscNativeImageCore1"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-process.test.ts",
+      "total_lines": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "sha256": "f224c8f9d567594d7013f0ea158d2c2863cfddce0e346cff7e0b0e16bf7583dd",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/tool-result-images.test.ts",
+      "total_lines": 138,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "sha256": "ea6be817dd453b2c3c35051b829b5c9df890a4a9dfeb77ea20ff3abe3036cd11",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-processing.test.ts",
+      "total_lines": 171,
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "sha256": "eb5d070b5855627e1c6d4a53f1908efee8bbc4d6b8f09da967e9f5709cb03dda",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscImageTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/clipboard-image.ts",
+      "total_lines": 301,
+      "ranges": [
+        [
+          1,
+          301
+        ]
+      ],
+      "sha256": "5a0c122abb4f6b9c8d3f5ded32a0434c8851f365d03d6b79a09fd28d546fec59",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/clipboard-native.ts",
+      "total_lines": 34,
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "sha256": "8b191a68f53546395cdeecbe2acf69367e46dea2800a3a44d505736dced8bc32",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/clipboard.ts",
+      "total_lines": 176,
+      "ranges": [
+        [
+          1,
+          176
+        ]
+      ],
+      "sha256": "03fbbed59a9b46a952a85a8a0fd7cc170b2bc912b477a53066bdfff8f2082947",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/child-process.ts",
+      "total_lines": 138,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/clipboard-image.test.ts",
+      "total_lines": 185,
+      "ranges": [
+        [
+          1,
+          185
+        ]
+      ],
+      "sha256": "137aad5b58c35e08d4b22e6f17c2b57969e0c2fdb2113b5730f22bdcb2b033b9",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/clipboard-native.test.ts",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "sha256": "1efb1046de4ce66a96739769e036a3d93e487270c48702cc38bb17f40780d46b",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/clipboard-image-bmp-conversion.test.ts",
+      "total_lines": 89,
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "sha256": "63e7b485e90539b6f69abca3a417249d7246df8187ad46384dcaeb715f8fe6f5",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/clipboard.test.ts",
+      "total_lines": 211,
+      "ranges": [
+        [
+          1,
+          211
+        ]
+      ],
+      "sha256": "aa2c0ace907e7f3836f571af2921b4d4c621a5fa6d96674d56d7949c0018dcfb",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardTests1"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts",
+      "total_lines": 83,
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "sha256": "d548355a05025c12dcdc31402689f4bb9a479b2c9480dfe279664af96b8aa89a",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscClipboardTests1"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/fs_watch.rs",
+      "total_lines": 162,
+      "ranges": [
+        [
+          1,
+          162
+        ]
+      ],
+      "sha256": "5594be1409f430eab8ff0e2d857138a85d2e816397a094f0ec5bff88a388173d",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeUtility0"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-harness/src/frontmatter.rs",
+      "total_lines": 180,
+      "ranges": [
+        [
+          1,
+          180
+        ]
+      ],
+      "sha256": "d507b36d461ff59353580bc07cfa4be755e4a8580146f8d468247768dd5e50b5",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeUtility0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/frontmatter.test.ts",
+      "total_lines": 61,
+      "ranges": [
+        [
+          1,
+          61
+        ]
+      ],
+      "sha256": "88309e13d75cec874a1fa43b921c4bb3dbcbce55c6ace5acf9742e81667ad2dd",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilityTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/json-utils.test.ts",
+      "total_lines": 18,
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilityTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ansi-utils.test.ts",
+      "total_lines": 111,
+      "ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "sha256": "c0deb09e3f927314fbd60a5484d961497826254279398aaadaa3517567053cec",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilityTests0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/abort.ts",
+      "total_lines": 57,
+      "ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "sha256": "bc6ae52d6a9ed9bfa0f677a10dc4484cea50bbb34cf0154942ed56b9536baeaa",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/sleep.ts",
+      "total_lines": 19,
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "sha256": "41bb3a7cccc0420483993d6fbc4e85d7cc1ab5a4ec46ce440deaae224f1005fc",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/fs-watch.ts",
+      "total_lines": 31,
+      "ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/frontmatter.ts",
+      "total_lines": 40,
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "sha256": "c2bb61b8d25e25a26fb742d65bc39899d0bd03b5fbd7d5f37a2218d5325df6e4",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/redact.ts",
+      "total_lines": 9,
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "sha256": "6be3ba4a3293e6a2aa9810a5bde8ae3ab66684c3f43fa2cc0d8a3148efb79651",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Full source read; literal [REDACTED] output strings at lines 3 and 6 are program text, not connector-redaction markers.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/ansi.ts",
+      "total_lines": 61,
+      "ranges": [
+        [
+          1,
+          61
+        ]
+      ],
+      "sha256": "65f53effde0303bda407ffd923cf7a1ad9159cc8ff0b35872d781239c885116c",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/html.ts",
+      "total_lines": 52,
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "sha256": "d3abd075ab64807a1facae1511ec0b9b22f63153c7808eb63e7560fb00b1d48b",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/json.ts",
+      "total_lines": 16,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscUtilitySource0"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-agent/src/agent_loop.rs",
+      "total_lines": 1299,
+      "ranges": [
+        [
+          1090,
+          1170
+        ]
+      ],
+      "sha256": "c26aff9bad718232dc302e4d954392378cb7d17ccc2c6772404ed3f5f9224266",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeWindows"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/Cargo.toml",
+      "total_lines": 108,
+      "ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "sha256": "922866ba16f97f770202870c56181e5060b183afed6e9d9b0f5fc799eb3af225",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeCliCargo"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/shell.ts",
+      "total_lines": 269,
+      "ranges": [
+        [
+          1,
+          269
+        ]
+      ],
+      "sha256": "7f0a90bf759282f0851e70a7eb38f418b9aa2467c6a3f625aee256669c7bb4fc",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscShellToolsSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/tools-manager.ts",
+      "total_lines": 377,
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "sha256": "93485116f9210f807d823762c21c70d9fadef21bc27bf816be42fdd27a9cf90d",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscShellToolsSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/changelog.ts",
+      "total_lines": 197,
+      "ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "sha256": "4bd8005890b8a3b001b022323a93fecaf9a8fb4296982c1ba1217832d8220d89",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/deprecation.ts",
+      "total_lines": 15,
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "sha256": "5d299ae61779d60507f8634caada1283b0b63077bcc5d5a03d0a328168f3e46f",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/open-browser.ts",
+      "total_lines": 25,
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "sha256": "134233cdbc3079566b217a5714461ba8189a1673ea1380e8e081f8d3bc4f00ef",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/syntax-highlight.ts",
+      "total_lines": 147,
+      "ranges": [
+        [
+          1,
+          147
+        ]
+      ],
+      "sha256": "14cc46cfbf5c0ef65bd1e9560a7d35fbb064ae3248f0a76ce99c1c8a12289814",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/highlight-js-lib-index.d.ts",
+      "total_lines": 20,
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "sha256": "dbfb8a1b4856ac53d5f645296c7f9f50379204a84b7ba37c5bcf36a9aa520d07",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsSource"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "total_lines": 5844,
+      "ranges": [
+        [
+          3080,
+          3120
+        ],
+        [
+          4452,
+          4505
+        ]
+      ],
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "fully_read": false,
+      "source_store": "miscNativeImageUserCaller",
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscAdditionalCallerRead"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "total_lines": 4036,
+      "ranges": [
+        [
+          630,
+          694
+        ]
+      ],
+      "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+      "fully_read": false,
+      "source_store": "miscNativeImageUserCaller",
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/changelog.test.ts",
+      "total_lines": 50,
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "sha256": "8218262c6fef5236d54bbee804bf46498cba0d0ea6452bbcda87b06bccd22e37",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsTests"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/syntax-highlight.test.ts",
+      "total_lines": 77,
+      "ranges": [
+        [
+          1,
+          77
+        ]
+      ],
+      "sha256": "7ccc1de634368ceff5f65dca2ae9525efde9c584c6cbc1fcce458b66be23c87c",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscMoreUtilsTests",
+        "miscTsExperimentalCaller"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/changelog.rs",
+      "total_lines": 434,
+      "ranges": [
+        [
+          1,
+          434
+        ]
+      ],
+      "sha256": "e758eade22f55011e3a67b366a126fa475028f5db315c0495c9a2c97dfae57e9",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeChangelogBrowser"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-tools/src/utils/open_browser.rs",
+      "total_lines": 168,
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "sha256": "17ac9809b9255e036f5d409bc11461ec9d02c48bb87d2523bacde213d5412da6",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscNativeChangelogBrowser"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/print-mode.ts",
+      "total_lines": 170,
+      "ranges": [
+        [
+          1,
+          170
+        ]
+      ],
+      "sha256": "5562a121cc75a477d16fb11f79715afb26e1ab28c8158b7d8cc61570200203c9",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPrintSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/print-mode.test.ts",
+      "total_lines": 143,
+      "ranges": [
+        [
+          1,
+          143
+        ]
+      ],
+      "sha256": "eb6a00a82da7ebffde2f83cd5ad210ea995a183cf8f6040265ecc25374b22eed",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPrintSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/index.ts",
+      "total_lines": 67,
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "sha256": "6517b05dc8dc7846dfe8181a646fbd1f05da08f621b48814282fee6e81c9830b",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPrintSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/slash-commands.ts",
+      "total_lines": 56,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPrintSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/index.ts",
+      "total_lines": 81,
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "sha256": "9c8700b57dc9b572a217ef55925c99619d58a47a7e70b90ef78b42cf78cf26e9",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPrintSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/index.ts",
+      "total_lines": 5,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "sha256": "29c9dc5de4ec9c895223e8991ff02871f8eb67702435abed64a2b412430b4d7c",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPrintSource"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/index.ts",
+      "total_lines": 482,
+      "ranges": [
+        [
+          1,
+          482
+        ]
+      ],
+      "sha256": "a1b85d4a98148f3c9bfa1a38fa852d7cba302f421695243aaabe18b587d373bc",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscPublicExports"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/client.ts",
+      "total_lines": 333,
+      "ranges": [
+        [
+          1,
+          333
+        ]
+      ],
+      "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscLlamaCore"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "total_lines": 159,
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscLlamaCore"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/provider.ts",
+      "total_lines": 151,
+      "ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "sha256": "36aa18033eea0382b05cef0988d4e809a0a5cd955526857751e20f90217b6abb",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscLlamaCore"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/llama-cpp.md",
+      "total_lines": 100,
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "sha256": "83b82ed64a2519deff1253fd48ff297ea6fd2baef0a5f7607d15e9b81ecaeabc",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscLlamaCore"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/index.ts",
+      "total_lines": 229,
+      "ranges": [
+        [
+          1,
+          229
+        ]
+      ],
+      "sha256": "b212e60f4e7bd1ad44def2fa1ccee2b2e53a03dc1ef75c78052e8555f4ae9e4e",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscLlamaHost0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/llama-extension.test.ts",
+      "total_lines": 296,
+      "ranges": [
+        [
+          1,
+          296
+        ]
+      ],
+      "sha256": "98993083c5c5c4b5e0e7c58c54f734cb83eaa54d651fb5eef950ed93cbdedda2",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution.",
+      "source_stores": [
+        "miscLlamaHost1"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-tools/src/os_env.rs",
+      "ranges": [
+        [
+          1,
+          270
+        ],
+        [
+          275,
+          391
+        ],
+        [
+          800,
+          890
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscNativeEnvShell",
+        "miscNativeCancellationShell"
+      ],
+      "sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb",
+      "total_lines": 1141,
+      "fully_read": false,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/shell_output.rs",
+      "ranges": [
+        [
+          130,
+          210
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscNativeEnvShell"
+      ],
+      "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+      "total_lines": 479,
+      "fully_read": false,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/compaction/compaction.rs",
+      "ranges": [
+        [
+          451,
+          511
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscNativeCancellationShell"
+      ],
+      "sha256": "01d4cc50d85522d7d889686c50c9fdec10c90e7d3ef91d42b05b761b85dc3713",
+      "total_lines": 943,
+      "fully_read": false,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness/child.rs",
+      "ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscNativeCancellationShell"
+      ],
+      "sha256": "da74ebd086f9b56bd261448443fe4f6e03705179a0b9a31082b146cd7d312c9c",
+      "total_lines": 300,
+      "fully_read": false,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "ranges": [
+        [
+          1,
+          350
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscNativePrintMode0"
+      ],
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total_lines": 1566,
+      "fully_read": false,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/ui.ts",
+      "ranges": [
+        [
+          1,
+          543
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscLlamaHost0",
+        "miscLlamaHost1"
+      ],
+      "sha256": "1ee9f6c2e065c8b0b3d936e3423b87d97a0129eddd0802ed55a61339cd95065e",
+      "total_lines": 543,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/index.ts",
+      "ranges": [
+        [
+          1,
+          317
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportCore"
+      ],
+      "sha256": "4437bb427d6170d2a3dffa2c77a71e20657dee33a96d307c6fa4e2257bc5b4fd",
+      "total_lines": 317,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/tool-renderer.ts",
+      "ranges": [
+        [
+          1,
+          173
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportCore"
+      ],
+      "sha256": "0fd13dbe01cbd51b08e25e8f395a78ea5bfd28777405d15d7af1ede02abf42e6",
+      "total_lines": 173,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/ansi-to-html.ts",
+      "ranges": [
+        [
+          1,
+          259
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportCore"
+      ],
+      "sha256": "09232a1add3bbb0cd436c881dca877b81efa754c1b6133b57e057ef212ec9926",
+      "total_lines": 259,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/template.html",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportCore"
+      ],
+      "sha256": "916782b1184a9597527605ad751e2b3af30fcea23ba2194002969cd217a06881",
+      "total_lines": 56,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/export.rs",
+      "ranges": [
+        [
+          1,
+          367
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscNativeExport0"
+      ],
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "total_lines": 367,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/template.js",
+      "ranges": [
+        [
+          1,
+          368
+        ],
+        [
+          370,
+          1865
+        ]
+      ],
+      "excluded_redacted_lines": [
+        369
+      ],
+      "source_stores": [
+        "miscExportJs0",
+        "miscExportJs1",
+        "miscExportJs2",
+        "miscExportJs3",
+        "miscExportFinish"
+      ],
+      "sha256": "9e9fafe8fab42401a7d5134b014c956e68ac6838f78a8eddf8fd6908a107a196",
+      "total_lines": 1865,
+      "fully_read": false,
+      "notes": "All returned visible numbered source within recorded ranges read; specified redacted lines excluded and not inferred. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/export-html-xss.test.ts",
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportJs0"
+      ],
+      "sha256": "61b68968b6f1f4f0181e3fafaf5e34064e59dae7980f3280d8499d9e8f182454",
+      "total_lines": 68,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/export-html-whitespace.test.ts",
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportJs1"
+      ],
+      "sha256": "c2ff40a4fe78eede86277bd8006e9c3445aaf05a33e4cee0600e92f0202fda4e",
+      "total_lines": 43,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/export-html-skill-block.test.ts",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportJs1"
+      ],
+      "sha256": "3fafde05f99185b1eaf688dded7d5a8807cb2bdcc646d0535b9bcd9b9e4e6ef2",
+      "total_lines": 41,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/template.css",
+      "ranges": [
+        [
+          1,
+          1067
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportJs2",
+        "miscExportJs3",
+        "miscExportFinish"
+      ],
+      "sha256": "28c16e3827c23a62eef8283cac316b478f946e023093adad25ff9c9b891d41af",
+      "total_lines": 1067,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/vendor/marked.min.js",
+      "ranges": [
+        [
+          1,
+          37
+        ],
+        [
+          39,
+          42
+        ],
+        [
+          44,
+          79
+        ]
+      ],
+      "excluded_redacted_lines": [
+        38,
+        43
+      ],
+      "source_stores": [
+        "miscExportFinish",
+        "miscMarked0",
+        "miscMarked1"
+      ],
+      "sha256": "d5487edc7258b404bfa74c393d74a6393155f02517bd5e7e77cd64f8187f39a0",
+      "total_lines": 79,
+      "fully_read": false,
+      "notes": "All returned visible numbered source within recorded ranges read; specified redacted lines excluded and not inferred. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/vendor/highlight.min.js",
+      "ranges": [
+        [
+          1,
+          1213
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "source_stores": [
+        "miscExportFinish",
+        "miscHighlight0",
+        "miscHighlight1",
+        "miscHighlight2",
+        "miscHighlight3",
+        "miscHighlight4"
+      ],
+      "sha256": "4216ffd8f5c80bedc5966c644b044fdb0228df8a55aaadc4c0469371b927541e",
+      "total_lines": 1213,
+      "fully_read": true,
+      "notes": "Complete visible numbered source bodies read within recorded ranges. A connector truncated flag on bounded reads means a partial-file interval; actual numbered-line coverage was checked. No application/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/containerization.md",
+      "total_lines": 112,
+      "ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "sha256": "9490d613a690b2ddd483084e0c76c82141673f89380cc5c5158ade5fe3e8ca0c",
+      "fully_read": true,
+      "source_stores": [
+        "miscDocumentation0"
+      ],
+      "excluded_redacted_lines": [],
+      "notes": "Entire numbered documentation source read. Examples and external links were not executed or visited."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/docs.json",
+      "total_lines": 173,
+      "ranges": [
+        [
+          1,
+          173
+        ]
+      ],
+      "sha256": "dcbcd461615e6d5d087322fbd78978e34573ee16ca415132a7f43ea00915b574",
+      "fully_read": true,
+      "source_stores": [
+        "miscDocumentation0"
+      ],
+      "excluded_redacted_lines": [],
+      "notes": "Entire numbered documentation source read. Examples and external links were not executed or visited."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/index.md",
+      "total_lines": 89,
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "sha256": "2eddeadff985d13a0bd6101554ebd5b926d9d70ea52c6bc3db473162edbe2ba3",
+      "fully_read": true,
+      "source_stores": [
+        "miscDocumentation0"
+      ],
+      "excluded_redacted_lines": [],
+      "notes": "Entire numbered documentation source read. Examples and external links were not executed or visited."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/json.md",
+      "total_lines": 92,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "sha256": "3718725295e061d8d7be531dafc091e1e5162cfe0bfe1ff5295100cc662b447d",
+      "fully_read": true,
+      "source_stores": [
+        "miscDocumentation0"
+      ],
+      "excluded_redacted_lines": [],
+      "notes": "Entire numbered documentation source read. Examples and external links were not executed or visited."
+    },
+    {
+      "path": "rust:crates/ice-cli/embedded-docs/README.md",
+      "total_lines": 422,
+      "ranges": [
+        [
+          1,
+          422
+        ]
+      ],
+      "sha256": "38a9e1db837b28c1404c86ff5d466416dad0ec33f732697b114692d5ccea2762",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscNativeDocs"
+      ],
+      "baseline_sha256": "38a9e1db837b28c1404c86ff5d466416dad0ec33f732697b114692d5ccea2762",
+      "baseline_match": true
+    },
+    {
+      "path": "rust:crates/ice-cli/embedded-docs/user-guide.md",
+      "total_lines": 505,
+      "ranges": [
+        [
+          1,
+          109
+        ],
+        [
+          111,
+          117
+        ],
+        [
+          119,
+          505
+        ]
+      ],
+      "sha256": "9ce06aead36c78530f1dec589e0b0a80c78de173d454f9823a2ef4b6ed351e3d",
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        110,
+        118
+      ],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscNativeDocs",
+        "miscNativeDocsAnsi"
+      ],
+      "baseline_sha256": "9ce06aead36c78530f1dec589e0b0a80c78de173d454f9823a2ef4b6ed351e3d",
+      "baseline_match": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/ansi.rs",
+      "total_lines": 220,
+      "ranges": [
+        [
+          1,
+          220
+        ]
+      ],
+      "sha256": "e50a764f625ea53aeee0ebeadbac313ca5a42c02ecef515a7db165571c160544",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscNativeDocsAnsi"
+      ],
+      "baseline_sha256": "e50a764f625ea53aeee0ebeadbac313ca5a42c02ecef515a7db165571c160544",
+      "baseline_match": true
+    },
+    {
+      "path": "ice:packages/coding-agent/src/claude-sdk/adapter.ts",
+      "total_lines": 458,
+      "ranges": [
+        [
+          152,
+          225
+        ],
+        [
+          252,
+          458
+        ]
+      ],
+      "sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscSdkIndependentReview0"
+      ],
+      "baseline_sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+      "baseline_match": true
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs",
+      "total_lines": 148,
+      "ranges": [
+        [
+          25,
+          87
+        ],
+        [
+          89,
+          89
+        ],
+        [
+          91,
+          93
+        ]
+      ],
+      "sha256": "1b2654b29b3ad6c49ec6e9ceb7b2e6221b1e6a4cd956237c2138324a7275c7f9",
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        88,
+        90
+      ],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscSdkIndependentReview0"
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-hardening.test.mjs",
+      "total_lines": 46,
+      "ranges": [
+        [
+          20,
+          45
+        ]
+      ],
+      "sha256": "f6654e2552ed70d310e49ff2c00e2ddca181d1ece9a1f98805f8af94d299f023",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscSdkIndependentReview0"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/experimental.rs",
+      "total_lines": 29,
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "sha256": "e89546cb94397db0e356bb5777fb1cfe98b2eee5af088eccda2c48d6c7d2c05d",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscExperimentalBodies"
+      ],
+      "baseline_sha256": "e89546cb94397db0e356bb5777fb1cfe98b2eee5af088eccda2c48d6c7d2c05d",
+      "baseline_match": true
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/startup-ui.ts",
+      "total_lines": 240,
+      "ranges": [
+        [
+          76,
+          127
+        ]
+      ],
+      "sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscTsExperimentalCaller"
+      ],
+      "baseline_sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "baseline_match": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/syntax_highlight.rs",
+      "total_lines": 492,
+      "ranges": [
+        [
+          211,
+          390
+        ]
+      ],
+      "sha256": "78270fec2aaec6cd33acaaf5bff02b7c45747bfb145c9e8a5af17c1393c623c1",
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered bodies read. No application or tests executed.",
+      "source_stores": [
+        "miscNativeSyntaxDocCredit"
+      ],
+      "baseline_sha256": "78270fec2aaec6cd33acaaf5bff02b7c45747bfb145c9e8a5af17c1393c623c1",
+      "baseline_match": true
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "ranges": [
+        [
+          1020,
+          1040
+        ]
+      ],
+      "total_lines": 8282,
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "notes": "Actual bounded numbered source read through read-only read-evidence.mjs; no execution.",
+      "source_stores": [
+        "miscAdditionalCallerRead"
+      ]
+    },
+    {
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "ranges": [
+        [
+          1,
+          260
+        ]
+      ],
+      "total_lines": 260,
+      "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "notes": "Independent MISC integration review of actual numbered bodies; no execution.",
+      "source_stores": [
+        "miscEvalsIndependentSource"
+      ]
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "ranges": [
+        [
+          50,
+          155
+        ]
+      ],
+      "total_lines": 194,
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "notes": "Independent MISC integration review of actual numbered bodies; no execution.",
+      "source_stores": [
+        "miscEvalsIndependentSource"
+      ]
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "ranges": [
+        [
+          53,
+          87
+        ]
+      ],
+      "total_lines": 114,
+      "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "notes": "Independent MISC integration review of actual numbered bodies; no execution.",
+      "source_stores": [
+        "miscEvalsIndependentSource"
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/docs/containerization.md",
+      "lines": 111,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/docs.json",
+      "lines": 172,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/images/doom-extension.png",
+      "lines": 0,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "not-applicable",
+      "notes": "Documentation image asset; no executable behavior; bytes and hash recorded in evidence/tracked-files.json."
+    },
+    {
+      "path": "packages/coding-agent/docs/images/exy.png",
+      "lines": 0,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "not-applicable",
+      "notes": "Documentation image asset; no executable behavior; bytes and hash recorded in evidence/tracked-files.json."
+    },
+    {
+      "path": "packages/coding-agent/docs/images/interactive-mode.png",
+      "lines": 0,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "not-applicable",
+      "notes": "Documentation image asset; no executable behavior; bytes and hash recorded in evidence/tracked-files.json."
+    },
+    {
+      "path": "packages/coding-agent/docs/images/tree-view.png",
+      "lines": 0,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "not-applicable",
+      "notes": "Documentation image asset; no executable behavior; bytes and hash recorded in evidence/tracked-files.json."
+    },
+    {
+      "path": "packages/coding-agent/docs/index.md",
+      "lines": 88,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/json.md",
+      "lines": 91,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/keybindings.md",
+      "lines": 246,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/llama-cpp.md",
+      "lines": 99,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/terminal-setup.md",
+      "lines": 142,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/theme-sources.md",
+      "lines": 30,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/themes.md",
+      "lines": 309,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/tmux.md",
+      "lines": 63,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/docs/tui.md",
+      "lines": 942,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/claude-sdk/adapter.ts",
+      "lines": 457,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/claude-sdk/extension.ts",
+      "lines": 36,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/diagnostics.ts",
+      "lines": 15,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/experimental.ts",
+      "lines": 5,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/ansi-to-html.ts",
+      "lines": 258,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/index.ts",
+      "lines": 316,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/template.css",
+      "lines": 1066,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/template.html",
+      "lines": 55,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/template.js",
+      "lines": 1864,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/tool-renderer.ts",
+      "lines": 172,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/vendor/highlight.min.js",
+      "lines": 1213,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/export-html/vendor/marked.min.js",
+      "lines": 78,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/http-dispatcher.ts",
+      "lines": 111,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/index.ts",
+      "lines": 80,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/core/slash-commands.ts",
+      "lines": 55,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/extensions/index.ts",
+      "lines": 4,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/extensions/llama/client.ts",
+      "lines": 332,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "lines": 158,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/extensions/llama/index.ts",
+      "lines": 228,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/extensions/llama/provider.ts",
+      "lines": 150,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/extensions/llama/ui.ts",
+      "lines": 542,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/index.ts",
+      "lines": 481,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/modes/index.ts",
+      "lines": 66,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/modes/json-event.ts",
+      "lines": 40,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/modes/print-mode.ts",
+      "lines": 169,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/abort.ts",
+      "lines": 56,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/ansi.ts",
+      "lines": 60,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/changelog.ts",
+      "lines": 196,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/child-process.ts",
+      "lines": 137,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/clipboard-image.ts",
+      "lines": 300,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/clipboard-native.ts",
+      "lines": 33,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/clipboard.ts",
+      "lines": 175,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/deprecation.ts",
+      "lines": 14,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/exif-orientation.ts",
+      "lines": 183,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/frontmatter.ts",
+      "lines": 39,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/fs-watch.ts",
+      "lines": 30,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/git.ts",
+      "lines": 226,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/highlight-js-lib-index.d.ts",
+      "lines": 19,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/html.ts",
+      "lines": 51,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/ice-user-agent.ts",
+      "lines": 4,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/image-convert.ts",
+      "lines": 49,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/image-process.ts",
+      "lines": 119,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/image-resize-core.ts",
+      "lines": 164,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/image-resize-worker.ts",
+      "lines": 42,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/image-resize.ts",
+      "lines": 123,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/json.ts",
+      "lines": 15,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/mime.ts",
+      "lines": 116,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/open-browser.ts",
+      "lines": 24,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/paths.ts",
+      "lines": 118,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/photon.ts",
+      "lines": 139,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/readdir-order.ts",
+      "lines": 20,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/redact.ts",
+      "lines": 8,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/shell.ts",
+      "lines": 268,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/sleep.ts",
+      "lines": 18,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/syntax-highlight.ts",
+      "lines": 146,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/tool-result-images.ts",
+      "lines": 62,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/tools-manager.ts",
+      "lines": 376,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/version-check.ts",
+      "lines": 84,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/coding-agent/src/utils/windows-self-update.ts",
+      "lines": 84,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/extensions.eval.ts",
+      "lines": 140,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/ice-harness.ts",
+      "lines": 259,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/smoke.eval.ts",
+      "lines": 17,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/artifacts.ts",
+      "lines": 112,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "lines": 193,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/reporter.ts",
+      "lines": 113,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/setup.ts",
+      "lines": 8,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/summary.ts",
+      "lines": 438,
+      "area": "misc",
+      "entry_ids": [],
+      "status": "pending",
+      "notes": ""
+    }
+  ],
+  "candidate_inventory_count": 86,
+  "reserved_entries": {
+    "MISC-001": "Validated release metadata and quiet automatic version checks",
+    "MISC-002": "Windows loaded dependency quarantine and deferred cleanup",
+    "MISC-003": "Tool-result image identity, failure policy and post-hook normalization",
+    "MISC-004": "Optional clipboard module loading and text-read fallback",
+    "MISC-005": "Ordered clipboard writes and bounded remote OSC 52 fallback",
+    "MISC-006": "Clipboard image backend order, MIME preference and WSL transfer",
+    "MISC-007": "Cancellation linking, waiter races and abortable timer lifetime",
+    "MISC-008": "Filesystem watcher error callbacks versus native modification-time polling",
+    "MISC-009": "Shared YAML frontmatter fences, scalar values and parse errors",
+    "MISC-010": "Optional fd and rg discovery, download selection and extraction policy",
+    "MISC-040–049": "audit_tools evals supplement after first-pass QA",
+    "MISC-011": "Coding-agent shell selection, environment and shutdown wrapper",
+    "MISC-012": "Browser/default-handler process ownership",
+    "MISC-013": "Changelog parsing and release-pinned links",
+    "MISC-014": "Terminal syntax scopes and HTML entity decoding",
+    "MISC-015": "Single-shot text output and completion cleanup",
+    "MISC-016": "Single-shot JSON event stream and sink lifetime",
+    "MISC-017": "HTML export assembly and file contract",
+    "MISC-018": "Offline tree viewer navigation and share metadata",
+    "MISC-019": "Transcript rendering and safe content boundaries",
+    "MISC-020": "Custom tool rendering and ANSI-to-HTML",
+    "MISC-021": "Llama router transport/SSE and operation waits",
+    "MISC-022": "Hugging Face token/search/quantization",
+    "MISC-023": "Llama built-in provider/auth/catalog",
+    "MISC-024": "/llama model manager",
+    "MISC-025": "Public exports and small utility boundaries",
+    "MISC-026": "Documentation/deployment contract",
+    "MISC-030–037": "Coordinator SDK supplement merged; narrative/critical source review completed."
+  },
+  "reused_source_reads": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "total_lines": 725,
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "ranges": [
+        [
+          441,
+          725
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed.",
+      "artifact": "docs/ice-gap/evidence/tui-native-helper-supplement.json",
+      "attribution": "Root source-only review"
+    },
+    {
+      "repo": "ice",
+      "path": "ice:packages/coding-agent/src/modes/json-event.ts",
+      "sha256": "418369a8be3584b209b975385905b5a6e8fd928c8aa8b790544640c355fab4d3",
+      "total": 41,
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "baseline": "418369a8be3584b209b975385905b5a6e8fd928c8aa8b790544640c355fab4d3",
+      "unread": [],
+      "fully_read": true,
+      "owner": "same worker earlier RPC review",
+      "artifact": "docs/ice-gap/evidence/rpc-source-review.json"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/git.ts",
+      "sha256": "bff4590aefa988ba625026769ac5ad02f02558d59bd7d566f4728e1ee4da1da9",
+      "total_lines": 227,
+      "ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false,
+      "fully_read": true,
+      "artifact": "docs/ice-gap/evidence/cli-packaging-supplement-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full body source-only review; immutable supplement SHA ae46d869bdcccb8b584e846979a4142bc6865efe0da25a4b094e313246798fb3"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/paths.ts",
+      "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+      "total_lines": 119,
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false,
+      "fully_read": true,
+      "artifact": "docs/ice-gap/evidence/cli-packaging-supplement-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full body source-only review; immutable supplement SHA ae46d869bdcccb8b584e846979a4142bc6865efe0da25a4b094e313246798fb3"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/readdir-order.ts",
+      "sha256": "b21f3c677fd9262e24ef80a5796d6fc3c6eed95531c4fe7d78d609ee9c4f1b17",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false,
+      "fully_read": true,
+      "artifact": "docs/ice-gap/evidence/cli-packaging-supplement-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full body source-only review; immutable supplement SHA ae46d869bdcccb8b584e846979a4142bc6865efe0da25a4b094e313246798fb3"
+    },
+    {
+      "repo": "rust",
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total": 1566,
+      "ranges": [
+        [
+          1,
+          1566
+        ]
+      ],
+      "baseline": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "unread": [],
+      "fully_read": true,
+      "total_lines": 1566,
+      "owner": "same worker prior RPC review",
+      "artifact": "docs/ice-gap/evidence/rpc-source-review.json"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/claude-sdk/adapter.ts",
+      "ranges": [
+        [
+          1,
+          458
+        ]
+      ],
+      "total_lines": 458,
+      "sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/claude-sdk/extension.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "total_lines": 37,
+      "sha256": "5f5e6f7b06eeba5c57090c0b7698a628a35c53fc25d32c7386444c26e88b7283",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-hardening.test.mjs",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "total_lines": 46,
+      "sha256": "f6654e2552ed70d310e49ff2c00e2ddca181d1ece9a1f98805f8af94d299f023",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs",
+      "ranges": [
+        [
+          1,
+          87
+        ],
+        [
+          89,
+          89
+        ],
+        [
+          91,
+          148
+        ]
+      ],
+      "total_lines": 148,
+      "sha256": "1b2654b29b3ad6c49ec6e9ceb7b2e6221b1e6a4cd956237c2138324a7275c7f9",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [
+        88,
+        90
+      ],
+      "notes": "Every visible line reviewed; connector-redacted fixture/assertion lines excluded without reconstruction. Source only.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-live-cli.mjs",
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "total_lines": 51,
+      "sha256": "a2330f911428fd82bbdd4d22427227309ebfd9ae9f0470dcc0226a1b86576319",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Full numbered source body reviewed; no code or tests executed.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/types.rs",
+      "ranges": [
+        [
+          419,
+          493
+        ]
+      ],
+      "total_lines": 1157,
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/binding.rs",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "total_lines": 104,
+      "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/provider.rs",
+      "ranges": [
+        [
+          80,
+          210
+        ]
+      ],
+      "total_lines": 1778,
+      "sha256": "ba60bcabe0571dd2b790f7f584fabe1368bce0034058817fc50cc4e7a6a86f49",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/provider.rs",
+      "ranges": [
+        [
+          461,
+          552
+        ]
+      ],
+      "total_lines": 1778,
+      "sha256": "ba60bcabe0571dd2b790f7f584fabe1368bce0034058817fc50cc4e7a6a86f49",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/registry.rs",
+      "ranges": [
+        [
+          622,
+          669
+        ]
+      ],
+      "total_lines": 1330,
+      "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "ranges": [
+        [
+          31,
+          88
+        ]
+      ],
+      "total_lines": 392,
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "ranges": [
+        [
+          149,
+          204
+        ]
+      ],
+      "total_lines": 392,
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/event_stream.rs",
+      "ranges": [
+        [
+          18,
+          172
+        ]
+      ],
+      "total_lines": 276,
+      "sha256": "244eca9d8de1dc90737bd405bdc6521cd4a8c2c4fe920b1b74916a24c54507f5",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/providers/mod.rs",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "total_lines": 47,
+      "sha256": "a8adc4d1d109ba95db09d41233691bcb6665e34bef3a08ae0ecb3f3a90dd4a32",
+      "fully_read": true,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/model_registry.rs",
+      "ranges": [
+        [
+          113,
+          170
+        ]
+      ],
+      "total_lines": 416,
+      "sha256": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "fully_read": false,
+      "owner": "coordinator",
+      "excluded_redacted_lines": [],
+      "notes": "Actual visible numbered lines reviewed; requested range was clamped to returned body. Existing native shared/provider capability credited, not replaced.",
+      "artifact": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "attribution": "Coordinator full source review; MISC owner independently reviewed all eight narratives and critical source/test intervals."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/keybindings.md",
+      "ranges": [
+        [
+          1,
+          247
+        ]
+      ],
+      "total_lines": 247,
+      "sha256": "7f362d9561aa535d71f5a8f11e820eb8c288b5306b9ecc74cb44fb4494650613",
+      "baseline_sha256": "7f362d9561aa535d71f5a8f11e820eb8c288b5306b9ecc74cb44fb4494650613",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/terminal-setup.md",
+      "ranges": [
+        [
+          1,
+          143
+        ]
+      ],
+      "total_lines": 143,
+      "sha256": "edbe987da8e692a6a097c0d2ebde5b7f657c76309b0bbf5f8b205240d3399650",
+      "baseline_sha256": "edbe987da8e692a6a097c0d2ebde5b7f657c76309b0bbf5f8b205240d3399650",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/tmux.md",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "total_lines": 64,
+      "sha256": "754cb29259688e7c90f4d16854e3aa1efe6c193c1a18eb3b7a543f5157bb9caf",
+      "baseline_sha256": "754cb29259688e7c90f4d16854e3aa1efe6c193c1a18eb3b7a543f5157bb9caf",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/tui.md",
+      "ranges": [
+        [
+          1,
+          943
+        ]
+      ],
+      "total_lines": 943,
+      "sha256": "7b3b3a89a8688c4dc2ea845675cdc50928167eb4f3dd0d0a8367877a303ab90f",
+      "baseline_sha256": "7b3b3a89a8688c4dc2ea845675cdc50928167eb4f3dd0d0a8367877a303ab90f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/json.ts",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "total_lines": 16,
+      "sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "baseline_sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/json-utils.test.ts",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "total_lines": 18,
+      "sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "baseline_sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/experimental.ts",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "total_lines": 6,
+      "sha256": "78188595ccedd441f49d741931b022cd614bb0df3f41f6e691b30e1be8315c2b",
+      "baseline_sha256": "78188595ccedd441f49d741931b022cd614bb0df3f41f6e691b30e1be8315c2b",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed.",
+      "artifact": "docs/ice-gap/evidence/misc-coordinator-docs-review.json",
+      "attribution": "Coordinator source-only body review; metadata inspected by MISC owner."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/theme-sources.md",
+      "total_lines": 31,
+      "ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "sha256": "8724d60ea5ea1b3da5a9e294c2066f3d06c7c0ff9c0b67bb0bc71994a04e4519",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "audit_extensions",
+      "artifact": "docs/ice-gap/evidence/tui-source-review.json",
+      "attribution": "Original TUI owner full body; exact record recovered by tui_closeout and MISC owner.",
+      "baseline_match": true
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/themes.md",
+      "total_lines": 310,
+      "ranges": [
+        [
+          1,
+          310
+        ]
+      ],
+      "sha256": "7a3e4ac46beec7be3b9cce7273e03029b8c09292320b3062675533bc214e4060",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "audit_extensions",
+      "artifact": "docs/ice-gap/evidence/tui-source-review.json",
+      "attribution": "Original TUI owner full body; exact record recovered by tui_closeout and MISC owner.",
+      "baseline_match": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/syntax_highlight.rs",
+      "total_lines": 492,
+      "ranges": [
+        [
+          1,
+          492
+        ]
+      ],
+      "sha256": "78270fec2aaec6cd33acaaf5bff02b7c45747bfb145c9e8a5af17c1393c623c1",
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "audit_extensions",
+      "artifact": "docs/ice-gap/evidence/tui-source-review.json",
+      "attribution": "TUI-005 full-body credit confirmed by tui_closeout; MISC independently reread 211–390.",
+      "baseline_match": true
+    },
+    {
+      "path": "ice:packages/evals/README.md",
+      "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+      "total_lines": 154,
+      "ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/package.json",
+      "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/tsconfig.json",
+      "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+      "total_lines": 11,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/vitest.config.ts",
+      "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/vitest.test.config.ts",
+      "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+      "total_lines": 15,
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+      "total_lines": 98,
+      "ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+      "total_lines": 260,
+      "ranges": [
+        [
+          1,
+          260
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+      "total_lines": 141,
+      "ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/smoke.eval.ts",
+      "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+      "total_lines": 18,
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+      "total_lines": 113,
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "total_lines": 194,
+      "ranges": [
+        [
+          1,
+          194
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "total_lines": 439,
+      "ranges": [
+        [
+          1,
+          439
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+      "total_lines": 114,
+      "ranges": [
+        [
+          1,
+          114
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+      "total_lines": 9,
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/test/ice-harness.test.ts",
+      "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+      "total_lines": 35,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/artifacts.test.ts",
+      "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+      "total_lines": 104,
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/harness-table.test.ts",
+      "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/summary.test.ts",
+      "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+      "total_lines": 233,
+      "ranges": [
+        [
+          1,
+          233
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:vitest.base.ts",
+      "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+      "total_lines": 29,
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:package.json",
+      "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+      "total_lines": 91,
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:tsconfig.json",
+      "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+      "total_lines": 39,
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:crates/ice-harness/Cargo.toml",
+      "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+      "total_lines": 43,
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+      "total_lines": 4086,
+      "ranges": [
+        [
+          1,
+          469
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/in_memory.rs",
+      "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+      "total_lines": 898,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:tsconfig.base.json",
+      "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+      "total_lines": 26,
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:Cargo.toml",
+      "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+      "total_lines": 89,
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "total_lines": 5844,
+      "ranges": [
+        [
+          1,
+          135
+        ],
+        [
+          650,
+          820
+        ],
+        [
+          1578,
+          1592
+        ],
+        [
+          2011,
+          2053
+        ],
+        [
+          3400,
+          3510
+        ],
+        [
+          4510,
+          4550
+        ],
+        [
+          4625,
+          4715
+        ],
+        [
+          4870,
+          4930
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/ai/src/utils/text.ts",
+      "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+      "total_lines": 13,
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "Direct source-read by existing read-only helper; no execution",
+      "baseline": {
+        "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/session/jsonl/mod.rs",
+      "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+      "total_lines": 27,
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+        "matched": true,
+        "basis": "matches frozen coordinator manifest hash recorded by SESSION full source review"
+      },
+      "fully_read": true,
+      "coverage": "full",
+      "artifact": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "owner": "audit_tools",
+      "attribution": "Full or explicitly bounded source-only body review in immutable eval supplement; independently validated source hash metadata."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "ranges": [
+        [
+          1,
+          1008
+        ]
+      ],
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "total_lines": 1008,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              1008
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed.",
+      "artifact": "docs/ice-gap/evidence/cli-combined-read-manifest.json"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "ranges": [
+        [
+          1,
+          95
+        ],
+        [
+          97,
+          1015
+        ]
+      ],
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "total_lines": 1015,
+      "excluded_redacted_lines": [
+        96
+      ],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              95
+            ],
+            [
+              97,
+              1015
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              95
+            ],
+            [
+              97,
+              175
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              770,
+              886
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed.",
+      "artifact": "docs/ice-gap/evidence/cli-combined-read-manifest.json"
+    },
+    {
+      "repo": "ice",
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+      "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "total": 2253,
+      "ranges": [
+        [
+          1,
+          2253
+        ]
+      ],
+      "baseline": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "unread": [],
+      "fully_read": true,
+      "total_lines": 2253,
+      "artifact": "docs/ice-gap/evidence/rpc-source-review.json",
+      "owner": "audit_session",
+      "notes": "Earlier complete visible RPC source review by same worker; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash.ts",
+      "total_lines": 750,
+      "ranges": [
+        [
+          1,
+          749
+        ]
+      ],
+      "sha256": "9b59f5b97743d815b84fca1c0961d38824a36740af2e7de5d1276831c2dbf918",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "artifact": "docs/ice-gap/evidence/proposal-tools.json",
+      "owner": "audit_tools/coordinator",
+      "notes": "Exact saved source-body interval recovered from accepted Tools proposal; trailing terminal blank is not added beyond the attributed range. No execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/find.ts",
+      "total_lines": 378,
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "artifact": "docs/ice-gap/evidence/proposal-tools.json",
+      "owner": "audit_tools/coordinator",
+      "notes": "Exact saved source-body interval recovered from accepted Tools proposal; trailing terminal blank is not added beyond the attributed range. No execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/grep.ts",
+      "total_lines": 386,
+      "ranges": [
+        [
+          1,
+          385
+        ]
+      ],
+      "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "artifact": "docs/ice-gap/evidence/proposal-tools.json",
+      "owner": "audit_tools/coordinator",
+      "notes": "Exact saved source-body interval recovered from accepted Tools proposal; trailing terminal blank is not added beyond the attributed range. No execution."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/find.rs",
+      "total_lines": 300,
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ],
+      "sha256": "79b2815a1f655b8255f67508e3b51e8b76f6472d73f4220c2a1480cbba492072",
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "artifact": "docs/ice-gap/evidence/proposal-tools.json",
+      "owner": "audit_tools/coordinator",
+      "notes": "Exact saved source-body interval recovered from accepted Tools proposal; trailing terminal blank is not added beyond the attributed range. No execution."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/grep.rs",
+      "total_lines": 436,
+      "ranges": [
+        [
+          1,
+          436
+        ]
+      ],
+      "sha256": "361b6a5627240176da097c18a95b893ffdf970139a7e517ae6d97e5f0f252112",
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "artifact": "docs/ice-gap/evidence/proposal-tools.json",
+      "owner": "audit_tools/coordinator",
+      "notes": "Exact saved source-body interval recovered from accepted Tools proposal; trailing terminal blank is not added beyond the attributed range. No execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+      "total_lines": 120,
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "sha256": "dd4d85d37cdfa4ad5886b2878dd71c4f02bda34f653f7d30defb1aa507dfb3ec",
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "artifact": "docs/ice-gap/evidence/proposal-providers-auth.json",
+      "owner": "audit_session/coordinator",
+      "notes": "Earlier AUTH complete visible body review, recovered exact accepted metadata. Mocks openBrowser rather than launching a browser; no execution."
+    }
+  ],
+  "existing_entry_mappings": [
+    {
+      "path": "packages/coding-agent/src/core/http-dispatcher.ts",
+      "entry_ids": [
+        "SET-013"
+      ],
+      "reason": "Root owns complete algorithm; current worker independently completed source read."
+    },
+    {
+      "path": "packages/coding-agent/src/utils/child-process.ts",
+      "entry_ids": [
+        "AGENT-053",
+        "TOOLS-002"
+      ],
+      "reason": "Full source and 5303 regression read; same post-exit idle algorithm; cross-spawn selection is a native runtime adaptation."
+    },
+    {
+      "paths": [
+        "packages/coding-agent/src/utils/mime.ts",
+        "packages/coding-agent/src/utils/image-process.ts",
+        "packages/coding-agent/src/utils/image-convert.ts",
+        "packages/coding-agent/src/utils/image-resize-core.ts",
+        "packages/coding-agent/src/utils/image-resize.ts",
+        "packages/coding-agent/src/utils/image-resize-worker.ts",
+        "packages/coding-agent/src/utils/exif-orientation.ts",
+        "packages/coding-agent/src/utils/photon.ts"
+      ],
+      "entry_ids": [
+        "TOOLS-023"
+      ],
+      "reason": "Full independent body reads confirm authored comprehensive shared algorithm."
+    },
+    {
+      "path": "packages/coding-agent/src/utils/json.ts",
+      "entry_ids": [
+        "AUTH-007"
+      ],
+      "reason": "Sole ModelConfig consumer; exact helper and test source read locally and independently by coordinator; coordinator appended precise grammar centrally."
+    },
+    {
+      "path": "packages/coding-agent/src/core/experimental.ts",
+      "entry_ids": [
+        "CLI-015"
+      ],
+      "reason": "Sole TS first-run caller is already owned. TS exact getIceEnv('ICE_EXPERIMENTAL')==='1' is reread per call. Native experimental.rs caches first exact environment result in OnceLock and has no production caller found in crates; native first-run integration gap is CLI-015."
+    }
+  ],
+  "remaining": [],
+  "limitations": [
+    "No runtime verification. Exact previously redacted user-state/credential limitations from other areas remain unchanged.",
+    "First-pass claims, complete test inventory, candidate mapping and remaining shared-owner credits not yet reconciled.",
+    "Current read-only native searches scoped to repository crates; concrete external provider packages are unverified.",
+    "No direct downloader/abort/sleep utility suite was found; adjacent consumer suites require final owner reconciliation."
+  ],
+  "source_stores": [
+    "miscUpdateSource",
+    "miscVersionTests",
+    "miscImageCore0",
+    "miscImageCore1",
+    "miscNativeImageCore0",
+    "miscNativeImageCore1",
+    "miscImageTests0",
+    "miscClipboardSource",
+    "miscClipboardTests0",
+    "miscClipboardTests1",
+    "miscNativeClipboardCopy",
+    "miscNativeUtility0",
+    "miscUtilityTests0",
+    "miscUtilitySource0",
+    "miscNativeWindows",
+    "miscNativeCliCargo",
+    "miscShellToolsSource",
+    "miscMoreUtilsSource",
+    "miscMoreUtilsTests",
+    "miscNativeChangelogBrowser",
+    "miscNativeEnvShell",
+    "miscPrintSource",
+    "miscNativeCancellationShell",
+    "miscNativePrintMode0",
+    "miscPublicExports",
+    "miscLlamaCore",
+    "miscLlamaHost0",
+    "miscLlamaHost1",
+    "miscExportCore",
+    "miscNativeExport0",
+    "miscExportJs0",
+    "miscExportJs1",
+    "miscExportJs2",
+    "miscExportJs3",
+    "miscExportFinish",
+    "miscMarked0",
+    "miscMarked1",
+    "miscHighlight0",
+    "miscHighlight1",
+    "miscHighlight2",
+    "miscHighlight3",
+    "miscHighlight4",
+    "miscDocumentation0",
+    "miscNativeDocs",
+    "miscNativeDocsAnsi",
+    "miscSdkIndependentReview0",
+    "miscExperimentalBodies",
+    "miscTsExperimentalCaller",
+    "miscNativeSyntaxDocCredit",
+    "miscAdditionalCallerRead",
+    "miscEvalsIndependentSource"
+  ],
+  "remaining_direct_tests": [],
+  "test_discovery_note": "Direct import inventory is still being reconciled. No relevant suite is declared complete solely from discovery. tools/bash-background/resolve-config-value and UI consumers require cross-area test credit; package helper credit pending supplement.",
+  "stage": "All 43 MISC narratives and all original ledger source bodies closed (with exact connector-redaction exclusions); final ledger/surfaces/candidates/proposal QA in progress",
+  "redacted_exclusions": [
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/template.js",
+      "sha256": "9e9fafe8fab42401a7d5134b014c956e68ac6838f78a8eddf8fd6908a107a196",
+      "excluded_lines": [
+        369
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/vendor/marked.min.js",
+      "sha256": "d5487edc7258b404bfa74c393d74a6393155f02517bd5e7e77cd64f8187f39a0",
+      "excluded_lines": [
+        38,
+        43
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/embedded-docs/user-guide.md",
+      "sha256": "9ce06aead36c78530f1dec589e0b0a80c78de173d454f9823a2ef4b6ed351e3d",
+      "excluded_lines": [
+        110,
+        118
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs",
+      "sha256": "1b2654b29b3ad6c49ec6e9ceb7b2e6221b1e6a4cd956237c2138324a7275c7f9",
+      "excluded_lines": [
+        88,
+        90
+      ]
+    }
+  ],
+  "test_identity": {
+    "paths": [
+      "packages/coding-agent/test/version-check.test.ts",
+      "packages/coding-agent/test/ice-user-agent.test.ts",
+      "packages/coding-agent/test/image-process.test.ts",
+      "packages/coding-agent/test/tool-result-images.test.ts",
+      "packages/coding-agent/test/image-processing.test.ts",
+      "packages/coding-agent/test/clipboard-image.test.ts",
+      "packages/coding-agent/test/clipboard-native.test.ts",
+      "packages/coding-agent/test/clipboard-image-bmp-conversion.test.ts",
+      "packages/coding-agent/test/clipboard.test.ts",
+      "packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts",
+      "packages/coding-agent/test/frontmatter.test.ts",
+      "packages/coding-agent/test/json-utils.test.ts",
+      "packages/coding-agent/test/ansi-utils.test.ts",
+      "packages/coding-agent/test/changelog.test.ts",
+      "packages/coding-agent/test/syntax-highlight.test.ts",
+      "packages/coding-agent/test/print-mode.test.ts",
+      "packages/coding-agent/test/llama-extension.test.ts",
+      "packages/coding-agent/test/export-html-xss.test.ts",
+      "packages/coding-agent/test/export-html-whitespace.test.ts",
+      "packages/coding-agent/test/export-html-skill-block.test.ts"
+    ],
+    "frozen_head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "git_status": "clean for all 20 source-read tests",
+    "tracked_count": 20,
+    "actual_tests_executed": false
+  },
+  "fragments": [
+    {
+      "name": "Claude SDK",
+      "entry_ids": [
+        "MISC-030",
+        "MISC-031",
+        "MISC-032",
+        "MISC-033",
+        "MISC-034",
+        "MISC-035",
+        "MISC-036",
+        "MISC-037"
+      ],
+      "spec": "docs/ice-gap/evidence/spec-misc-claude-sdk.json",
+      "spec_sha256": "5da0591b92ccd1741b4cc2fab0a8c1d5e20026a4dd26fe2d8c972be1857f4c84",
+      "proposal": "docs/ice-gap/evidence/proposal-misc-claude-sdk.json",
+      "proposal_sha256": "d6c4cc88ef922a3e04dac1f0efd765e3368208c114b0c444cbcc8059f77354fa",
+      "source_review": "docs/ice-gap/evidence/misc-claude-sdk-source-review.json",
+      "source_review_sha256": "e6bb4e0aa3f58940505989d767692bebb5a5e33bd72658e4d40e6e978679d50e",
+      "narratives_reviewed": true,
+      "independent_review": "adapter152–225,252–458; adapter.test25–87,89,91–93; hardening.test20–45. Capacity admission, per-key ownership, close/ready race, output hook validation and preview mapping confirmed from source; no contradiction found."
+    },
+    {
+      "name": "evals",
+      "spec": "docs/ice-gap/evidence/spec-misc-evals-supplement.json",
+      "spec_sha256": "4a72b10b8938de032107b8671e54fd3108f335ea168bdda75d80051008061a9f",
+      "proposal": "docs/ice-gap/evidence/proposal-misc-evals-supplement.json",
+      "proposal_sha256": "2e610aadfebd15af1da9420d7d8a226fba2b87406b630c4629eb83be6f237ede",
+      "source_review": "docs/ice-gap/evidence/misc-evals-source-review.json",
+      "source_review_sha256": "aeb202b6ebe580f81469804e61869693bdfd664556b02667dfc6996165d0e1ae",
+      "entries": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-042",
+        "MISC-043",
+        "MISC-044",
+        "MISC-045",
+        "MISC-046",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "independent_review": "All nine narratives read, complete ice-harness.ts plus bounded canonical-key and reporter branches independently read. Added exact JS integer-index JSON ordering and abort-finally replacement qualification. No application/test execution."
+    }
+  ],
+  "comparison_notes": [
+    {
+      "id": "MISC-NOTE-EXPERIMENTAL",
+      "entry_ids": [
+        "CLI-015"
+      ],
+      "finding": "Do not infer extended-footer or onboarding wiring from native experimental.rs comments. The exported helper exists but the whole-crates symbol search found no production caller; lib.rs exports its module.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/experimental.ts:1-6",
+        "ice:packages/coding-agent/src/cli/startup-ui.ts:115-127",
+        "rust:crates/ice-cli/src/experimental.rs:1-29",
+        "rust:crates/ice-cli/src/lib.rs:43"
+      ]
+    }
+  ],
+  "first_pass_source": {
+    "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+    "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d",
+    "total_lines": 706,
+    "ranges": [
+      [
+        510,
+        546
+      ],
+      [
+        580,
+        706
+      ]
+    ],
+    "notes": "Actual active first-pass source read; stale initial 678-line copy is not authoritative."
+  }
+}

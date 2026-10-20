@@ -1,0 +1,1270 @@
+{
+  "generated_at": "2026-10-20T03:17:20.094Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/protocol/src/cbor/options.ts",
+      "sha256": "3e26072fd679ae28b7b4a0bb810fbb6adf144aaf50a873f0ee0f23b0fa1d3f6d",
+      "emitted_ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "UINT32_BASE",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:1",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "MAX_UINT32",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:2",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DEFAULT_MAX_CBOR_BYTE_LENGTH",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:6",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DEFAULT_MAX_CBOR_CONTAINER_LENGTH",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:7",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DEFAULT_MAX_CBOR_DEPTH",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:8",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CborOptions",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:10",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ResolvedCborOptions",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:19",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "textEncoder",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:32",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "textDecoder",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:33",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resolveOptions",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/cbor/options.ts:42",
+          "covering_entries": [
+            "RPC-002"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/protocol/src/codec.ts",
+      "sha256": "33ba2f0c75f430f7bdc5356ec1916a515a2b68cdf1e899e92348742ff0fae277",
+      "emitted_ranges": [
+        [
+          161,
+          173
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "createClientMessageDecoder",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/codec.ts:162",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "createServerMessageDecoder",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/codec.ts:166",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "isSupportedProtocolVersion",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/codec.ts:170",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/protocol/src/framing.ts",
+      "sha256": "2cf96ebaf35c06beadcd9c652b5f7104d9cc9149c23e08bcd710ea04c2e16ffd",
+      "emitted_ranges": [
+        [
+          5,
+          30
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "DEFAULT_MAX_FRAME_LENGTH",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/framing.ts:6",
+          "covering_entries": [
+            "RPC-001"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "FrameDecoderOptions",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/framing.ts:8",
+          "covering_entries": [
+            "RPC-001"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "FrameError",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/framing.ts:12",
+          "covering_entries": [
+            "RPC-001"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/protocol/src/schemas.ts",
+      "sha256": "1b43e4a82e227f6e5fea25fb428e64327295e0a85b3cd1bb932127b632beb084",
+      "emitted_ranges": [
+        [
+          2,
+          21
+        ],
+        [
+          23,
+          139
+        ],
+        [
+          156,
+          175
+        ],
+        [
+          188,
+          223
+        ],
+        [
+          246,
+          447
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "PROTOCOL_VERSION",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:3",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "JsonValueSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:24",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ThinkingLevelSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:26",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionPhaseSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:39",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionPhase",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:46",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelRefSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:48",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelCostSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:54",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelMetadataSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:61",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelMetadata",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:74",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "TextContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:76",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ThinkingContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:80",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ImageContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:85",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ToolCallContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:90",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "UserContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:96",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AssistantContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:97",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ToolContentSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:98",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ToolCallContent",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:102",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "UsageSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:104",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "UserTranscriptItemSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:121",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AssistantTranscriptItemSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:157",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ToolTranscriptItemSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:189",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "TranscriptItemSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:194",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "UserTranscriptItem",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:199",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AssistantTranscriptItem",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:200",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ToolTranscriptItem",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:201",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "TranscriptItem",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:202",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "TranscriptProgressSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:205",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionSummarySchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:247",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionSnapshotSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:248",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerSnapshotSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:258",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProtocolErrorCodeSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:267",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProtocolErrorSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:274",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProtocolErrorCode",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:279",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProtocolError",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:280",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ListCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:287",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CreateCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:288",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AttachCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:295",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DetachCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:296",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "PromptCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:297",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SteerCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:298",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AbortCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:299",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SetModelCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:300",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SetThinkingCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:305",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:310",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandName",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:322",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CreateResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:324",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AttachResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:328",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "PromptResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:332",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SteerResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:336",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AbortResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:340",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SetModelResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:344",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SetThinkingResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:348",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ListResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:353",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DetachResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:357",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandResultSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:361",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandResult",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:372",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ResultForCommand",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:374",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ClientHelloSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:381",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ClientHello",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:385",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RequestEnvelopeSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:387",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RequestEnvelope",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:392",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ClientMessageSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:393",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerEventSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:396",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerHelloSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:408",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerHelloErrorSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:414",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ResponseEnvelopeSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:418",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "EventEnvelopeSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:432",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerMessageSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/protocol/src/schemas.ts:436",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerHello",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:442",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerHelloError",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:443",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ResponseEnvelope",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:444",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "EventEnvelope",
+          "kind": "type",
+          "ts": "ice:packages/protocol/src/schemas.ts:445",
+          "covering_entries": [
+            "RPC-003"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/connection.ts",
+      "sha256": "bcaff506cd6f80c3911396c6439e7d7a0b30a1c57b6dcbfe018367c1ae665a77",
+      "emitted_ranges": [
+        [
+          11,
+          37
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ByteConnectionHandler",
+          "kind": "type",
+          "ts": "ice:packages/server/src/connection.ts:12",
+          "covering_entries": [
+            "RPC-005"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ByteConnectionAcceptor",
+          "kind": "type",
+          "ts": "ice:packages/server/src/connection.ts:18",
+          "covering_entries": [
+            "RPC-005"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ConnectionStage",
+          "kind": "type",
+          "ts": "ice:packages/server/src/connection.ts:20",
+          "covering_entries": [
+            "RPC-005"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ConnectionState",
+          "kind": "type",
+          "ts": "ice:packages/server/src/connection.ts:22",
+          "covering_entries": [
+            "RPC-005"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "isTerminalConnection",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/connection.ts:34",
+          "covering_entries": [
+            "RPC-005"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/errors.ts",
+      "sha256": "1a16b39f1719bd2f0b5b70b7f5b861ebff959573aa4d0f183bfacf1b43703adf",
+      "emitted_ranges": [
+        [
+          2,
+          41
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "IceServerOperationErrorCode",
+          "kind": "type",
+          "ts": "ice:packages/server/src/errors.ts:3",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SessionBusyError",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/errors.ts:21",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SessionLockedError",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/errors.ts:28",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SessionNotFoundError",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/errors.ts:35",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/protocol.ts",
+      "sha256": "8490af2a4c3f2ef7c98c9523960e53c94278380862dec4ac421c8378d3a3dac8",
+      "emitted_ranges": [
+        [
+          107,
+          134
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "AssistantTranscriptOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/protocol.ts:108",
+          "covering_entries": [
+            "RPC-004"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "UserTranscriptOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/protocol.ts:112",
+          "covering_entries": [
+            "RPC-004"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ToolTranscriptOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/protocol.ts:116",
+          "covering_entries": [
+            "RPC-004"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/sessions.ts",
+      "sha256": "9fac4be92a9e6e2beba4eb0685975c691f6501da8b75bbb2a943c376ad7b57c2",
+      "emitted_ranges": [
+        [
+          42,
+          61
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "LiveSessionManager",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/sessions.ts:43",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/testing/backend.ts",
+      "sha256": "0c6b4b2c693b9f831099a28db1607317ae9a3eabba123c8c990860e110d5b0aa",
+      "emitted_ranges": [
+        [
+          18,
+          100
+        ],
+        [
+          197,
+          246
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "TEST_MODEL",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/testing/backend.ts:19",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "TestSessionRuntime",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/testing/backend.ts:52",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "TestSessionBackend",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/testing/backend.ts:198",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/testing/client.ts",
+      "sha256": "299022c313b537729c596f061ee1f18b02769571d8eb7d72c3d32ad2191e0d2e",
+      "emitted_ranges": [
+        [
+          19,
+          74
+        ],
+        [
+          115,
+          148
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "WireChannel",
+          "kind": "type",
+          "ts": "ice:packages/server/src/testing/client.ts:20",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ProtocolTestClient",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/testing/client.ts:26",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "connectUnixTestClient",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/testing/client.ts:116",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/testing/server.ts",
+      "sha256": "8793f8203d5db038309dfb4604ff6be7d108b0551ed70cd0ffc8c8127ae90917",
+      "emitted_ranges": [
+        [
+          4,
+          28
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "TestServerOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/testing/server.ts:5",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "TestServer",
+          "kind": "type",
+          "ts": "ice:packages/server/src/testing/server.ts:9",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "createTestServer",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/testing/server.ts:15",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/transports/unix/listener.ts",
+      "sha256": "01afebb4530c330db398bbbeee886e2699b96669a3dc0350594f2836c1db4a84",
+      "emitted_ranges": [
+        [
+          17,
+          36
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "validateUnixSocketPath",
+          "kind": "runtime",
+          "ts": "ice:packages/server/src/transports/unix/listener.ts:18",
+          "covering_entries": [
+            "RPC-008"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/transports/unix/types.ts",
+      "sha256": "9400fa85f5eadc64d6375deb3ed435bf81505b71d3830f6a85ad6b6803587c15",
+      "emitted_ranges": [
+        [
+          2,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "UnixListenerOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/transports/unix/types.ts:3",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "UnixServerOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/transports/unix/types.ts:15",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/types.ts",
+      "sha256": "f42ffa808c11f82f269324b94dc5fd6c9eeae8de56d92fa03f8a2a925db1d113",
+      "emitted_ranges": [
+        [
+          13,
+          54
+        ],
+        [
+          61,
+          65
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "IceServerOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:14",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "MaybePromise",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:22",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "PromptInput",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:24",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SteerInput",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:25",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CreateSessionOptions",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:27",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "IceSessionRuntimeEvent",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:36",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionRuntime",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:62",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionBackend",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:63",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionRuntimeEvent",
+          "kind": "type",
+          "ts": "ice:packages/server/src/types.ts:64",
+          "covering_entries": [
+            "RPC-007"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

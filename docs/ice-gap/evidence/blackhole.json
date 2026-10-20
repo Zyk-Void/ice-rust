@@ -1,0 +1,3475 @@
+{
+  "area": "blackhole",
+  "complete": true,
+  "entries": [
+    {
+      "id": "BLACK-001",
+      "title": "Optional native Blackhole package and preserved provenance",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-005",
+        "BLACK-006",
+        "BLACK-039",
+        "BLACK-040",
+        "BLACK-041"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-040",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-041",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-002",
+      "title": "Blackhole configuration schema, defaults and tolerant reads",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 150,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-003",
+      "title": "Environment override precedence and percent-derived thresholds",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 55,
+      "size_max": 100,
+      "dependencies": [
+        "BLACK-002"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-004",
+      "title": "Configuration writes and environment-persistence interaction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-003"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-005",
+      "title": "Namespaced Blackhole settings UI",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 65,
+      "size_max": 120,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-004",
+        "EXT-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-016",
+          "kind": "prerequisite",
+          "reason": "Blackhole registers ordered named settings and callbacks through EXT-016. TUI-025 is the presentation consumer. Blackhole retains responsibility for file values and writes.",
+          "reviews": [
+            "DEPQA-022"
+          ]
+        },
+        {
+          "entry_id": "TUI-025",
+          "kind": "shared-contract",
+          "reason": "Blackhole registers ordered named settings and callbacks through EXT-016. TUI-025 is the presentation consumer. Blackhole retains responsibility for file values and writes.",
+          "reviews": [
+            "DEPQA-022"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-006",
+      "title": "/blackhole command parser and mode presets",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 45,
+      "size_max": 90,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-007",
+      "title": "Message-to-normalized-block conversion and source references",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "BLACK-008"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-008",
+      "title": "Text sanitization before deterministic extraction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 20,
+      "size_max": 45,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-009",
+      "title": "Thinking, noisy-tool and user-wrapper filtering",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [
+        "BLACK-007"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-010",
+      "title": "Content clipping, sentence boundaries and text search helpers",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 80,
+      "size_max": 140,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-011",
+      "title": "Path aliases and content-bearing tool argument extraction",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 80,
+      "size_max": 150,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-012",
+      "title": "Skill-body collapse with line and raw-text variants",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-013",
+      "title": "Content-word budgets, locale segmentation and filler removal",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-014",
+      "title": "Bash command digest normalization",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 90,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-015",
+      "title": "Tool-call one-line summaries and recognized argument fields",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 80,
+      "dependencies": [
+        "BLACK-011",
+        "BLACK-014"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-016",
+      "title": "Brief transcript grouping, reference folding and action caps",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 170,
+      "size_max": 290,
+      "dependencies": [
+        "BLACK-007",
+        "BLACK-009",
+        "BLACK-012",
+        "BLACK-013",
+        "BLACK-014",
+        "BLACK-015"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-017",
+      "title": "Reverse parsing of brief sections into transcript entries",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 65,
+      "size_max": 120,
+      "dependencies": [
+        "BLACK-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-018",
+      "title": "Genuine user-request rolling section",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 35,
+      "size_max": 65,
+      "dependencies": [
+        "BLACK-007",
+        "BLACK-026",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-019",
+      "title": "Final-prose findings extraction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 35,
+      "size_max": 70,
+      "dependencies": [
+        "BLACK-007",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-020",
+      "title": "Recent actions with heuristic error association",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [
+        "BLACK-015",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-021",
+      "title": "Outstanding blocker and error selection",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "BLACK-010",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-022",
+      "title": "File activity extraction and fresh-category formatting",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 65,
+      "size_max": 120,
+      "dependencies": [
+        "BLACK-011",
+        "BLACK-029"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-029",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-023",
+      "title": "Heuristic commit-message and hash extraction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 150,
+      "dependencies": [
+        "BLACK-007"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-024",
+      "title": "Session-goal and latest-scope-change extraction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 110,
+      "size_max": 190,
+      "dependencies": [
+        "BLACK-010",
+        "BLACK-012",
+        "BLACK-018",
+        "BLACK-028"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-025",
+      "title": "User-preference extraction and goal deduplication",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 90,
+      "dependencies": [
+        "BLACK-010",
+        "BLACK-024",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-026",
+      "title": "Section layout, bounded brief tail and terminal-width wrapping",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 150,
+      "dependencies": [
+        "BLACK-016",
+        "BLACK-018",
+        "BLACK-019",
+        "BLACK-020",
+        "BLACK-021",
+        "BLACK-022",
+        "BLACK-023",
+        "BLACK-024",
+        "BLACK-025",
+        "TUI-202"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TUI-202",
+          "kind": "prerequisite",
+          "reason": "The pure compiler calls wrapTextWithAnsi and requires its display-width, word/grapheme and ANSI continuation semantics. TUI-202 depends on the underlying width primitive TUI-201; no interactive controller is required.",
+          "reviews": [
+            "DEPQA-023"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-027",
+      "title": "Historical section parsing and rolling-item merge policies",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 110,
+      "size_max": 200,
+      "dependencies": [
+        "BLACK-007",
+        "BLACK-009",
+        "BLACK-026",
+        "BLACK-028",
+        "BLACK-029",
+        "BLACK-030"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-029",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-028",
+      "title": "Original-goal preservation and newest-scope replacement across compactions",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 55,
+      "size_max": 100,
+      "dependencies": [
+        "BLACK-024",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-029",
+      "title": "Cross-compaction file-list union and category reconciliation",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 50,
+      "size_max": 100,
+      "dependencies": [
+        "BLACK-022",
+        "BLACK-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-030",
+      "title": "Removal of stale memory, legacy observation sections and recall boilerplate",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 55,
+      "size_max": 110,
+      "dependencies": [
+        "BLACK-027",
+        "BLACK-037",
+        "BLACK-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-031",
+      "title": "Minimal-tail compaction, hidden-message filtering and cut sentinel",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 170,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-007",
+        "SESSION-013",
+        "SESSION-034"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-013",
+          "kind": "prerequisite",
+          "reason": "The cut-ID/retained-context contract and branch entry projection are prerequisites. An absent sentinel intentionally drops the old context tail while preserving durable history. Native retained_tail is an explicit adapter choice, not evidence of byte-compatible v3 storage.",
+          "reviews": [
+            "DEPQA-024"
+          ]
+        },
+        {
+          "entry_id": "SESSION-029",
+          "kind": "shared-contract",
+          "reason": "The cut-ID/retained-context contract and branch entry projection are prerequisites. An absent sentinel intentionally drops the old context tail while preserving durable history. Native retained_tail is an explicit adapter choice, not evidence of byte-compatible v3 storage.",
+          "reviews": [
+            "DEPQA-024"
+          ]
+        },
+        {
+          "entry_id": "SESSION-034",
+          "kind": "prerequisite",
+          "reason": "The cut-ID/retained-context contract and branch entry projection are prerequisites. An absent sentinel intentionally drops the old context tail while preserving durable history. Native retained_tail is an explicit adapter choice, not evidence of byte-compatible v3 storage.",
+          "reviews": [
+            "DEPQA-024"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-032",
+      "title": "Active goal and task-list reconstruction from durable custom state",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 110,
+      "size_max": 200,
+      "dependencies": [
+        "BLACK-039",
+        "SAFE-022"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-033",
+      "title": "Mode, plan and verifier reconstruction for compacted context",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 110,
+      "dependencies": [
+        "SAFE-003",
+        "SAFE-013",
+        "SAFE-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-034",
+      "title": "Latest subagent digest and resumable child references",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 95,
+      "size_max": 180,
+      "dependencies": [
+        "SUB-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SUB-016",
+          "kind": "prerequisite",
+          "reason": "The formatter needs the durable ice-subagent-v2-child record schema and latest-state/tombstone interpretation from SUB-016. Artifact identifiers are references described by SUB-028; formatting does not require the artifact store to read files, launch children or validate live ownership.",
+          "reviews": [
+            "DEPQA-025"
+          ]
+        },
+        {
+          "entry_id": "SUB-028",
+          "kind": "shared-contract",
+          "reason": "The formatter needs the durable ice-subagent-v2-child record schema and latest-state/tombstone interpretation from SUB-016. Artifact identifiers are references described by SUB-028; formatting does not require the artifact store to read files, launch children or validate live ownership.",
+          "reviews": [
+            "DEPQA-025"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-035",
+      "title": "Background-shell lifecycle reconstruction from branch evidence",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 160,
+      "size_max": 280,
+      "dependencies": [
+        "SESSION-025",
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-025",
+          "kind": "prerequisite",
+          "reason": "The consumer reconstructs state from producer task IDs, polling/status details, kill results and completion custom-message fields. It must preserve the restart warning: these branch records do not establish surviving processes or a persisted registry.",
+          "reviews": [
+            "DEPQA-026"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "The consumer reconstructs state from producer task IDs, polling/status details, kill results and completion custom-message fields. It must preserve the restart warning: these branch records do not establish surviving processes or a persisted registry.",
+          "reviews": [
+            "DEPQA-026"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-006",
+          "kind": "prerequisite",
+          "reason": "The consumer reconstructs state from producer task IDs, polling/status details, kill results and completion custom-message fields. It must preserve the restart warning: these branch records do not establish surviving processes or a persisted registry.",
+          "reviews": [
+            "DEPQA-026"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-008",
+          "kind": "prerequisite",
+          "reason": "The consumer reconstructs state from producer task IDs, polling/status details, kill results and completion custom-message fields. It must preserve the restart warning: these branch records do not establish surviving processes or a persisted registry.",
+          "reviews": [
+            "DEPQA-026"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-036",
+      "title": "MCP, web-search, fetched-URL and external-tool usage reconstruction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 110,
+      "size_max": 190,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "BLACK-037",
+      "title": "Session-scoped one-shot Cognee checkpoint recall consumption",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "BLACK-030",
+        "BLACK-039"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-051",
+          "kind": "shared-contract",
+          "reason": "Optional producer follows an explicit on-disk schema.",
+          "reviews": [
+            "DEPQA-027",
+            "coordinator-relationship-override"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-038",
+      "title": "Optional isolated model refinement with deterministic fallback",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 110,
+      "size_max": 190,
+      "dependencies": [
+        "AI-002",
+        "AI-003",
+        "AI-006",
+        "BLACK-002",
+        "BLACK-027",
+        "BLACK-030",
+        "BLACK-039"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AI-002",
+          "kind": "prerequisite",
+          "reason": "Model lookup and shared complete dispatch/options supply signal, fresh sessionId and cacheRetention=none. Per-provider cache-marker behavior is separate; a caller option is not a guarantee of external cache isolation. Deterministic fallback remains Blackhole-owned.",
+          "reviews": [
+            "DEPQA-028"
+          ]
+        },
+        {
+          "entry_id": "AI-003",
+          "kind": "prerequisite",
+          "reason": "Model lookup and shared complete dispatch/options supply signal, fresh sessionId and cacheRetention=none. Per-provider cache-marker behavior is separate; a caller option is not a guarantee of external cache isolation. Deterministic fallback remains Blackhole-owned.",
+          "reviews": [
+            "DEPQA-028"
+          ]
+        },
+        {
+          "entry_id": "AI-006",
+          "kind": "prerequisite",
+          "reason": "Model lookup and shared complete dispatch/options supply signal, fresh sessionId and cacheRetention=none. Per-provider cache-marker behavior is separate; a caller option is not a guarantee of external cache isolation. Deterministic fallback remains Blackhole-owned.",
+          "reviews": [
+            "DEPQA-028"
+          ]
+        },
+        {
+          "entry_id": "AI-024",
+          "kind": "shared-contract",
+          "reason": "Model lookup and shared complete dispatch/options supply signal, fresh sessionId and cacheRetention=none. Per-provider cache-marker behavior is separate; a caller option is not a guarantee of external cache isolation. Deterministic fallback remains Blackhole-owned.",
+          "reviews": [
+            "DEPQA-028"
+          ]
+        },
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-039",
+      "title": "Before-compaction engine override and full summary composition",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "BLACK-001",
+        "BLACK-002",
+        "BLACK-018",
+        "BLACK-026",
+        "BLACK-027",
+        "BLACK-031",
+        "BLACK-032",
+        "BLACK-033",
+        "BLACK-034",
+        "BLACK-035",
+        "BLACK-036",
+        "BLACK-037",
+        "BLACK-038",
+        "EXT-022",
+        "SESSION-013",
+        "SESSION-016",
+        "SESSION-017"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-033",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-034",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-035",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-022",
+          "kind": "prerequisite",
+          "reason": "The hook needs full preparation and ordered override/cancel reduction, followed by manual or automatic session-owned persistence/context replacement. The deterministic compiler does not need a second agent loop.",
+          "reviews": [
+            "DEPQA-029"
+          ]
+        },
+        {
+          "entry_id": "SESSION-013",
+          "kind": "prerequisite",
+          "reason": "The hook needs full preparation and ordered override/cancel reduction, followed by manual or automatic session-owned persistence/context replacement. The deterministic compiler does not need a second agent loop.",
+          "reviews": [
+            "DEPQA-029"
+          ]
+        },
+        {
+          "entry_id": "SESSION-016",
+          "kind": "prerequisite",
+          "reason": "The hook needs full preparation and ordered override/cancel reduction, followed by manual or automatic session-owned persistence/context replacement. The deterministic compiler does not need a second agent loop.",
+          "reviews": [
+            "DEPQA-029"
+          ]
+        },
+        {
+          "entry_id": "SESSION-017",
+          "kind": "prerequisite",
+          "reason": "The hook needs full preparation and ordered override/cancel reduction, followed by manual or automatic session-owned persistence/context replacement. The deterministic compiler does not need a second agent loop.",
+          "reviews": [
+            "DEPQA-029"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-040",
+      "title": "Context-only trimming of pre-compaction tool results",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 160,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-031"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BLACK-041",
+      "title": "Boundary-triggered pause/resume compaction and missed-request suppression",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 170,
+      "dependencies": [
+        "BLACK-002",
+        "BLACK-003",
+        "BLACK-039",
+        "EXT-019",
+        "SESSION-015",
+        "SESSION-017"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "BLACK-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "prerequisite",
+          "reason": "The context exposes compactAfterTurn; SESSION-015 owns boundary request consumption/pause-resume scheduling and SESSION-017 owns accepted automatic compaction and acknowledgement. Blackhole retains its missed-request suppression state.",
+          "reviews": [
+            "DEPQA-030"
+          ]
+        },
+        {
+          "entry_id": "SESSION-015",
+          "kind": "prerequisite",
+          "reason": "The context exposes compactAfterTurn; SESSION-015 owns boundary request consumption/pause-resume scheduling and SESSION-017 owns accepted automatic compaction and acknowledgement. Blackhole retains its missed-request suppression state.",
+          "reviews": [
+            "DEPQA-030"
+          ]
+        },
+        {
+          "entry_id": "SESSION-017",
+          "kind": "prerequisite",
+          "reason": "The context exposes compactAfterTurn; SESSION-015 owns boundary request consumption/pause-resume scheduling and SESSION-017 owns accepted automatic compaction and acknowledgement. Blackhole retains its missed-request suppression state.",
+          "reviews": [
+            "DEPQA-030"
+          ]
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/LICENSE",
+      "entry_ids": [
+        "BLACK-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/PROVENANCE.md",
+      "entry_ids": [
+        "BLACK-001",
+        "BLACK-002",
+        "BLACK-041"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts",
+      "entry_ids": [
+        "BLACK-001",
+        "BLACK-005",
+        "BLACK-006"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/package.json",
+      "entry_ids": [
+        "BLACK-001"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/brief.ts",
+      "entry_ids": [
+        "BLACK-013",
+        "BLACK-014",
+        "BLACK-015",
+        "BLACK-016",
+        "BLACK-017"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/build-sections.ts",
+      "entry_ids": [
+        "BLACK-018",
+        "BLACK-019",
+        "BLACK-020",
+        "BLACK-021",
+        "BLACK-022",
+        "BLACK-024",
+        "BLACK-025",
+        "BLACK-026"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts",
+      "entry_ids": [
+        "BLACK-037"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/content.ts",
+      "entry_ids": [
+        "BLACK-010",
+        "BLACK-011"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/filter-noise.ts",
+      "entry_ids": [
+        "BLACK-009"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/format.ts",
+      "entry_ids": [
+        "BLACK-026"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts",
+      "entry_ids": [
+        "BLACK-032",
+        "BLACK-033",
+        "BLACK-035",
+        "BLACK-036"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/normalize.ts",
+      "entry_ids": [
+        "BLACK-007"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/refine.ts",
+      "entry_ids": [
+        "BLACK-038"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/sanitize.ts",
+      "entry_ids": [
+        "BLACK-008"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/skill-collapse.ts",
+      "entry_ids": [
+        "BLACK-012"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.ts",
+      "entry_ids": [
+        "BLACK-034"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts",
+      "entry_ids": [
+        "BLACK-027",
+        "BLACK-028",
+        "BLACK-029",
+        "BLACK-030"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts",
+      "entry_ids": [
+        "BLACK-031"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/tool-args.ts",
+      "entry_ids": [
+        "BLACK-011",
+        "BLACK-015"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts",
+      "entry_ids": [
+        "BLACK-002",
+        "BLACK-003",
+        "BLACK-004"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/commits.ts",
+      "entry_ids": [
+        "BLACK-023"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/files.ts",
+      "entry_ids": [
+        "BLACK-022"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/goals.ts",
+      "entry_ids": [
+        "BLACK-024"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/preferences.ts",
+      "entry_ids": [
+        "BLACK-025"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts",
+      "entry_ids": [
+        "BLACK-039"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts",
+      "entry_ids": [
+        "BLACK-040"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts",
+      "entry_ids": [
+        "BLACK-041"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/sections.ts",
+      "entry_ids": [
+        "BLACK-026"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/ice-blackhole/src/types.ts",
+      "entry_ids": [
+        "BLACK-007",
+        "BLACK-022"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact algorithms and contracts are specified in the listed entries."
+    }
+  ],
+  "supplemental_ledger": [
+    {
+      "path": "user-extensions/ice-blackhole/LICENSE",
+      "lines": 21,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-001"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/LICENSE. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/PROVENANCE.md",
+      "lines": 23,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-001",
+        "BLACK-002",
+        "BLACK-041"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/PROVENANCE.md. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/index.ts",
+      "lines": 159,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-001",
+        "BLACK-005",
+        "BLACK-006"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/index.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/package.json",
+      "lines": 18,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-001"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/package.json. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/brief.ts",
+      "lines": 530,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-013",
+        "BLACK-014",
+        "BLACK-015",
+        "BLACK-016",
+        "BLACK-017"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/brief.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/build-sections.ts",
+      "lines": 162,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-018",
+        "BLACK-019",
+        "BLACK-020",
+        "BLACK-021",
+        "BLACK-022",
+        "BLACK-024",
+        "BLACK-025",
+        "BLACK-026"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy fully read; formatting-only difference confirmed by normalized syntax or full git diff against packages/coding-agent/examples/extensions/ice-blackhole/src/core/build-sections.ts."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/checkpoint-recall.ts",
+      "lines": 114,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-037"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/content.ts",
+      "lines": 134,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-010",
+        "BLACK-011"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/content.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/filter-noise.ts",
+      "lines": 47,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-009"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/filter-noise.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/format.ts",
+      "lines": 74,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-026"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/format.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/live-state.ts",
+      "lines": 388,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-032",
+        "BLACK-033",
+        "BLACK-035",
+        "BLACK-036"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy fully read; formatting-only difference confirmed by normalized syntax or full git diff against packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/normalize.ts",
+      "lines": 118,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-007"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/normalize.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/refine.ts",
+      "lines": 81,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-038"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/refine.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/sanitize.ts",
+      "lines": 5,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-008"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/sanitize.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/skill-collapse.ts",
+      "lines": 35,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-012"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/skill-collapse.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/subagents.ts",
+      "lines": 111,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-034"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/summarize.ts",
+      "lines": 303,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-027",
+        "BLACK-028",
+        "BLACK-029",
+        "BLACK-030"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy fully read; formatting-only difference confirmed by normalized syntax or full git diff against packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/tail.ts",
+      "lines": 87,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-031"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/tool-args.ts",
+      "lines": 19,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-011",
+        "BLACK-015"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/tool-args.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/core/unified-config.ts",
+      "lines": 157,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-002",
+        "BLACK-003",
+        "BLACK-004"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/extract/commits.ts",
+      "lines": 112,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-023"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/extract/commits.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/extract/files.ts",
+      "lines": 38,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-022"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/extract/files.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/extract/goals.ts",
+      "lines": 101,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-024"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/extract/goals.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/extract/preferences.ts",
+      "lines": 52,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-025"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/extract/preferences.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/hooks/before-compact.ts",
+      "lines": 111,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-039"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/hooks/trim-kept-tail.ts",
+      "lines": 83,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-040"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/om/compaction-trigger.ts",
+      "lines": 68,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-041"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/sections.ts",
+      "lines": 18,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-026"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/sections.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    },
+    {
+      "path": "user-extensions/ice-blackhole/src/types.ts",
+      "lines": 36,
+      "area": "blackhole",
+      "entry_ids": [
+        "BLACK-007",
+        "BLACK-022"
+      ],
+      "status": "mapped",
+      "notes": "Supplemental tracked runtime copy; byte-identical to fully read packages/coding-agent/examples/extensions/ice-blackhole/src/types.ts. SHA-256 equality recorded in evidence/blackhole-copies.json."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "slash-commands",
+      "name": "/blackhole",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:109",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-006",
+      "candidate_ids": [
+        "C000139"
+      ]
+    },
+    {
+      "category": "environment",
+      "name": "ICE_CODING_AGENT_DIR",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:40",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [
+        "C000141"
+      ]
+    },
+    {
+      "category": "environment",
+      "name": "ICE_BLACKHOLE_COMPACTION",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:91",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-003",
+      "candidate_ids": [
+        "C000143"
+      ]
+    },
+    {
+      "category": "environment",
+      "name": "ICE_BLACKHOLE_COMPACTION_ENGINE",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:95",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-003",
+      "candidate_ids": [
+        "C000144"
+      ]
+    },
+    {
+      "category": "environment",
+      "name": "ICE_BLACKHOLE_MID_RUN_COMPACTION",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:103",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-003",
+      "candidate_ids": [
+        "C000145"
+      ]
+    },
+    {
+      "category": "environment",
+      "name": "ICE_BLACKHOLE_COMPACT_AFTER_PERCENT",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:114",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-003",
+      "candidate_ids": [
+        "C000146"
+      ]
+    },
+    {
+      "category": "settings",
+      "name": "compaction",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:11",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "compactionEngine",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:12",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "midRunCompaction",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:13",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "tailBehavior",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:14",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "compactAfterPercent",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:15",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "memory",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:16",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "trimKeptToolResults",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:18",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "refine",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:20",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "refineModel",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:22",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": [],
+      "notes": "Exact top-level JSON key in ice-blackhole-config.json."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.compaction",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:17",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.compaction-engine",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:24",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.mid-run-compaction",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:31",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.threshold",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:38",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.tail-behavior",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:45",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.trim-kept-tool-results",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:52",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.refine",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:60",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "blackhole.memory",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:67",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": [],
+      "notes": "UI namespace blackhole followed by exact item ID; not a persisted dotted JSON key."
+    },
+    {
+      "category": "extension-api",
+      "name": "registerSettings namespace blackhole",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts:75",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-005",
+      "candidate_ids": []
+    },
+    {
+      "category": "extension-api",
+      "name": "Blackhole compactAfterTurn(mode)",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:43",
+      "rust_ref": "crates/ice-harness/src/agent_harness.rs:3867",
+      "status": "partial",
+      "entry_id": "BLACK-041",
+      "candidate_ids": [],
+      "supporting_references": {
+        "rust_ref": [
+          "rust:crates/ice-harness/src/agent_harness.rs:3867-3915"
+        ]
+      },
+      "reference_normalization": {
+        "rust_ref": {
+          "original": "crates/ice-harness/src/agent_harness.rs:3867-3915",
+          "method": "first source line in the single-anchor CSV field; complete references retained in supporting_references"
+        }
+      }
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/ice-blackhole/ice-blackhole-config.json",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:39",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-002",
+      "candidate_ids": []
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/ice-cognee/compaction-recall.json",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts:32",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-037",
+      "candidate_ids": []
+    },
+    {
+      "category": "hooks",
+      "name": "session_before_compact",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:25",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-039",
+      "candidate_ids": [
+        "C000149"
+      ]
+    },
+    {
+      "category": "hooks",
+      "name": "context",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts:75",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-040",
+      "candidate_ids": [
+        "C000150"
+      ]
+    },
+    {
+      "category": "hooks",
+      "name": "agent_start",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:49",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-041",
+      "candidate_ids": [
+        "C000151"
+      ]
+    },
+    {
+      "category": "hooks",
+      "name": "session_compact",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:54",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-041",
+      "candidate_ids": [
+        "C000152"
+      ]
+    },
+    {
+      "category": "hooks",
+      "name": "turn_end",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:58",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-041",
+      "candidate_ids": [
+        "C000153"
+      ]
+    },
+    {
+      "category": "session-types",
+      "name": "ice-goals-state",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts:11",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-032",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "ice-safe-verify-state",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts:12",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-033",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "bash_background_completed",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts:13",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-035",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "web-search-results",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts:14",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-036",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "ice-subagent-v2-child",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.ts:15",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-034",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "ice-cognee-recall",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts:8",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-031",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "compaction.details.engine=blackhole",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:99",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-039",
+      "candidate_ids": []
+    },
+    {
+      "category": "session-types",
+      "name": "compaction.firstKeptEntryId=__blackhole_minimal_tail__",
+      "ice_ref": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts:6",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "BLACK-031",
+      "candidate_ids": []
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000140",
+      "reason": "Filesystem target expression resolved to the exact config/checkpoint path in BLACK-037; not a separate user-addressable path. Source packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts:46."
+    },
+    {
+      "candidate_id": "C000142",
+      "reason": "Filesystem target expression resolved to the exact config/checkpoint path in BLACK-004; not a separate user-addressable path. Source packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:59."
+    },
+    {
+      "candidate_id": "C000147",
+      "reason": "Filesystem target expression resolved to the exact config/checkpoint path in BLACK-004; not a separate user-addressable path. Source packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:151."
+    },
+    {
+      "candidate_id": "C000148",
+      "reason": "Filesystem target expression resolved to the exact config/checkpoint path in BLACK-004; not a separate user-addressable path. Source packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:152."
+    }
+  ],
+  "claims": [
+    {
+      "qa_claim_id": "FPC-126",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        387,
+        389
+      ],
+      "claim": "Optional Blackhole derives from sting8k/ice-vcc; native compaction exists without Blackhole.",
+      "verdict": "qualified",
+      "finding": "Repository package/license/provenance support the adaptation attribution and optional-extension packaging. Native LLM compaction is real; the absent feature is Blackhole's deterministic compiler and hooks. No upstream network or external package availability was checked.",
+      "evidence": [
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/index.ts:1-159",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/package.json:1-18",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/PROVENANCE.md:1-23",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/LICENSE:1-21",
+        "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:49-81",
+        "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:1-164",
+        "rust:crates/ice-plugin-sdk/src/lib.rs:575-598",
+        "rust:crates/ice-extensions/src/actions.rs:381-499",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:1-111",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247",
+        "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313",
+        "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363",
+        "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:112-127",
+        "rust:crates/ice-harness/src/compaction/compaction.rs:125-147",
+        "rust:crates/ice-extensions/src/translate.rs:934-942"
+      ],
+      "entry_ids": [
+        "BLACK-001",
+        "BLACK-039"
+      ]
+    },
+    {
+      "qa_claim_id": "FPC-127",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        391,
+        395
+      ],
+      "claim": "Blackhole replaces LLM summary generation with normalization, filtering and deterministic request/finding/file/commit/goal/preference sections.",
+      "verdict": "qualified",
+      "finding": "The deterministic compiler and named sections are covered individually. The full hook also gates engine/mode, rebuilds state, optionally refines and delegates final persistence to the host, so 'deterministic' describes the default compiler rather than every configured path.",
+      "evidence": [
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:1-111",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247",
+        "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313",
+        "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363",
+        "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:112-127",
+        "rust:crates/ice-harness/src/compaction/compaction.rs:125-147",
+        "rust:crates/ice-extensions/src/translate.rs:934-942"
+      ],
+      "entry_ids": [
+        "BLACK-007",
+        "BLACK-008",
+        "BLACK-009",
+        "BLACK-018",
+        "BLACK-019",
+        "BLACK-022",
+        "BLACK-023",
+        "BLACK-024",
+        "BLACK-025",
+        "BLACK-026",
+        "BLACK-039"
+      ]
+    },
+    {
+      "qa_claim_id": "FPC-128",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        396,
+        398
+      ],
+      "claim": "Blackhole rebuilds volatile goal/mode/plan/subagent/shell/MCP state from durable entries instead of merging previous summaries.",
+      "verdict": "supported",
+      "finding": "Supported as recorded-branch projections. These summaries do not poll live processes or confer runtime authority; subagent selection follows its recorded-state ordering.",
+      "evidence": [
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:1-111",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247",
+        "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313",
+        "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363",
+        "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:112-127",
+        "rust:crates/ice-harness/src/compaction/compaction.rs:125-147",
+        "rust:crates/ice-extensions/src/translate.rs:934-942"
+      ],
+      "entry_ids": [
+        "BLACK-032",
+        "BLACK-033",
+        "BLACK-034",
+        "BLACK-035",
+        "BLACK-036",
+        "BLACK-039"
+      ]
+    },
+    {
+      "qa_claim_id": "FPC-129",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        399,
+        399
+      ],
+      "claim": "Blackhole skill-collapse collapses skill bodies.",
+      "verdict": "supported",
+      "finding": "Both line and raw-text collapse helpers are specified, including exact tag syntax, malformed closing behavior and the line helper's per-name deduplication.",
+      "evidence": [
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/skill-collapse.ts:1-35",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/sections.test.ts:1-205",
+        "rust:crates/ice-harness/src/compaction/compaction.rs:620-683",
+        "rust:crates/ice-harness/src/compaction/tokens.rs:137-198"
+      ],
+      "entry_ids": [
+        "BLACK-012"
+      ]
+    },
+    {
+      "qa_claim_id": "FPC-130",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        400,
+        400
+      ],
+      "claim": "Blackhole trim-kept-tail trims the kept tail.",
+      "verdict": "qualified",
+      "finding": "The actual helper rewrites old tool-result text in model context after a compaction timestamp, with a shared 6000 UTF-16-unit text budget. It preserves full session records and nontext blocks; it is not general transcript deletion.",
+      "evidence": [
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts:1-83",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.test.ts:1-85",
+        "rust:crates/ice-harness/src/compaction/tokens.rs:117-135",
+        "rust:crates/ice-agent/src/hooks.rs:29-34"
+      ],
+      "entry_ids": [
+        "BLACK-040"
+      ]
+    },
+    {
+      "qa_claim_id": "FPC-131",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        401,
+        401
+      ],
+      "claim": "Blackhole consumes Cognee's one-shot checkpoint recall.",
+      "verdict": "qualified",
+      "finding": "The session-bound, expiry-checked handoff is consumed separately from summary/refinement. Matching valid files are deleted before rendering, mismatch is retained, and the exact size/claim limitations are recorded.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:139-195",
+        "ice:packages/coding-agent/src/ice-cognee.ts:2288-2504"
+      ],
+      "entry_ids": [
+        "BLACK-037",
+        "COG-051"
+      ]
+    },
+    {
+      "qa_claim_id": "FPC-132",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        402,
+        403
+      ],
+      "claim": "Blackhole requests boundary compaction and stops re-requesting after a miss.",
+      "verdict": "supported",
+      "finding": "Supported with request/acknowledgement/suspension state, reset rules and pause/resume semantics. Existing native automatic mid-run compaction remains credited separately.",
+      "evidence": [
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:1-68",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:133-145",
+        "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:128-164",
+        "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:83-209",
+        "rust:crates/ice-harness/src/agent_harness.rs:3867-3915",
+        "rust:crates/ice-agent/src/hooks.rs:59-64",
+        "ice:packages/coding-agent/src/core/agent-session.ts:2167-2407",
+        "ice:packages/coding-agent/test/suite/agent-session-compaction-lock.test.ts:1-386",
+        "rust:crates/ice-harness/src/agent_harness.rs:2239-2281",
+        "rust:crates/ice-harness/src/agent_harness.rs:4283-4442",
+        "ice:packages/coding-agent/src/core/agent-session.ts:2408-2565",
+        "ice:packages/coding-agent/src/core/compaction/compaction.ts:135-174",
+        "rust:crates/ice-harness/src/agent_harness.rs:3547-3585",
+        "rust:crates/ice-harness/src/agent_harness.rs:3697-3785",
+        "rust:crates/ice-harness/src/agent_harness.rs:3860-3970"
+      ],
+      "entry_ids": [
+        "BLACK-041",
+        "SESSION-015"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        410,
+        412
+      ],
+      "claim": "Mid-run compaction is missing in Rust; compaction exists mainly as manual flow.",
+      "verdict": "corrected",
+      "finding": "Rust installs an AfterToolResults closure, checks threshold, compacts/persists and replaces context before the next model step. Blackhole-specific percent settings, pause/resume request protocol and suppression state remain absent.",
+      "evidence": [
+        "rust:crates/ice-harness/src/agent_harness.rs:3867-3915",
+        "rust:crates/ice-harness/src/agent_harness.rs:3957-3969",
+        "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:21-68"
+      ],
+      "entry_ids": [
+        "BLACK-041"
+      ],
+      "qa_claim_id": "BLACK-existing-mid-run",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      }
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/LICENSE",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/PROVENANCE.md",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/index.ts",
+      "ranges": [
+        [
+          1,
+          160
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/package.json",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/brief.ts",
+      "ranges": [
+        [
+          1,
+          531
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/build-sections.ts",
+      "ranges": [
+        [
+          1,
+          160
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts",
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/content.ts",
+      "ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/filter-noise.ts",
+      "ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/format.ts",
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts",
+      "ranges": [
+        [
+          1,
+          390
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/normalize.ts",
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/refine.ts",
+      "ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/sanitize.ts",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/skill-collapse.ts",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.ts",
+      "ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts",
+      "ranges": [
+        [
+          1,
+          308
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts",
+      "ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/tool-args.ts",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/extract/commits.ts",
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/extract/files.ts",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/extract/goals.ts",
+      "ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/extract/preferences.ts",
+      "ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts",
+      "ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts",
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts",
+      "ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/sections.ts",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/types.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "notes": "Complete source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.test.ts",
+      "ranges": [
+        [
+          1,
+          188
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.test.ts",
+      "ranges": [
+        [
+          1,
+          212
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/sections.test.ts",
+      "ranges": [
+        [
+          1,
+          205
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.test.ts",
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.test.ts",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.test.ts",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.test.ts",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts",
+      "ranges": [
+        [
+          1,
+          164
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts",
+      "ranges": [
+        [
+          1,
+          578
+        ]
+      ]
+    },
+    {
+      "path": "ice:user-extensions/ice-blackhole/src/core/build-sections.ts",
+      "ranges": [
+        [
+          1,
+          163
+        ]
+      ],
+      "notes": "Complete read and formatting-equivalence verification."
+    },
+    {
+      "path": "ice:user-extensions/ice-blackhole/src/core/live-state.ts",
+      "ranges": [
+        [
+          1,
+          389
+        ]
+      ],
+      "notes": "Complete read and formatting-equivalence verification."
+    },
+    {
+      "path": "ice:user-extensions/ice-blackhole/src/core/summarize.ts",
+      "ranges": [
+        [
+          1,
+          304
+        ]
+      ],
+      "notes": "Complete read and formatting-equivalence verification."
+    }
+  ],
+  "rust_only": [],
+  "open_questions": [
+    {
+      "id": "Q-BLACK-01",
+      "question": "Should the Rust port preserve the current optional/unused memory setting and minimal-tail default, or revise the stale provenance/UI contract?",
+      "entries": [
+        "BLACK-001",
+        "BLACK-002",
+        "BLACK-005"
+      ]
+    },
+    {
+      "id": "Q-BLACK-02",
+      "question": "Should checkpoint consumption be hardened to atomic claim, validated top-level JSON and a true whole-section budget? Current TS is one-shot by deletion but not race-safe, and the notice sits outside the 4000-unit budget.",
+      "entries": [
+        "BLACK-037"
+      ]
+    },
+    {
+      "id": "Q-BLACK-03",
+      "question": "Should old model-inferred State Of Work be explicitly stripped during re-compaction and should whitespace-prefixed forged headers be neutralized? Current source does neither comprehensively.",
+      "entries": [
+        "BLACK-030",
+        "BLACK-038"
+      ]
+    },
+    {
+      "id": "Q-BLACK-04",
+      "question": "For cross-language fidelity, which Unicode word segmentation and UTF-16 clipping behavior is authoritative when Rust Unicode/ICU output differs?",
+      "entries": [
+        "BLACK-010",
+        "BLACK-013",
+        "BLACK-026"
+      ]
+    }
+  ],
+  "unverified": [],
+  "dependency_requests": [],
+  "additional_audit_behavior_claims": [
+    {
+      "original_claim": "tailBehavior supports ice-default/minimal with kept-tail and recall-noise handling.",
+      "reason": "tailBehavior configuration/default/sentinel was not a substantive first-pass claim at394. Keep BLACK-002/031 as additional audited behavior; remove this record from first-pass claim count.",
+      "entry_ids": [
+        "BLACK-002",
+        "BLACK-031"
+      ]
+    },
+    {
+      "original_claim": "Refinement is optional, model-routed, bounded and falls back to deterministic text.",
+      "reason": "Optional refinement was not described at396–397; those lines are the live-state paragraph. Keep BLACK-038 as additional audited behavior, without a fabricated first-pass claim.",
+      "entry_ids": [
+        "BLACK-038"
+      ]
+    },
+    {
+      "original_claim": "Config at agentDir/ice-blackhole with enum/percent/refine/memory settings.",
+      "reason": "Configuration schema/write behavior was not claimed at399–400; those lines concern skill collapse and kept-tail trimming. Keep BLACK-002/003/004 as additional audit entries.",
+      "entry_ids": [
+        "BLACK-002",
+        "BLACK-003",
+        "BLACK-004"
+      ]
+    },
+    {
+      "original_claim": "registerSettings and /blackhole provide status/percent/resume/pause/off.",
+      "reason": "Settings/slash command parser was not claimed at401–403; those lines concern recall and boundary triggers. Keep BLACK-005/006 as additional audit entries. Actual trigger claim maps to FPC-132.",
+      "entry_ids": [
+        "BLACK-005",
+        "BLACK-006"
+      ]
+    }
+  ],
+  "dependency_request_history": [
+    {
+      "entry_id": "BLACK-005",
+      "area": "extensions",
+      "capability": "namespaced registerSettings descriptors/change callbacks"
+    },
+    {
+      "entry_id": "BLACK-026",
+      "area": "tui",
+      "capability": "wrapTextWithAnsi display-width and continuation behavior"
+    },
+    {
+      "entry_id": "BLACK-031",
+      "area": "session",
+      "capability": "compaction cut-ID/retained-tail override and durable context projection"
+    },
+    {
+      "entry_id": "BLACK-034",
+      "area": "subagents",
+      "capability": "ice-subagent-v2-child durable records and artifact schemas"
+    },
+    {
+      "entry_id": "BLACK-035",
+      "area": "tools",
+      "capability": "background Bash IDs, polling result shapes, completion custom messages"
+    },
+    {
+      "entry_id": "BLACK-037",
+      "area": "cognee",
+      "capability": "session-scoped compaction-recall.json producer"
+    },
+    {
+      "entry_id": "BLACK-038",
+      "area": "ai",
+      "capability": "complete/model registry/cancellation/no-cache session isolation"
+    },
+    {
+      "entry_id": "BLACK-039",
+      "area": "extensions",
+      "capability": "session_before_compact preparation and override result"
+    },
+    {
+      "entry_id": "BLACK-041",
+      "area": "session",
+      "capability": "compactAfterTurn pause/resume scheduling and session_compact acknowledgement"
+    }
+  ],
+  "dependency_resolutions": [
+    {
+      "entry_id": "BLACK-005",
+      "area": "extensions",
+      "capability": "namespaced registerSettings descriptors/change callbacks",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-016"
+      ],
+      "related_entry_ids": [
+        "TUI-025"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-022",
+      "rationale": "Blackhole registers ordered named settings and callbacks through EXT-016. TUI-025 is the presentation consumer. Blackhole retains responsibility for file values and writes.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-026",
+      "area": "tui",
+      "capability": "wrapTextWithAnsi display-width and continuation behavior",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "TUI-202"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-023",
+      "rationale": "The pure compiler calls wrapTextWithAnsi and requires its display-width, word/grapheme and ANSI continuation semantics. TUI-202 depends on the underlying width primitive TUI-201; no interactive controller is required.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-031",
+      "area": "session",
+      "capability": "compaction cut-ID/retained-tail override and durable context projection",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-013",
+        "SESSION-034"
+      ],
+      "related_entry_ids": [
+        "SESSION-029"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-024",
+      "rationale": "The cut-ID/retained-context contract and branch entry projection are prerequisites. An absent sentinel intentionally drops the old context tail while preserving durable history. Native retained_tail is an explicit adapter choice, not evidence of byte-compatible v3 storage.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-034",
+      "area": "subagents",
+      "capability": "ice-subagent-v2-child durable records and artifact schemas",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SUB-016"
+      ],
+      "related_entry_ids": [
+        "SUB-028"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-025",
+      "rationale": "The formatter needs the durable ice-subagent-v2-child record schema and latest-state/tombstone interpretation from SUB-016. Artifact identifiers are references described by SUB-028; formatting does not require the artifact store to read files, launch children or validate live ownership.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-035",
+      "area": "tools",
+      "capability": "background Bash IDs, polling result shapes, completion custom messages",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008",
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-026",
+      "rationale": "The consumer reconstructs state from producer task IDs, polling/status details, kill results and completion custom-message fields. It must preserve the restart warning: these branch records do not establish surviving processes or a persisted registry.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-037",
+      "area": "cognee",
+      "capability": "session-scoped compaction-recall.json producer",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "COG-051"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-027",
+      "rationale": "This optional file consumer can operate on its explicit documented JSON contract without requiring Cognee to be installed. Link COG-051 as the producer/shared handoff contract; do not add a hard reverse edge to an already mutually referenced optional integration.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-038",
+      "area": "ai",
+      "capability": "complete/model registry/cancellation/no-cache session isolation",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AI-002",
+        "AI-003",
+        "AI-006"
+      ],
+      "related_entry_ids": [
+        "AI-024"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-028",
+      "rationale": "Model lookup and shared complete dispatch/options supply signal, fresh sessionId and cacheRetention=none. Per-provider cache-marker behavior is separate; a caller option is not a guarantee of external cache isolation. Deterministic fallback remains Blackhole-owned.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-039",
+      "area": "extensions",
+      "capability": "session_before_compact preparation and override result",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-022",
+        "SESSION-013",
+        "SESSION-016",
+        "SESSION-017"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-029",
+      "rationale": "The hook needs full preparation and ordered override/cancel reduction, followed by manual or automatic session-owned persistence/context replacement. The deterministic compiler does not need a second agent loop.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "BLACK-041",
+      "area": "session",
+      "capability": "compactAfterTurn pause/resume scheduling and session_compact acknowledgement",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-019",
+        "SESSION-015",
+        "SESSION-017"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-030",
+      "rationale": "The context exposes compactAfterTurn; SESSION-015 owns boundary request consumption/pause-resume scheduling and SESSION-017 owns accepted automatic compaction and acknowledgement. Blackhole retains its missed-request suppression state.",
+      "previous_confirmed_entry_ids": []
+    }
+  ],
+  "source_evidence_coordinate_system": "Historical read/provenance records retain ff9270f coordinates and hashes; current rust: comparison citations and surfaces are remapped to 1891337. Canonical read-coverage.json separately records current source identity and exact transferred credit.",
+  "draft_complete": true,
+  "published": true,
+  "accepted_phase": "active-source-verified"
+}

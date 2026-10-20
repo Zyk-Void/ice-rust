@@ -1,0 +1,1265 @@
+{
+  "area": "misc",
+  "fragment": "evals",
+  "owner": "audit_tools",
+  "phase": "complete immutable worker handoff; coordinator owns integration",
+  "source_identities": {
+    "manifest": "resume-source-identities-2026-10-19T222055Z.json",
+    "ice_root": "/home/mewtwo/Zks/ice",
+    "ice_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust_root": "/home/mewtwo/Zks/ice-rust",
+    "rust_revision": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "method": "Read-only ConnectMe source/test-body inspection and local Git hash verification only. No tests/models/applications, network, installs, private state or reviewed command execution.",
+  "files": [
+    {
+      "path": "ice:packages/evals/README.md",
+      "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+      "total_lines": 154,
+      "ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/package.json",
+      "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/tsconfig.json",
+      "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+      "total_lines": 11,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/vitest.config.ts",
+      "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/vitest.test.config.ts",
+      "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+      "total_lines": 15,
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+      "total_lines": 98,
+      "ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+      "total_lines": 260,
+      "ranges": [
+        [
+          1,
+          260
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+      "total_lines": 141,
+      "ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/smoke.eval.ts",
+      "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+      "total_lines": 18,
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+      "total_lines": 113,
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "total_lines": 194,
+      "ranges": [
+        [
+          1,
+          194
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "total_lines": 439,
+      "ranges": [
+        [
+          1,
+          439
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+      "total_lines": 114,
+      "ranges": [
+        [
+          1,
+          114
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+      "total_lines": 9,
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/ice-harness.test.ts",
+      "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+      "total_lines": 35,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/artifacts.test.ts",
+      "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+      "total_lines": 104,
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/harness-table.test.ts",
+      "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/summary.test.ts",
+      "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+      "total_lines": 233,
+      "ranges": [
+        [
+          1,
+          233
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:vitest.base.ts",
+      "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+      "total_lines": 29,
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:package.json",
+      "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+      "total_lines": 91,
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:tsconfig.json",
+      "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+      "total_lines": 39,
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/Cargo.toml",
+      "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+      "total_lines": 43,
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+      "total_lines": 4086,
+      "ranges": [
+        [
+          1,
+          469
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/in_memory.rs",
+      "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+      "total_lines": 898,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded"
+    },
+    {
+      "path": "ice:tsconfig.base.json",
+      "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+      "total_lines": 26,
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:Cargo.toml",
+      "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+      "total_lines": 89,
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "total_lines": 5844,
+      "ranges": [
+        [
+          1,
+          135
+        ],
+        [
+          650,
+          820
+        ],
+        [
+          1578,
+          1592
+        ],
+        [
+          2011,
+          2053
+        ],
+        [
+          3400,
+          3510
+        ],
+        [
+          4510,
+          4550
+        ],
+        [
+          4625,
+          4715
+        ],
+        [
+          4870,
+          4930
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded"
+    },
+    {
+      "path": "ice:packages/ai/src/utils/text.ts",
+      "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+      "total_lines": 13,
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "Direct source-read by existing read-only helper; no execution",
+      "baseline": {
+        "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/session/jsonl/mod.rs",
+      "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+      "total_lines": 27,
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+        "matched": true,
+        "basis": "matches frozen coordinator manifest hash recorded by SESSION full source review"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    }
+  ],
+  "baseline_verification": [
+    {
+      "path": "ice:packages/evals/README.md",
+      "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+      "total_lines": 154,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/package.json",
+      "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+      "total_lines": 21,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/tsconfig.json",
+      "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+      "total_lines": 11,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/vitest.config.ts",
+      "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+      "total_lines": 21,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/vitest.test.config.ts",
+      "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+      "total_lines": 15,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+      "total_lines": 98,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+      "total_lines": 260,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+      "total_lines": 141,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/smoke.eval.ts",
+      "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+      "total_lines": 18,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+      "total_lines": 113,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "total_lines": 194,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "total_lines": 439,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+      "total_lines": 114,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+      "total_lines": 9,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/evals/test/ice-harness.test.ts",
+      "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+      "total_lines": 35,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/artifacts.test.ts",
+      "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+      "total_lines": 104,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/harness-table.test.ts",
+      "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+      "total_lines": 95,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/summary.test.ts",
+      "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+      "total_lines": 233,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:vitest.base.ts",
+      "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+      "total_lines": 29,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:package.json",
+      "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+      "total_lines": 91,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "ice:tsconfig.json",
+      "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+      "total_lines": 39,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "rust:crates/ice-harness/Cargo.toml",
+      "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+      "total_lines": 43,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+      "total_lines": 33,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+      "total_lines": 4086,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/in_memory.rs",
+      "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+      "total_lines": 898,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:tsconfig.base.json",
+      "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+      "total_lines": 26,
+      "matched": true,
+      "basis": "clean tracked frozen Git revision; not original manifest"
+    },
+    {
+      "path": "rust:Cargo.toml",
+      "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+      "total_lines": 89,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "total_lines": 5844,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "ice:packages/ai/src/utils/text.ts",
+      "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+      "total_lines": 13,
+      "matched": true,
+      "basis": "coordinator source manifest"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/session/jsonl/mod.rs",
+      "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+      "total_lines": 27,
+      "matched": true,
+      "basis": "matches frozen coordinator manifest hash recorded by SESSION full source review"
+    }
+  ],
+  "assigned_ledger_files": 8,
+  "owned_candidates": {
+    "path": "docs/ice-gap/evidence/candidates-misc.json",
+    "sha256": "98285114bdd68e7a9d651c022ecf50cb63c657dcedd3f6b3de8650217f99a978",
+    "candidates": [
+      {
+        "candidate_id": "C002103",
+        "category": "paths",
+        "name": ".ice",
+        "path": "packages/evals/src/extensions.eval.ts",
+        "line": 24,
+        "end_line": 24,
+        "area": "misc",
+        "kind": "ice-path-literal",
+        "detail": "",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002104",
+        "category": "paths",
+        "name": "extensionPath",
+        "path": "packages/evals/src/extensions.eval.ts",
+        "line": 25,
+        "end_line": 25,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "readFileSync",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002105",
+        "category": "paths",
+        "name": "cwd",
+        "path": "packages/evals/src/ice-harness.ts",
+        "line": 130,
+        "end_line": 130,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "mkdir",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002106",
+        "category": "paths",
+        "name": "agentDir",
+        "path": "packages/evals/src/ice-harness.ts",
+        "line": 130,
+        "end_line": 130,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "mkdir",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002107",
+        "category": "paths",
+        "name": "sessionPath",
+        "path": "packages/evals/src/ice-harness.ts",
+        "line": 217,
+        "end_line": 217,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "readFile",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002108",
+        "category": "paths",
+        "name": "root",
+        "path": "packages/evals/src/ice-harness.ts",
+        "line": 229,
+        "end_line": 229,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "rm",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002109",
+        "category": "environment",
+        "name": "ICE_PROVIDER",
+        "path": "packages/evals/src/smoke.eval.ts",
+        "line": 13,
+        "end_line": 13,
+        "area": "misc",
+        "kind": "direct-env-read",
+        "detail": "",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002110",
+        "category": "environment",
+        "name": "ICE_MODEL",
+        "path": "packages/evals/src/smoke.eval.ts",
+        "line": 14,
+        "end_line": 14,
+        "area": "misc",
+        "kind": "direct-env-read",
+        "detail": "",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002111",
+        "category": "paths",
+        "name": "directory",
+        "path": "packages/evals/src/vitest-evals/artifacts.ts",
+        "line": 105,
+        "end_line": 105,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "mkdir",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002112",
+        "category": "paths",
+        "name": "path",
+        "path": "packages/evals/src/vitest-evals/artifacts.ts",
+        "line": 107,
+        "end_line": 107,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "writeFile",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002113",
+        "category": "environment",
+        "name": "ICE_EVAL_ARTIFACT_DIR",
+        "path": "packages/evals/src/vitest-evals/reporter.ts",
+        "line": 15,
+        "end_line": 15,
+        "area": "misc",
+        "kind": "direct-env-read",
+        "detail": "",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002114",
+        "category": "paths",
+        "name": "artifactDirectory",
+        "path": "packages/evals/src/vitest-evals/reporter.ts",
+        "line": 45,
+        "end_line": 45,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "mkdir",
+        "rust_name_candidates": []
+      },
+      {
+        "candidate_id": "C002115",
+        "category": "paths",
+        "name": "join(artifactDirectory, \"runs.jsonl\")",
+        "path": "packages/evals/src/vitest-evals/reporter.ts",
+        "line": 46,
+        "end_line": 50,
+        "area": "misc",
+        "kind": "filesystem-target-expression",
+        "detail": "appendFile",
+        "rust_name_candidates": []
+      }
+    ]
+  },
+  "native_test_scope": {
+    "path": "crates/ice-harness/tests/harness_run_e2e.rs",
+    "read_ranges": [
+      [
+        1,
+        469
+      ]
+    ],
+    "complete_relevant_bodies": [
+      "harness_with and harness_with_options 51–128",
+      "retryable_provider_failure_emits_retry_progress_and_recovers 130–176",
+      "record_runtime_events 178–203",
+      "full_run_with_write_tool_call_completes_and_persists 205–406",
+      "run_with_no_tool_calls_completes_in_single_turn 408–454"
+    ],
+    "not_claimed": "Remaining unrelated hook/crash/recovery/resume tests after469 are not claimed fully read by this fragment. Coordinator explicitly approved this bounded eval-equivalent comparison."
+  },
+  "reused_source_credit": [
+    {
+      "source_review": "docs/ice-gap/evidence/session-source-review.json",
+      "source_review_sha256": "9fae2a6d3cf139aa6e8f01f88b4419ef2f46f20e84d3bb68ea9ef7ce4a50c667",
+      "method": "Existing worker full-body read credit; not this worker's independent full read. The native JSONL module export facade was also read directly.",
+      "files": [
+        {
+          "repo": "rust",
+          "path": "crates/ice-harness/src/session/jsonl/codec.rs",
+          "total": 612,
+          "sha256": "1b71390fa7ce534c8192a008cc93875102a68c9feef9983bcec9cc9853a1a298",
+          "baseline": "1b71390fa7ce534c8192a008cc93875102a68c9feef9983bcec9cc9853a1a298",
+          "baseline_matched": true,
+          "ranges": [
+            [
+              1,
+              612
+            ]
+          ],
+          "fully_read": true
+        },
+        {
+          "repo": "rust",
+          "path": "crates/ice-harness/src/session/jsonl/errors.rs",
+          "total": 74,
+          "sha256": "d007e2d2e0605ff54dd31128b86f488b3929354dfebc029e4b45850540ff3b81",
+          "baseline": "d007e2d2e0605ff54dd31128b86f488b3929354dfebc029e4b45850540ff3b81",
+          "baseline_matched": true,
+          "ranges": [
+            [
+              1,
+              74
+            ]
+          ],
+          "fully_read": true
+        },
+        {
+          "repo": "rust",
+          "path": "crates/ice-harness/src/session/jsonl/mod.rs",
+          "total": 27,
+          "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+          "baseline": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+          "baseline_matched": true,
+          "ranges": [
+            [
+              1,
+              27
+            ]
+          ],
+          "fully_read": true
+        },
+        {
+          "repo": "rust",
+          "path": "crates/ice-harness/src/session/jsonl/repo.rs",
+          "total": 1105,
+          "sha256": "6b3a08cc251d3cc2471f2bb06773fffef3e3c447c1f732772efc56ca36c92dda",
+          "baseline": "6b3a08cc251d3cc2471f2bb06773fffef3e3c447c1f732772efc56ca36c92dda",
+          "baseline_matched": true,
+          "ranges": [
+            [
+              1,
+              1105
+            ]
+          ],
+          "fully_read": true
+        },
+        {
+          "repo": "rust",
+          "path": "crates/ice-harness/src/session/jsonl/storage.rs",
+          "total": 931,
+          "sha256": "29553513222ea80e8bfe8a9519b03e3113f93fa7479ac3e2a808bb5f14df7abb",
+          "baseline": "29553513222ea80e8bfe8a9519b03e3113f93fa7479ac3e2a808bb5f14df7abb",
+          "baseline_matched": true,
+          "ranges": [
+            [
+              1,
+              931
+            ]
+          ],
+          "fully_read": true
+        },
+        {
+          "repo": "rust",
+          "path": "crates/ice-harness/src/session/jsonl/types.rs",
+          "total": 152,
+          "sha256": "3ae9a894a6ffb80ed4f5354f82a5f5faf0fc350f2227764f7b77d07e60cf0b92",
+          "baseline": "3ae9a894a6ffb80ed4f5354f82a5f5faf0fc350f2227764f7b77d07e60cf0b92",
+          "baseline_matched": true,
+          "ranges": [
+            [
+              1,
+              152
+            ]
+          ],
+          "fully_read": true
+        }
+      ]
+    }
+  ],
+  "retrieval_limits": [
+    "ConnectMe read_many batches kept at or below20 and all returned filenames matched requested filenames on successful batches.",
+    "Two oversized range batches failed before returning any source; no coverage was credited. Read-only existing cli-packaging-supplement-read.mjs then retrieved the bounded agent_harness.rs ranges.",
+    "One combined textual output truncated at the model output budget; the stored complete result was re-emitted for summary.test.ts198–233 and root configuration files before full coverage was credited."
+  ],
+  "verification": {
+    "application_tests_executed": false,
+    "model_runs_executed": false,
+    "source_drift": 0,
+    "source_scope": "23 TypeScript files fully read (8 assigned source,4 direct suites,11 supporting/shared helpers/docs/config);4 native manifests/facades fully read and3 native runtime/test files bounded. Reused SESSION JSONL module credit is explicit.",
+    "worker_qa": "misc-evals-qa.json",
+    "worker_qa_passed": true
+  },
+  "summary": {
+    "entries": 9,
+    "assigned_ledger_files": 8,
+    "fully_read_ts_files": 23,
+    "direct_ts_suites": 4,
+    "builtin_model_eval_files": 2,
+    "direct_native_files": 7,
+    "fully_read_native_files": 4,
+    "partial_native_files": 3,
+    "original_candidates": 13,
+    "surfaces": 53
+  },
+  "search_evidence": [
+    {
+      "workspace": "rust",
+      "scope": "crates",
+      "query": "(evalHarness|vitest-evals|ICE_EVAL_|createIceCodingAgentHarness|eval[-_ ]?(suite|run|report)|pass[_-]?rate|judge[_-]?score)",
+      "matches": 0,
+      "truncated": false,
+      "basis": "Bounded native absence evidence paired with full workspace/harness manifests and relevant actual native construction/run source."
+    },
+    {
+      "workspace": "rust",
+      "scope": "crates",
+      "file_glob": "**/*eval*",
+      "matches": 0,
+      "truncated": false,
+      "basis": "Name inventory only, not sufficient alone for absence."
+    },
+    {
+      "workspace": "ice",
+      "scope": "packages",
+      "query": "(ice-harness|vitest-evals/(artifacts|harness-table|summary|reporter|setup)|run-evals)",
+      "matches": [
+        {
+          "path": "packages/evals/vitest.config.ts",
+          "line": 13,
+          "text": "\t\t\tsetupFiles: [\"./src/vitest-evals/setup.ts\"],",
+          "context": "13: \t\t\tsetupFiles: [\"./src/vitest-evals/setup.ts\"],\n14: \t\t\treporters: [\"vitest-evals/reporter\", \"./src/vitest-evals/reporter.ts\"],"
+        },
+        {
+          "path": "packages/evals/vitest.config.ts",
+          "line": 14,
+          "text": "\t\t\treporters: [\"vitest-evals/reporter\", \"./src/vitest-evals/reporter.ts\"],",
+          "context": "13: \t\t\tsetupFiles: [\"./src/vitest-evals/setup.ts\"],\n14: \t\t\treporters: [\"vitest-evals/reporter\", \"./src/vitest-evals/reporter.ts\"],"
+        },
+        {
+          "path": "packages/evals/test/ice-harness.test.ts",
+          "line": 2,
+          "text": "import { resolveModelSelection } from \"../src/ice-harness.ts\";",
+          "context": "2: import { resolveModelSelection } from \"../src/ice-harness.ts\";"
+        },
+        {
+          "path": "packages/evals/test/vitest-evals/summary.test.ts",
+          "line": 7,
+          "text": "} from \"../../src/vitest-evals/summary.ts\";",
+          "context": "7: } from \"../../src/vitest-evals/summary.ts\";"
+        },
+        {
+          "path": "packages/evals/test/vitest-evals/harness-table.test.ts",
+          "line": 8,
+          "text": "} from \"../../src/vitest-evals/harness-table.ts\";",
+          "context": "8: } from \"../../src/vitest-evals/harness-table.ts\";"
+        },
+        {
+          "path": "packages/evals/test/vitest-evals/artifacts.test.ts",
+          "line": 9,
+          "text": "} from \"../../src/vitest-evals/artifacts.ts\";",
+          "context": "9: } from \"../../src/vitest-evals/artifacts.ts\";"
+        },
+        {
+          "path": "packages/evals/src/ice-harness.ts",
+          "line": 26,
+          "text": "import { ICE_SESSION_SNAPSHOT_ARTIFACT } from \"./vitest-evals/artifacts.ts\";",
+          "context": "26: import { ICE_SESSION_SNAPSHOT_ARTIFACT } from \"./vitest-evals/artifacts.ts\";"
+        },
+        {
+          "path": "packages/evals/src/smoke.eval.ts",
+          "line": 3,
+          "text": "import { createIceCodingAgentHarness } from \"./ice-harness.ts\";",
+          "context": "3: import { createIceCodingAgentHarness } from \"./ice-harness.ts\";"
+        },
+        {
+          "path": "packages/evals/src/extensions.eval.ts",
+          "line": 5,
+          "text": "import { createIceCodingAgentHarness, type IceCodingAgentInput } from \"./ice-harness.ts\";",
+          "context": "5: import { createIceCodingAgentHarness, type IceCodingAgentInput } from \"./ice-harness.ts\";\n6: import { recordEvalSourceArtifact } from \"./vitest-evals/artifacts.ts\";\n7: import { evalHarnessTable } from \"./vitest-evals/harness-table.ts\";"
+        },
+        {
+          "path": "packages/evals/src/extensions.eval.ts",
+          "line": 6,
+          "text": "import { recordEvalSourceArtifact } from \"./vitest-evals/artifacts.ts\";",
+          "context": "5: import { createIceCodingAgentHarness, type IceCodingAgentInput } from \"./ice-harness.ts\";\n6: import { recordEvalSourceArtifact } from \"./vitest-evals/artifacts.ts\";\n7: import { evalHarnessTable } from \"./vitest-evals/harness-table.ts\";"
+        },
+        {
+          "path": "packages/evals/src/extensions.eval.ts",
+          "line": 7,
+          "text": "import { evalHarnessTable } from \"./vitest-evals/harness-table.ts\";",
+          "context": "5: import { createIceCodingAgentHarness, type IceCodingAgentInput } from \"./ice-harness.ts\";\n6: import { recordEvalSourceArtifact } from \"./vitest-evals/artifacts.ts\";\n7: import { evalHarnessTable } from \"./vitest-evals/harness-table.ts\";"
+        },
+        {
+          "path": "packages/evals/package.json",
+          "line": 8,
+          "text": "\t\t\"eval\": \"node scripts/run-evals.mjs\",",
+          "context": "8: \t\t\"eval\": \"node scripts/run-evals.mjs\","
+        },
+        {
+          "path": "packages/evals/README.md",
+          "line": 39,
+          "text": "trace guidance. Ice-specific evals use `createIceCodingAgentHarness(...)` from `src/ice-harness.ts`, with one harness bound",
+          "context": "39: trace guidance. Ice-specific evals use `createIceCodingAgentHarness(...)` from `src/ice-harness.ts`, with one harness bound"
+        },
+        {
+          "path": "packages/evals/README.md",
+          "line": 45,
+          "text": "import { createIceCodingAgentHarness } from \"./ice-harness.ts\";",
+          "context": "45: import { createIceCodingAgentHarness } from \"./ice-harness.ts\";"
+        },
+        {
+          "path": "packages/evals/README.md",
+          "line": 112,
+          "text": "import { evalHarnessTable } from \"./vitest-evals/harness-table.ts\";",
+          "context": "112: import { evalHarnessTable } from \"./vitest-evals/harness-table.ts\";"
+        },
+        {
+          "path": "packages/coding-agent/test/test-harness.ts",
+          "line": 366,
+          "text": "\tconst tempDir = join(tmpdir(), `ice-harness-${Date.now()}-${Math.random().toString(36).slice(2)}`);",
+          "context": "366: \tconst tempDir = join(tmpdir(), `ice-harness-${Date.now()}-${Math.random().toString(36).slice(2)}`);"
+        }
+      ],
+      "truncated": false,
+      "basis": "Direct-import adjacent-suite closure; only4 direct eval helper suites,plus unrelated coding-agent test-helper string."
+    }
+  ],
+  "auxiliary_evidence_reads": [
+    {
+      "path": "docs/ice-gap/evidence/candidates-misc.json",
+      "sha256": "98285114bdd68e7a9d651c022ecf50cb63c657dcedd3f6b3de8650217f99a978",
+      "selection": "13 records with packages/evals path"
+    },
+    {
+      "path": "docs/ice-gap/evidence/session-source-review.json",
+      "sha256": "9fae2a6d3cf139aa6e8f01f88b4419ef2f46f20e84d3bb68ea9ef7ce4a50c667",
+      "selection": "Native shared body/range credit"
+    }
+  ]
+}

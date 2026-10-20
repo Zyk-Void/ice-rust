@@ -1,0 +1,664 @@
+[
+  {
+    "path": "ice:packages/coding-agent/src/config.ts",
+    "ranges": [
+      [
+        1,
+        605
+      ]
+    ],
+    "sha256": "e4b690beca6ecfa772e8439c225537b43a8b763bd36691300965b131085b1337",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/defaults.ts",
+    "ranges": [
+      [
+        1,
+        4
+      ]
+    ],
+    "sha256": "9e840a25965021c237848925da5627bdba1fdff6107445f8789acb9ab02dd668",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/source-info.ts",
+    "ranges": [
+      [
+        1,
+        41
+      ]
+    ],
+    "sha256": "9736ba7876085249e036fdf5f4d3bba565b5bc11b832e200a0d3ba58743c747b",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/project-trust.ts",
+    "ranges": [
+      [
+        1,
+        97
+      ]
+    ],
+    "sha256": "04a4cd25f6be0bd858364c1117fc6d16c481614ac2d7778879b3d7d4fad3c371",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/cli/project-trust.ts",
+    "ranges": [
+      [
+        1,
+        63
+      ]
+    ],
+    "sha256": "f53dace044983ef779b0c99ea3f1a75155116ace6e4569c623b95d6c24972c3b",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/docs/security.md",
+    "ranges": [
+      [
+        1,
+        62
+      ]
+    ],
+    "sha256": "2ab9be9dc813dd1c47ab3efaf31aed4581947ee70639861aabb52b0a2df270e0",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/trust.rs",
+    "ranges": [
+      [
+        1,
+        357
+      ]
+    ],
+    "sha256": "1077116d936d5237b3d4899d35826562116c34b4d10aec6901c88cc5c0bc40c0",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/resource_dirs.rs",
+    "ranges": [
+      [
+        1,
+        550
+      ]
+    ],
+    "sha256": "57f18ec67c1ab88894ec73a1b77ab26d6362cdb2291d5a43ee1ab4da7e3658d4",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/trust-manager.ts",
+    "ranges": [
+      [
+        1,
+        246
+      ]
+    ],
+    "sha256": "33983da226dcf64dc3ecb24ff0293ab66513a198a82440b917b03e6a922a12bf",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/resolve-config-value.ts",
+    "ranges": [
+      [
+        1,
+        289
+      ]
+    ],
+    "sha256": "88433e8f785ae56acd10ee6a2cf5eeb17c59093e1fb8cb8a559f5b417a5a705a",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/prompt-templates.ts",
+    "ranges": [
+      [
+        1,
+        287
+      ]
+    ],
+    "sha256": "7ecc31322ddf8f936b85d4634364a6cf52b1e46c59e01e266466eaaf50ab223b",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/system-prompt.ts",
+    "ranges": [
+      [
+        1,
+        184
+      ]
+    ],
+    "sha256": "b3db373c277ed9e3ad9bde9a040c7b4ca396c4a1b668231332daee1e071271f5",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/legacy-compat/paths.ts",
+    "ranges": [
+      [
+        1,
+        7
+      ]
+    ],
+    "sha256": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c",
+    "notes": "Direct source reading; truncated display portions were re-emitted and read. No app execution."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/utils/paths.ts",
+    "ranges": [
+      [
+        1,
+        119
+      ]
+    ],
+    "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+    "notes": "Initial display lost lines 1–73; do not mark full until re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/config.rs",
+    "ranges": [
+      [
+        1,
+        900
+      ],
+      [
+        976,
+        1050
+      ],
+      [
+        1640,
+        1719
+      ]
+    ],
+    "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+    "notes": "Read via bounded readonly helper; lines 1–199 re-emitted after display truncation. 887 credential-shaped property expression redacted by connector; not used as evidence."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/session.rs",
+    "ranges": [
+      [
+        68,
+        131
+      ],
+      [
+        382,
+        680
+      ],
+      [
+        708,
+        732
+      ],
+      [
+        1380,
+        1557
+      ],
+      [
+        1840,
+        1870
+      ],
+      [
+        1910,
+        1985
+      ]
+    ],
+    "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+    "notes": "Actual project trust call path."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+    "ranges": [
+      [
+        1,
+        1612
+      ]
+    ],
+    "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/docs/environment-variables.md",
+    "ranges": [
+      [
+        1,
+        89
+      ]
+    ],
+    "sha256": "1cf0852bf26e072d33a2d4387fa18dc51d77fbddb12dce3fe8f86f1ab7b35541",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/docs/prompt-templates.md",
+    "ranges": [
+      [
+        1,
+        97
+      ]
+    ],
+    "sha256": "281a2c0da444f7f2fc44d5b60187824fe6eb0078a6ad162abe5a94d1871f5826",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/trust-manager.test.ts",
+    "ranges": [
+      [
+        1,
+        68
+      ]
+    ],
+    "sha256": "78a6593719d12bc5c0eae6ed33ec15ac6658c3d016b5751ac6c252059a56cc7b",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/resolve-config-value.test.ts",
+    "ranges": [
+      [
+        1,
+        122
+      ]
+    ],
+    "sha256": "56b05b65ee53c9e29b4841653efc1d683b9d917aef304f6ac231573ac92bbf58",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/resource-loader.ts",
+    "ranges": [
+      [
+        1,
+        1177
+      ]
+    ],
+    "sha256": "c21751d673e5237a77b9282093354b1bd99d09f3866606e7e67c27f488d0d50c",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/skills.ts",
+    "ranges": [
+      [
+        1,
+        550
+      ]
+    ],
+    "sha256": "e4e87102891c54b0360d0584d007eb3da25fc87c2e4d1d3c6c5129d982664d2c",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/docs/settings.md",
+    "ranges": [
+      [
+        1,
+        372
+      ]
+    ],
+    "sha256": "0b2cc5a1e973a65ddcdc11b13b74018db7d2c247d9dcf8b3c2a0c594ac7766e6",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/docs/skills.md",
+    "ranges": [
+      [
+        1,
+        241
+      ]
+    ],
+    "sha256": "707c1aebd45a7d9fb5f1cbde260653818be9687afbcacf441f12564572339a87",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/legacy-compat/identity.ts",
+    "ranges": [
+      [
+        1,
+        11
+      ]
+    ],
+    "sha256": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/legacy-compat/env.ts",
+    "ranges": [
+      [
+        1,
+        32
+      ]
+    ],
+    "sha256": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/http-dispatcher.ts",
+    "ranges": [
+      [
+        1,
+        112
+      ]
+    ],
+    "sha256": "9d04472e90684fbe783b0f11e5ca40a533f3775ad4dfc3bce222421797a18477",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/ice-resource-precedence.test.ts",
+    "ranges": [
+      [
+        1,
+        129
+      ]
+    ],
+    "sha256": "e7ac8d2bcf97cbb30beceaa57f6fedc3f0a63a8973dfe2560f7c4e9006b6e2d6",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/prompt-templates.test.ts",
+    "ranges": [
+      [
+        1,
+        625
+      ]
+    ],
+    "sha256": "cfed2333712407588f1df5f131bf763f2a366af2802d3ae27ccbeed79e0787fb",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "rust:crates/ice-harness/src/context_files.rs",
+    "ranges": [
+      [
+        1,
+        316
+      ]
+    ],
+    "sha256": "fb7cfdcde1bdf8a47388fe90b293220faa9f42472f84b37bf10df52d7b1dd7c8",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "rust:crates/ice-harness/src/system_prompt.rs",
+    "ranges": [
+      [
+        1,
+        158
+      ]
+    ],
+    "sha256": "8c0c579502b599f516724e71ea9e5b61b7c25382c1446c448ffcbdf6deb7fe76",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "rust:crates/ice-harness/src/skills.rs",
+    "ranges": [
+      [
+        1,
+        567
+      ]
+    ],
+    "sha256": "c002d9b9955d6b5e56bd8789d1383560b9620898e073218d4bac8884d58793db",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/settings.rs",
+    "ranges": [
+      [
+        1,
+        1221
+      ]
+    ],
+    "sha256": "41a1a99a8295384989ed27e52ee112656e6171d1a19d37957fcf27c7a7d870d8",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/settings-manager.test.ts",
+    "ranges": [
+      [
+        1,
+        603
+      ]
+    ],
+    "sha256": "8e82b758c7b2336003dd97056dcc51432f9f900f2e02711eb07e36316b29aa4f",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/suite/regressions/3616-settings-inmemory-reload.test.ts",
+    "ranges": [
+      [
+        1,
+        87
+      ]
+    ],
+    "sha256": "0ef92699ba0887ea3c9231ca057e83437bdb6902181934dd0edd96cd417ff8df",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/suite/regressions/7572-provider-retry-settings-merge.test.ts",
+    "ranges": [
+      [
+        1,
+        36
+      ]
+    ],
+    "sha256": "7b50e25746f36f0118df8f7931a772166da8656618768bd6ff094f873c02936a",
+    "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/ice.ts",
+    "ranges": [
+      [
+        80,
+        105
+      ]
+    ],
+    "sha256": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+    "notes": "Direct source read; stated bounded ranges fully displayed, including re-emitted display truncations."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/main.ts",
+    "ranges": [
+      [
+        523,
+        549
+      ],
+      [
+        630,
+        634
+      ],
+      [
+        708,
+        711
+      ]
+    ],
+    "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+    "notes": "Direct source read; stated bounded ranges fully displayed, including re-emitted display truncations."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+    "ranges": [
+      [
+        800,
+        868
+      ],
+      [
+        972,
+        984
+      ]
+    ],
+    "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:ICE_PORTING.md",
+    "ranges": [
+      [
+        417,
+        457
+      ],
+      [
+        467,
+        516
+      ],
+      [
+        560,
+        641
+      ]
+    ],
+    "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/updates.rs",
+    "ranges": [
+      [
+        1,
+        181
+      ]
+    ],
+    "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-harness/src/events.rs",
+    "ranges": [
+      [
+        150,
+        245
+      ],
+      [
+        252,
+        320
+      ],
+      [
+        373,
+        456
+      ]
+    ],
+    "sha256": "8ed6d7304989859715fb14e2dbc2c3ab20f0b918a6a718b886b482c1cbc76e3c",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-ai/src/http.rs",
+    "ranges": [
+      [
+        1,
+        230
+      ]
+    ],
+    "sha256": "0db47f8e8d082ce0f11ff68aa7cd639ec7447b8552ed19042f3893d01322114a",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/provider.rs",
+    "ranges": [
+      [
+        204,
+        224
+      ]
+    ],
+    "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "ice:packages/coding-agent/test/resource-loader.test.ts",
+    "ranges": [
+      [
+        348,
+        579
+      ],
+      [
+        1008,
+        1170
+      ]
+    ],
+    "sha256": "c5cdccd6e4dd496be930fa051902b7ea54f590ebb5ab43ed854cf215e5ec3f46",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-cli/src/fs_watch.rs",
+    "ranges": [
+      [
+        1,
+        162
+      ]
+    ],
+    "sha256": "5594be1409f430eab8ff0e2d857138a85d2e816397a094f0ec5bff88a388173d",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+    "ranges": [
+      [
+        262,
+        322
+      ]
+    ],
+    "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+    "ranges": [
+      [
+        891,
+        909
+      ],
+      [
+        1425,
+        1436
+      ],
+      [
+        3210,
+        3228
+      ]
+    ],
+    "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-harness/src/prompt_templates.rs",
+    "ranges": [
+      [
+        1,
+        479
+      ]
+    ],
+    "sha256": "a91401e7be31523a731d3c4fe198a0ce801dc99e37568361baf3278ed617f2e5",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+    "ranges": [
+      [
+        891,
+        915
+      ]
+    ],
+    "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+    "ranges": [
+      [
+        1770,
+        1779
+      ]
+    ],
+    "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+    "notes": "Coordinator directly read these source ranges; bounded output was fully displayed, with any display truncation re-emitted."
+  },
+  {
+    "path": "rust:crates/ice-extensions/src/resources.rs",
+    "ranges": [
+      [
+        30,
+        101
+      ]
+    ],
+    "sha256": "7f0dc047938a2294c019a34a9573d27ceaec62d21f06cf2370951085e3a67c82",
+    "notes": "Coordinator directly read these bounded source ranges; application/tests were not executed."
+  },
+  {
+    "path": "rust:crates/ice-tui/src/theme.rs",
+    "ranges": [
+      [
+        320,
+        426
+      ]
+    ],
+    "sha256": "13758a6ab9aee8e85096e4888494836e74297b47a366fb0bea609455cadfd897",
+    "notes": "Coordinator directly read these bounded source ranges; application/tests were not executed."
+  }
+]

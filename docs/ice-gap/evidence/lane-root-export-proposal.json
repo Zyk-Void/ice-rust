@@ -1,0 +1,3680 @@
+{
+  "captured_at": "2026-10-20T03:09:24.424Z",
+  "owner": "/root",
+  "source_only": true,
+  "complete": true,
+  "areas": [
+    "agent",
+    "tools",
+    "cli-packaging",
+    "settings",
+    "observability"
+  ],
+  "entry_updates": [
+    {
+      "id": "AGENT-062",
+      "area": "agent",
+      "source_append": [
+        "Named export: `SkillDiagnosticCode` (`ice:packages/agent/src/harness/skills.ts:11`).",
+        "`ice:packages/agent/src/harness/skills.ts:11-28` defines the named diagnostic discriminant and fields."
+      ],
+      "interfaces_append": [
+        "The diagnostic code is `SkillDiagnosticCode = \"file_info_failed\" | \"list_failed\" | \"read_failed\" | \"parse_failed\" | \"invalid_metadata\"`. `SkillDiagnostic` has `type: \"warning\"`, `code: SkillDiagnosticCode`, `message: string`, and `path: string`; sourced enrichment adds the caller's `source` without changing these fields."
+      ]
+    },
+    {
+      "id": "SESSION-011",
+      "area": "session",
+      "source_append": [
+        "Named export: `CompactionErrorCode` (`ice:packages/agent/src/harness/types.ts:179`).",
+        "`ice:packages/agent/src/harness/types.ts:178-191` (`CompactionErrorCode`, `CompactionError`)."
+      ],
+      "interfaces_append": [
+        "`CompactionErrorCode = \"aborted\" | \"summarization_failed\"`. `CompactionError(code, message, cause?: Error)` extends `Error`, sets `name = \"CompactionError\"` and public `code`, and passes `{ cause }` to the base constructor only when `cause !== undefined`; the cause is not stringified."
+      ]
+    },
+    {
+      "id": "SESSION-012",
+      "area": "session",
+      "source_append": [
+        "Named export: `BranchSummaryErrorCode` (`ice:packages/agent/src/harness/types.ts:194`).",
+        "Named export: `BranchSummaryError` (`ice:packages/agent/src/harness/types.ts:197`).",
+        "`ice:packages/agent/src/harness/types.ts:193-206` (`BranchSummaryErrorCode`, `BranchSummaryError`)."
+      ],
+      "interfaces_append": [
+        "`BranchSummaryErrorCode = \"aborted\" | \"summarization_failed\"`. `BranchSummaryError(code, message, cause?: Error)` extends `Error`, sets `name = \"BranchSummaryError\"` and public `code`, and preserves an optional `Error` cause through the base constructor. These are the generic harness helper's returned errors, separate from the coding-agent helper's thrown-error interface."
+      ]
+    },
+    {
+      "id": "TOOLS-015",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BashToolDetails` (`ice:packages/agent/src/harness/tools/bash.ts:18`).",
+        "Named export: `ShellCaptureProgress` (`ice:packages/agent/src/harness/utils/shell-output.ts:4`).",
+        "Named export: `ShellCaptureOptions` (`ice:packages/agent/src/harness/utils/shell-output.ts:11`).",
+        "Named export: `ShellCaptureResult` (`ice:packages/agent/src/harness/utils/shell-output.ts:17`)."
+      ]
+    },
+    {
+      "id": "TOOLS-025",
+      "area": "tools",
+      "source_append": [
+        "Named export: `detectLineEnding` (`ice:packages/agent/src/harness/tools/edit-diff.ts:7`).",
+        "Named export: `normalizeToLF` (`ice:packages/agent/src/harness/tools/edit-diff.ts:15`).",
+        "Named export: `restoreLineEndings` (`ice:packages/agent/src/harness/tools/edit-diff.ts:19`).",
+        "Named export: `normalizeForFuzzyMatch` (`ice:packages/agent/src/harness/tools/edit-diff.ts:30`).",
+        "Named export: `applyReplacementsPreservingUnchangedLines` (`ice:packages/agent/src/harness/tools/edit-diff.ts:128`).",
+        "Named export: `FuzzyMatchResult` (`ice:packages/agent/src/harness/tools/edit-diff.ts:171`).",
+        "Named export: `AppliedEditsResult` (`ice:packages/agent/src/harness/tools/edit-diff.ts:192`).",
+        "Named export: `fuzzyFindText` (`ice:packages/agent/src/harness/tools/edit-diff.ts:203`).",
+        "Named export: `stripBom` (`ice:packages/agent/src/harness/tools/edit-diff.ts:244`).",
+        "Named export: `applyEditsToNormalizedContent` (`ice:packages/agent/src/harness/tools/edit-diff.ts:301`).",
+        "Named export: `EditToolDetails` (`ice:packages/agent/src/harness/tools/edit.ts:42`).",
+        "Named export: `createEditTool` (`ice:packages/agent/src/harness/tools/edit.ts:77`).",
+        "Named export: `detectLineEnding` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:10`).",
+        "Named export: `normalizeToLF` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:18`).",
+        "Named export: `restoreLineEndings` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:22`).",
+        "Named export: `normalizeForFuzzyMatch` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:33`).",
+        "Named export: `applyReplacementsPreservingUnchangedLines` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:138`).",
+        "Named export: `FuzzyMatchResult` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:181`).",
+        "Named export: `AppliedEditsResult` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:202`).",
+        "Named export: `fuzzyFindText` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:213`).",
+        "Named export: `stripBom` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:254`).",
+        "Named export: `applyEditsToNormalizedContent` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:324`).",
+        "Named export: `EditToolDetails` (`ice:packages/coding-agent/src/core/tools/edit.ts:61`).",
+        "Named export: `EditToolOptions` (`ice:packages/coding-agent/src/core/tools/edit.ts:89`).",
+        "Named export: `createEditToolDefinition` (`ice:packages/coding-agent/src/core/tools/edit.ts:287`).",
+        "Named export: `createEditTool` (`ice:packages/coding-agent/src/core/tools/edit.ts:435`)."
+      ]
+    },
+    {
+      "id": "TOOLS-023",
+      "area": "tools",
+      "source_append": [
+        "Named export: `encodeBase64` (`ice:packages/agent/src/harness/tools/image.ts:12`)."
+      ]
+    },
+    {
+      "id": "TOOLS-022",
+      "area": "tools",
+      "source_append": [
+        "Named export: `ReadToolDetails` (`ice:packages/agent/src/harness/tools/read.ts:24`).",
+        "Named export: `ReadImageProcessorResult` (`ice:packages/agent/src/harness/tools/read.ts:28`).",
+        "Named export: `ReadToolDetails` (`ice:packages/coding-agent/src/core/tools/read.ts:28`)."
+      ]
+    },
+    {
+      "id": "TOOLS-024",
+      "area": "tools",
+      "source_append": [
+        "Named export: `createWriteTool` (`ice:packages/agent/src/harness/tools/write.ts:15`).",
+        "Named export: `createWriteToolDefinition` (`ice:packages/coding-agent/src/core/tools/write.ts:181`).",
+        "Named export: `createWriteTool` (`ice:packages/coding-agent/src/core/tools/write.ts:265`)."
+      ]
+    },
+    {
+      "id": "TOOLS-019",
+      "area": "tools",
+      "source_append": [
+        "Named export: `GREP_MAX_LINE_LENGTH` (`ice:packages/agent/src/harness/utils/truncate.ts:13`).",
+        "Named export: `GREP_MAX_LINE_LENGTH` (`ice:packages/coding-agent/src/core/tools/truncate.ts:13`)."
+      ]
+    },
+    {
+      "id": "TOOLS-016",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BashExecutorOptions` (`ice:packages/coding-agent/src/core/bash-executor.ts:22`)."
+      ]
+    },
+    {
+      "id": "TOOLS-031",
+      "area": "tools",
+      "source_append": [
+        "Named export: `isStdoutTakenOver` (`ice:packages/coding-agent/src/core/output-guard.ts:110`)."
+      ]
+    },
+    {
+      "id": "TOOLS-005",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE` (`ice:packages/coding-agent/src/core/tools/bash-background.ts:27`).",
+        "Named export: `summarizeShellCommand` (`ice:packages/coding-agent/src/core/tools/bash-background.ts:30`).",
+        "Named export: `BashBackgroundCompletion` (`ice:packages/coding-agent/src/core/tools/bash-background.ts:35`).",
+        "Named export: `BackgroundShellRead` (`ice:packages/coding-agent/src/core/tools/bash-background.ts:133`).",
+        "`ice:packages/coding-agent/src/core/tools/bash-background.ts:27-33` (`BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE`, `summarizeShellCommand`)."
+      ],
+      "interfaces_append": [
+        "The completion custom-type constant is `BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE = \"bash_background_completed\"`. `summarizeShellCommand(command: string): string` applies `trimEnd()`, splits on LF, and returns the first line unchanged for one line or first line plus ` (+N more lines)` for multiple remaining lines. Trailing whitespace and empty trailing lines disappear before counting; leading whitespace is retained, and an all-whitespace input returns the empty first string."
+      ]
+    },
+    {
+      "id": "TOOLS-006",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BASH_SHELL_TOOL_NAMES` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:19`).",
+        "Named export: `MAX_WAIT_SECONDS` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:22`).",
+        "Named export: `createBashOutputToolDefinition` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:87`)."
+      ]
+    },
+    {
+      "id": "TOOLS-008",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BashKillInput` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:63`).",
+        "Named export: `createBashKillToolDefinition` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:214`).",
+        "`ice:packages/coding-agent/src/core/tools/bash-shells.ts:58-63` (`bashKillSchema`, `BashKillInput`)."
+      ],
+      "interfaces_append": [
+        "`BashKillInput = Static<typeof bashKillSchema>` projects `Type.Object({ id: Type.String({ description: \"Background shell id to stop (for example bash-1)\" }) })`; there is no additional runtime algorithm in the alias."
+      ]
+    },
+    {
+      "id": "TOOLS-009",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BashInputInput` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:249`).",
+        "Named export: `BashInputApproval` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:252`).",
+        "Named export: `createBashInputToolDefinition` (`ice:packages/coding-agent/src/core/tools/bash-shells.ts:254`)."
+      ]
+    },
+    {
+      "id": "TOOLS-011",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BashWatchKind` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:13`).",
+        "Named export: `BASH_WATCH_FIRED_CUSTOM_TYPE` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:16`).",
+        "Named export: `BashWatchSpec` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:18`).",
+        "Named export: `BashWatchSnapshot` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:34`).",
+        "Named export: `BashWatchFire` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:49`).",
+        "Named export: `MAX_WATCH_FIRES` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:68`).",
+        "Named export: `BashWatchInput` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:128`).",
+        "Named export: `createBashWatchToolDefinition` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:142`)."
+      ]
+    },
+    {
+      "id": "TOOLS-013",
+      "area": "tools",
+      "source_append": [
+        "Named export: `MIN_SILENCE_MS` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:66`).",
+        "Named export: `MIN_INTERVAL_MS` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:67`).",
+        "Named export: `BashWatchDefaults` (`ice:packages/coding-agent/src/core/tools/bash-watch.ts:77`)."
+      ]
+    },
+    {
+      "id": "TOOLS-001",
+      "area": "tools",
+      "source_append": [
+        "Named export: `BashToolDetails` (`ice:packages/coding-agent/src/core/tools/bash.ts:80`)."
+      ]
+    },
+    {
+      "id": "TOOLS-026",
+      "area": "tools",
+      "source_append": [
+        "Named export: `EditDiffResult` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:539`).",
+        "Named export: `EditDiffError` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:544`).",
+        "Named export: `computeEditDiff` (`ice:packages/coding-agent/src/core/tools/edit-diff.ts:587`)."
+      ]
+    },
+    {
+      "id": "TOOLS-028",
+      "area": "tools",
+      "source_append": [
+        "Named export: `FindToolDetails` (`ice:packages/coding-agent/src/core/tools/find.ts:41`).",
+        "Named export: `FindToolOptions` (`ice:packages/coding-agent/src/core/tools/find.ts:63`).",
+        "Named export: `createFindTool` (`ice:packages/coding-agent/src/core/tools/find.ts:375`)."
+      ]
+    },
+    {
+      "id": "TOOLS-029",
+      "area": "tools",
+      "source_append": [
+        "Named export: `GrepToolDetails` (`ice:packages/coding-agent/src/core/tools/grep.ts:41`).",
+        "Named export: `GrepToolOptions` (`ice:packages/coding-agent/src/core/tools/grep.ts:63`).",
+        "Named export: `createGrepTool` (`ice:packages/coding-agent/src/core/tools/grep.ts:383`)."
+      ]
+    },
+    {
+      "id": "TOOLS-018",
+      "area": "tools",
+      "source_append": [
+        "Named export: `ToolDef` (`ice:packages/coding-agent/src/core/tools/index.ts:82`)."
+      ]
+    },
+    {
+      "id": "TOOLS-030",
+      "area": "tools",
+      "source_append": [
+        "Named export: `LsToolDetails` (`ice:packages/coding-agent/src/core/tools/ls.ts:23`).",
+        "Named export: `LsToolOptions` (`ice:packages/coding-agent/src/core/tools/ls.ts:47`).",
+        "Named export: `createLsTool` (`ice:packages/coding-agent/src/core/tools/ls.ts:223`)."
+      ]
+    },
+    {
+      "id": "TOOLS-010",
+      "area": "tools",
+      "source_append": [
+        "Named export: `OutputAccumulatorOptions` (`ice:packages/coding-agent/src/core/tools/output-accumulator.ts:7`).",
+        "Named export: `MAX_LOG_FILE_BYTES` (`ice:packages/coding-agent/src/core/tools/output-accumulator.ts:16`).",
+        "Named export: `OutputSnapshot` (`ice:packages/coding-agent/src/core/tools/output-accumulator.ts:29`)."
+      ]
+    },
+    {
+      "id": "TOOLS-027",
+      "area": "tools",
+      "source_append": [
+        "Named export: `ToolRenderResultLike` (`ice:packages/coding-agent/src/core/tools/render-utils.ts:66`)."
+      ]
+    },
+    {
+      "id": "CLI-003",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `isValidThinkingLevel` (`ice:packages/coding-agent/src/cli/args.ts:65`).",
+        "Named export: `printHelp` (`ice:packages/coding-agent/src/cli/args.ts:249`).",
+        "`ice:packages/coding-agent/src/cli/args.ts:249-443` (`printHelp`)."
+      ],
+      "mechanism_append": [
+        "`printHelp(extensionFlags?: ExtensionFlag[]): void` prints the static usage, package/auth command list, options, examples, environment descriptions and seven builtin tool names through `console.log`. A nonempty extension flag list adds an Extension CLI Flags section in supplied order. Each row uses `--${flag.name}`, appends ` <value>` only for `type === \"string\"`, pads the flag column to 30 characters, and uses `flag.description ?? \"Registered by \" + flag.extensionPath`. An absent or empty list adds no section. The printed examples and advertised defaults are presentation strings; they do not validate inputs or prove live provider availability."
+      ]
+    },
+    {
+      "id": "CLI-016",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `ConfigSelectorOptions` (`ice:packages/coding-agent/src/cli/config-selector.ts:10`)."
+      ]
+    },
+    {
+      "id": "CLI-011",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `CredentialPrintKind` (`ice:packages/coding-agent/src/cli/credential-print.ts:6`).",
+        "Named export: `CredentialPrintCommand` (`ice:packages/coding-agent/src/cli/credential-print.ts:10`).",
+        "Named export: `printCredentialPrintHelp` (`ice:packages/coding-agent/src/cli/credential-print.ts:24`).",
+        "Named export: `validateCredentialPrintArgs` (`ice:packages/coding-agent/src/cli/credential-print.ts:66`)."
+      ]
+    },
+    {
+      "id": "CLI-009",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `ProcessedFiles` (`ice:packages/coding-agent/src/cli/file-processor.ts:12`).",
+        "Named export: `ProcessFileOptions` (`ice:packages/coding-agent/src/cli/file-processor.ts:17`)."
+      ]
+    },
+    {
+      "id": "CLI-010",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `InitialMessageInput` (`ice:packages/coding-agent/src/cli/initial-message.ts:4`).",
+        "Named export: `InitialMessageResult` (`ice:packages/coding-agent/src/cli/initial-message.ts:11`)."
+      ]
+    },
+    {
+      "id": "CLI-023",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `ProgressCallback` (`ice:packages/coding-agent/src/core/package-manager.ts:88`)."
+      ]
+    },
+    {
+      "id": "CLI-021",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `ConfiguredPackage` (`ice:packages/coding-agent/src/core/package-manager.ts:97`).",
+        "Named export: `DefaultPackageManager` (`ice:packages/coding-agent/src/core/package-manager.ts:782`)."
+      ]
+    },
+    {
+      "id": "CLI-022",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `getExtensionTempFolder` (`ice:packages/coding-agent/src/core/package-manager.ts:218`)."
+      ]
+    },
+    {
+      "id": "CLI-002",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `MainOptions` (`ice:packages/coding-agent/src/main.ts:522`).",
+        "`ice:packages/coding-agent/src/main.ts:522-533` (`MainOptions`, main's builtin factory composition)."
+      ],
+      "interfaces_append": [
+        "The exact public startup options are `MainOptions { extensionFactories?: InlineExtension[]; globalFirstSettings?: boolean; agentViewBridge?: IceAgentViewBridge }`. The caller's extension factories follow `builtInExtensions` in `main`; the distribution opts into global-first settings and supplies its optional view bridge."
+      ]
+    },
+    {
+      "id": "CLI-014",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `migrateSessionsFromAgentRoot` (`ice:packages/coding-agent/src/migrations.ts:83`)."
+      ]
+    },
+    {
+      "id": "CLI-034",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `PackageCommand` (`ice:packages/coding-agent/src/package-manager-cli.ts:33`).",
+        "`ice:packages/coding-agent/src/package-manager-cli.ts:33-35` (`PackageCommand`)."
+      ],
+      "interfaces_append": [
+        "The exported command discriminant is exactly `PackageCommand = \"install\" | \"remove\" | \"update\" | \"list\"`; `uninstall` is normalized by the parser rather than being an additional union member."
+      ]
+    },
+    {
+      "id": "CLI-035",
+      "area": "cli-packaging",
+      "source_append": [
+        "Named export: `PackageCommandRuntimeOptions` (`ice:packages/coding-agent/src/package-manager-cli.ts:554`).",
+        "`ice:packages/coding-agent/src/package-manager-cli.ts:554-556` (`PackageCommandRuntimeOptions`)."
+      ],
+      "interfaces_append": [
+        "`PackageCommandRuntimeOptions { extensionFactories?: InlineExtension[] }` carries optional inline factories into package-command resource/trust initialization; it adds no new command-line flag."
+      ]
+    },
+    {
+      "id": "SET-003",
+      "area": "settings",
+      "source_append": [
+        "Named export: `AppMode` (`ice:packages/coding-agent/src/core/project-trust.ts:12`).",
+        "Named export: `DefaultProjectTrust` (`ice:packages/coding-agent/src/core/settings-manager.ts:80`).",
+        "`ice:packages/coding-agent/src/core/settings-manager.ts:80` (`DefaultProjectTrust`)."
+      ]
+    },
+    {
+      "id": "SET-006",
+      "area": "settings",
+      "source_append": [
+        "Named export: `isCommandConfigValue` (`ice:packages/coding-agent/src/core/resolve-config-value.ts:131`)."
+      ]
+    },
+    {
+      "id": "SET-012",
+      "area": "settings",
+      "source_append": [
+        "Named export: `BranchSummarySettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:33`).",
+        "Named export: `ProviderRetrySettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:38`).",
+        "Named export: `RetrySettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:44`)."
+      ]
+    },
+    {
+      "id": "SET-015",
+      "area": "settings",
+      "source_append": [
+        "Named export: `UiMode` (`ice:packages/coding-agent/src/core/settings-manager.ts:51`).",
+        "Named export: `MarkdownSettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:72`).",
+        "Named export: `WarningSettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:76`).",
+        "`ice:packages/coding-agent/src/core/settings-manager.ts:51-82` (`UiMode`, `MarkdownSettings`, `WarningSettings`)."
+      ],
+      "interfaces_append": [
+        "The source declares `UiMode = TuiMode`, `MarkdownSettings { codeBlockIndent?: string }`, and `WarningSettings { anthropicExtraUsage?: boolean }`. The two-space Markdown fallback and the warning consumer's default are the separate behaviors above; the optional interfaces themselves do not inject values."
+      ]
+    },
+    {
+      "id": "SET-016",
+      "area": "settings",
+      "source_append": [
+        "Named export: `TerminalSettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:53`).",
+        "Named export: `ImageSettings` (`ice:packages/coding-agent/src/core/settings-manager.ts:60`)."
+      ]
+    },
+    {
+      "id": "SET-011",
+      "area": "settings",
+      "source_append": [
+        "Named export: `TransportSetting` (`ice:packages/coding-agent/src/core/settings-manager.ts:82`).",
+        "`ice:packages/coding-agent/src/core/settings-manager.ts:82` declares `TransportSetting = Transport`; this is a type alias of the AI transport contract, with no separate runtime behavior."
+      ]
+    },
+    {
+      "id": "SET-014",
+      "area": "settings",
+      "source_append": [
+        "Named export: `DEFAULT_BASH_AUTO_BACKGROUND_MS` (`ice:packages/coding-agent/src/core/settings-manager.ts:216`).",
+        "`ice:packages/coding-agent/src/core/settings-manager.ts:216` defines `DEFAULT_BASH_AUTO_BACKGROUND_MS = 60_000`, the named default consumed by this setting."
+      ]
+    },
+    {
+      "id": "SET-023",
+      "area": "settings",
+      "source_append": [
+        "Named export: `SourceScope` (`ice:packages/coding-agent/src/core/source-info.ts:3`).",
+        "Named export: `SourceOrigin` (`ice:packages/coding-agent/src/core/source-info.ts:4`)."
+      ]
+    },
+    {
+      "id": "SET-004",
+      "area": "settings",
+      "source_append": [
+        "Named export: `getProjectTrustParentPath` (`ice:packages/coding-agent/src/core/trust-manager.ts:60`).",
+        "`ice:packages/coding-agent/src/core/trust-manager.ts:60-95` (`getProjectTrustParentPath`, parent option construction)."
+      ],
+      "mechanism_append": [
+        "`getProjectTrustParentPath(cwd)` canonicalizes with the same `normalizeCwd`, obtains `dirname`, and returns `undefined` when the normalized path is already its own parent. The parent-trust option is offered only for a returned parent; its grouped update sets that parent true and removes the current child decision. Session-only options use empty updates and do not persist a decision."
+      ]
+    },
+    {
+      "id": "OBS-004",
+      "area": "observability",
+      "source_append": [
+        "Named export: `startObserveRecorder` (`ice:packages/coding-agent/src/observe/observe-recorder.ts:324`)."
+      ]
+    },
+    {
+      "id": "OBS-014",
+      "area": "observability",
+      "source_append": [
+        "Named export: `OBSERVE_DEFAULT_PORT` (`ice:packages/coding-agent/src/observe/observe-server.ts:33`).",
+        "Named export: `ObserveServer` (`ice:packages/coding-agent/src/observe/observe-server.ts:62`).",
+        "Named export: `startObserveServer` (`ice:packages/coding-agent/src/observe/observe-server.ts:264`)."
+      ]
+    },
+    {
+      "id": "OBS-013",
+      "area": "observability",
+      "source_append": [
+        "Named export: `ObserveRunStore` (`ice:packages/coding-agent/src/observe/observe-store.ts:53`)."
+      ]
+    },
+    {
+      "id": "OBS-017",
+      "area": "observability",
+      "source_append": [
+        "`ice:packages/coding-agent/src/observe/observe-cognee.ts:98-148` exports `createObserveCogneeSource`; `ice:packages/coding-agent/src/main.ts:929-937` constructs it with the session cwd for the dashboard."
+      ],
+      "interfaces_append": [
+        "The factory is `createObserveCogneeSource(options: { cwd: string; configPath?: string; fetch?: typeof fetch }): ObserveCogneeSource`. Its connection is created only on first use, shared through one promise, and reset after a failed initial connection. Auth/unreachable request failures clear the same still-current connection and summary cache."
+      ]
+    },
+    {
+      "id": "COG-021",
+      "area": "cognee",
+      "source_append": [
+        "The observation integration exports `createObserveCogneeSource` in `ice:packages/coding-agent/src/observe/observe-cognee.ts:98-148`; its lazy connection, recovery and dashboard-specific caches are specified by `OBS-017` and `OBS-018`."
+      ]
+    }
+  ],
+  "dispositions": [
+    {
+      "symbol": "SkillDiagnosticCode",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/skills.ts:11",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "AGENT-062"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; AGENT-062 owns Source-tagged skill enrichment and diagnostics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "48e9307332ec9453cc401b8f981e5718e9637698d9b89594afce98170532f71d",
+        "ranges": [
+          [
+            11,
+            22
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "CompactionErrorCode",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/types.ts:179",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SESSION-011"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SESSION-011 owns Harness summarization routing, retry callbacks and exact result semantics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "c5187bd964f987b65e250f421c352ed9b58a5dd6a0ca93ae3758fc414b8d9ea6",
+        "ranges": [
+          [
+            179,
+            190
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BranchSummaryErrorCode",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/types.ts:194",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SESSION-012"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SESSION-012 owns Branch-summary collection, token-budget grace and option edge cases. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "c5187bd964f987b65e250f421c352ed9b58a5dd6a0ca93ae3758fc414b8d9ea6",
+        "ranges": [
+          [
+            194,
+            205
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BranchSummaryError",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/types.ts:197",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SESSION-012"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SESSION-012 owns Branch-summary collection, token-budget grace and option edge cases. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "c5187bd964f987b65e250f421c352ed9b58a5dd6a0ca93ae3758fc414b8d9ea6",
+        "ranges": [
+          [
+            197,
+            208
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/bash.ts:18",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-015"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-015 owns Harness shell capture sanitation, early spill and failure ordering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "9dbd536990ba542a2beb9c42ccffb195ab841ea926cff48c838d53f6b4d24ee3",
+        "ranges": [
+          [
+            18,
+            29
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "detectLineEnding",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:7",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            7,
+            18
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "normalizeToLF",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:15",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            15,
+            26
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "restoreLineEndings",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:19",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            19,
+            30
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "normalizeForFuzzyMatch",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:30",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            30,
+            41
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "applyReplacementsPreservingUnchangedLines",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:128",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            128,
+            139
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "FuzzyMatchResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:171",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            171,
+            182
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "AppliedEditsResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:192",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            192,
+            203
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "fuzzyFindText",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:203",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            203,
+            214
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "stripBom",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:244",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            244,
+            255
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "applyEditsToNormalizedContent",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:301",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+        "ranges": [
+          [
+            301,
+            312
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "EditToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/edit.ts:42",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "fa2a6223c25075c359fcbc6e98de8618041d2b651258429198ffa1515a5267df",
+        "ranges": [
+          [
+            42,
+            53
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createEditTool",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit.ts:77",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "fa2a6223c25075c359fcbc6e98de8618041d2b651258429198ffa1515a5267df",
+        "ranges": [
+          [
+            77,
+            88
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "encodeBase64",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/image.ts:12",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-023"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-023 owns Image signatures, conversion, resizing and coordinate hints. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "d63af23f90abd2925b80d555ac5c5915ee1b7f512a2490b95a727c8bd0e8d97b",
+        "ranges": [
+          [
+            12,
+            23
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ReadToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/read.ts:24",
+      "covering_entries": [
+        "TOOLS-022"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-022"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-022 owns Read-tool pagination, cancellation and model-aware image handoff. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "f6d4c6913ff7949f11ea03957635b6f8e61cb92d7bec403dec22798776e4d36f",
+        "ranges": [
+          [
+            24,
+            35
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ReadImageProcessorResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/read.ts:28",
+      "covering_entries": [
+        "TOOLS-022"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-022"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-022 owns Read-tool pagination, cancellation and model-aware image handoff. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "f6d4c6913ff7949f11ea03957635b6f8e61cb92d7bec403dec22798776e4d36f",
+        "ranges": [
+          [
+            28,
+            39
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createWriteTool",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/write.ts:15",
+      "covering_entries": [
+        "TOOLS-024"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-024"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-024 owns Write-tool I/O ordering, abort bracketing and result text. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "3881a6947b6c632cced62c0a233af9ab435f422d8a77b176caafc5e6f41763d2",
+        "ranges": [
+          [
+            15,
+            26
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ShellCaptureProgress",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/utils/shell-output.ts:4",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-015"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-015 owns Harness shell capture sanitation, early spill and failure ordering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+        "ranges": [
+          [
+            4,
+            15
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ShellCaptureOptions",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/utils/shell-output.ts:11",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-015"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-015 owns Harness shell capture sanitation, early spill and failure ordering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+        "ranges": [
+          [
+            11,
+            22
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ShellCaptureResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/utils/shell-output.ts:17",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-015"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-015 owns Harness shell capture sanitation, early spill and failure ordering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+        "ranges": [
+          [
+            17,
+            28
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "GREP_MAX_LINE_LENGTH",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/utils/truncate.ts:13",
+      "covering_entries": [
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-019"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-019 owns Exact truncation metadata, UTF-8 boundaries and line numbering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "8a00ec12753e667056a8c2b5a4f31fd45ccc2bdca7df17a57138fe836c09f7fe",
+        "ranges": [
+          [
+            13,
+            24
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashExecutorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/bash-executor.ts:22",
+      "covering_entries": [
+        "TOOLS-016"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-016"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-016 owns User Bash execution helper and its distinct output contract. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "977b512e30ff671c55e1148f055781dc786d75323e9821f3f7a9c3e327120003",
+        "ranges": [
+          [
+            22,
+            33
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "isStdoutTakenOver",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/output-guard.ts:110",
+      "covering_entries": [
+        "RPC-017",
+        "TOOLS-031"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-031"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-031 owns Stdout isolation, queued UTF-8 byte limits and transient sink retries. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "d1f0d31689404bcb72e6a524173b0092a232da48655e748688bbd3d1f7a2b364",
+        "ranges": [
+          [
+            110,
+            121
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:27",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "TOOLS-005"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-005 owns Background shell snapshots, bounded retention and completion state machine. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+        "ranges": [
+          [
+            27,
+            38
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "summarizeShellCommand",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:30",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "TOOLS-005"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-005 owns Background shell snapshots, bounded retention and completion state machine. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+        "ranges": [
+          [
+            30,
+            41
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashBackgroundCompletion",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:35",
+      "covering_entries": [
+        "TOOLS-005"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-005"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-005 owns Background shell snapshots, bounded retention and completion state machine. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+        "ranges": [
+          [
+            35,
+            46
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BackgroundShellRead",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:133",
+      "covering_entries": [
+        "TOOLS-005"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-005"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-005 owns Background shell snapshots, bounded retention and completion state machine. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+        "ranges": [
+          [
+            133,
+            144
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BASH_SHELL_TOOL_NAMES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:19",
+      "covering_entries": [
+        "TOOLS-006"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-006"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-006 owns Incremental bash_output reads and steering-interruptible waits. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            19,
+            30
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MAX_WAIT_SECONDS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:22",
+      "covering_entries": [
+        "TOOLS-006",
+        "TOOLS-007"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-006"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-006 owns Incremental bash_output reads and steering-interruptible waits. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            22,
+            33
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashKillInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:63",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "TOOLS-008"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-008 owns Stopping running shells, lingering process groups and session disposal. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            63,
+            74
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createBashOutputToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:87",
+      "covering_entries": [
+        "TOOLS-006"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-006"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-006 owns Incremental bash_output reads and steering-interruptible waits. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            87,
+            98
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createBashKillToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:214",
+      "covering_entries": [
+        "TOOLS-008"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-008"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-008 owns Stopping running shells, lingering process groups and session disposal. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            214,
+            225
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashInputInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:249",
+      "covering_entries": [
+        "TOOLS-009"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-009"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-009 owns Approved, byte-bounded stdin for a running background shell. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            249,
+            260
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashInputApproval",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:252",
+      "covering_entries": [
+        "TOOLS-009"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-009"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-009 owns Approved, byte-bounded stdin for a running background shell. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            252,
+            263
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createBashInputToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:254",
+      "covering_entries": [
+        "TOOLS-009"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-009"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-009 owns Approved, byte-bounded stdin for a running background shell. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+        "ranges": [
+          [
+            254,
+            265
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashWatchKind",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:13",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            13,
+            24
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BASH_WATCH_FIRED_CUSTOM_TYPE",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:16",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            16,
+            27
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashWatchSpec",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:18",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            18,
+            29
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashWatchSnapshot",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:34",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            34,
+            45
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashWatchFire",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:49",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            49,
+            60
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MIN_SILENCE_MS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:66",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-013"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-013 owns Silence, prompt and interval watches with automatic defaults. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            66,
+            77
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MIN_INTERVAL_MS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:67",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-013"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-013 owns Silence, prompt and interval watches with automatic defaults. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            67,
+            78
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MAX_WATCH_FIRES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:68",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            68,
+            79
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashWatchDefaults",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:77",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-013"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-013 owns Silence, prompt and interval watches with automatic defaults. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            77,
+            88
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashWatchInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:128",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            128,
+            139
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createBashWatchToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:142",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-011 owns Session-local bash_watch management and exact watch schemas. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+        "ranges": [
+          [
+            142,
+            153
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BashToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash.ts:80",
+      "covering_entries": [
+        "TOOLS-001"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-001"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-001 owns Bash invocation schema, zero-timeout normalization and hard ceiling. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "9b59f5b97743d815b84fca1c0961d38824a36740af2e7de5d1276831c2dbf918",
+        "ranges": [
+          [
+            80,
+            91
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "detectLineEnding",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:10",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            10,
+            21
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "normalizeToLF",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:18",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            18,
+            29
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "restoreLineEndings",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:22",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            22,
+            33
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "normalizeForFuzzyMatch",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:33",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            33,
+            44
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "applyReplacementsPreservingUnchangedLines",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:138",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            138,
+            149
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "FuzzyMatchResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:181",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            181,
+            192
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "AppliedEditsResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:202",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            202,
+            213
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "fuzzyFindText",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:213",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            213,
+            224
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "stripBom",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:254",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            254,
+            265
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "applyEditsToNormalizedContent",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:324",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            324,
+            335
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "EditDiffResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:539",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-026"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-026 owns Trustworthy edit diffs and asynchronous preflight preview. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            539,
+            550
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "EditDiffError",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:544",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-026"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-026 owns Trustworthy edit diffs and asynchronous preflight preview. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            544,
+            555
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "computeEditDiff",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:587",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-026"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-026 owns Trustworthy edit diffs and asynchronous preflight preview. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+        "ranges": [
+          [
+            587,
+            595
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "EditToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:61",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+        "ranges": [
+          [
+            61,
+            72
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "EditToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:89",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+        "ranges": [
+          [
+            89,
+            100
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createEditToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:287",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+        "ranges": [
+          [
+            287,
+            298
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createEditTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:435",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-025"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-025 owns Atomic edit batches with exact-match precedence and localized fuzzy normalization. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+        "ranges": [
+          [
+            435,
+            438
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "FindToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/find.ts:41",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-028"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-028"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-028 owns Find glob semantics, hierarchical ignore rules and result boundaries. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+        "ranges": [
+          [
+            41,
+            52
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "FindToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/find.ts:63",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-028"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-028"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-028 owns Find glob semantics, hierarchical ignore rules and result boundaries. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+        "ranges": [
+          [
+            63,
+            74
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createFindTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/find.ts:375",
+      "covering_entries": [
+        "TOOLS-028"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-028"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-028 owns Find glob semantics, hierarchical ignore rules and result boundaries. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+        "ranges": [
+          [
+            375,
+            378
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "GrepToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/grep.ts:41",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-029"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-029"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-029 owns Grep match stream, context formatting and error/cancellation semantics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+        "ranges": [
+          [
+            41,
+            52
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "GrepToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/grep.ts:63",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-029"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-029"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-029 owns Grep match stream, context formatting and error/cancellation semantics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+        "ranges": [
+          [
+            63,
+            74
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createGrepTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/grep.ts:383",
+      "covering_entries": [
+        "TOOLS-029"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-029"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-029 owns Grep match stream, context formatting and error/cancellation semantics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+        "ranges": [
+          [
+            383,
+            386
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ToolDef",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/index.ts:82",
+      "covering_entries": [
+        "TOOLS-018"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-018"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-018 owns Tool factories, definition adapters and execution context. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "1c299edad4472e06d9232e694378c1555bfe3f3514247f1831e13821e4204684",
+        "ranges": [
+          [
+            82,
+            93
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "LsToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/ls.ts:23",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-030"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-030"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-030 owns Directory listing symlinks, collation and per-entry failure handling. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+        "ranges": [
+          [
+            23,
+            34
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "LsToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/ls.ts:47",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-030"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-030"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-030 owns Directory listing symlinks, collation and per-entry failure handling. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+        "ranges": [
+          [
+            47,
+            58
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createLsTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/ls.ts:223",
+      "covering_entries": [
+        "TOOLS-030"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-030"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-030 owns Directory listing symlinks, collation and per-entry failure handling. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+        "ranges": [
+          [
+            223,
+            226
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "OutputAccumulatorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts:7",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-010"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-010 owns Raw output accumulation, bounded live log spill and trustworthy full-output paths. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+        "ranges": [
+          [
+            7,
+            18
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MAX_LOG_FILE_BYTES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts:16",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-010"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-010 owns Raw output accumulation, bounded live log spill and trustworthy full-output paths. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+        "ranges": [
+          [
+            16,
+            27
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "OutputSnapshot",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts:29",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-010"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-010 owns Raw output accumulation, bounded live log spill and trustworthy full-output paths. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+        "ranges": [
+          [
+            29,
+            40
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ReadToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/read.ts:28",
+      "covering_entries": [
+        "TOOLS-022"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-022"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-022 owns Read-tool pagination, cancellation and model-aware image handoff. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "4b3f61291a9f314c582caeaa735eb38f8a736dd68ac711425bfd0650febb1fa1",
+        "ranges": [
+          [
+            28,
+            39
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ToolRenderResultLike",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/render-utils.ts:66",
+      "covering_entries": [
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-027"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-027 owns Per-tool call and result renderers with streaming content previews. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "fded002274529fc617ccac4623ec3d5a4b776a752ad534446eed8be67d29bafc",
+        "ranges": [
+          [
+            66,
+            77
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "GREP_MAX_LINE_LENGTH",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/truncate.ts:13",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-019"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-019 owns Exact truncation metadata, UTF-8 boundaries and line numbering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "104e61ea602c7f7894097b2771dad8c68de75c5a10ea6222e615c4ad144451c7",
+        "ranges": [
+          [
+            13,
+            24
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createWriteToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/write.ts:181",
+      "covering_entries": [
+        "TOOLS-024",
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-024"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-024 owns Write-tool I/O ordering, abort bracketing and result text. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "898d58e0f08f7eda9e13ef6905cf6ac4188e8995f6d071495bd528a4265e7150",
+        "ranges": [
+          [
+            181,
+            192
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "createWriteTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/write.ts:265",
+      "covering_entries": [
+        "TOOLS-024"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "TOOLS-024"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; TOOLS-024 owns Write-tool I/O ordering, abort bracketing and result text. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-tools.json",
+        "sha256": "898d58e0f08f7eda9e13ef6905cf6ac4188e8995f6d071495bd528a4265e7150",
+        "ranges": [
+          [
+            265,
+            268
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "isValidThinkingLevel",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/args.ts:65",
+      "covering_entries": [
+        "CLI-003"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-003"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-003 owns Argument token grammar, complete flag surface and diagnostic semantics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+        "ranges": [
+          [
+            65,
+            76
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "printHelp",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/args.ts:249",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "CLI-003"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-003 owns Argument token grammar, complete flag surface and diagnostic semantics. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+        "ranges": [
+          [
+            249,
+            260
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ConfigSelectorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/config-selector.ts:10",
+      "covering_entries": [
+        "CLI-016"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-016"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-016 owns Startup selectors, config wrapper and resume-picker terminal lifetime. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+        "ranges": [
+          [
+            10,
+            21
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "CredentialPrintKind",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:6",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-011 owns Credential-print command grammar, output discipline and duration parsing defect. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+        "ranges": [
+          [
+            6,
+            17
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "CredentialPrintCommand",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:10",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-011 owns Credential-print command grammar, output discipline and duration parsing defect. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+        "ranges": [
+          [
+            10,
+            21
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "printCredentialPrintHelp",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:24",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-011 owns Credential-print command grammar, output discipline and duration parsing defect. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+        "ranges": [
+          [
+            24,
+            35
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "validateCredentialPrintArgs",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:66",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-011"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-011 owns Credential-print command grammar, output discipline and duration parsing defect. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+        "ranges": [
+          [
+            66,
+            77
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ProcessedFiles",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/file-processor.ts:12",
+      "covering_entries": [
+        "CLI-009",
+        "RPC-021"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-009"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-009 owns CLI file attachments, typed text failures and image preprocessing. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+        "ranges": [
+          [
+            12,
+            23
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ProcessFileOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/file-processor.ts:17",
+      "covering_entries": [
+        "CLI-009",
+        "RPC-021"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-009"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-009 owns CLI file attachments, typed text failures and image preprocessing. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+        "ranges": [
+          [
+            17,
+            28
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "InitialMessageInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/initial-message.ts:4",
+      "covering_entries": [
+        "CLI-010"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-010"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-010 owns Initial prompt concatenation and remaining-message ownership. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+        "ranges": [
+          [
+            4,
+            15
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "InitialMessageResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/initial-message.ts:11",
+      "covering_entries": [
+        "CLI-010"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-010"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-010 owns Initial prompt concatenation and remaining-message ownership. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+        "ranges": [
+          [
+            11,
+            22
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ProgressCallback",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:88",
+      "covering_entries": [
+        "CLI-023",
+        "CLI-033"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-023"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-023 owns Package subprocess environment, completion events, timeouts and progress callbacks. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+        "ranges": [
+          [
+            88,
+            99
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ConfiguredPackage",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:97",
+      "covering_entries": [
+        "CLI-023",
+        "CLI-033"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-021"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-021 owns Scoped package settings, identity-preserving edits and payload-before-config ordering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+        "ranges": [
+          [
+            97,
+            108
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "getExtensionTempFolder",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:218",
+      "covering_entries": [
+        "CLI-022"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-022 owns Managed cache layout, temporary extension caches and lexical containment. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+        "ranges": [
+          [
+            218,
+            229
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "DefaultPackageManager",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:782",
+      "covering_entries": [
+        "CLI-021"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-021"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-021 owns Scoped package settings, identity-preserving edits and payload-before-config ordering. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+        "ranges": [
+          [
+            782,
+            793
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MainOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/main.ts:522",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "CLI-002"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-002 owns ICE distribution preflight, early agent commands and builtin factory order. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+        "ranges": [
+          [
+            522,
+            533
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "migrateSessionsFromAgentRoot",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/migrations.ts:83",
+      "covering_entries": [
+        "CLI-014"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-014"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-014 owns Session, managed-binary, prompt-directory and keybinding startup migrations. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+        "ranges": [
+          [
+            83,
+            94
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "PackageCommand",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/package-manager-cli.ts:33",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "CLI-034"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-034 owns Package-command parsing, help/error precedence and update target matrix. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "7d789b8cb6cef448396725801f5f21c08d7eb33289b85b9b153883882be87e66",
+        "ranges": [
+          [
+            33,
+            44
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "PackageCommandRuntimeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/package-manager-cli.ts:554",
+      "covering_entries": [
+        "CLI-038",
+        "CLI-043",
+        "CLI-046"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "CLI-035"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; CLI-035 owns Package-command project trust and saved-trust-only update policy. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "7d789b8cb6cef448396725801f5f21c08d7eb33289b85b9b153883882be87e66",
+        "ranges": [
+          [
+            554,
+            565
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "AppMode",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/project-trust.ts:12",
+      "covering_entries": [
+        "SET-003"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-003"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-003 owns Project trust resolution before loading executable resources. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "04a4cd25f6be0bd858364c1117fc6d16c481614ac2d7778879b3d7d4fad3c371",
+        "ranges": [
+          [
+            12,
+            23
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "isCommandConfigValue",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/resolve-config-value.ts:131",
+      "covering_entries": [
+        "SET-005",
+        "SET-006"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-006"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-006 owns Bounded command-backed configuration values and cached failures. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "88433e8f785ae56acd10ee6a2cf5eeb17c59093e1fb8cb8a559f5b417a5a705a",
+        "ranges": [
+          [
+            131,
+            142
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "BranchSummarySettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:33",
+      "covering_entries": [
+        "SET-012"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-012"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-012 owns Compaction, branch-summary and two-layer retry settings. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            33,
+            44
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ProviderRetrySettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:38",
+      "covering_entries": [
+        "SET-012"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-012"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-012 owns Compaction, branch-summary and two-layer retry settings. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            38,
+            49
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "RetrySettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:44",
+      "covering_entries": [
+        "SET-012"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-012"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-012 owns Compaction, branch-summary and two-layer retry settings. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            44,
+            55
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "UiMode",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:51",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-015"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-015 owns Display, editor, cursor and warning preferences with exact fallback rules. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            51,
+            62
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "TerminalSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:53",
+      "covering_entries": [
+        "SET-016"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-016"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-016 owns Independent image transmission, resizing and terminal presentation settings. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            53,
+            64
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ImageSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:60",
+      "covering_entries": [
+        "SET-016"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-016"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-016 owns Independent image transmission, resizing and terminal presentation settings. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            60,
+            71
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "MarkdownSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:72",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-015"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-015 owns Display, editor, cursor and warning preferences with exact fallback rules. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            72,
+            83
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "WarningSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:76",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-015"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-015 owns Display, editor, cursor and warning preferences with exact fallback rules. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            76,
+            87
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "DefaultProjectTrust",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:80",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-003"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-003 owns Project trust resolution before loading executable resources. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            80,
+            91
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "TransportSetting",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:82",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-011"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-011 owns Model defaults, queue modes, transport preferences and global favorites. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            82,
+            93
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "DEFAULT_BASH_AUTO_BACKGROUND_MS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:216",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-014"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-014 owns Shell path, background timers and restrictive stdin approval composition. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+        "ranges": [
+          [
+            216,
+            227
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "SourceScope",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/source-info.ts:3",
+      "covering_entries": [
+        "SET-023"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-023"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-023 owns Resource provenance, canonical deduplication and extension-added paths. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "9736ba7876085249e036fdf5f4d3bba565b5bc11b832e200a0d3ba58743c747b",
+        "ranges": [
+          [
+            3,
+            14
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "SourceOrigin",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/source-info.ts:4",
+      "covering_entries": [
+        "SET-023"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "SET-023"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-023 owns Resource provenance, canonical deduplication and extension-added paths. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "9736ba7876085249e036fdf5f4d3bba565b5bc11b832e200a0d3ba58743c747b",
+        "ranges": [
+          [
+            4,
+            15
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "getProjectTrustParentPath",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/trust-manager.ts:60",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "entry_ids": [
+        "SET-004"
+      ],
+      "disposition": "source-reviewed-addition-or-corrected-owner",
+      "reason": "The declaration and current entry behavior were read by the coordinator; SET-004 owns Locked trust store with canonical ancestor inheritance and grouped updates. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "33983da226dcf64dc3ecb24ff0293ab66513a198a82440b917b03e6a922a12bf",
+        "ranges": [
+          [
+            60,
+            71
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "startObserveRecorder",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/observe/observe-recorder.ts:324",
+      "covering_entries": [
+        "OBS-004"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "OBS-004"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; OBS-004 owns Recorder identity, event contracts and bounded live state. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "c44e595384313d2bbce825e938b4c9b9feabb7480e9a2cf2351b5ab84d26651e",
+        "ranges": [
+          [
+            324,
+            335
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "OBSERVE_DEFAULT_PORT",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/observe/observe-server.ts:33",
+      "covering_entries": [
+        "OBS-014",
+        "OBS-016"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "OBS-014"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; OBS-014 owns Loopback dashboard authentication, token file and HTML asset loading. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+        "ranges": [
+          [
+            33,
+            44
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ObserveServer",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/observe/observe-server.ts:62",
+      "covering_entries": [
+        "OBS-014"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "OBS-014"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; OBS-014 owns Loopback dashboard authentication, token file and HTML asset loading. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+        "ranges": [
+          [
+            62,
+            73
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "startObserveServer",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/observe/observe-server.ts:264",
+      "covering_entries": [
+        "OBS-014",
+        "OBS-015",
+        "OBS-016"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "OBS-014"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; OBS-014 owns Loopback dashboard authentication, token file and HTML asset loading. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+        "ranges": [
+          [
+            264,
+            275
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    },
+    {
+      "symbol": "ObserveRunStore",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/observe/observe-store.ts:53",
+      "covering_entries": [
+        "OBS-011",
+        "OBS-013"
+      ],
+      "action": "name-in-entry",
+      "entry_ids": [
+        "OBS-013"
+      ],
+      "disposition": "named-existing-behavior",
+      "reason": "The declaration and current entry behavior were read by the coordinator; OBS-013 owns Historical run queries and ordered replay reconstruction. The accepted source and mechanism remain authoritative rather than the QA range hint.",
+      "source_review": {
+        "artifact": "evidence/lane-root-declarations-agent-cli-packaging-settings-observability.json",
+        "sha256": "5b8d2a6da8f87dc04334e3fd10f5d87de84aebfcf6c33bf06480d27d5baccb82",
+        "ranges": [
+          [
+            53,
+            64
+          ]
+        ]
+      },
+      "additional_review": "evidence/lane-root-source-review.json"
+    }
+  ],
+  "precision_status": {
+    "AGENT_057": "UTF-16 indexed string iteration already correct, directly verified against lines223-224.",
+    "COG_046": "captureSession gate already correct, directly verified against lines2127-2132.",
+    "observe_cognee_factory": "Named in OBS-017 and cross-referenced from COG-021 in this proposal."
+  }
+}

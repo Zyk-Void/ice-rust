@@ -1,0 +1,51 @@
+{
+  "captured_at": "2026-10-20T03:11:51.016Z",
+  "owner": "/root",
+  "source_only": true,
+  "before": {
+    "spec_sha256": "f10af7a200b17292deeeca172bfc5051727a049de3261881b784a678678a8e42",
+    "accepted_sha256": "9b46249fb1858097a0a3df983468ba48c1831f03f3053a445b3c907a3779f329",
+    "proposal_sha256": "9b46249fb1858097a0a3df983468ba48c1831f03f3053a445b3c907a3779f329"
+  },
+  "after_entries": 50,
+  "added_entry": "AI-019",
+  "added_surfaces": 12,
+  "source_anchor_repair": {
+    "spec_path": "docs/ice-gap/evidence/spec-ai.json",
+    "spec_sha256": "f10af7a200b17292deeeca172bfc5051727a049de3261881b784a678678a8e42",
+    "entry_id": "AI-013",
+    "field": "source",
+    "operation": "replace_exact_reference_token",
+    "old_reference": "ice:packages/ai/src/types.ts:245-314",
+    "new_reference": "ice:packages/ai/src/types.ts:487-514",
+    "old_field_value": "ice:packages/ai/src/api/constrained-sampling.ts:1-148; ice:packages/ai/test/constrained-sampling.test.ts:1-230; ice:packages/ai/src/types.ts:245-314.",
+    "new_field_value": "ice:packages/ai/src/api/constrained-sampling.ts:1-148; ice:packages/ai/test/constrained-sampling.test.ts:1-230; ice:packages/ai/src/types.ts:487-514.",
+    "source_sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+    "rationale": "GrammarFormat, GrammarVariants, ConstrainedSamplingConfig and Tool are exactly487–514. The previous245–314 span covers API dispatch/options rather than those declarations; preserve it only as a separately explained options reference if another narrative actually needs it.",
+    "preserve_all_other_fields": true
+  },
+  "independent_qa": {
+    "status": "reviewed",
+    "reviewer": "/root",
+    "source_only": true,
+    "entry_ids": [
+      "AI-019"
+    ],
+    "basis": [
+      "evidence/ai-schema-source-review.json",
+      "evidence/ai-schema-qa.json",
+      "evidence/coordinator-ai-schema-review.json"
+    ],
+    "notes": "Full worker source review and independent bounded coordinator review. ThinkingLevelMap includes off; Model.compat conditional is explicit; timestamp units are Unix milliseconds. Raw duplicate-role candidate remains unverified as a production failure."
+  },
+  "existing_defect_link": {
+    "id": "RUST-035",
+    "entry_id": "AI-019"
+  },
+  "raw_role_candidate": {
+    "source": "evidence/ai-schema-defect-candidates.json",
+    "id": "AI-SCHEMA-RAW-ROLE",
+    "decision": "retain-bounded-candidate-without-new-defect-id",
+    "reason": "Source structure independently confirmed. No fully traced raw production caller or runtime reproduction. The current RPC Value projection is not asserted to expose duplicate role keys."
+  }
+}

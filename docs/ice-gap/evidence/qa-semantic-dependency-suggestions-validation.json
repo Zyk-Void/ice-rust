@@ -1,0 +1,11 @@
+{
+  "requests": 44,
+  "additional_requests": 3,
+  "missing_resolutions": [],
+  "unknown_prerequisites": [],
+  "unknown_related_ids": [],
+  "source_entry_hashes_preserved": true,
+  "shared_edits": false,
+  "execution": "No application or test execution.",
+  "schema_followup": "AI-019 reserved; not an actual dependency."
+}

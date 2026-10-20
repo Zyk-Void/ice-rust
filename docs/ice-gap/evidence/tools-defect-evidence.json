@@ -1,0 +1,41 @@
+{
+  "area": "tools",
+  "verification": "source-read reasoning only; no application execution or runtime reproduction",
+  "entry_id": "TOOLS-010",
+  "title": "Advertised full Bash output is created from an already-pruned tail",
+  "source_refs": [
+    "rust:crates/ice-tools/src/shell_output.rs:69-171",
+    "rust:crates/ice-tools/src/shell_output.rs:319-343",
+    "rust:crates/ice-tools/src/shell_output.rs:404-420",
+    "rust:crates/ice-tools/tests/bash.rs:99-154"
+  ],
+  "source_sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+  "conditions": [
+    "The execution callback delivers more than the 102400 UTF-8-byte retained-tail cap before execution settles.",
+    "Capture pruning has removed an initial prefix, progress reports truncation, and no full-output file has previously been requested.",
+    "Post-execution temporary-file creation and append succeed."
+  ],
+  "result": "The returned full-output path contains the retained tail only; the discarded prefix is irrecoverable from this capture. This finding does not require the separate OS pipe-draining defect to be present.",
+  "test_scope": "The inspected existing Bash spill test uses 2001 short lines, which crosses the 2000-line presentation limit but does not cross the retained-tail byte cap. It does not establish preservation beyond 100 KiB.",
+  "local_git": {
+    "command": "git blame -L 319,343 --line-porcelain -- crates/ice-tools/src/shell_output.rs",
+    "frozen_head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "origin_commit": "909e85120146cfcf46b7835d69a8805bce3edcff",
+    "origin_path": "crates/pi-tools/src/shell_output.rs",
+    "origin_lines": [
+      262,
+      286
+    ],
+    "current_lines": [
+      319,
+      343
+    ],
+    "commit_summary": "@",
+    "scope": "Attribution read from local Git history only; no upstream remote was queried."
+  },
+  "fix_requirements": [
+    "Start durable spill before the first destructive tail prune and replay every earlier captured byte exactly once.",
+    "Keep later appends in order and surface persistence failures truthfully, distinguishing incomplete logs from complete logs.",
+    "Add a future source change regression with output well above the rolling cap and verify a unique prefix, middle and suffix in the full-output file. No test was run during this audit."
+  ]
+}

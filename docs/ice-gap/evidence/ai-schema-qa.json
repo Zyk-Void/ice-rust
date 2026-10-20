@@ -1,0 +1,34 @@
+{
+  "area": "ai",
+  "fragment": "shared-schema",
+  "owner": "audit_tools",
+  "status": "passed",
+  "entry_ids": [
+    "AI-019"
+  ],
+  "unused_reserved_ids": [
+    "AI-020"
+  ],
+  "entry_count": 1,
+  "surfaces": 12,
+  "checked_narrative_source_references": 50,
+  "full_source_files": 4,
+  "full_test_files": 3,
+  "bounded_files": 1,
+  "all_source_hashes_match_frozen_manifest_or_git": true,
+  "application_or_test_execution": false,
+  "shared_edits": false,
+  "issues": [],
+  "limits": [
+    "Checks validate the authored audit structure and available source-read ranges, not application runtime behavior.",
+    "Existing RUST-035 is cross-linked. Raw Message duplicate-role candidate remains bounded and not reproduced.",
+    "No same-file read/LOC is added a second time to the shared audit denominator.",
+    "Coordinator independent QA and publication remain required."
+  ],
+  "coordinator_requested_wording_checks": {
+    "thinking_map_includes_off": true,
+    "compat_uses_actual_conditional": true,
+    "bare_model_citation_expanded": true,
+    "timestamp_units_milliseconds": true
+  }
+}

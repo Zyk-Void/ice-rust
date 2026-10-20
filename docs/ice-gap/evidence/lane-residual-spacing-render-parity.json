@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T06:53:48.240Z",
+  "passed": true,
+  "owner": "/root/residual_spacing",
+  "method": "Executed the exact existing documentation renderer with in-memory normalized canonical prose fields and read/write stubs; no rendered Markdown or canonical input was written.",
+  "tool_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+  "dry_run_sha256": "30413c47b14320dd185955e1623ddfa6d8963c72ce5e9de4515a75313cf4c280",
+  "approval_sha256": "e848581f4710a4ab501025fe66585060b87d826b9c1fdb9059e366988e331215",
+  "renderer_sha256": "7cc36d4a75017db5fd9b0fafb94e5aa9128c8323851263a21caab7e5f93d4cff",
+  "accepted_changes": 764,
+  "accepted_changed_fields": 307,
+  "all_accepted_field_results_byte_identical": true,
+  "areas_checked": 16,
+  "entries_checked": 791,
+  "remaining_real_prose_glue": 0,
+  "input_and_historical_proofs_byte_identical": true,
+  "changed_inputs": [],
+  "input_sha256": {
+    "tools/fix-spacing.mjs": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+    "render-area.mjs": "7cc36d4a75017db5fd9b0fafb94e5aa9128c8323851263a21caab7e5f93d4cff",
+    "evidence/spacing-validation.json": "3f209aeacef73eb7af2a2f671928654ac3dfaa5f464133fa3760068663db8257",
+    "evidence/spacing-review.json": "bacdf41827d8938933943572cc95979b48af3dbaec73aa65b3533a3ff382b943",
+    "evidence/spec-ai.json": "e29c2e35ade52f23d75df2d88909f33273cc58576e44622167d962a65f103f66",
+    "ai.md": "ef6e3998c71665399e0e733a476b0faf0ebda6c8888532728c111d264a368ff1",
+    "evidence/spec-agent.json": "bff5e13459f02d99ef9d738792f36ebf3e0c3cff9687bebf7e2e005b3f1eab28",
+    "agent.md": "2a0fc7d3bb22a2bc8298509e831386bc6445346610ff1e3f35168c7f78c39dde",
+    "evidence/spec-tools.json": "13c4ec49f34f370da497728aff390e0c51646f3d59a68d894e99293e4c6bdd64",
+    "tools.md": "ef2e8078f2c270cbea8893af45dfd335878209277b7bd583a7526ed26a81f96e",
+    "evidence/spec-session.json": "bf070480003b3a40a828b92766a33d7b447651ff975550c41442a53478bd04ef",
+    "session.md": "afe270734b8e7aa14c320437b96b9bd6a1e34029f17928e20bcfc16261a303b8",
+    "evidence/spec-settings.json": "d74646eb4672a9c231388e259a4cb7753a7fe4800df59c6764fc322849ad4ccd",
+    "settings.md": "15e7c2a6cef9a543ce3c266d6042015382151c08c687fc9e26177d74b468ab11",
+    "evidence/spec-extensions.json": "02756ef43c46dc22c8ca7c598f2fa68ee17faf14134494bb8e2af8f599a044d0",
+    "extensions.md": "0644f135781cec173a249852a56b41d1cde82d1a08632d4f3608846551dd76a6",
+    "evidence/spec-rpc-remote.json": "ab85c7ba8d6537231690a46d3e9bc8e11277db0e7c05a6ab55508efdb5fb29e8",
+    "rpc-remote.md": "2fa03c1daa5e837eb78adf43b09b10e56de181d8131bf4ed441b4a8a750aa107",
+    "evidence/spec-tui.json": "5b6e03cdaa80e8e64e8fa0ef4db9819c8478d3da6f0b3462e131cca6e8843363",
+    "tui.md": "233064e37e637eea8d84ea1029e0f11629180f40f4210097f6d11bff2e470d35",
+    "evidence/spec-subagents.json": "d6323b97206d88c117dbb67d82e6511f7195ac8940eea9971f8d0201e235dc0c",
+    "subagents.md": "a47198107d36e0c209f128627de49dd2f9a170e92e2f4dc8a5f8e2eafb1be221",
+    "evidence/spec-safe-verify.json": "e0b260032a3974ad83c90ca42190382f97c03d026773cf12fe4a304cd0451c0a",
+    "safe-verify.md": "93dd88d1d110e9359132ded6574be9976f46ff0554816e49cd3ab371766c7b0d",
+    "evidence/spec-observability.json": "f5671f4818323c1536fece8b2b1facbd72b7824a368c2e3380b9c46e01ed35be",
+    "observability.md": "68d12982126c2550a6ce145369dab7832fc4d7bd988ec3509a9113f51aa499e7",
+    "evidence/spec-cognee.json": "81590f1a5fd60dbfc629a09d937bbff12e4fc77a23e2c445fc6f674f6cffb63d",
+    "cognee.md": "ee02d23d136f7eecf4be91c3422e6d8bc6e92fb324352db29080321bc05dca06",
+    "evidence/spec-blackhole.json": "4e4cfbeed75c1e2a6ed72462df19020ea75fe34109c70e1971f9a0e180a9956b",
+    "blackhole.md": "6870ed661b7fe7acbd0ad16dd62e41141333c0f6a70e53a34baf75a13f9b9164",
+    "evidence/spec-providers-auth.json": "fa761cf0ca13fa0d5838048420013386b503f7f992b17f2967306374a8b410df",
+    "providers-auth.md": "22af17a9d7915e7e7493719bd55d4bf62d086e78ec5fee79bf1a6b7894f7c046",
+    "evidence/spec-cli-packaging.json": "a3914d875ed10e29096c9e562a111d3a9726423a427567c219ad6cf3c57151cc",
+    "cli-packaging.md": "0899dd7e30297e58e9ae97232b25c3a18d9ddee245c6e0be4dcc82937a66e0db",
+    "evidence/spec-misc.json": "62f377e00ed555ed22d8cb4b6913e1432c6eb83f9f4d12973a0ffa1116c27945",
+    "misc.md": "c9426a84cf0fc0c168c997052a4bdbb224b078f771f5604353c4a4aad9f6e4ed",
+    "evidence/spacing-residual-dry-run.json": "30413c47b14320dd185955e1623ddfa6d8963c72ce5e9de4515a75313cf4c280",
+    "evidence/lane-residual-spacing-review.json": "e848581f4710a4ab501025fe66585060b87d826b9c1fdb9059e366988e331215"
+  },
+  "resolved_initial_parity_findings": {
+    "artifact_sha256": "77331404a00ffc154fd56e2e0fb2abe713d60bcee45a40cf602678983a4d8147",
+    "findings": [
+      {
+        "area": "tools",
+        "entries": 31,
+        "bytes": 178946,
+        "rendered_sha256": "7dab46d850dee08fb760826a8e586e97fc50d421fe37970dc15623b9a887cdba",
+        "normalization_idempotent": false,
+        "remaining_real_prose_glue": null,
+        "first_difference": {
+          "offset": 51857,
+          "before": " ice source\n\nice:packages/coding-agent/src/core/tools/output-accumulator.ts:1-291 OutputAccumulator,describeLogFileIssue; ice:packages/coding-agent/src/core/tools/bash.ts:410-502; ice:packages/coding-",
+          "after": " ice source\n\nice:packages/coding-agent/src/core/tools/output-accumulator.ts:1-291 OutputAccumulator, describeLogFileIssue; ice:packages/coding-agent/src/core/tools/bash.ts:410-502; ice:packages/coding"
+        }
+      },
+      {
+        "area": "settings",
+        "entries": 33,
+        "bytes": 163202,
+        "rendered_sha256": "15e7c2a6cef9a543ce3c266d6042015382151c08c687fc9e26177d74b468ab11",
+        "normalization_idempotent": false,
+        "remaining_real_prose_glue": null,
+        "first_difference": {
+          "offset": 6981,
+          "before": "by-design.**\n\n### 2. ice source\n\nice:packages/coding-agent/src/config.ts:27-367 detectInstallMethod,getSelfUpdateCommand,getSelfUpdateUnavailableInstruction,getUpdateInstruction and root/writability h",
+          "after": "by-design.**\n\n### 2. ice source\n\nice:packages/coding-agent/src/config.ts:27-367 detectInstallMethod, getSelfUpdateCommand, getSelfUpdateUnavailableInstruction, getUpdateInstruction and root/writabilit"
+        }
+      },
+      {
+        "area": "subagents",
+        "entries": 44,
+        "bytes": 314030,
+        "rendered_sha256": "6db53e7f25622aab2c7f55d767f831b640d1bb54c8e2156f0b522aaf39fffcbf",
+        "normalization_idempotent": false,
+        "remaining_real_prose_glue": null,
+        "first_difference": {
+          "offset": 511,
+          "before": "e\n\nice:packages/coding-agent/src/subagents/definitions/schema.ts:1-164 NativeAgentFrontmatterSchema,JsonAgentDefinitionSchema; ice:packages/coding-agent/src/subagents/definitions/parse.ts:24-234 parse",
+          "after": "e\n\nice:packages/coding-agent/src/subagents/definitions/schema.ts:1-164 NativeAgentFrontmatterSchema, JsonAgentDefinitionSchema; ice:packages/coding-agent/src/subagents/definitions/parse.ts:24-234 pars"
+        }
+      }
+    ],
+    "resolution": "Generated source-section metadata is context-protected exactly as the canonical source field; no accepted prose edit changes."
+  },
+  "results": [
+    {
+      "area": "ai",
+      "entries": 50,
+      "bytes": 301813,
+      "rendered_sha256": "70736a82358b1f51b2c6c6d2b93f31f9079d422f4b171c1c7e2039f7cdcc0da8",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "agent",
+      "entries": 65,
+      "bytes": 350784,
+      "rendered_sha256": "0cbdb3f0c206a8c934e6e5eb3451063729d215ecb3fc54bd6de7d6dbc104f0bb",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "tools",
+      "entries": 31,
+      "bytes": 178946,
+      "rendered_sha256": "7dab46d850dee08fb760826a8e586e97fc50d421fe37970dc15623b9a887cdba",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "session",
+      "entries": 38,
+      "bytes": 245111,
+      "rendered_sha256": "afe270734b8e7aa14c320437b96b9bd6a1e34029f17928e20bcfc16261a303b8",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "settings",
+      "entries": 33,
+      "bytes": 163202,
+      "rendered_sha256": "15e7c2a6cef9a543ce3c266d6042015382151c08c687fc9e26177d74b468ab11",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "extensions",
+      "entries": 57,
+      "bytes": 338246,
+      "rendered_sha256": "78d312438beae3b5515ad20732500c8eca85d3240bea55903a4b1739ad6f172a",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "rpc-remote",
+      "entries": 36,
+      "bytes": 283311,
+      "rendered_sha256": "19206607e437d230b819246a8d1a3c28f14e37e1e482231c61cade2a59024281",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "tui",
+      "entries": 151,
+      "bytes": 737593,
+      "rendered_sha256": "6984efb3e39770d0aea15ef82ee0178169a38cec33a38f2f47021bc0ea325fc3",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "subagents",
+      "entries": 44,
+      "bytes": 314030,
+      "rendered_sha256": "6db53e7f25622aab2c7f55d767f831b640d1bb54c8e2156f0b522aaf39fffcbf",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "safe-verify",
+      "entries": 26,
+      "bytes": 99565,
+      "rendered_sha256": "6da76746763fe395181fecb9b36bc5abd02c32cb6d0b8268f16e35e8eb44dd81",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "observability",
+      "entries": 29,
+      "bytes": 149315,
+      "rendered_sha256": "52856f1fc301ac342573d85ebcd5fad7686a3f29dd26907a98649087c879f558",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "cognee",
+      "entries": 68,
+      "bytes": 372726,
+      "rendered_sha256": "7ac19025c66083742337816cc2e0b4141109c3e8e3d13316b662f2e6181e940f",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "blackhole",
+      "entries": 41,
+      "bytes": 235858,
+      "rendered_sha256": "c255d4b2b21b3f33a1a4e7c26a87d1a2e5552f454ca6846904f40a583f26211a",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "providers-auth",
+      "entries": 33,
+      "bytes": 239728,
+      "rendered_sha256": "2d257c4621c7d95304a79910730ee943dd06f89795356dbcb0ae4b9797b53819",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "cli-packaging",
+      "entries": 46,
+      "bytes": 253419,
+      "rendered_sha256": "0899dd7e30297e58e9ae97232b25c3a18d9ddee245c6e0be4dcc82937a66e0db",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    },
+    {
+      "area": "misc",
+      "entries": 43,
+      "bytes": 267112,
+      "rendered_sha256": "192842f85acac9a01ecd617d41e2dcafc43164895d93b2be4ce2c7f77df04178",
+      "normalization_idempotent": true,
+      "remaining_real_prose_glue": 0
+    }
+  ],
+  "fresh_preview_binding": {
+    "passed": true,
+    "verified_at": "2026-10-20T06:57:11.849Z",
+    "previous_parity_sha256": "8e039eac59bb8c28f07b280498ab6fd8f76842c0a09ad1387a4b3d85fbf854d5",
+    "fresh_preview_sha256": "30413c47b14320dd185955e1623ddfa6d8963c72ce5e9de4515a75313cf4c280",
+    "exact_equality_to_prior_reviewed_preview": {
+      "inputs": true,
+      "changes": true,
+      "field_changes": true
+    },
+    "all_renderer_spec_area_and_historical_inputs_byte_identical": true,
+    "results_reused_reason": "The exact same final helper produced the established successful in-memory render projection. Every canonical spec, renderer, existing area Markdown and retained historical proof is unchanged; the freshly generated preview has exactly identical inputs, changes and field changes."
+  }
+}

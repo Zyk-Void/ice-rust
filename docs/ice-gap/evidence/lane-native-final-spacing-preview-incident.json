@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "owner": "/root/native_closeout",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "incident": "A preliminary native projection preview dynamically imported the prior non-import-safe tools/fix-spacing.mjs. Its import-time preview rewrote evidence/spacing-dry-run.json with an observed zero-change preview before the missing export guard stopped the native helper.",
+  "affected_artifact": "evidence/spacing-dry-run.json",
+  "expected_original_sha256": "7d17f5f1fbd69649eaf5bf48eab7e6426b3838f42503792d50de09b337c3b4b9",
+  "observed_replacement_sha256": "558902ce9eb20e4fcd33340d19139bd110b4b47c93381fc516e11953f4981104",
+  "observed_replacement_captured_at": "2026-10-20T06:28:25.905Z",
+  "original_dry_run_restored": false,
+  "original_dry_run_unavailable": true,
+  "replacement_is_not_original_historical_evidence": true,
+  "preserved": [
+    {
+      "path": "evidence/spacing-review.json",
+      "sha256": "bacdf41827d8938933943572cc95979b48af3dbaec73aa65b3533a3ff382b943",
+      "approved_original_change_count": 5359
+    },
+    {
+      "path": "evidence/spacing-validation.json",
+      "sha256": "3f209aeacef73eb7af2a2f671928654ac3dfaa5f464133fa3760068663db8257",
+      "captured_at": "2026-10-20T03:28:04.323Z",
+      "original_change_count": 5359,
+      "includes_full_changes_and_original_review": true
+    }
+  ],
+  "recovery_search": {
+    "original_audit_files": 533,
+    "matching_backups_archives_snapshots": 0,
+    "original_expected_hash_occurrences": [
+      "evidence/spacing-review.json",
+      "evidence/spacing-validation.json"
+    ],
+    "active_audit_directory_present": false,
+    "exact_copy_found": false,
+    "reconstruction_attempted": true,
+    "retained_schema_candidate_sha256": "67cea3c7808054ea9a04b4d89fbfd6d453239e94b46228731626fac343d79472",
+    "retained_schema_candidate_accepted": false,
+    "retained_schema_candidate_written": false,
+    "missing_original_metadata": ["original preview captured_at"],
+    "recovery_check": "Removing apply-only fields and using mode preview with the retained validation timestamp did not reproduce the reviewed SHA-256. No timestamp was invented or guessed and no reconstructed historical artifact was written."
+  },
+  "effects": {
+    "accepted_specs_modified": false,
+    "accepted_manifests_modified": false,
+    "application_source_modified": false,
+    "immutable_native_proposals_modified": false,
+    "native_prose_apply_run": false
+  },
+  "remediation": [
+    "Wait for residual-spacing agent explicit READY before importing the replacement normalizer.",
+    "Require an import-safe module export/direct-entry guard before dynamic import.",
+    "Bind positive residual proof and exact helper hash before active projection.",
+    "Preserve this incident and distinguish unavailable original dry-run from retained original validation/review."
+  ],
+  "status": "Historical dry-run unavailable; original validation and review retained intact. Current dry-run is an observed replacement, not the reviewed historical file.",
+  "recorded_at": "2026-10-20T06:30:07.570Z"
+}

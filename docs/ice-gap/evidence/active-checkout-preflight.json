@@ -1,0 +1,2827 @@
+{
+  "old": {
+    "root": "/home/mewtwo/Zks/ice-rust",
+    "branch": "main",
+    "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "origin": "https://github.com/Zyk-Void/ice-rust.git",
+    "status_porcelain": "",
+    "status_includes_untracked": false
+  },
+  "active": {
+    "root": "/home/mewtwo/Zykairotis/ice-rust",
+    "branch": "main",
+    "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+    "origin": "https://github.com/Zyk-Void/ice-rust.git",
+    "status_porcelain": "",
+    "status_includes_untracked": false
+  },
+  "frozen_rust": {
+    "root": "/home/mewtwo/Zks/ice-rust",
+    "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "branch": "main",
+    "status": "?? ASTRA_GAP_AUDIT_CONTINUE.md\n?? docs/ice-gap/\n"
+  },
+  "old_source_drift": [],
+  "tracked_old": 540,
+  "tracked_active": 541,
+  "total_mapped": 541,
+  "counts": {
+    "identical": 327,
+    "modified": 207,
+    "renamed_modified": 5,
+    "renamed_identical": 1,
+    "active_only": 1
+  },
+  "changed_files": [
+    {
+      "old_path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "active_path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "status": "modified",
+      "category": "ci",
+      "old_lines": 108,
+      "active_lines": 108
+    },
+    {
+      "old_path": ".github/ISSUE_TEMPLATE/feature_request.yml",
+      "active_path": ".github/ISSUE_TEMPLATE/feature_request.yml",
+      "status": "modified",
+      "category": "ci",
+      "old_lines": 77,
+      "active_lines": 77
+    },
+    {
+      "old_path": ".github/workflows/release-binaries.yml",
+      "active_path": ".github/workflows/release-binaries.yml",
+      "status": "modified",
+      "category": "ci",
+      "old_lines": 230,
+      "active_lines": 230
+    },
+    {
+      "old_path": ".gitignore",
+      "active_path": ".gitignore",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 39,
+      "active_lines": 39
+    },
+    {
+      "old_path": ".ice/skills/ice-release/SKILL.md",
+      "active_path": ".icers/skills/ice-release/SKILL.md",
+      "status": "renamed_modified",
+      "category": "documentation",
+      "old_lines": 185,
+      "active_lines": 185
+    },
+    {
+      "old_path": "CHANGELOG.md",
+      "active_path": "CHANGELOG.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 1173,
+      "active_lines": 1173
+    },
+    {
+      "old_path": "CONTRIBUTING.md",
+      "active_path": "CONTRIBUTING.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 167,
+      "active_lines": 167
+    },
+    {
+      "old_path": "Cargo.toml",
+      "active_path": "Cargo.toml",
+      "status": "modified",
+      "category": "cargo_manifest",
+      "old_lines": 89,
+      "active_lines": 89
+    },
+    {
+      "old_path": "FORK.md",
+      "active_path": "FORK.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 65,
+      "active_lines": 76
+    },
+    {
+      "old_path": "ICE_PORTING.md",
+      "active_path": "ICE_PORTING.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 678,
+      "active_lines": 706
+    },
+    {
+      "old_path": "NOTICE",
+      "active_path": "NOTICE",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 25,
+      "active_lines": 25
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 447,
+      "active_lines": 447
+    },
+    {
+      "old_path": "ROADMAP.md",
+      "active_path": "ROADMAP.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 133,
+      "active_lines": 133
+    },
+    {
+      "old_path": "SECURITY.md",
+      "active_path": "SECURITY.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 82,
+      "active_lines": 82
+    },
+    {
+      "old_path": "Taskfile.yml",
+      "active_path": "Taskfile.yml",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 294,
+      "active_lines": 294
+    },
+    {
+      "old_path": "crates/ice-agent/README.md",
+      "active_path": "crates/ice-agent/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 169,
+      "active_lines": 169
+    },
+    {
+      "old_path": "crates/ice-ai/README.md",
+      "active_path": "crates/ice-ai/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 117,
+      "active_lines": 117
+    },
+    {
+      "old_path": "crates/ice-ai/src/http.rs",
+      "active_path": "crates/ice-ai/src/http.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 286,
+      "active_lines": 286
+    },
+    {
+      "old_path": "crates/ice-ai/src/provider.rs",
+      "active_path": "crates/ice-ai/src/provider.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 392,
+      "active_lines": 392
+    },
+    {
+      "old_path": "crates/ice-ai/src/providers/anthropic/mod.rs",
+      "active_path": "crates/ice-ai/src/providers/anthropic/mod.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 904,
+      "active_lines": 904
+    },
+    {
+      "old_path": "crates/ice-ai/src/providers/openai_completions.rs",
+      "active_path": "crates/ice-ai/src/providers/openai_completions.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1629,
+      "active_lines": 1629
+    },
+    {
+      "old_path": "crates/ice-cli/Cargo.toml",
+      "active_path": "crates/ice-cli/Cargo.toml",
+      "status": "modified",
+      "category": "cargo_manifest",
+      "old_lines": 108,
+      "active_lines": 108
+    },
+    {
+      "old_path": "crates/ice-cli/README.md",
+      "active_path": "crates/ice-cli/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 149,
+      "active_lines": 149
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/README.md",
+      "active_path": "crates/ice-cli/embedded-docs/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 422,
+      "active_lines": 422
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/agent-project.md",
+      "active_path": "crates/ice-cli/embedded-docs/agent-project.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 322,
+      "active_lines": 322
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/architecture.md",
+      "active_path": "crates/ice-cli/embedded-docs/architecture.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 463,
+      "active_lines": 463
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/changelog.md",
+      "active_path": "crates/ice-cli/embedded-docs/changelog.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 1173,
+      "active_lines": 1173
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/extension-authoring.md",
+      "active_path": "crates/ice-cli/embedded-docs/extension-authoring.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 588,
+      "active_lines": 588
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/rust-debugging.md",
+      "active_path": "crates/ice-cli/embedded-docs/rust-debugging.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 330,
+      "active_lines": 330
+    },
+    {
+      "old_path": "crates/ice-cli/embedded-docs/user-guide.md",
+      "active_path": "crates/ice-cli/embedded-docs/user-guide.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 505,
+      "active_lines": 505
+    },
+    {
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1015,
+      "active_lines": 1015
+    },
+    {
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1121,
+      "active_lines": 1121
+    },
+    {
+      "old_path": "crates/ice-cli/src/auth.rs",
+      "active_path": "crates/ice-cli/src/auth.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 739,
+      "active_lines": 739
+    },
+    {
+      "old_path": "crates/ice-cli/src/auth_guidance.rs",
+      "active_path": "crates/ice-cli/src/auth_guidance.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 61,
+      "active_lines": 61
+    },
+    {
+      "old_path": "crates/ice-cli/src/bin/ice.rs",
+      "active_path": "crates/ice-cli/src/bin/icers.rs",
+      "status": "renamed_identical",
+      "category": "source_or_configuration",
+      "old_lines": 22,
+      "active_lines": 22
+    },
+    {
+      "old_path": "crates/ice-cli/src/brand.rs",
+      "active_path": "crates/ice-cli/src/brand.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 253,
+      "active_lines": 253
+    },
+    {
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 434,
+      "active_lines": 434
+    },
+    {
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1761,
+      "active_lines": 1761
+    },
+    {
+      "old_path": "crates/ice-cli/src/dev_extension.rs",
+      "active_path": "crates/ice-cli/src/dev_extension.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 603,
+      "active_lines": 603
+    },
+    {
+      "old_path": "crates/ice-cli/src/docs_tool.rs",
+      "active_path": "crates/ice-cli/src/docs_tool.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 332,
+      "active_lines": 332
+    },
+    {
+      "old_path": "crates/ice-cli/src/events.rs",
+      "active_path": "crates/ice-cli/src/events.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 101,
+      "active_lines": 101
+    },
+    {
+      "old_path": "crates/ice-cli/src/experimental.rs",
+      "active_path": "crates/ice-cli/src/experimental.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 29,
+      "active_lines": 29
+    },
+    {
+      "old_path": "crates/ice-cli/src/extras.rs",
+      "active_path": "crates/ice-cli/src/extras.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 95,
+      "active_lines": 95
+    },
+    {
+      "old_path": "crates/ice-cli/src/fs_watch.rs",
+      "active_path": "crates/ice-cli/src/fs_watch.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 162,
+      "active_lines": 162
+    },
+    {
+      "old_path": "crates/ice-cli/src/install.rs",
+      "active_path": "crates/ice-cli/src/install.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1928,
+      "active_lines": 1928
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 3398,
+      "active_lines": 3398
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/events.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/events.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 510,
+      "active_lines": 510
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/pet.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/pet.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 285,
+      "active_lines": 285
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/rendering.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/rendering.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 562,
+      "active_lines": 566
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 725,
+      "active_lines": 725
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/selectors.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/selectors.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1034,
+      "active_lines": 1034
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/settings.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/settings.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1944,
+      "active_lines": 1944
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/state.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/state.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1373,
+      "active_lines": 1373
+    },
+    {
+      "old_path": "crates/ice-cli/src/interactive_tui/tests.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/tests.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 3485,
+      "active_lines": 3485
+    },
+    {
+      "old_path": "crates/ice-cli/src/key_trace.rs",
+      "active_path": "crates/ice-cli/src/key_trace.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 189,
+      "active_lines": 189
+    },
+    {
+      "old_path": "crates/ice-cli/src/lib.rs",
+      "active_path": "crates/ice-cli/src/lib.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 90,
+      "active_lines": 90
+    },
+    {
+      "old_path": "crates/ice-cli/src/modes.rs",
+      "active_path": "crates/ice-cli/src/modes.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1566,
+      "active_lines": 1566
+    },
+    {
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 819,
+      "active_lines": 819
+    },
+    {
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1403,
+      "active_lines": 1403
+    },
+    {
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 373,
+      "active_lines": 373
+    },
+    {
+      "old_path": "crates/ice-cli/src/provider.rs",
+      "active_path": "crates/ice-cli/src/provider.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 3458,
+      "active_lines": 3458
+    },
+    {
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 192,
+      "active_lines": 192
+    },
+    {
+      "old_path": "crates/ice-cli/src/remote/mod.rs",
+      "active_path": "crates/ice-cli/src/remote/mod.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 34,
+      "active_lines": 34
+    },
+    {
+      "old_path": "crates/ice-cli/src/remote/protocol.rs",
+      "active_path": "crates/ice-cli/src/remote/protocol.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 521,
+      "active_lines": 521
+    },
+    {
+      "old_path": "crates/ice-cli/src/remote/session.rs",
+      "active_path": "crates/ice-cli/src/remote/session.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 493,
+      "active_lines": 493
+    },
+    {
+      "old_path": "crates/ice-cli/src/remote/tui.rs",
+      "active_path": "crates/ice-cli/src/remote/tui.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 30,
+      "active_lines": 30
+    },
+    {
+      "old_path": "crates/ice-cli/src/resource_dirs.rs",
+      "active_path": "crates/ice-cli/src/resource_dirs.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 550,
+      "active_lines": 552
+    },
+    {
+      "old_path": "crates/ice-cli/src/resume_picker.rs",
+      "active_path": "crates/ice-cli/src/resume_picker.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 247,
+      "active_lines": 247
+    },
+    {
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 4016,
+      "active_lines": 4016
+    },
+    {
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 704,
+      "active_lines": 706
+    },
+    {
+      "old_path": "crates/ice-cli/src/settings.rs",
+      "active_path": "crates/ice-cli/src/settings.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1221,
+      "active_lines": 1221
+    },
+    {
+      "old_path": "crates/ice-cli/src/side_questions.rs",
+      "active_path": "crates/ice-cli/src/side_questions.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 714,
+      "active_lines": 716
+    },
+    {
+      "old_path": "crates/ice-cli/src/timings.rs",
+      "active_path": "crates/ice-cli/src/timings.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 144,
+      "active_lines": 144
+    },
+    {
+      "old_path": "crates/ice-cli/src/trust.rs",
+      "active_path": "crates/ice-cli/src/trust.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 357,
+      "active_lines": 357
+    },
+    {
+      "old_path": "crates/ice-cli/src/tui_shell.rs",
+      "active_path": "crates/ice-cli/src/tui_shell.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 459,
+      "active_lines": 459
+    },
+    {
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 3527,
+      "active_lines": 3531
+    },
+    {
+      "old_path": "crates/ice-cli/tests/btw_package.rs",
+      "active_path": "crates/ice-cli/tests/btw_package.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 197,
+      "active_lines": 197
+    },
+    {
+      "old_path": "crates/ice-cli/tests/provider_packages.rs",
+      "active_path": "crates/ice-cli/tests/provider_packages.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 767,
+      "active_lines": 766
+    },
+    {
+      "old_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "active_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 510,
+      "active_lines": 510
+    },
+    {
+      "old_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 376,
+      "active_lines": 376
+    },
+    {
+      "old_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 64,
+      "active_lines": 64
+    },
+    {
+      "old_path": "crates/ice-extensions/Cargo.toml",
+      "active_path": "crates/ice-extensions/Cargo.toml",
+      "status": "modified",
+      "category": "cargo_manifest",
+      "old_lines": 42,
+      "active_lines": 42
+    },
+    {
+      "old_path": "crates/ice-extensions/README.md",
+      "active_path": "crates/ice-extensions/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 85,
+      "active_lines": 85
+    },
+    {
+      "old_path": "crates/ice-extensions/src/actions.rs",
+      "active_path": "crates/ice-extensions/src/actions.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 2090,
+      "active_lines": 2090
+    },
+    {
+      "old_path": "crates/ice-extensions/src/event_log.rs",
+      "active_path": "crates/ice-extensions/src/event_log.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 232,
+      "active_lines": 232
+    },
+    {
+      "old_path": "crates/ice-extensions/src/lib.rs",
+      "active_path": "crates/ice-extensions/src/lib.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 938,
+      "active_lines": 938
+    },
+    {
+      "old_path": "crates/ice-extensions/src/loader.rs",
+      "active_path": "crates/ice-extensions/src/loader.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 761,
+      "active_lines": 761
+    },
+    {
+      "old_path": "crates/ice-extensions/src/prompt_transform.rs",
+      "active_path": "crates/ice-extensions/src/prompt_transform.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 212,
+      "active_lines": 212
+    },
+    {
+      "old_path": "crates/ice-extensions/src/provider.rs",
+      "active_path": "crates/ice-extensions/src/provider.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1778,
+      "active_lines": 1778
+    },
+    {
+      "old_path": "crates/ice-extensions/src/provider_hooks.rs",
+      "active_path": "crates/ice-extensions/src/provider_hooks.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 758,
+      "active_lines": 758
+    },
+    {
+      "old_path": "crates/ice-extensions/src/resources.rs",
+      "active_path": "crates/ice-extensions/src/resources.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 317,
+      "active_lines": 317
+    },
+    {
+      "old_path": "crates/ice-extensions/tests/voice_ptt_smoke.rs",
+      "active_path": "crates/ice-extensions/tests/voice_ptt_smoke.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 294,
+      "active_lines": 294
+    },
+    {
+      "old_path": "crates/ice-harness/src/agent_harness.rs",
+      "active_path": "crates/ice-harness/src/agent_harness.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 5844,
+      "active_lines": 5844
+    },
+    {
+      "old_path": "crates/ice-harness/src/context_files.rs",
+      "active_path": "crates/ice-harness/src/context_files.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 316,
+      "active_lines": 316
+    },
+    {
+      "old_path": "crates/ice-harness/src/frame_progress.rs",
+      "active_path": "crates/ice-harness/src/frame_progress.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 494,
+      "active_lines": 494
+    },
+    {
+      "old_path": "crates/ice-harness/src/frontmatter.rs",
+      "active_path": "crates/ice-harness/src/frontmatter.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 180,
+      "active_lines": 180
+    },
+    {
+      "old_path": "crates/ice-harness/src/run_budget.rs",
+      "active_path": "crates/ice-harness/src/run_budget.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 258,
+      "active_lines": 258
+    },
+    {
+      "old_path": "crates/ice-harness/src/session/types.rs",
+      "active_path": "crates/ice-harness/src/session/types.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1400,
+      "active_lines": 1400
+    },
+    {
+      "old_path": "crates/ice-harness/src/session/values.rs",
+      "active_path": "crates/ice-harness/src/session/values.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 225,
+      "active_lines": 225
+    },
+    {
+      "old_path": "crates/ice-harness/src/settle.rs",
+      "active_path": "crates/ice-harness/src/settle.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 666,
+      "active_lines": 666
+    },
+    {
+      "old_path": "crates/ice-harness/tests/harness_run_e2e.rs",
+      "active_path": "crates/ice-harness/tests/harness_run_e2e.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 4086,
+      "active_lines": 4086
+    },
+    {
+      "old_path": "crates/ice-plugin-sdk/Cargo.toml",
+      "active_path": "crates/ice-plugin-sdk/Cargo.toml",
+      "status": "modified",
+      "category": "cargo_manifest",
+      "old_lines": 38,
+      "active_lines": 38
+    },
+    {
+      "old_path": "crates/ice-plugin-sdk/README.md",
+      "active_path": "crates/ice-plugin-sdk/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 270,
+      "active_lines": 270
+    },
+    {
+      "old_path": "crates/ice-plugin-sdk/src/lib.rs",
+      "active_path": "crates/ice-plugin-sdk/src/lib.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 2169,
+      "active_lines": 2169
+    },
+    {
+      "old_path": "crates/ice-tools/README.md",
+      "active_path": "crates/ice-tools/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 119,
+      "active_lines": 119
+    },
+    {
+      "old_path": "crates/ice-tools/src/os_env.rs",
+      "active_path": "crates/ice-tools/src/os_env.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1141,
+      "active_lines": 1141
+    },
+    {
+      "old_path": "crates/ice-tools/src/tools/bash.rs",
+      "active_path": "crates/ice-tools/src/tools/bash.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 427,
+      "active_lines": 427
+    },
+    {
+      "old_path": "crates/ice-tools/tests/host_private_env.rs",
+      "active_path": "crates/ice-tools/tests/host_private_env.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 166,
+      "active_lines": 166
+    },
+    {
+      "old_path": "crates/ice-tui/README.md",
+      "active_path": "crates/ice-tui/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 95,
+      "active_lines": 95
+    },
+    {
+      "old_path": "crates/ice-tui/src/keybindings.rs",
+      "active_path": "crates/ice-tui/src/keybindings.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 936,
+      "active_lines": 936
+    },
+    {
+      "old_path": "crates/ice-tui/src/syntax_highlight.rs",
+      "active_path": "crates/ice-tui/src/syntax_highlight.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 492,
+      "active_lines": 492
+    },
+    {
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 672,
+      "active_lines": 672
+    },
+    {
+      "old_path": "crates/ice-tui/src/tool_execution.rs",
+      "active_path": "crates/ice-tui/src/tool_execution.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 1682,
+      "active_lines": 1682
+    },
+    {
+      "old_path": "crates/ice-tui/src/tui_alt_screen.rs",
+      "active_path": "crates/ice-tui/src/tui_alt_screen.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 2133,
+      "active_lines": 2133
+    },
+    {
+      "old_path": "crates/ice-tui/src/user_message.rs",
+      "active_path": "crates/ice-tui/src/user_message.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 154,
+      "active_lines": 154
+    },
+    {
+      "old_path": "demo/README.md",
+      "active_path": "demo/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 51,
+      "active_lines": 51
+    },
+    {
+      "old_path": "demo/ice.tape",
+      "active_path": "demo/icers.tape",
+      "status": "renamed_modified",
+      "category": "other_tracked",
+      "old_lines": 51,
+      "active_lines": 51
+    },
+    {
+      "old_path": "deploy/caddy-ice.override.yml",
+      "active_path": "deploy/caddy-ice.override.yml",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 11,
+      "active_lines": 11
+    },
+    {
+      "old_path": "deploy/ice.caddy",
+      "active_path": "deploy/icers.caddy",
+      "status": "renamed_modified",
+      "category": "other_tracked",
+      "old_lines": 48,
+      "active_lines": 48
+    },
+    {
+      "old_path": "docs/README.md",
+      "active_path": "docs/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 40,
+      "active_lines": 40
+    },
+    {
+      "old_path": "docs/agent/project-structure.md",
+      "active_path": "docs/agent/project-structure.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 322,
+      "active_lines": 322
+    },
+    {
+      "old_path": "docs/architecture/overview.md",
+      "active_path": "docs/architecture/overview.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 67,
+      "active_lines": 67
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 182,
+      "active_lines": 182
+    },
+    {
+      "old_path": "docs/debugging/llm-repetition-forensics.md",
+      "active_path": "docs/debugging/llm-repetition-forensics.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 1905,
+      "active_lines": 1905
+    },
+    {
+      "old_path": "docs/debugging/rust-debugging.md",
+      "active_path": "docs/debugging/rust-debugging.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 346,
+      "active_lines": 346
+    },
+    {
+      "old_path": "docs/distribution/prebuilt-cli.md",
+      "active_path": "docs/distribution/prebuilt-cli.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 68,
+      "active_lines": 68
+    },
+    {
+      "old_path": "docs/extensions/authoring.md",
+      "active_path": "docs/extensions/authoring.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 570,
+      "active_lines": 570
+    },
+    {
+      "old_path": "docs/extensions/lifecycle.md",
+      "active_path": "docs/extensions/lifecycle.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 18,
+      "active_lines": 18
+    },
+    {
+      "old_path": "docs/extensions/provider-integration.md",
+      "active_path": "docs/extensions/provider-integration.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 251,
+      "active_lines": 251
+    },
+    {
+      "old_path": "docs/extensions/side-questions.md",
+      "active_path": "docs/extensions/side-questions.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 68,
+      "active_lines": 68
+    },
+    {
+      "old_path": "docs/extensions/subagents.md",
+      "active_path": "docs/extensions/subagents.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 137,
+      "active_lines": 137
+    },
+    {
+      "old_path": "docs/guides/user-guide.en.md",
+      "active_path": "docs/guides/user-guide.en.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 371,
+      "active_lines": 371
+    },
+    {
+      "old_path": "docs/guides/user-guide.md",
+      "active_path": "docs/guides/user-guide.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 541,
+      "active_lines": 541
+    },
+    {
+      "old_path": "docs/ice-tool/README.md",
+      "active_path": "docs/ice-tool/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 422,
+      "active_lines": 422
+    },
+    {
+      "old_path": "docs/ice-tool/agent-project.md",
+      "active_path": "docs/ice-tool/agent-project.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 322,
+      "active_lines": 322
+    },
+    {
+      "old_path": "docs/ice-tool/architecture.md",
+      "active_path": "docs/ice-tool/architecture.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 463,
+      "active_lines": 463
+    },
+    {
+      "old_path": "docs/ice-tool/extension-authoring.md",
+      "active_path": "docs/ice-tool/extension-authoring.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 588,
+      "active_lines": 588
+    },
+    {
+      "old_path": "docs/ice-tool/rust-debugging.md",
+      "active_path": "docs/ice-tool/rust-debugging.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 330,
+      "active_lines": 330
+    },
+    {
+      "old_path": "docs/ice-tool/user-guide.md",
+      "active_path": "docs/ice-tool/user-guide.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 505,
+      "active_lines": 505
+    },
+    {
+      "old_path": "docs/maintaining/releasing.md",
+      "active_path": "docs/maintaining/releasing.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 202,
+      "active_lines": 202
+    },
+    {
+      "old_path": "docs/performance/benchmark-vs-pi.md",
+      "active_path": "docs/performance/benchmark-vs-pi.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 157,
+      "active_lines": 157
+    },
+    {
+      "old_path": "docs/promotion/01-benchmark-vs-native-pi.md",
+      "active_path": "docs/promotion/01-benchmark-vs-native-pi.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 197,
+      "active_lines": 197
+    },
+    {
+      "old_path": "docs/promotion/02-rust-agent-runtime-architecture.md",
+      "active_path": "docs/promotion/02-rust-agent-runtime-architecture.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 203,
+      "active_lines": 203
+    },
+    {
+      "old_path": "docs/promotion/03-english-showhn-devto-reddit.md",
+      "active_path": "docs/promotion/03-english-showhn-devto-reddit.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 336,
+      "active_lines": 336
+    },
+    {
+      "old_path": "docs/promotion/04-submissions-twir-and-awesome-rust.md",
+      "active_path": "docs/promotion/04-submissions-twir-and-awesome-rust.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 174,
+      "active_lines": 174
+    },
+    {
+      "old_path": "docs/promotion/05-awesome-list-survey.md",
+      "active_path": "docs/promotion/05-awesome-list-survey.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 226,
+      "active_lines": 226
+    },
+    {
+      "old_path": "docs/promotion/06-directory-survey.md",
+      "active_path": "docs/promotion/06-directory-survey.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 193,
+      "active_lines": 193
+    },
+    {
+      "old_path": "docs/promotion/07-agent-loop-streaming.md",
+      "active_path": "docs/promotion/07-agent-loop-streaming.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 93,
+      "active_lines": 93
+    },
+    {
+      "old_path": "docs/promotion/08-provider-abstraction-and-offline-testing.md",
+      "active_path": "docs/promotion/08-provider-abstraction-and-offline-testing.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 90,
+      "active_lines": 90
+    },
+    {
+      "old_path": "docs/promotion/09-tool-execution-and-sandbox.md",
+      "active_path": "docs/promotion/09-tool-execution-and-sandbox.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 78,
+      "active_lines": 78
+    },
+    {
+      "old_path": "docs/promotion/10-session-jsonl-crash-recovery.md",
+      "active_path": "docs/promotion/10-session-jsonl-crash-recovery.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 76,
+      "active_lines": 76
+    },
+    {
+      "old_path": "docs/promotion/11-steering-follow-up-queues.md",
+      "active_path": "docs/promotion/11-steering-follow-up-queues.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 63,
+      "active_lines": 63
+    },
+    {
+      "old_path": "docs/promotion/12-plugin-abi-design.md",
+      "active_path": "docs/promotion/12-plugin-abi-design.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 66,
+      "active_lines": 66
+    },
+    {
+      "old_path": "docs/promotion/13-remote-server-client.md",
+      "active_path": "docs/promotion/13-remote-server-client.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 64,
+      "active_lines": 64
+    },
+    {
+      "old_path": "docs/promotion/14-context-compaction-and-skills.md",
+      "active_path": "docs/promotion/14-context-compaction-and-skills.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 61,
+      "active_lines": 61
+    },
+    {
+      "old_path": "docs/promotion/16-release-and-cross-platform-distribution.md",
+      "active_path": "docs/promotion/16-release-and-cross-platform-distribution.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 75,
+      "active_lines": 75
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 549,
+      "active_lines": 549
+    },
+    {
+      "old_path": "docs/remote/user-guide.md",
+      "active_path": "docs/remote/user-guide.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 147,
+      "active_lines": 147
+    },
+    {
+      "old_path": "examples/plugin-stub/Cargo.toml",
+      "active_path": "examples/plugin-stub/Cargo.toml",
+      "status": "modified",
+      "category": "cargo_manifest",
+      "old_lines": 15,
+      "active_lines": 15
+    },
+    {
+      "old_path": "examples/plugin-stub/src/lib.rs",
+      "active_path": "examples/plugin-stub/src/lib.rs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 852,
+      "active_lines": 852
+    },
+    {
+      "old_path": "packages/provider-runtime/Cargo.toml",
+      "active_path": "packages/provider-runtime/Cargo.toml",
+      "status": "modified",
+      "category": "cargo_manifest",
+      "old_lines": 19,
+      "active_lines": 19
+    },
+    {
+      "old_path": "packaging/README.md",
+      "active_path": "packaging/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 164,
+      "active_lines": 164
+    },
+    {
+      "old_path": "packaging/homebrew/ice.rb",
+      "active_path": "packaging/homebrew/icers.rb",
+      "status": "renamed_modified",
+      "category": "other_tracked",
+      "old_lines": 45,
+      "active_lines": 45
+    },
+    {
+      "old_path": "packaging/scoop/ice.json",
+      "active_path": "packaging/scoop/icers.json",
+      "status": "renamed_modified",
+      "category": "source_or_configuration",
+      "old_lines": 27,
+      "active_lines": 27
+    },
+    {
+      "old_path": "packaging/winget/Zyk-Void.ice.installer.yaml",
+      "active_path": "packaging/winget/Zyk-Void.ice.installer.yaml",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 18,
+      "active_lines": 18
+    },
+    {
+      "old_path": "packaging/winget/Zyk-Void.ice.locale.en-US.yaml",
+      "active_path": "packaging/winget/Zyk-Void.ice.locale.en-US.yaml",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 36,
+      "active_lines": 36
+    },
+    {
+      "old_path": "packaging/winget/Zyk-Void.ice.yaml",
+      "active_path": "packaging/winget/Zyk-Void.ice.yaml",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 9,
+      "active_lines": 9
+    },
+    {
+      "old_path": "release-plz.toml",
+      "active_path": "release-plz.toml",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 64,
+      "active_lines": 64
+    },
+    {
+      "old_path": "scripts/bench-vs-pi.mjs",
+      "active_path": "scripts/bench-vs-pi.mjs",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 418,
+      "active_lines": 418
+    },
+    {
+      "old_path": "scripts/bench.sh",
+      "active_path": "scripts/bench.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 63,
+      "active_lines": 63
+    },
+    {
+      "old_path": "scripts/ice-rebrand.sh",
+      "active_path": "scripts/ice-rebrand.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 51,
+      "active_lines": 62
+    },
+    {
+      "old_path": "scripts/install.ps1",
+      "active_path": "scripts/install.ps1",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 139,
+      "active_lines": 139
+    },
+    {
+      "old_path": "scripts/install.sh",
+      "active_path": "scripts/install.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 171,
+      "active_lines": 171
+    },
+    {
+      "old_path": "scripts/prebuilt-release.py",
+      "active_path": "scripts/prebuilt-release.py",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 95,
+      "active_lines": 95
+    },
+    {
+      "old_path": "scripts/push-taps.sh",
+      "active_path": "scripts/push-taps.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 69,
+      "active_lines": 69
+    },
+    {
+      "old_path": "scripts/refresh-channels.sh",
+      "active_path": "scripts/refresh-channels.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 152,
+      "active_lines": 152
+    },
+    {
+      "old_path": "scripts/release.sh",
+      "active_path": "scripts/release.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 296,
+      "active_lines": 296
+    },
+    {
+      "old_path": "scripts/sync-embedded-docs.sh",
+      "active_path": "scripts/sync-embedded-docs.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 36,
+      "active_lines": 36
+    },
+    {
+      "old_path": "scripts/test_prebuilt_release.py",
+      "active_path": "scripts/test_prebuilt_release.py",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 76,
+      "active_lines": 76
+    },
+    {
+      "old_path": "scripts/test_release_automation.py",
+      "active_path": "scripts/test_release_automation.py",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 164,
+      "active_lines": 164
+    },
+    {
+      "old_path": "scripts/test_release_channels.py",
+      "active_path": "scripts/test_release_channels.py",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 168,
+      "active_lines": 168
+    },
+    {
+      "old_path": "scripts/test_website.py",
+      "active_path": "scripts/test_website.py",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 135,
+      "active_lines": 135
+    },
+    {
+      "old_path": "scripts/tests/install.Tests.ps1",
+      "active_path": "scripts/tests/install.Tests.ps1",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 220,
+      "active_lines": 220
+    },
+    {
+      "old_path": "scripts/verify-website.py",
+      "active_path": "scripts/verify-website.py",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 87,
+      "active_lines": 87
+    },
+    {
+      "old_path": "scripts/website-cdn-purge.sh",
+      "active_path": "scripts/website-cdn-purge.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 17,
+      "active_lines": 17
+    },
+    {
+      "old_path": "scripts/winget-submit.sh",
+      "active_path": "scripts/winget-submit.sh",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 93,
+      "active_lines": 93
+    },
+    {
+      "old_path": "website/README.md",
+      "active_path": "website/README.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 119,
+      "active_lines": 119
+    },
+    {
+      "old_path": "website/agent-project.md",
+      "active_path": "website/agent-project.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 322,
+      "active_lines": 322
+    },
+    {
+      "old_path": "website/blog.html",
+      "active_path": "website/blog.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 66,
+      "active_lines": 66
+    },
+    {
+      "old_path": "website/compare.html",
+      "active_path": "website/compare.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 180,
+      "active_lines": 180
+    },
+    {
+      "old_path": "website/content/agent-project.html",
+      "active_path": "website/content/agent-project.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 306,
+      "active_lines": 306
+    },
+    {
+      "old_path": "website/content/extension-authoring.html",
+      "active_path": "website/content/extension-authoring.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 347,
+      "active_lines": 347
+    },
+    {
+      "old_path": "website/content/user-guide-en.html",
+      "active_path": "website/content/user-guide-en.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 249,
+      "active_lines": 249
+    },
+    {
+      "old_path": "website/content/user-guide.html",
+      "active_path": "website/content/user-guide.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 310,
+      "active_lines": 310
+    },
+    {
+      "old_path": "website/data/blog-posts/agent-loop.json",
+      "active_path": "website/data/blog-posts/agent-loop.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 26,
+      "active_lines": 26
+    },
+    {
+      "old_path": "website/data/blog-posts/architecture.json",
+      "active_path": "website/data/blog-posts/architecture.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 26,
+      "active_lines": 26
+    },
+    {
+      "old_path": "website/data/blog-posts/execution-env.json",
+      "active_path": "website/data/blog-posts/execution-env.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 26,
+      "active_lines": 26
+    },
+    {
+      "old_path": "website/data/blog-posts/plugin-abi.json",
+      "active_path": "website/data/blog-posts/plugin-abi.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 26,
+      "active_lines": 26
+    },
+    {
+      "old_path": "website/data/blog.json",
+      "active_path": "website/data/blog.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 173,
+      "active_lines": 173
+    },
+    {
+      "old_path": "website/data/docs.json",
+      "active_path": "website/data/docs.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 388,
+      "active_lines": 388
+    },
+    {
+      "old_path": "website/data/locales.json",
+      "active_path": "website/data/locales.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 812,
+      "active_lines": 812
+    },
+    {
+      "old_path": "website/data/packages.json",
+      "active_path": "website/data/packages.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 479,
+      "active_lines": 479
+    },
+    {
+      "old_path": "website/data/site.json",
+      "active_path": "website/data/site.json",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 120,
+      "active_lines": 120
+    },
+    {
+      "old_path": "website/docs.html",
+      "active_path": "website/docs.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 70,
+      "active_lines": 70
+    },
+    {
+      "old_path": "website/extension-authoring.md",
+      "active_path": "website/extension-authoring.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 288,
+      "active_lines": 288
+    },
+    {
+      "old_path": "website/favicon.svg",
+      "active_path": "website/favicon.svg",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 9,
+      "active_lines": 9
+    },
+    {
+      "old_path": "website/guide.html",
+      "active_path": "website/guide.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 303,
+      "active_lines": 303
+    },
+    {
+      "old_path": "website/guide.js",
+      "active_path": "website/guide.js",
+      "status": "modified",
+      "category": "source_or_configuration",
+      "old_lines": 116,
+      "active_lines": 116
+    },
+    {
+      "old_path": "website/index.html",
+      "active_path": "website/index.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 123,
+      "active_lines": 123
+    },
+    {
+      "old_path": "website/packages.html",
+      "active_path": "website/packages.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 75,
+      "active_lines": 75
+    },
+    {
+      "old_path": "website/robots.txt",
+      "active_path": "website/robots.txt",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 11,
+      "active_lines": 11
+    },
+    {
+      "old_path": "website/support.html",
+      "active_path": "website/support.html",
+      "status": "modified",
+      "category": "other_tracked",
+      "old_lines": 56,
+      "active_lines": 56
+    },
+    {
+      "old_path": "website/user-guide.md",
+      "active_path": "website/user-guide.md",
+      "status": "modified",
+      "category": "documentation",
+      "old_lines": 445,
+      "active_lines": 445
+    },
+    {
+      "old_path": null,
+      "active_path": "AGENTS.md",
+      "status": "active_only",
+      "category": "documentation",
+      "active_lines": 277
+    }
+  ],
+  "commit_changes": [
+    {
+      "status": "M",
+      "old_path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "active_path": ".github/ISSUE_TEMPLATE/bug_report.yml"
+    },
+    {
+      "status": "M",
+      "old_path": ".github/ISSUE_TEMPLATE/feature_request.yml",
+      "active_path": ".github/ISSUE_TEMPLATE/feature_request.yml"
+    },
+    {
+      "status": "M",
+      "old_path": ".github/workflows/release-binaries.yml",
+      "active_path": ".github/workflows/release-binaries.yml"
+    },
+    {
+      "status": "M",
+      "old_path": ".gitignore",
+      "active_path": ".gitignore"
+    },
+    {
+      "status": "R094",
+      "old_path": ".ice/skills/ice-release/SKILL.md",
+      "active_path": ".icers/skills/ice-release/SKILL.md"
+    },
+    {
+      "status": "A",
+      "old_path": null,
+      "active_path": "AGENTS.md"
+    },
+    {
+      "status": "M",
+      "old_path": "CHANGELOG.md",
+      "active_path": "CHANGELOG.md"
+    },
+    {
+      "status": "M",
+      "old_path": "CONTRIBUTING.md",
+      "active_path": "CONTRIBUTING.md"
+    },
+    {
+      "status": "M",
+      "old_path": "Cargo.toml",
+      "active_path": "Cargo.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "FORK.md",
+      "active_path": "FORK.md"
+    },
+    {
+      "status": "M",
+      "old_path": "ICE_PORTING.md",
+      "active_path": "ICE_PORTING.md"
+    },
+    {
+      "status": "M",
+      "old_path": "NOTICE",
+      "active_path": "NOTICE"
+    },
+    {
+      "status": "M",
+      "old_path": "README.md",
+      "active_path": "README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "ROADMAP.md",
+      "active_path": "ROADMAP.md"
+    },
+    {
+      "status": "M",
+      "old_path": "SECURITY.md",
+      "active_path": "SECURITY.md"
+    },
+    {
+      "status": "M",
+      "old_path": "Taskfile.yml",
+      "active_path": "Taskfile.yml"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-agent/README.md",
+      "active_path": "crates/ice-agent/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-ai/README.md",
+      "active_path": "crates/ice-ai/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-ai/src/http.rs",
+      "active_path": "crates/ice-ai/src/http.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-ai/src/provider.rs",
+      "active_path": "crates/ice-ai/src/provider.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-ai/src/providers/anthropic/mod.rs",
+      "active_path": "crates/ice-ai/src/providers/anthropic/mod.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-ai/src/providers/openai_completions.rs",
+      "active_path": "crates/ice-ai/src/providers/openai_completions.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/Cargo.toml",
+      "active_path": "crates/ice-cli/Cargo.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/README.md",
+      "active_path": "crates/ice-cli/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/README.md",
+      "active_path": "crates/ice-cli/embedded-docs/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/agent-project.md",
+      "active_path": "crates/ice-cli/embedded-docs/agent-project.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/architecture.md",
+      "active_path": "crates/ice-cli/embedded-docs/architecture.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/changelog.md",
+      "active_path": "crates/ice-cli/embedded-docs/changelog.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/extension-authoring.md",
+      "active_path": "crates/ice-cli/embedded-docs/extension-authoring.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/rust-debugging.md",
+      "active_path": "crates/ice-cli/embedded-docs/rust-debugging.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/embedded-docs/user-guide.md",
+      "active_path": "crates/ice-cli/embedded-docs/user-guide.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/auth.rs",
+      "active_path": "crates/ice-cli/src/auth.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/auth_guidance.rs",
+      "active_path": "crates/ice-cli/src/auth_guidance.rs"
+    },
+    {
+      "status": "R100",
+      "old_path": "crates/ice-cli/src/bin/ice.rs",
+      "active_path": "crates/ice-cli/src/bin/icers.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/brand.rs",
+      "active_path": "crates/ice-cli/src/brand.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/dev_extension.rs",
+      "active_path": "crates/ice-cli/src/dev_extension.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/docs_tool.rs",
+      "active_path": "crates/ice-cli/src/docs_tool.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/events.rs",
+      "active_path": "crates/ice-cli/src/events.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/experimental.rs",
+      "active_path": "crates/ice-cli/src/experimental.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/extras.rs",
+      "active_path": "crates/ice-cli/src/extras.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/fs_watch.rs",
+      "active_path": "crates/ice-cli/src/fs_watch.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/install.rs",
+      "active_path": "crates/ice-cli/src/install.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/events.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/events.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/pet.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/pet.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/rendering.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/rendering.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/run.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/selectors.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/selectors.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/settings.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/settings.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/state.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/state.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/interactive_tui/tests.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/tests.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/key_trace.rs",
+      "active_path": "crates/ice-cli/src/key_trace.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/lib.rs",
+      "active_path": "crates/ice-cli/src/lib.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/modes.rs",
+      "active_path": "crates/ice-cli/src/modes.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/provider.rs",
+      "active_path": "crates/ice-cli/src/provider.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/remote/mod.rs",
+      "active_path": "crates/ice-cli/src/remote/mod.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/remote/protocol.rs",
+      "active_path": "crates/ice-cli/src/remote/protocol.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/remote/session.rs",
+      "active_path": "crates/ice-cli/src/remote/session.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/remote/tui.rs",
+      "active_path": "crates/ice-cli/src/remote/tui.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/resource_dirs.rs",
+      "active_path": "crates/ice-cli/src/resource_dirs.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/resume_picker.rs",
+      "active_path": "crates/ice-cli/src/resume_picker.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/settings.rs",
+      "active_path": "crates/ice-cli/src/settings.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/side_questions.rs",
+      "active_path": "crates/ice-cli/src/side_questions.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/timings.rs",
+      "active_path": "crates/ice-cli/src/timings.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/trust.rs",
+      "active_path": "crates/ice-cli/src/trust.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/tui_shell.rs",
+      "active_path": "crates/ice-cli/src/tui_shell.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/tests/btw_package.rs",
+      "active_path": "crates/ice-cli/tests/btw_package.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/tests/provider_packages.rs",
+      "active_path": "crates/ice-cli/tests/provider_packages.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "active_path": "crates/ice-cli/tests/remote_client_smoke.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/Cargo.toml",
+      "active_path": "crates/ice-extensions/Cargo.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/README.md",
+      "active_path": "crates/ice-extensions/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/actions.rs",
+      "active_path": "crates/ice-extensions/src/actions.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/event_log.rs",
+      "active_path": "crates/ice-extensions/src/event_log.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/lib.rs",
+      "active_path": "crates/ice-extensions/src/lib.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/loader.rs",
+      "active_path": "crates/ice-extensions/src/loader.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/prompt_transform.rs",
+      "active_path": "crates/ice-extensions/src/prompt_transform.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/provider.rs",
+      "active_path": "crates/ice-extensions/src/provider.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/provider_hooks.rs",
+      "active_path": "crates/ice-extensions/src/provider_hooks.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/src/resources.rs",
+      "active_path": "crates/ice-extensions/src/resources.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-extensions/tests/voice_ptt_smoke.rs",
+      "active_path": "crates/ice-extensions/tests/voice_ptt_smoke.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/agent_harness.rs",
+      "active_path": "crates/ice-harness/src/agent_harness.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/context_files.rs",
+      "active_path": "crates/ice-harness/src/context_files.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/frame_progress.rs",
+      "active_path": "crates/ice-harness/src/frame_progress.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/frontmatter.rs",
+      "active_path": "crates/ice-harness/src/frontmatter.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/run_budget.rs",
+      "active_path": "crates/ice-harness/src/run_budget.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/session/types.rs",
+      "active_path": "crates/ice-harness/src/session/types.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/session/values.rs",
+      "active_path": "crates/ice-harness/src/session/values.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/src/settle.rs",
+      "active_path": "crates/ice-harness/src/settle.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-harness/tests/harness_run_e2e.rs",
+      "active_path": "crates/ice-harness/tests/harness_run_e2e.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-plugin-sdk/Cargo.toml",
+      "active_path": "crates/ice-plugin-sdk/Cargo.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-plugin-sdk/README.md",
+      "active_path": "crates/ice-plugin-sdk/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-plugin-sdk/src/lib.rs",
+      "active_path": "crates/ice-plugin-sdk/src/lib.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tools/README.md",
+      "active_path": "crates/ice-tools/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tools/src/os_env.rs",
+      "active_path": "crates/ice-tools/src/os_env.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tools/src/tools/bash.rs",
+      "active_path": "crates/ice-tools/src/tools/bash.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tools/tests/host_private_env.rs",
+      "active_path": "crates/ice-tools/tests/host_private_env.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/README.md",
+      "active_path": "crates/ice-tui/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/src/keybindings.rs",
+      "active_path": "crates/ice-tui/src/keybindings.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/src/syntax_highlight.rs",
+      "active_path": "crates/ice-tui/src/syntax_highlight.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/src/tool_execution.rs",
+      "active_path": "crates/ice-tui/src/tool_execution.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/src/tui_alt_screen.rs",
+      "active_path": "crates/ice-tui/src/tui_alt_screen.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "crates/ice-tui/src/user_message.rs",
+      "active_path": "crates/ice-tui/src/user_message.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "demo/README.md",
+      "active_path": "demo/README.md"
+    },
+    {
+      "status": "R086",
+      "old_path": "demo/ice.tape",
+      "active_path": "demo/icers.tape"
+    },
+    {
+      "status": "M",
+      "old_path": "deploy/caddy-ice.override.yml",
+      "active_path": "deploy/caddy-ice.override.yml"
+    },
+    {
+      "status": "R082",
+      "old_path": "deploy/ice.caddy",
+      "active_path": "deploy/icers.caddy"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/README.md",
+      "active_path": "docs/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/agent/project-structure.md",
+      "active_path": "docs/agent/project-structure.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/architecture/overview.md",
+      "active_path": "docs/architecture/overview.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/debugging/llm-repetition-forensics.md",
+      "active_path": "docs/debugging/llm-repetition-forensics.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/debugging/rust-debugging.md",
+      "active_path": "docs/debugging/rust-debugging.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/distribution/prebuilt-cli.md",
+      "active_path": "docs/distribution/prebuilt-cli.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/extensions/authoring.md",
+      "active_path": "docs/extensions/authoring.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/extensions/lifecycle.md",
+      "active_path": "docs/extensions/lifecycle.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/extensions/provider-integration.md",
+      "active_path": "docs/extensions/provider-integration.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/extensions/side-questions.md",
+      "active_path": "docs/extensions/side-questions.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/extensions/subagents.md",
+      "active_path": "docs/extensions/subagents.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/guides/user-guide.en.md",
+      "active_path": "docs/guides/user-guide.en.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/guides/user-guide.md",
+      "active_path": "docs/guides/user-guide.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/ice-tool/README.md",
+      "active_path": "docs/ice-tool/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/ice-tool/agent-project.md",
+      "active_path": "docs/ice-tool/agent-project.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/ice-tool/architecture.md",
+      "active_path": "docs/ice-tool/architecture.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/ice-tool/extension-authoring.md",
+      "active_path": "docs/ice-tool/extension-authoring.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/ice-tool/rust-debugging.md",
+      "active_path": "docs/ice-tool/rust-debugging.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/ice-tool/user-guide.md",
+      "active_path": "docs/ice-tool/user-guide.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/maintaining/releasing.md",
+      "active_path": "docs/maintaining/releasing.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/performance/benchmark-vs-pi.md",
+      "active_path": "docs/performance/benchmark-vs-pi.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/01-benchmark-vs-native-pi.md",
+      "active_path": "docs/promotion/01-benchmark-vs-native-pi.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/02-rust-agent-runtime-architecture.md",
+      "active_path": "docs/promotion/02-rust-agent-runtime-architecture.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/03-english-showhn-devto-reddit.md",
+      "active_path": "docs/promotion/03-english-showhn-devto-reddit.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/04-submissions-twir-and-awesome-rust.md",
+      "active_path": "docs/promotion/04-submissions-twir-and-awesome-rust.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/05-awesome-list-survey.md",
+      "active_path": "docs/promotion/05-awesome-list-survey.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/06-directory-survey.md",
+      "active_path": "docs/promotion/06-directory-survey.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/07-agent-loop-streaming.md",
+      "active_path": "docs/promotion/07-agent-loop-streaming.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/08-provider-abstraction-and-offline-testing.md",
+      "active_path": "docs/promotion/08-provider-abstraction-and-offline-testing.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/09-tool-execution-and-sandbox.md",
+      "active_path": "docs/promotion/09-tool-execution-and-sandbox.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/10-session-jsonl-crash-recovery.md",
+      "active_path": "docs/promotion/10-session-jsonl-crash-recovery.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/11-steering-follow-up-queues.md",
+      "active_path": "docs/promotion/11-steering-follow-up-queues.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/12-plugin-abi-design.md",
+      "active_path": "docs/promotion/12-plugin-abi-design.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/13-remote-server-client.md",
+      "active_path": "docs/promotion/13-remote-server-client.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/14-context-compaction-and-skills.md",
+      "active_path": "docs/promotion/14-context-compaction-and-skills.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/16-release-and-cross-platform-distribution.md",
+      "active_path": "docs/promotion/16-release-and-cross-platform-distribution.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md"
+    },
+    {
+      "status": "M",
+      "old_path": "docs/remote/user-guide.md",
+      "active_path": "docs/remote/user-guide.md"
+    },
+    {
+      "status": "M",
+      "old_path": "examples/plugin-stub/Cargo.toml",
+      "active_path": "examples/plugin-stub/Cargo.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "examples/plugin-stub/src/lib.rs",
+      "active_path": "examples/plugin-stub/src/lib.rs"
+    },
+    {
+      "status": "M",
+      "old_path": "packages/provider-runtime/Cargo.toml",
+      "active_path": "packages/provider-runtime/Cargo.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "packaging/README.md",
+      "active_path": "packaging/README.md"
+    },
+    {
+      "status": "R088",
+      "old_path": "packaging/homebrew/ice.rb",
+      "active_path": "packaging/homebrew/icers.rb"
+    },
+    {
+      "status": "R097",
+      "old_path": "packaging/scoop/ice.json",
+      "active_path": "packaging/scoop/icers.json"
+    },
+    {
+      "status": "M",
+      "old_path": "packaging/winget/Zyk-Void.ice.installer.yaml",
+      "active_path": "packaging/winget/Zyk-Void.ice.installer.yaml"
+    },
+    {
+      "status": "M",
+      "old_path": "packaging/winget/Zyk-Void.ice.locale.en-US.yaml",
+      "active_path": "packaging/winget/Zyk-Void.ice.locale.en-US.yaml"
+    },
+    {
+      "status": "M",
+      "old_path": "packaging/winget/Zyk-Void.ice.yaml",
+      "active_path": "packaging/winget/Zyk-Void.ice.yaml"
+    },
+    {
+      "status": "M",
+      "old_path": "release-plz.toml",
+      "active_path": "release-plz.toml"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/bench-vs-pi.mjs",
+      "active_path": "scripts/bench-vs-pi.mjs"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/bench.sh",
+      "active_path": "scripts/bench.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/ice-rebrand.sh",
+      "active_path": "scripts/ice-rebrand.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/install.ps1",
+      "active_path": "scripts/install.ps1"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/install.sh",
+      "active_path": "scripts/install.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/prebuilt-release.py",
+      "active_path": "scripts/prebuilt-release.py"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/push-taps.sh",
+      "active_path": "scripts/push-taps.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/refresh-channels.sh",
+      "active_path": "scripts/refresh-channels.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/release.sh",
+      "active_path": "scripts/release.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/sync-embedded-docs.sh",
+      "active_path": "scripts/sync-embedded-docs.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/test_prebuilt_release.py",
+      "active_path": "scripts/test_prebuilt_release.py"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/test_release_automation.py",
+      "active_path": "scripts/test_release_automation.py"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/test_release_channels.py",
+      "active_path": "scripts/test_release_channels.py"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/test_website.py",
+      "active_path": "scripts/test_website.py"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/tests/install.Tests.ps1",
+      "active_path": "scripts/tests/install.Tests.ps1"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/verify-website.py",
+      "active_path": "scripts/verify-website.py"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/website-cdn-purge.sh",
+      "active_path": "scripts/website-cdn-purge.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "scripts/winget-submit.sh",
+      "active_path": "scripts/winget-submit.sh"
+    },
+    {
+      "status": "M",
+      "old_path": "website/README.md",
+      "active_path": "website/README.md"
+    },
+    {
+      "status": "M",
+      "old_path": "website/agent-project.md",
+      "active_path": "website/agent-project.md"
+    },
+    {
+      "status": "M",
+      "old_path": "website/blog.html",
+      "active_path": "website/blog.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/compare.html",
+      "active_path": "website/compare.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/content/agent-project.html",
+      "active_path": "website/content/agent-project.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/content/extension-authoring.html",
+      "active_path": "website/content/extension-authoring.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/content/user-guide-en.html",
+      "active_path": "website/content/user-guide-en.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/content/user-guide.html",
+      "active_path": "website/content/user-guide.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/blog-posts/agent-loop.json",
+      "active_path": "website/data/blog-posts/agent-loop.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/blog-posts/architecture.json",
+      "active_path": "website/data/blog-posts/architecture.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/blog-posts/execution-env.json",
+      "active_path": "website/data/blog-posts/execution-env.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/blog-posts/plugin-abi.json",
+      "active_path": "website/data/blog-posts/plugin-abi.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/blog.json",
+      "active_path": "website/data/blog.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/docs.json",
+      "active_path": "website/data/docs.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/locales.json",
+      "active_path": "website/data/locales.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/packages.json",
+      "active_path": "website/data/packages.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/data/site.json",
+      "active_path": "website/data/site.json"
+    },
+    {
+      "status": "M",
+      "old_path": "website/docs.html",
+      "active_path": "website/docs.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/extension-authoring.md",
+      "active_path": "website/extension-authoring.md"
+    },
+    {
+      "status": "M",
+      "old_path": "website/favicon.svg",
+      "active_path": "website/favicon.svg"
+    },
+    {
+      "status": "M",
+      "old_path": "website/guide.html",
+      "active_path": "website/guide.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/guide.js",
+      "active_path": "website/guide.js"
+    },
+    {
+      "status": "M",
+      "old_path": "website/index.html",
+      "active_path": "website/index.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/packages.html",
+      "active_path": "website/packages.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/robots.txt",
+      "active_path": "website/robots.txt"
+    },
+    {
+      "status": "M",
+      "old_path": "website/support.html",
+      "active_path": "website/support.html"
+    },
+    {
+      "status": "M",
+      "old_path": "website/user-guide.md",
+      "active_path": "website/user-guide.md"
+    }
+  ],
+  "read_only": true,
+  "comparison_scope": "All tracked repository files; the tracked .ice/.icers release skill is hashed from local Git HEAD blobs without reading namespace-directory contents. No real user state is inspected.",
+  "source_reads_are_metadata_only": true,
+  "initial_helper_exclusion_false_alarm": "The first unsaved pass excluded the tracked release skill and treated its absent hash as a mismatch; this corrected pass compares its Git source blob and reports no frozen-source drift.",
+  "notes": "Read-only preflight; both tracked working trees clean. Untracked audit evidence is intentionally omitted from git status.",
+  "source_map_status": "in progress",
+  "exact_diff_status": "in progress"
+}

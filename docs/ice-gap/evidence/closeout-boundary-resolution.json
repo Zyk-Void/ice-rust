@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:53:42.329970+00:00",
+  "id": "BOUNDARY-001",
+  "status": "resolved",
+  "resolved_by": "Closeout coordinator (Claude Code) on explicit user instruction (\"complete all\")",
+  "blocked_path": ".least/",
+  "identification": "Tool-output cache written by the local `least` agent harness (~/.npm-global/bin/least) during this audit run: 4 files under .least/cache/tool-output/ws_0235eae4b04eada508c345c4/ (an apply_patch diff of docs/ice-gap/tools/build-final-index.py and a bash validation output; ttlMs 86400000), created 2026-10-20T07:12:58Z. Not repository content and not application source.",
+  "action": "Removed the untracked .least/ directory from the active checkout.",
+  "expected_git_status": "?? docs/ice-gap/\n",
+  "observed_git_status": "?? docs/ice-gap/\n",
+  "active_head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+  "active_tracked_diff_names": "",
+  "final_gate": {
+    "path": "evidence/final-validation.json",
+    "sha256": "e1909d33d38e99528f442de7075866577ae623e6684a202f0904591ca20031fc",
+    "captured_at": "2026-10-20T07:53:13.658996+00:00",
+    "passed": true,
+    "issues": 0,
+    "warnings": null
+  },
+  "closeout_additions": [
+    "Ledger row packages/coding-agent/examples/extensions/ice-delegable-workspace-info.ts (37 lines, SUB-014) with full read coverage; ledger 873 rows, 861 mapped.",
+    "SUB-014 ice source cites the example extension; subagents manifest supplemental_ledger records its sha256.",
+    "RUST-069 entry_ids set to SESSION-029 (legacy discriminator migration owner).",
+    "README and progress regenerated with tools/build-final-index.py complete after the active gate passed."
+  ],
+  "note": "The `least` harness may recreate .least/ if an agent runs through it inside the active checkout again."
+}

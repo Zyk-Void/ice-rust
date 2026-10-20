@@ -1,0 +1,81 @@
+{
+  "captured_at": "2026-10-20T07:24:44.091Z",
+  "mode": "active-complete",
+  "gate": "2026-10-20T07:21:17.628464+00:00",
+  "changes": [
+    {
+      "id": "header-2",
+      "name": "spec-ai.json",
+      "field": "introduction",
+      "before": "Source-derived comparison of TypeScript ice-ai with the actual Rust provider and harness implementations. This area contains 50 reviewed gap entries and reconciles all 67 assigned source rows, 14 mechanical candidates and the manually discovered public surfaces. Native providers, typed events, schema support, durable partial-progress frames and compaction are credited. No application, generator, build, test or provider call was executed. Final cross-area and active-checkout verification remain prerequisites for overall completion.",
+      "after": "Source-derived comparison of TypeScript ice-ai with the actual Rust provider and harness implementations. This area contains 50 reviewed gap entries and reconciles all 67 assigned source rows, 14 mechanical candidates and the manually discovered public surfaces. Native providers, typed events, schema support, durable partial-progress frames and compaction are credited. No application, generator, build, test or provider call was executed. The coordinator's final acceptance artifacts record cross-area and active-checkout verification."
+    },
+    {
+      "id": "header-3",
+      "name": "spec-cli-packaging.json",
+      "field": "introduction",
+      "before": "Complete source-derived CLI and packaging specification, including startup, credential commands, migrations, npm/Git/local resource backends, native Cargo/prebuilt preservation and updater defects. No application, test, installer or updater was executed. Final global and active-checkout reconciliation remain pending.",
+      "after": "Complete source-derived CLI and packaging specification, including startup, credential commands, migrations, npm/Git/local resource backends, native Cargo/prebuilt preservation and updater defects. No application, test, installer or updater was executed. The coordinator's final acceptance artifacts record global and active-checkout reconciliation."
+    },
+    {
+      "id": "header-4",
+      "name": "spec-cli-packaging.json",
+      "field": "complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "id": "header-6",
+      "name": "spec-misc.json",
+      "field": "complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "id": "header-7",
+      "name": "spec-observability.json",
+      "field": "introduction",
+      "before": "This area specifies the eight observability ledger files and their runtime wiring. Findings distinguish the live in-memory projection, the redacted durable projection, replay reconstruction, HTTP/SSE transport and browser rendering. TypeScript behavior is based on the frozen dirty-worktree baseline; Rust comparisons target ff9270f. This area is published. Overall completion awaits the active-checkout relocation.",
+      "after": "This area specifies the eight observability ledger files and their runtime wiring. Findings distinguish the live in-memory projection, the redacted durable projection, replay reconstruction, HTTP/SSE transport and browser rendering. TypeScript behavior is based on the frozen dirty-worktree baseline. Rust comparisons retain their original ff9270f evidence and are reconciled to active checkout 1891337 through the coordinator's reviewed source mapping. Final acceptance is recorded in the coordinator's validation artifacts."
+    },
+    {
+      "id": "header-9",
+      "name": "spec-settings.json",
+      "field": "appendix",
+      "before": "## Source-reading closure\n\nAll 17 assigned source/document files and the 10 identified core settings/resource/trust/config test bodies were read. Their full hashes, including the completed 1–1170 resource-loader test, are recorded in evidence/qa-settings-test-closure.json. Source assertions were inspected; no tests or application code were executed. UI selector/style, RPC settings and provider settings consumer suites are assigned to those area audits and are part of the final global closure. Cross-area dependency resolution and active-checkout validation remain pending.\n",
+      "after": "## Source-reading closure\n\nAll 17 assigned source/document files and the 10 identified core settings/resource/trust/config test bodies were read. Their full hashes, including the completed 1–1170 resource-loader test, are recorded in evidence/qa-settings-test-closure.json. Source assertions were inspected; no tests or application code were executed. UI selector/style, RPC settings and provider settings consumer suites are assigned to those area audits and are part of the final global closure. The coordinator's final acceptance artifacts record cross-area dependency resolution and active-checkout validation.\n"
+    },
+    {
+      "id": "header-10",
+      "name": "spec-subagents.json",
+      "field": "appendix",
+      "before": "## Source-reading and review closure\n\nAll 71 assigned source/document files and the 37 relevant TypeScript plus 7 native Rust test bodies were read, covering 121 distinct files. No application, build or test was executed. Credential-like fixture values and four source expressions were redacted by transport; no hidden value was recovered or inferred. Hashed ranges are retained in evidence/subagents-read-evidence.json and the area evidence manifest. Independent coordinator reads and corrections are in evidence/qa-coordinator-subagents.json. This area is provisionally published while cross-area dependencies, drift checking and active-checkout citation validation remain pending.\n",
+      "after": "## Source-reading and review closure\n\nAll 71 assigned source/document files and the 37 relevant TypeScript plus 7 native Rust test bodies were read, covering 121 distinct files. No application, build or test was executed. Credential-like fixture values and four source expressions were redacted by transport; no hidden value was recovered or inferred. Hashed ranges are retained in evidence/subagents-read-evidence.json and the area evidence manifest. Independent coordinator reads and corrections are in evidence/qa-coordinator-subagents.json. The coordinator's final acceptance artifacts record cross-area dependencies, source-drift checks and active-checkout citation validation.\n"
+    },
+    {
+      "id": "header-11",
+      "name": "spec-tools.json",
+      "field": "introduction",
+      "before": "Source-only comparison against the frozen TypeScript void worktree and initial Rust main checkout. This area covers both coding-agent tools and the separate runtime-neutral agent-harness tool implementations. Similar tool names do not establish parity. Existing tests are read as behavioral evidence, never executed. All paths, process operations and input effects below describe the audited software, not actions performed during the audit.",
+      "after": "Source-only comparison against the frozen TypeScript void worktree and reviewed active Rust checkout, preserving the original-source provenance. This area covers both coding-agent tools and the separate runtime-neutral agent-harness tool implementations. Similar tool names do not establish parity. Existing tests are read as behavioral evidence, never executed. All paths, process operations and input effects below describe the audited software, not actions performed during the audit."
+    }
+  ],
+  "completed_areas": [
+    "ai",
+    "agent",
+    "tools",
+    "session",
+    "settings",
+    "extensions",
+    "rpc-remote",
+    "tui",
+    "subagents",
+    "safe-verify",
+    "observability",
+    "cognee",
+    "blackhole",
+    "providers-auth",
+    "cli-packaging",
+    "misc"
+  ]
+}

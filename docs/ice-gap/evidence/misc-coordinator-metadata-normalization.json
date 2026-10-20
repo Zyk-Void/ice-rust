@@ -1,0 +1,16 @@
+{
+  "owner": "/root",
+  "captured_at": "2026-10-20T03:08:59.169Z",
+  "area": "misc",
+  "before": {
+    "spec": "329bf154f760ccdac91c5517096a90f7920f97a29f877496817c680a9614c2c7",
+    "proposal": "d5c51d65c4dbba5d489f8995dd9daced8fc4dcad09498fdcdbb14aa8103f8d13"
+  },
+  "normalized_claims": [],
+  "supplemental_ledger": null,
+  "source_anchor_additions": [],
+  "after": {
+    "spec": "329bf154f760ccdac91c5517096a90f7920f97a29f877496817c680a9614c2c7",
+    "proposal": "d5c51d65c4dbba5d489f8995dd9daced8fc4dcad09498fdcdbb14aa8103f8d13"
+  }
+}

@@ -1,0 +1,1802 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:06:34.693Z",
+  "owner": "/root/helper_migration",
+  "active_audit_root": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "historical_mutators_executed": false,
+  "read_credit_recorders_executed": false,
+  "safe_execution_complete": true,
+  "passed": true,
+  "plan_sha256": "73bc41a761e791c640d0267b1755d58f4c9825e06677f5277bfb7bbbc03cd9c3",
+  "receipt_sha256": "55f09fcf112514b8311e54475624529a8ea5cdcf25360ecd110f5e384974499e",
+  "node_version": "v24.22.0",
+  "python_command": "/usr/bin/python3 -I",
+  "summary": {
+    "helpers": 142,
+    "syntax_passed": 142,
+    "syntax_failed": 0,
+    "safe_validator_executions": 18,
+    "safe_validator_failures": 0,
+    "issues": 0
+  },
+  "syntax_results": [
+    {
+      "path": "tools/audit-util.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-common.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-env.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-loop.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-resources.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-runtime.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-blackhole-rest.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-blackhole.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-cognee-client.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-cognee-runtime.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-extensions-common.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-extensions-dispatch.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-extensions-loader.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-safe-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/compare-blackhole-copies.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/direct-source.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/active-checkout-compare.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/ai-schema-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/cli-packaging-supplement-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-coverage-gaps.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-final-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-review-apply.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-review-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/qa-observability-independent-helper.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/semantic-dependency-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/subagents-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tools-read-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tools-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-candidates-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-build-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-merge-spec.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-normalize.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-owned-evidence-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-publication-readonly-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-review-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-terminal-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extract-surfaces.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-agent.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-blackhole.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-cognee.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-extension-core-text.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-safe-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-blackhole.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-spec.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inventory.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/merge-progress.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/prepare-workers.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/publish-area.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/read-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/refine-blackhole-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/render-area.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/repair-extensions-dispatch.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/resolve-extension-test-refs.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/resume-integrity.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/supplement-surfaces.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/accept-canonical-read-coverage.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/accept-final-area.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/append-native-queue-defect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/apply-auth-json-precision.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/apply-native-command-provenance.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/build-final-index.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/clean-session-audit-aliases.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-active-closeout.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-build-root-export-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-checkpoint.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-closeout-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-complete-original-publication.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-fast-preflight.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-inspect-relocation.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-merge-exports.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-normalize-tui-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-prepare-native-prose.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-publish-closeout.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-record-native-hunks.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-relocate-audit.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extend-relocation-map.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-audit-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/fix-spacing.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-authored.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-closeout.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-final-structure.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-global-audit.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-prose-queues.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/integrate-ai-schema-supplement.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-batch.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-decls.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-match.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-native-prose.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-identity.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-build-misc.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-exports.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-prepare.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-ranges.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-readme-limits-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-remap-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-type-contracts.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-verify-exports.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lookup-read-credit.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/merge-cli-fragments.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/normalize-citations.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/normalize-final-handoff.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/normalize-final-schema.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/prepare-citation-normalizer.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/qa-first-pass-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/read-audit-json-part.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-final-dependencies.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-final-first-pass.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-first-pass-records.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-readability.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/remap-rust-citations.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/repair-agent57-literal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/review-spacing.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-area-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-complete-audit.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-defect-provenance.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-supplemental-baseline.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-audit-paths.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-core.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-prepare-migration.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-relocated-validation.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    }
+  ],
+  "safe_executions": [
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "ai"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "cd6bf92055efeb5d4bd2622e5b83eefeb324179f044242059d030d3bb4590c3c",
+      "stderr": "",
+      "summary": {
+        "area": "ai",
+        "entries": 50,
+        "unique_line_references": 469,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "agent"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "5cc31016a95c203fac155dab78ba08cf710b858ea68e93db1faa792031b5778a",
+      "stderr": "",
+      "summary": {
+        "area": "agent",
+        "entries": 65,
+        "unique_line_references": 387,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "tools"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "e769e2913de8f94401582a5e32bdb36a22122d05c63dd7037bcd8cdd13eacc69",
+      "stderr": "",
+      "summary": {
+        "area": "tools",
+        "entries": 31,
+        "unique_line_references": 229,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "session"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "54c9b85ca798f7970c8324b6c71a62724439063234ee3c9720843ab1ece70806",
+      "stderr": "",
+      "summary": {
+        "area": "session",
+        "entries": 38,
+        "unique_line_references": 452,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "settings"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "c2bef32015c0a7b1cf52f1edcdb6d22815521b69d80d411ccabbfc1647ccadbe",
+      "stderr": "",
+      "summary": {
+        "area": "settings",
+        "entries": 33,
+        "unique_line_references": 214,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "extensions"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "2b959d3b6cc5c373c5c98c67c45ed19bddc8bd03f6da25ab11bf82b598e7fd00",
+      "stderr": "",
+      "summary": {
+        "area": "extensions",
+        "entries": 57,
+        "unique_line_references": 443,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "rpc-remote"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "3d2acf9c5f8937e591ac840c1e1010015fe3cb8bde92567253eab23eb26cfeca",
+      "stderr": "",
+      "summary": {
+        "area": "rpc-remote",
+        "entries": 36,
+        "unique_line_references": 589,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "tui"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "1974630d824622993709ddd3aa03858f5c2ba9f069097dd5e29ec4345063a322",
+      "stderr": "",
+      "summary": {
+        "area": "tui",
+        "entries": 151,
+        "unique_line_references": 1344,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "subagents"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "a28ef71c7d2ddbd156379ace646356be1ce30c678d420558244e03bc38de1497",
+      "stderr": "",
+      "summary": {
+        "area": "subagents",
+        "entries": 44,
+        "unique_line_references": 204,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "safe-verify"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "265690be12b24c922f0b22452b977340a19fcffc17e28eaa65c9bb61f22b4171",
+      "stderr": "",
+      "summary": {
+        "area": "safe-verify",
+        "entries": 26,
+        "unique_line_references": 166,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "observability"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "c8704b6d7e6c3008edc39a9fa1e6bec0e4d581d9194a475bd0becba6430d6ce5",
+      "stderr": "",
+      "summary": {
+        "area": "observability",
+        "entries": 29,
+        "unique_line_references": 211,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "cognee"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "dcbebb8c888b01247e2623f5f4add51355bc0706f37ee8dbdb9016a61526512f",
+      "stderr": "",
+      "summary": {
+        "area": "cognee",
+        "entries": 68,
+        "unique_line_references": 229,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "blackhole"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "41c200deb4df3d84797be87b65b5a0fc90295a1d4c20551277d30d68442fcf8f",
+      "stderr": "",
+      "summary": {
+        "area": "blackhole",
+        "entries": 41,
+        "unique_line_references": 128,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "providers-auth"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "e0b1a322a02d6ffbce319f6a902a84aea76804ce2b91b158e0552dbd08a48449",
+      "stderr": "",
+      "summary": {
+        "area": "providers-auth",
+        "entries": 33,
+        "unique_line_references": 475,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "cli-packaging"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "3e533bf17e007202f907027e20a519eda153a6e6c263d0bc8c3aca9c125359bb",
+      "stderr": "",
+      "summary": {
+        "area": "cli-packaging",
+        "entries": 46,
+        "unique_line_references": 375,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "misc"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "be8121bbebc62282024c2b282dfad65edd60b393cfa88241b5757d128fc106a9",
+      "stderr": "",
+      "summary": {
+        "area": "misc",
+        "entries": 43,
+        "unique_line_references": 407,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-final-structure.mjs",
+      "args": [],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "b8150e4fc1eabb2862b669324caf530ead84429558d7541088a30a6f6b70aed4",
+      "stderr": "",
+      "summary": {
+        "captured_at": "2026-10-20T07:06:34.533Z",
+        "areas": [
+          {
+            "area": "ai",
+            "entries": 50,
+            "accepted": true,
+            "published": true,
+            "sha256": "ea0b8114c78722dada0c77500125682b0c11a345266bcc202551529030d888eb",
+            "statuses": {
+              "partial": 26,
+              "missing": 23,
+              "different-by-design": 1
+            },
+            "priorities": {
+              "P1": 41,
+              "P0": 2,
+              "P2": 6,
+              "P3": 1
+            }
+          },
+          {
+            "area": "agent",
+            "entries": 65,
+            "accepted": true,
+            "published": true,
+            "sha256": "8397086a0648e510d2fc5be8438f9ca33dc3d655f8c8143dc6b3b8d97bf67562",
+            "statuses": {
+              "different-by-design": 11,
+              "partial": 49,
+              "missing": 5
+            },
+            "priorities": {
+              "P1": 35,
+              "P2": 13,
+              "P0": 14,
+              "P3": 3
+            }
+          },
+          {
+            "area": "tools",
+            "entries": 31,
+            "accepted": true,
+            "published": true,
+            "sha256": "c36ecb953c2df91a48b794ec3507f2a3b78472e28a4d6191192ebac807f447dd",
+            "statuses": {
+              "partial": 21,
+              "missing": 10
+            },
+            "priorities": {
+              "P0": 15,
+              "P1": 13,
+              "P2": 3
+            }
+          },
+          {
+            "area": "session",
+            "entries": 38,
+            "accepted": true,
+            "published": true,
+            "sha256": "b1af0cf4ce44197e4bf87d16290d3de96f26194ea262d1cc226866c5320976a6",
+            "statuses": {
+              "partial": 27,
+              "different-by-design": 7,
+              "missing": 4
+            },
+            "priorities": {
+              "P1": 27,
+              "P3": 1,
+              "P2": 10
+            }
+          },
+          {
+            "area": "settings",
+            "entries": 33,
+            "accepted": true,
+            "published": true,
+            "sha256": "5ab72a4e1ba824aceb3ec871bd27ccecf28e05c3839cf2504b18a3a0ba5a7ebd",
+            "statuses": {
+              "partial": 31,
+              "different-by-design": 1,
+              "missing": 1
+            },
+            "priorities": {
+              "P1": 18,
+              "P2": 9,
+              "P0": 6
+            }
+          },
+          {
+            "area": "extensions",
+            "entries": 57,
+            "accepted": true,
+            "published": true,
+            "sha256": "2593658a38806b3cffd5fd4f3d6199ed8a349e8bf7d3d09bcd19a284c1c67edf",
+            "statuses": {
+              "different-by-design": 3,
+              "partial": 46,
+              "missing": 8
+            },
+            "priorities": {
+              "P0": 11,
+              "P2": 16,
+              "P1": 30
+            }
+          },
+          {
+            "area": "rpc-remote",
+            "entries": 36,
+            "accepted": true,
+            "published": true,
+            "sha256": "2285698a6e97290a70cb65016dfea4aa190cb6777e438c807a6623999b04e766",
+            "statuses": {
+              "partial": 10,
+              "missing": 25,
+              "different-by-design": 1
+            },
+            "priorities": {
+              "P1": 36
+            }
+          },
+          {
+            "area": "tui",
+            "entries": 151,
+            "accepted": true,
+            "published": true,
+            "sha256": "aae91d897198883733eec48642839ad157551fc3955b150a138d0d9d26e6af98",
+            "statuses": {
+              "partial": 114,
+              "missing": 37
+            },
+            "priorities": {
+              "P1": 105,
+              "P2": 39,
+              "P3": 3,
+              "P0": 4
+            }
+          },
+          {
+            "area": "subagents",
+            "entries": 44,
+            "accepted": true,
+            "published": true,
+            "sha256": "9a4907c25aa409cf8f69cdb6eff97de1470f2e33bc80b6a9b4335e938c020a0b",
+            "statuses": {
+              "missing": 33,
+              "partial": 11
+            },
+            "priorities": {
+              "P1": 20,
+              "P2": 8,
+              "P0": 16
+            }
+          },
+          {
+            "area": "safe-verify",
+            "entries": 26,
+            "accepted": true,
+            "published": true,
+            "sha256": "58a28856c096814026a4350701f97a5877543eeaff62d50035aeca3da28d7d8b",
+            "statuses": {
+              "missing": 26
+            },
+            "priorities": {
+              "P0": 15,
+              "P1": 10,
+              "P2": 1
+            }
+          },
+          {
+            "area": "observability",
+            "entries": 29,
+            "accepted": true,
+            "published": true,
+            "sha256": "c4f4227102ddc2acea68c5ece85910c37a1613e44555265ee4a840f00cd35088",
+            "statuses": {
+              "missing": 28,
+              "partial": 1
+            },
+            "priorities": {
+              "P3": 3,
+              "P2": 12,
+              "P1": 14
+            }
+          },
+          {
+            "area": "cognee",
+            "entries": 68,
+            "accepted": true,
+            "published": true,
+            "sha256": "90ed5d21b12475d5b71b5c2251979de6e792064c9a6e7fdf6a219593f31c2ed2",
+            "statuses": {
+              "missing": 68
+            },
+            "priorities": {
+              "P1": 45,
+              "P0": 20,
+              "P2": 3
+            }
+          },
+          {
+            "area": "blackhole",
+            "entries": 41,
+            "accepted": true,
+            "published": true,
+            "sha256": "52b87872e9f0cb5cf1ec4dae68ad8455d51656bbc288fa9f8208eca0f2b4405c",
+            "statuses": {
+              "missing": 33,
+              "partial": 8
+            },
+            "priorities": {
+              "P1": 36,
+              "P2": 5
+            }
+          },
+          {
+            "area": "providers-auth",
+            "entries": 33,
+            "accepted": true,
+            "published": true,
+            "sha256": "30d6970865fa997d2a7379b2477801256e406e32586a4831bae2526681200da6",
+            "statuses": {
+              "partial": 19,
+              "missing": 14
+            },
+            "priorities": {
+              "P1": 29,
+              "P2": 4
+            }
+          },
+          {
+            "area": "cli-packaging",
+            "entries": 46,
+            "accepted": true,
+            "published": true,
+            "sha256": "b8fb2b25e785233ebf0169b02f08c8c638a03d86ea87a6178014aade8d50d0a0",
+            "statuses": {
+              "partial": 24,
+              "different-by-design": 6,
+              "missing": 16
+            },
+            "priorities": {
+              "P2": 9,
+              "P1": 31,
+              "P0": 3,
+              "P3": 3
+            }
+          },
+          {
+            "area": "misc",
+            "entries": 43,
+            "accepted": true,
+            "published": true,
+            "sha256": "3b785c94ba2652f7ed5cb87421add6ac196ceb5415d9209f4f573c06efaeddb1",
+            "statuses": {
+              "partial": 17,
+              "different-by-design": 6,
+              "missing": 20
+            },
+            "priorities": {
+              "P2": 25,
+              "P1": 16,
+              "P0": 2
+            }
+          }
+        ],
+        "duplicate_ids": [],
+        "missing_fields": [],
+        "invalid_values": [],
+        "unknown_dependencies": [],
+        "unknown_metadata_ids": [],
+        "citation_shorthand": [],
+        "missing_native_anchors": [],
+        "published_missing_ids": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/verify-supplemental-baseline.mjs",
+      "args": [
+        "rust",
+        "crates/ice-cli/src/bin/icers.rs"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "d2d2f868ac1dc42548d534d19b650cd58642a5eb566a034f3c468024f26a25bd",
+      "stderr": "",
+      "summary": {
+        "method": "Local Git object and working-file byte comparison; no application/test execution",
+        "rows": [
+          {
+            "path": "rust:crates/ice-cli/src/bin/icers.rs",
+            "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+            "current_sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+            "head_sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+            "matches_head": true,
+            "current_lines": 22
+          }
+        ]
+      },
+      "issues": []
+    }
+  ],
+  "python_residue": {
+    "checked_root": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+    "forbidden_names": [
+      ".venv",
+      "__pycache__"
+    ],
+    "found": []
+  },
+  "checks": [
+    "All actual relocated helper bytes, paths, static inventory and unchanged independent-review hashes match the reviewed plan and applied receipt.",
+    "Every helper was parsed, without importing or executing historical mutation code.",
+    "Current spec validators ran for every published area from the audit-directory cwd, proving the relocated data roots work.",
+    "Current structural reconciliation and visible-file local Git baseline comparison ran without application/test/build execution."
+  ],
+  "issues": [],
+  "limitations": [
+    "Syntax validation does not execute or semantically certify historical writers.",
+    "Safe validators inspect current accepted documentation and visible tracked source; they add no source-read credit.",
+    "The separate comprehensive active final gate remains the publication completion gate.",
+    "Independent review remains unfinished; its exact existing findings were only moved unchanged."
+  ]
+}

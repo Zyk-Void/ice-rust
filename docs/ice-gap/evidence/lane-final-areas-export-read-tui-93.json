@@ -1,0 +1,945 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "phase": "source-displayed-awaiting-semantic-disposition",
+  "records": [
+    {
+      "symbol": "TextChunk",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:97",
+      "covering_entries": [
+        "TUI-244",
+        "TUI-250"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/components/editor.ts",
+        "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+        "range": [
+          94,
+          111
+        ],
+        "text": "94 |  * Represents a chunk of text for word-wrap layout.\n95 |  * Tracks both the text content and its position in the original line.\n96 |  */\n97 | export interface TextChunk {\n98 | \ttext: string;\n99 | \tstartIndex: number;\n100 | \tendIndex: number;\n101 | }\n102 | \n103 | /**\n104 |  * Split a line into word-wrapped chunks.\n105 |  * Wraps at word boundaries when possible, falling back to character-level\n106 |  * wrapping for words longer than the available width.\n107 |  *\n108 |  * @param line - The text line to wrap\n109 |  * @param maxWidth - Maximum visible width per chunk\n110 |  * @param preSegmented - Optional pre-segmented graphemes (e.g. with paste-marker awareness).\n111 |  *                       When omitted the default Intl.Segmenter is used."
+      },
+      "entries": [
+        {
+          "id": "TUI-244",
+          "title": "Paste-marker ownership, deletion and collision-free registry renumbering",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/editor.ts:27-107; ice:packages/tui/src/components/editor.ts:1468-1532; ice:packages/tui/src/components/editor.ts:1909-1968; ice:packages/tui/test/editor.test.ts:3582-3954",
+          "what": "Keep marker display text, atomic cursor behavior, payload ownership and undo restoration consistent after deletion and renumbering.",
+          "mechanism": "Only regex-shaped markers whose ID exists in the paste registry are atomic. Grapheme and word segmenters merge valid marker spans; unknown manually typed markers remain ordinary text. Backspace after a valid marker captures text+registry+counter, removes its registry entry, decrements counter, moves higher IDs in sorted ascending order and rewrites higher marker IDs throughout all logical lines. Forward delete removes a whole atomic marker but does not remove/renumber its registry entry; word/line kills likewise retain registry entries. Undo restores all three structures. Preserve these distinctions as actual source behavior. Source caveats: backspace rewrites text before cutting with pre-rewrite offsets, so digit-width changes in earlier markers can invalidate its slice position; rewriting a valid bare marker with no suffix interpolates undefined for that suffix. A port should perform the deletion and a collision-free rewrite from one stable snapshot rather than copying those defects.",
+          "interfaces": "Registered marker regex '[paste #ID( +L lines| C chars)?]'; validPasteIds; deep EditorSnapshot; getExpandedText literal replacement.",
+          "dependencies": [
+            "TUI-233",
+            "TUI-242",
+            "TUI-243"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:167-193 recognizes marker syntax without consulting registry for left/right/backspace; manually typed marker-like text is incorrectly atomic. delete_forward at909-936 removes one scalar instead of a whole marker. remove_paste at415-450 collects higher HashMap keys without sorting, then removes old ID and inserts old-1. Reachable backspace at859-903 deletes a registered marker and calls this: if higher IDs3 then2 are visited after deleting1, payload3 overwrites payload2 at key2, then the later removal moves payload3 again to1, losing payload2 and leaving rewritten marker2 unresolved. Order depends on HashMap iteration. Native deletion occurs before renumbering, which avoids the source's stale-slice defect and must be preserved. Native tests at2286-2320 cover only one higher entry2→1, not this collision.",
+          "port": "Use registry-aware marker segmentation for every edit/navigation path. Rebuild a new registry from immutable entries or sort ascending before moving IDs; rewrite text and cursor from a stable deletion result. Retain complete snapshots and intentionally define forward-delete registry retention. Add deterministic three-or-more marker cases with out-of-order display and crossing9→10 IDs; repair the Rust data-loss defect before relying on marker expansion.",
+          "size_min": 140,
+          "size_max": 230,
+          "priority": "P0",
+          "priority_reason": "A normal delete with several folded pastes can destroy stored prompt content in the current native implementation."
+        },
+        {
+          "id": "TUI-250",
+          "title": "Editor marker-aware word wrapping and logical-to-visual ranges",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/editor.ts:27-206; ice:packages/tui/src/components/editor.ts:1071-1176; ice:packages/tui/test/editor.test.ts:728-1182; ice:packages/tui/test/editor.test.ts:3847-3932",
+          "what": "Wrap editor content at word/CJK opportunities while retaining source ranges needed for cursor movement, decoration and atomic paste markers.",
+          "mechanism": "wordWrapLine returns text plus UTF16 startIndex/endIndex for each chunk, preserving source whitespace and all original content. Prefer a break after whitespace before nonspace or around CJK; if backtracking still leaves the next wide segment over width, force-break before it. Split oversized registered marker segments recursively into ordinary graphemes for display while retaining logical atom identity. Empty input/nonpositive width yields an empty chunk. Layout maps hidden source positions to display positions, wraps each logical line, clips decoration spans to each chunk and assigns a boundary cursor to the next nonfinal chunk, with last chunk allowing end-of-line. Source defect: when a single real grapheme itself is wider than maxWidth, the oversized-segment recursive call receives the identical grapheme and width and has no progress guard. A width1 layout with a two-cell CJK character reaches this recursion; do not port it unchanged.",
+          "interfaces": "Exported wordWrapLine(line,maxWidth,segments?) -> WrappedLine[]; internal visual ranges and cursor flags; marker-aware grapheme segmentation.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-244"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:195-214 wraps Unicode scalars at hard cell width with no word/CJK opportunities or valid-marker atom metadata; it permits one overwide glyph rather than recursing. render at1390-1558 wraps the active logical line one column narrower than other logical lines, so moving cursor between rows changes wrapping. It does not supply a shared logical/visual map for movement or decoration. Preserve its bounded behavior for too-narrow terminals while implementing the source's intended content-preserving range model.",
+          "port": "Build one grapheme/atom layout map reused by render and navigation. Add safe progress for a grapheme wider than available width, explicitly choosing clipping/overflow/fallback policy and ensuring no lost content. Port source whitespace and backtrack cases rather than assuming generic wrap_ansi output carries editing offsets.",
+          "size_min": 180,
+          "size_max": 290,
+          "priority": "P1",
+          "priority_reason": "The renderer and cursor must agree on wrapped positions, especially around wide glyphs and folded paste markers."
+        }
+      ]
+    },
+    {
+      "symbol": "EditorBorderStyle",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:229",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/components/editor.ts",
+        "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+        "range": [
+          226,
+          243
+        ],
+        "text": "226 | \tcursorPos?: number;\n227 | }\n228 | \n229 | export type EditorBorderStyle = \"none\" | \"single\" | \"double\" | \"round\" | \"bold\";\n230 | \n231 | export interface EditorTheme {\n232 | \tborderColor: (str: string) => string;\n233 | \tselectList: SelectListTheme;\n234 | }\n235 | \n236 | export interface TextDecoration {\n237 | \tstart: number;\n238 | \tend: number;\n239 | \tprefix: string;\n240 | \tsuffix: string;\n241 | \t/** Source characters at the start of this span hidden only in the rendered editor. */\n242 | \tconcealPrefix?: number;\n243 | }"
+      },
+      "entries": [
+        {
+          "id": "TUI-242",
+          "title": "Editor state access and atomic programmatic replacement",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/editor.ts:209-400; ice:packages/tui/src/components/editor.ts:1178-1299; ice:packages/tui/test/editor.test.ts:288-314; ice:packages/tui/test/editor.test.ts:1853-1940; ice:packages/tui/src/editor-component.ts:11-77",
+          "what": "Expose raw and expanded multiline text, defensively copied lines/cursor and predictable replacement/insertion operations without confusing text offsets with terminal cells.",
+          "mechanism": "State contains at least one logical line and UTF16 cursorLine/cursorCol. getText joins LF; getLines copies; getExpandedText iterates paste registry in insertion order, replacing each registered marker with a function-returned literal body so dollar replacement syntax is inert. This can expand a later-ID marker introduced inside an earlier paste body; it is not a single nonrecursive pass. setText cancels completion, exits history, clears last action, normalizes CRLF/CR to LF and tabs to four spaces; when text differs it captures the full pre-change snapshot. It always clears paste registry/counter, positions at the end and calls onChange even for the same text. insertTextAtCursor ignores empty input, cancels completion/history and captures one snapshot before normalization/splicing; preserves both existing prefix and suffix and places cursor after inserted content, with one change callback. pasteText routes to paste preprocessing, not plain insertion.",
+          "interfaces": "Editor.getText/getExpandedText/getLines/getCursor/setText/insertTextAtCursor/pasteText; EditorState and source UTF16 offsets; EditorComponent abstraction. The custom EditorComponent interface requires getText/setText/handleInput plus the Component render/invalidate contract. onSubmit/onChange properties are optional despite the comment heading; history, insertion, paste, expanded text, autocomplete provider, borderColor, padding and dropdown-height setters are optional. The interface documents expanded-text fallback to getText; caller integration belongs to extension/application entries.",
+          "dependencies": [
+            "TUI-234"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:269-450 exposes equivalent raw/expanded text and byte cursor access, but set_text splits LF without CR/tab normalization, moves to row0/col0, clears pastes, does not capture undo or exit history and leaves any selection anchor intact. expand_pastes is one regex replacement pass. insert at795-857 normalizes line endings but not tabs and coalesces with prior inserts; selection replacement is a native extra. snap_boundary at146-165 and set_cursor at554-562 protect ordinary byte-position setters; preserve them. Native selection, redo and optional placeholder/initial text should remain available alongside source-compatible operations.",
+          "port": "Define byte-versus-source offset adapters and explicit atomic replace/insert APIs. Restore source normalization, end-caret, snapshot and callback order, reset stale selection appropriately, and keep native selection/redo capabilities. Document recursive marker expansion as source behavior and choose a bounded safe expansion policy explicitly rather than accidentally changing literal paste content.",
+          "size_min": 100,
+          "size_max": 170,
+          "priority": "P1",
+          "priority_reason": "External editor, clipboard, completion and extension operations need predictable replacement and undo semantics."
+        },
+        {
+          "id": "TUI-251",
+          "title": "Editor render-only decorations and concealed source prefixes",
+          "status": "missing",
+          "source": "ice:packages/tui/src/components/editor.ts:209-262; ice:packages/tui/src/components/editor.ts:557-634; ice:packages/tui/src/components/editor.ts:1071-1176; ice:packages/tui/test/editor.test.ts:4186-4252",
+          "what": "Style or conceal input spans without inserting terminal codes into editor text or shifting the source cursor.",
+          "mechanism": "Decoration callback receives each logical line; exceptions become an empty list. Keep integer spans with0<=start<end<=line.length, sort by start and drop subsequent overlaps. concealPrefix is clamped to an integer0..span length; the protected first-line prompt prefix is also hidden. Build sourceToDisplay/displayToSource mappings per UTF16 code unit; concealed source positions map to a display boundary whose reverse map points after concealed text. Map accepted style prefix/suffix spans through concealment, clip them against wrapped chunk source ranges, and insert them around only the display substring. Cursor and edits remain in plain source coordinates. Validation is by code unit, not grapheme boundary, so the port must make any stronger boundary validation explicit.",
+          "interfaces": "EditorDecoration {start,end,prefix,suffix,concealPrefix?}; EditorDecorations callback; setDecorations; protected getPromptPrefixLength; source/display maps.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-250"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:1390-1558 can reverse native selection and render a placeholder but has no decoration callback, concealed prefix contract or source/display maps. Native style.prompt at76-88 is stored but unused in render. Generic syntax/theme adapters belong TUI-005; the coding-agent literal highlighter and CustomEditor wrapper consume this primitive rather than replacing it.",
+          "port": "Add a render-only decoration API and explicit byte/source/display mapping. Retain native selection as a separate overlapping visual layer with defined ordering, isolate callback failures and never persist ANSI bytes into text. Wire coding-agent highlighters through the shared map so hidden mode prefixes and wrapped decorations preserve caret position.",
+          "size_min": 150,
+          "size_max": 240,
+          "priority": "P1",
+          "priority_reason": "Input highlighting and mode-prefix concealment require a primitive contract that the native editor does not expose."
+        }
+      ]
+    },
+    {
+      "symbol": "EditorTheme",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:231",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/components/editor.ts",
+        "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+        "range": [
+          228,
+          245
+        ],
+        "text": "228 | \n229 | export type EditorBorderStyle = \"none\" | \"single\" | \"double\" | \"round\" | \"bold\";\n230 | \n231 | export interface EditorTheme {\n232 | \tborderColor: (str: string) => string;\n233 | \tselectList: SelectListTheme;\n234 | }\n235 | \n236 | export interface TextDecoration {\n237 | \tstart: number;\n238 | \tend: number;\n239 | \tprefix: string;\n240 | \tsuffix: string;\n241 | \t/** Source characters at the start of this span hidden only in the rendered editor. */\n242 | \tconcealPrefix?: number;\n243 | }\n244 | \n245 | export type TextDecorationProvider = (line: string) => TextDecoration[];"
+      },
+      "entries": [
+        {
+          "id": "TUI-242",
+          "title": "Editor state access and atomic programmatic replacement",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/editor.ts:209-400; ice:packages/tui/src/components/editor.ts:1178-1299; ice:packages/tui/test/editor.test.ts:288-314; ice:packages/tui/test/editor.test.ts:1853-1940; ice:packages/tui/src/editor-component.ts:11-77",
+          "what": "Expose raw and expanded multiline text, defensively copied lines/cursor and predictable replacement/insertion operations without confusing text offsets with terminal cells.",
+          "mechanism": "State contains at least one logical line and UTF16 cursorLine/cursorCol. getText joins LF; getLines copies; getExpandedText iterates paste registry in insertion order, replacing each registered marker with a function-returned literal body so dollar replacement syntax is inert. This can expand a later-ID marker introduced inside an earlier paste body; it is not a single nonrecursive pass. setText cancels completion, exits history, clears last action, normalizes CRLF/CR to LF and tabs to four spaces; when text differs it captures the full pre-change snapshot. It always clears paste registry/counter, positions at the end and calls onChange even for the same text. insertTextAtCursor ignores empty input, cancels completion/history and captures one snapshot before normalization/splicing; preserves both existing prefix and suffix and places cursor after inserted content, with one change callback. pasteText routes to paste preprocessing, not plain insertion.",
+          "interfaces": "Editor.getText/getExpandedText/getLines/getCursor/setText/insertTextAtCursor/pasteText; EditorState and source UTF16 offsets; EditorComponent abstraction. The custom EditorComponent interface requires getText/setText/handleInput plus the Component render/invalidate contract. onSubmit/onChange properties are optional despite the comment heading; history, insertion, paste, expanded text, autocomplete provider, borderColor, padding and dropdown-height setters are optional. The interface documents expanded-text fallback to getText; caller integration belongs to extension/application entries.",
+          "dependencies": [
+            "TUI-234"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:269-450 exposes equivalent raw/expanded text and byte cursor access, but set_text splits LF without CR/tab normalization, moves to row0/col0, clears pastes, does not capture undo or exit history and leaves any selection anchor intact. expand_pastes is one regex replacement pass. insert at795-857 normalizes line endings but not tabs and coalesces with prior inserts; selection replacement is a native extra. snap_boundary at146-165 and set_cursor at554-562 protect ordinary byte-position setters; preserve them. Native selection, redo and optional placeholder/initial text should remain available alongside source-compatible operations.",
+          "port": "Define byte-versus-source offset adapters and explicit atomic replace/insert APIs. Restore source normalization, end-caret, snapshot and callback order, reset stale selection appropriately, and keep native selection/redo capabilities. Document recursive marker expansion as source behavior and choose a bounded safe expansion policy explicitly rather than accidentally changing literal paste content.",
+          "size_min": 100,
+          "size_max": 170,
+          "priority": "P1",
+          "priority_reason": "External editor, clipboard, completion and extension operations need predictable replacement and undo semantics."
+        },
+        {
+          "id": "TUI-251",
+          "title": "Editor render-only decorations and concealed source prefixes",
+          "status": "missing",
+          "source": "ice:packages/tui/src/components/editor.ts:209-262; ice:packages/tui/src/components/editor.ts:557-634; ice:packages/tui/src/components/editor.ts:1071-1176; ice:packages/tui/test/editor.test.ts:4186-4252",
+          "what": "Style or conceal input spans without inserting terminal codes into editor text or shifting the source cursor.",
+          "mechanism": "Decoration callback receives each logical line; exceptions become an empty list. Keep integer spans with0<=start<end<=line.length, sort by start and drop subsequent overlaps. concealPrefix is clamped to an integer0..span length; the protected first-line prompt prefix is also hidden. Build sourceToDisplay/displayToSource mappings per UTF16 code unit; concealed source positions map to a display boundary whose reverse map points after concealed text. Map accepted style prefix/suffix spans through concealment, clip them against wrapped chunk source ranges, and insert them around only the display substring. Cursor and edits remain in plain source coordinates. Validation is by code unit, not grapheme boundary, so the port must make any stronger boundary validation explicit.",
+          "interfaces": "EditorDecoration {start,end,prefix,suffix,concealPrefix?}; EditorDecorations callback; setDecorations; protected getPromptPrefixLength; source/display maps.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-250"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:1390-1558 can reverse native selection and render a placeholder but has no decoration callback, concealed prefix contract or source/display maps. Native style.prompt at76-88 is stored but unused in render. Generic syntax/theme adapters belong TUI-005; the coding-agent literal highlighter and CustomEditor wrapper consume this primitive rather than replacing it.",
+          "port": "Add a render-only decoration API and explicit byte/source/display mapping. Retain native selection as a separate overlapping visual layer with defined ordering, isolate callback failures and never persist ANSI bytes into text. Wire coding-agent highlighters through the shared map so hidden mode prefixes and wrapped decorations preserve caret position.",
+          "size_min": 150,
+          "size_max": 240,
+          "priority": "P1",
+          "priority_reason": "Input highlighting and mode-prefix concealment require a primitive contract that the native editor does not expose."
+        }
+      ]
+    },
+    {
+      "symbol": "TextDecoration",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:236",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/components/editor.ts",
+        "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+        "range": [
+          233,
+          250
+        ],
+        "text": "233 | \tselectList: SelectListTheme;\n234 | }\n235 | \n236 | export interface TextDecoration {\n237 | \tstart: number;\n238 | \tend: number;\n239 | \tprefix: string;\n240 | \tsuffix: string;\n241 | \t/** Source characters at the start of this span hidden only in the rendered editor. */\n242 | \tconcealPrefix?: number;\n243 | }\n244 | \n245 | export type TextDecorationProvider = (line: string) => TextDecoration[];\n246 | \n247 | export interface EditorOptions {\n248 | \tpaddingX?: number;\n249 | \t/** Gutter text before the first line (e.g. \"❯ \"), drawn in the border color; continuation lines are indented to match. */\n250 | \tprompt?: string;"
+      },
+      "entries": [
+        {
+          "id": "TUI-242",
+          "title": "Editor state access and atomic programmatic replacement",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/editor.ts:209-400; ice:packages/tui/src/components/editor.ts:1178-1299; ice:packages/tui/test/editor.test.ts:288-314; ice:packages/tui/test/editor.test.ts:1853-1940; ice:packages/tui/src/editor-component.ts:11-77",
+          "what": "Expose raw and expanded multiline text, defensively copied lines/cursor and predictable replacement/insertion operations without confusing text offsets with terminal cells.",
+          "mechanism": "State contains at least one logical line and UTF16 cursorLine/cursorCol. getText joins LF; getLines copies; getExpandedText iterates paste registry in insertion order, replacing each registered marker with a function-returned literal body so dollar replacement syntax is inert. This can expand a later-ID marker introduced inside an earlier paste body; it is not a single nonrecursive pass. setText cancels completion, exits history, clears last action, normalizes CRLF/CR to LF and tabs to four spaces; when text differs it captures the full pre-change snapshot. It always clears paste registry/counter, positions at the end and calls onChange even for the same text. insertTextAtCursor ignores empty input, cancels completion/history and captures one snapshot before normalization/splicing; preserves both existing prefix and suffix and places cursor after inserted content, with one change callback. pasteText routes to paste preprocessing, not plain insertion.",
+          "interfaces": "Editor.getText/getExpandedText/getLines/getCursor/setText/insertTextAtCursor/pasteText; EditorState and source UTF16 offsets; EditorComponent abstraction. The custom EditorComponent interface requires getText/setText/handleInput plus the Component render/invalidate contract. onSubmit/onChange properties are optional despite the comment heading; history, insertion, paste, expanded text, autocomplete provider, borderColor, padding and dropdown-height setters are optional. The interface documents expanded-text fallback to getText; caller integration belongs to extension/application entries.",
+          "dependencies": [
+            "TUI-234"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:269-450 exposes equivalent raw/expanded text and byte cursor access, but set_text splits LF without CR/tab normalization, moves to row0/col0, clears pastes, does not capture undo or exit history and leaves any selection anchor intact. expand_pastes is one regex replacement pass. insert at795-857 normalizes line endings but not tabs and coalesces with prior inserts; selection replacement is a native extra. snap_boundary at146-165 and set_cursor at554-562 protect ordinary byte-position setters; preserve them. Native selection, redo and optional placeholder/initial text should remain available alongside source-compatible operations.",
+          "port": "Define byte-versus-source offset adapters and explicit atomic replace/insert APIs. Restore source normalization, end-caret, snapshot and callback order, reset stale selection appropriately, and keep native selection/redo capabilities. Document recursive marker expansion as source behavior and choose a bounded safe expansion policy explicitly rather than accidentally changing literal paste content.",
+          "size_min": 100,
+          "size_max": 170,
+          "priority": "P1",
+          "priority_reason": "External editor, clipboard, completion and extension operations need predictable replacement and undo semantics."
+        },
+        {
+          "id": "TUI-251",
+          "title": "Editor render-only decorations and concealed source prefixes",
+          "status": "missing",
+          "source": "ice:packages/tui/src/components/editor.ts:209-262; ice:packages/tui/src/components/editor.ts:557-634; ice:packages/tui/src/components/editor.ts:1071-1176; ice:packages/tui/test/editor.test.ts:4186-4252",
+          "what": "Style or conceal input spans without inserting terminal codes into editor text or shifting the source cursor.",
+          "mechanism": "Decoration callback receives each logical line; exceptions become an empty list. Keep integer spans with0<=start<end<=line.length, sort by start and drop subsequent overlaps. concealPrefix is clamped to an integer0..span length; the protected first-line prompt prefix is also hidden. Build sourceToDisplay/displayToSource mappings per UTF16 code unit; concealed source positions map to a display boundary whose reverse map points after concealed text. Map accepted style prefix/suffix spans through concealment, clip them against wrapped chunk source ranges, and insert them around only the display substring. Cursor and edits remain in plain source coordinates. Validation is by code unit, not grapheme boundary, so the port must make any stronger boundary validation explicit.",
+          "interfaces": "EditorDecoration {start,end,prefix,suffix,concealPrefix?}; EditorDecorations callback; setDecorations; protected getPromptPrefixLength; source/display maps.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-250"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:1390-1558 can reverse native selection and render a placeholder but has no decoration callback, concealed prefix contract or source/display maps. Native style.prompt at76-88 is stored but unused in render. Generic syntax/theme adapters belong TUI-005; the coding-agent literal highlighter and CustomEditor wrapper consume this primitive rather than replacing it.",
+          "port": "Add a render-only decoration API and explicit byte/source/display mapping. Retain native selection as a separate overlapping visual layer with defined ordering, isolate callback failures and never persist ANSI bytes into text. Wire coding-agent highlighters through the shared map so hidden mode prefixes and wrapped decorations preserve caret position.",
+          "size_min": 150,
+          "size_max": 240,
+          "priority": "P1",
+          "priority_reason": "Input highlighting and mode-prefix concealment require a primitive contract that the native editor does not expose."
+        }
+      ]
+    },
+    {
+      "symbol": "TextDecorationProvider",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:245",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/components/editor.ts",
+        "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+        "range": [
+          242,
+          259
+        ],
+        "text": "242 | \tconcealPrefix?: number;\n243 | }\n244 | \n245 | export type TextDecorationProvider = (line: string) => TextDecoration[];\n246 | \n247 | export interface EditorOptions {\n248 | \tpaddingX?: number;\n249 | \t/** Gutter text before the first line (e.g. \"❯ \"), drawn in the border color; continuation lines are indented to match. */\n250 | \tprompt?: string;\n251 | \tautocompleteMaxVisible?: number;\n252 | \tborderStyle?: EditorBorderStyle;\n253 | \tdecorations?: TextDecorationProvider;\n254 | }\n255 | \n256 | const SLASH_COMMAND_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {\n257 | \tminPrimaryColumnWidth: 12,\n258 | \tmaxPrimaryColumnWidth: 32,\n259 | };"
+      },
+      "entries": [
+        {
+          "id": "TUI-242",
+          "title": "Editor state access and atomic programmatic replacement",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/editor.ts:209-400; ice:packages/tui/src/components/editor.ts:1178-1299; ice:packages/tui/test/editor.test.ts:288-314; ice:packages/tui/test/editor.test.ts:1853-1940; ice:packages/tui/src/editor-component.ts:11-77",
+          "what": "Expose raw and expanded multiline text, defensively copied lines/cursor and predictable replacement/insertion operations without confusing text offsets with terminal cells.",
+          "mechanism": "State contains at least one logical line and UTF16 cursorLine/cursorCol. getText joins LF; getLines copies; getExpandedText iterates paste registry in insertion order, replacing each registered marker with a function-returned literal body so dollar replacement syntax is inert. This can expand a later-ID marker introduced inside an earlier paste body; it is not a single nonrecursive pass. setText cancels completion, exits history, clears last action, normalizes CRLF/CR to LF and tabs to four spaces; when text differs it captures the full pre-change snapshot. It always clears paste registry/counter, positions at the end and calls onChange even for the same text. insertTextAtCursor ignores empty input, cancels completion/history and captures one snapshot before normalization/splicing; preserves both existing prefix and suffix and places cursor after inserted content, with one change callback. pasteText routes to paste preprocessing, not plain insertion.",
+          "interfaces": "Editor.getText/getExpandedText/getLines/getCursor/setText/insertTextAtCursor/pasteText; EditorState and source UTF16 offsets; EditorComponent abstraction. The custom EditorComponent interface requires getText/setText/handleInput plus the Component render/invalidate contract. onSubmit/onChange properties are optional despite the comment heading; history, insertion, paste, expanded text, autocomplete provider, borderColor, padding and dropdown-height setters are optional. The interface documents expanded-text fallback to getText; caller integration belongs to extension/application entries.",
+          "dependencies": [
+            "TUI-234"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:269-450 exposes equivalent raw/expanded text and byte cursor access, but set_text splits LF without CR/tab normalization, moves to row0/col0, clears pastes, does not capture undo or exit history and leaves any selection anchor intact. expand_pastes is one regex replacement pass. insert at795-857 normalizes line endings but not tabs and coalesces with prior inserts; selection replacement is a native extra. snap_boundary at146-165 and set_cursor at554-562 protect ordinary byte-position setters; preserve them. Native selection, redo and optional placeholder/initial text should remain available alongside source-compatible operations.",
+          "port": "Define byte-versus-source offset adapters and explicit atomic replace/insert APIs. Restore source normalization, end-caret, snapshot and callback order, reset stale selection appropriately, and keep native selection/redo capabilities. Document recursive marker expansion as source behavior and choose a bounded safe expansion policy explicitly rather than accidentally changing literal paste content.",
+          "size_min": 100,
+          "size_max": 170,
+          "priority": "P1",
+          "priority_reason": "External editor, clipboard, completion and extension operations need predictable replacement and undo semantics."
+        },
+        {
+          "id": "TUI-251",
+          "title": "Editor render-only decorations and concealed source prefixes",
+          "status": "missing",
+          "source": "ice:packages/tui/src/components/editor.ts:209-262; ice:packages/tui/src/components/editor.ts:557-634; ice:packages/tui/src/components/editor.ts:1071-1176; ice:packages/tui/test/editor.test.ts:4186-4252",
+          "what": "Style or conceal input spans without inserting terminal codes into editor text or shifting the source cursor.",
+          "mechanism": "Decoration callback receives each logical line; exceptions become an empty list. Keep integer spans with0<=start<end<=line.length, sort by start and drop subsequent overlaps. concealPrefix is clamped to an integer0..span length; the protected first-line prompt prefix is also hidden. Build sourceToDisplay/displayToSource mappings per UTF16 code unit; concealed source positions map to a display boundary whose reverse map points after concealed text. Map accepted style prefix/suffix spans through concealment, clip them against wrapped chunk source ranges, and insert them around only the display substring. Cursor and edits remain in plain source coordinates. Validation is by code unit, not grapheme boundary, so the port must make any stronger boundary validation explicit.",
+          "interfaces": "EditorDecoration {start,end,prefix,suffix,concealPrefix?}; EditorDecorations callback; setDecorations; protected getPromptPrefixLength; source/display maps.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-250"
+          ],
+          "rust": "rust:crates/ice-tui/src/editor.rs:1390-1558 can reverse native selection and render a placeholder but has no decoration callback, concealed prefix contract or source/display maps. Native style.prompt at76-88 is stored but unused in render. Generic syntax/theme adapters belong TUI-005; the coding-agent literal highlighter and CustomEditor wrapper consume this primitive rather than replacing it.",
+          "port": "Add a render-only decoration API and explicit byte/source/display mapping. Retain native selection as a separate overlapping visual layer with defined ordering, isolate callback failures and never persist ANSI bytes into text. Wire coding-agent highlighters through the shared map so hidden mode prefixes and wrapped decorations preserve caret position.",
+          "size_min": 150,
+          "size_max": 240,
+          "priority": "P1",
+          "priority_reason": "Input highlighting and mode-prefix concealment require a primitive contract that the native editor does not expose."
+        }
+      ]
+    },
+    {
+      "symbol": "ImageOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/image.ts:17",
+      "covering_entries": [
+        "TUI-229"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/components/image.ts",
+        "sha256": "cdef2f757008ce2fecfde6c0108366ebdc160bac70355db855fd264aec8d53f8",
+        "range": [
+          14,
+          31
+        ],
+        "text": "14 | \tfallbackColor: (str: string) => string;\n15 | }\n16 | \n17 | export interface ImageOptions {\n18 | \tmaxWidthCells?: number;\n19 | \tmaxHeightCells?: number;\n20 | \tfilename?: string;\n21 | \t/** Kitty image ID. If provided, reuses this ID (for animations/updates). */\n22 | \timageId?: number;\n23 | }\n24 | \n25 | export class Image implements Component {\n26 | \tprivate base64Data: string;\n27 | \tprivate mimeType: string;\n28 | \tprivate dimensions: ImageDimensions;\n29 | \tprivate theme: ImageTheme;\n30 | \tprivate options: ImageOptions;\n31 | \tprivate imageId?: number;"
+      },
+      "entries": [
+        {
+          "id": "TUI-229",
+          "title": "Image component, row reservation and informative fallback",
+          "status": "partial",
+          "source": "ice:packages/tui/src/components/image.ts:1-128; ice:packages/tui/src/terminal-image.ts:617-654; ice:packages/tui/test/terminal-image.test.ts:460-598",
+          "what": "Render image attachments with stable IDs, bounded geometry and a readable, optionally clickable fallback.",
+          "mechanism": "Constructor stores base64,MIME,theme,options and explicit dimensions or header result, falling back to800x600. It accepts a reusable imageId; otherwise allocates an ID lazily only for Kitty. Actual random formula produces1..0xfffffffe (despite a wider comment). Render caches only by width until invalidate, including capabilities/cell-dependent output. Max width is max(1,min(width-2,optionMaxWidth or60)); default max height is ceil(maxWidth*cellWidth/cellHeight), a square pixel box. Call renderImage with moveCursor=false and explicit max bounds. Kitty returns the sequence on first row followed by rows-1 empties; iTerm2 puts empties first and then cursor-up(rows-1)+sequence last. Fallback is one themed, width-truncated line, formatted [Image: optionalFilename [optionalMime] optionalWxH]. Absolute home paths are shortened only at home boundary; absolute filenames become file:// OSC8 links only when hyperlink capability is true. Relative/basename paths remain plain.",
+          "interfaces": "Image(base64,mimeType,ImageTheme,{maxWidthCells,maxHeightCells,filename,imageId},dimensions?); getImageId/invalidate/render; ImageTheme.fallbackColor; imageFallback(mime,dimensions,filename).",
+          "dependencies": [
+            "TUI-203",
+            "TUI-225",
+            "TUI-226",
+            "TUI-228"
+          ],
+          "rust": "rust:crates/ice-tui/src/image.rs:36-379 reserves corresponding image rows and iTerm cursor-up ordering; preserve this existing parity. Native constructors accept raw data or an un-fetched URL, allocate sequential IDs eagerly for data and reallocate on set_data; no caller-supplied reuse ID/dimensions/MIME/filename fallback. from_url marks loaded based on URL presence but renders a placeholder because it does not fetch. Native fit and unknown-image defaults differ (width cast and5rows), as detailed in TUI-228. No-protocol fallback is alt_text or [Image] with empty suffix truncation; supported-protocol empty-data path renders a bordered placeholder. Theme/title/inline visibility and mutable data/options are useful native extras to keep. set_alt_text does not invalidate the width cache, unlike native set_options/set_theme/set_url; same-width previously cached fallback can remain stale. Native ID counter can wrap through0. No global capability/cell cache revision is keyed by either component; TS relies on caller invalidation.",
+          "port": "Add compatibility construction and options over the native component; preserve native inline visibility and mutable APIs, correct cache invalidation for all output-affecting setters, and retain row reservation. Expose stable caller IDs and explicit geometry, compose MIME/path fallback through shared OSC8/truncation utilities, and document rather than imply URL retrieval.",
+          "size_min": 150,
+          "size_max": 250,
+          "priority": "P1",
+          "priority_reason": "Users need correct attachment sizing and useful fallback information on terminals without image support."
+        }
+      ]
+    },
+    {
+      "symbol": "KeyEventType",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/keys.ts:505",
+      "covering_entries": [
+        "TUI-206"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/keys.ts",
+        "sha256": "b972facce4233a4623239fc38029e28cae15d0fb326558c0c09dc02cf4345fa7",
+        "range": [
+          502,
+          519
+        ],
+        "text": "502 |  * Event types from Kitty keyboard protocol (flag 2)\n503 |  * 1 = key press, 2 = key repeat, 3 = key release\n504 |  */\n505 | export type KeyEventType = \"press\" | \"repeat\" | \"release\";\n506 | \n507 | interface ParsedKittySequence {\n508 | \tcodepoint: number;\n509 | \tshiftedKey?: number; // Shifted version of the key (when shift is pressed)\n510 | \tbaseLayoutKey?: number; // Key in standard PC-101 layout (for non-Latin layouts)\n511 | \tmodifier: number;\n512 | \teventType: KeyEventType;\n513 | }\n514 | \n515 | interface ParsedModifyOtherKeysSequence {\n516 | \tcodepoint: number;\n517 | \tmodifier: number;\n518 | }\n519 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-206",
+          "title": "Legacy, Kitty and modifyOtherKeys key identity and printable decoding",
+          "status": "partial",
+          "source": "ice:packages/tui/src/keys.ts:1-1402; ice:packages/tui/test/keys.test.ts:1-634",
+          "what": "Give raw terminal sequence consumers consistent logical key names, modifier matching and printable text without confusing keyboard layout, key release or protocol modes.",
+          "mechanism": "TS uses Shift=1, Alt=2, Ctrl=4, Super=8 and masks CapsLock64/NumLock128. Kitty encoded modifiers are one-indexed; CSI-u accepts alternate shifted/base-layout codepoints and press/repeat/release event fields, with modified arrows/Home/End/tilde navigation. Keypad57399–57408 maps to0–9,57409–57413 to ./ * - + (57410 is slash),57415='=',57416=',',57417–57426 to navigation/delete;57414 is keypad Enter. Shifted uppercase Latin identity normalizes to lowercase. Latin letters/digits/known symbols remain authoritative over physical base-layout keys; other layouts can use reported base key. Legacy CSI/SS3/Linux/rxvt navigation/function-key sequences are enumerated at keys.ts368–480, including shifted lowercase CSI and Ctrl lowercase SS3, $/^ tilde variants, Alt-b/f/p/n arrows and F1–F12. Function-key matches only permit no modifiers.\n\nExplicit Kitty and xterm CSI27;mod;code~ matching works regardless of negotiated mode. Ambiguous legacy Alt printable/control forms are disabled in Kitty mode; LF and ESC+CR become Shift+Enter there, otherwise Enter/Alt+Enter. Raw CR remains Enter; keypad SS3 OM is Enter. Local WT_SESSION without truthy SSH_CONNECTION/SSH_CLIENT/SSH_TTY makes raw BS0x08 Ctrl+Backspace; DEL remains Backspace, and raw BS also matches Ctrl+h through the general raw-control path. Esc/return aliases and order-independent modifier strings match; parseKey emits modifiers in Shift,Ctrl,Alt,Super order, although raw uppercase ASCII parses as the uppercase character rather than the explicit shifted form. Unsupported modifier bits reject formatted key IDs.\n\nisKeyRelease/isKeyRepeat scan supported :3/:2 suffix substrings (u,~,A–D,H,F), not a fully anchored event parser, and exempt bracketed-paste payloads. matchesKey does not itself suppress release events. decodeKittyPrintable permits only Shift and lock bits, prefers the reported shifted key, normalizes keypad keys, rejects controls/invalid codepoints, and returns String.fromCodePoint; it does not check the event-type field, so callers must discard releases where required. decodePrintableKey adds modifyOtherKeys with the same non-Control/Alt/Super printable policy.",
+          "interfaces": "KeyId/Key helper permutations; matchesKey,parseKey,isKeyRelease,isKeyRepeat,decodeKittyPrintable,decodePrintableKey,setKittyProtocolActive,isKittyProtocolActive. Raw strings and Crossterm structured events need an explicit adapter, not interchangeable representations.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/keys.rs:1-524 has a public string parser, but uses Ctrl=1/Shift=2/Alt=4, fails to subtract1, discards colon-containing parameters via filter_map and derives event type from the first keycode parameter. It misidentifies1~ as F1, groups several F-key numbers together, maps keypad57399 to Insert/57414 to Delete, omits alternate-layout/modifyOtherKeys/lock handling and accepts only ASCII printables. Key::to_key_id alphabetically sorts modifier names and exact-matches strings, conflicting with ctrl_alt helper order; global Kitty state does not affect parsing. Its printable decoder accepts ASCII CSI-u without checking modifiers or release type. These are source-established public-helper defects, not evidence all native typing is broken: rust:crates/ice-tui/src/terminal.rs:401-415 supplies Crossterm KeyEvent, and keybindings.rs:686-703 matches those directly. Bounded crates search found no call to decode_kitty_printable_from_str beyond its definition.",
+          "port": "Implement a single protocol parser with correctly normalized flags, event types and keypad mappings; keep raw printable decoding separate from shortcut identity. Bridge native structured events while retaining Crossterm's direct Unicode input path. Add table-driven acceptance cases from the read TS tests plus malformed/locked/released events; do not enable modifyOtherKeys until the active input reader can decode it. Preserve the observed TS caller-level release policy rather than claiming its printable helper suppresses releases.",
+          "size_min": 400,
+          "size_max": 650,
+          "priority": "P1",
+          "priority_reason": "Raw-input extensions and compatibility paths need correct key identity; active native structured-event handling must remain intact."
+        }
+      ]
+    },
+    {
+      "symbol": "StackLayoutEntry",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/layout-node.ts:10",
+      "covering_entries": [
+        "TUI-212"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/layout-node.ts",
+        "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+        "range": [
+          7,
+          24
+        ],
+        "text": "7 | \theight: number;\n8 | }\n9 | \n10 | export interface StackLayoutEntry {\n11 | \tcomponent: Component;\n12 | \tbasis?: number | \"auto\";\n13 | \tgrow?: number;\n14 | \tshrink?: number;\n15 | \tminSize?: number;\n16 | \tmaxSize?: number;\n17 | \tvisible?: (viewport: LayoutViewport) => boolean;\n18 | }\n19 | \n20 | export interface StackLayoutNode {\n21 | \ttype: \"vstack\" | \"hstack\";\n22 | \tentries: readonly StackLayoutEntry[];\n23 | \tgap: number;\n24 | \talign: \"stretch\" | \"start\" | \"center\" | \"end\";"
+      },
+      "entries": [
+        {
+          "id": "TUI-212",
+          "title": "Extensible constrained layout tree and nested scroll geometry",
+          "status": "partial",
+          "source": "ice:packages/tui/src/layout-node.ts:1-53; ice:packages/tui/src/layout.ts:30-261; ice:packages/tui/src/layout.ts:338-441; ice:packages/tui/test/layout.test.ts:302-323; ice:packages/tui/README.md:81-95",
+          "what": "Expose component layout nodes and produce one clipped geometry tree for rendering, cursor visibility and nested scroll hit routing.",
+          "mechanism": "The symbol-based layout hook lets any component return vstack/hstack/scroll structure. A frame uses floor-normalized positive dimensions and a per-component/per-width render cache so measure and paint share results; fixed basis skips unnecessary intrinsic measurement. Leaves keep full rendered lines, allocate requested/natural height and shift lineOffset just far enough to keep their first cursor marker visible. VStack allocates each child vertically and computes natural height with gaps. HStack allocates widths, measures children at their own positive width, applies stretch/start/center/end vertical placement and represents zero-width children without painting.\n\nScroll layout recursively lays out the child at unbounded height and y−oldScrollTop, obtains actual constrained child geometry, updates state, translates descendants for the new scroll position and recalculates ancestor-intersected clips. Thus nested ScrollViews remain in the tree. Frame primary selection uses the first encountered scroll as fallback and replaces it whenever a later marked-primary scroll is encountered. getScrollViewBox searches by state identity; getScrollViewsAt returns containing clipped scrolls deepest-first. Every child has a real parent reference; coordinates may be negative for offscreen content.\n\nPainting iterates only clipped visible row ranges, removes leading OSC133 A/B/C zone markers, composes at allocated x/width and handles Kitty top/bottom cropping through image metadata. The full-width painted-row cache keys line+width, scrollbar cache also sampled style; lines>4096 code units bypass, and cache clears when reaching4096 entries. Image-specific protocol/cropping details belong with terminal images.",
+          "interfaces": "LAYOUT_NODE,getLayoutNode,LayoutNode/StackLayoutNode/ScrollLayoutNode/LayoutViewport; LayoutRect,LayoutBox,LayoutFrame,renderLayoutFrame,getScrollViewBox,getScrollViewsAt. Custom layout hooks must not require concrete built-in downcasts.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-203",
+            "TUI-211"
+          ],
+          "rust": "rust:crates/ice-tui/src/layout.rs:128-479 already has frame-local caching, concrete VStack/HStack recursion, constrained dock layout and leaf cursor offset. It ignores the exported LayoutNodeProvider trait and recognizes only three concrete downcasts. VStack passes height.unwrap_or(0) to constrained allocation even for unbounded intrinsic layout. HStack ignores cross-axis align and omits zero-width boxes. ScrollView is flattened to pre-sliced lines with no child boxes/scroll_content_lines, so nested geometry/hit routing is lost. Only the first explicitly primary scroll is registered (no unmarked fallback). get_scroll_views_at at661-680 traverses outer-first; parent_index is populated with each child's own ordinal rather than a navigable parent, and unsigned coordinates cannot represent negative content origins. Paint504-548 copies full-width lines directly and has no source zone stripping, image crop or painted-row cache. Preserve native scroll-content reuse and cache tests at layout.rs868-979.",
+          "port": "Move layout-node access onto Component or another dynamically callable trait hook, retain signed geometry until clipping and recurse through scroll children. Unify natural/constrained sizing with TUI-211, preserve render-once-per-width and native pure-scroll cache reuse, implement exact primary selection/depth order/parent relationships, and compose only visible cells. Link image cropping without converting its protocol bytes into text; use the source's billion-row sparse fixture concept as a bounded paint-work acceptance criterion, not a requirement to allocate that many Rust strings.",
+          "size_min": 320,
+          "size_max": 520,
+          "priority": "P1",
+          "priority_reason": "Extensibility and nested viewport coordinates underpin overlays, scrolling and cursor placement."
+        }
+      ]
+    },
+    {
+      "symbol": "ScrollLayoutState",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/layout-node.ts:27",
+      "covering_entries": [
+        "TUI-212"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/layout-node.ts",
+        "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+        "range": [
+          24,
+          41
+        ],
+        "text": "24 | \talign: \"stretch\" | \"start\" | \"center\" | \"end\";\n25 | }\n26 | \n27 | export interface ScrollLayoutState {\n28 | \treadonly scrollTop: number;\n29 | \treadonly primary: boolean;\n30 | \treadonly overscroll: \"chain\" | \"contain\";\n31 | \treadonly viewportHeight: number;\n32 | \tgetContentWidth(width: number): number;\n33 | \tupdateLayout(contentHeight: number, viewportHeight: number, requestRender: () => void): void;\n34 | }\n35 | \n36 | export interface ScrollLayoutNode {\n37 | \ttype: \"scroll\";\n38 | \tcomponent: Component;\n39 | \tstate: ScrollLayoutState;\n40 | }\n41 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-212",
+          "title": "Extensible constrained layout tree and nested scroll geometry",
+          "status": "partial",
+          "source": "ice:packages/tui/src/layout-node.ts:1-53; ice:packages/tui/src/layout.ts:30-261; ice:packages/tui/src/layout.ts:338-441; ice:packages/tui/test/layout.test.ts:302-323; ice:packages/tui/README.md:81-95",
+          "what": "Expose component layout nodes and produce one clipped geometry tree for rendering, cursor visibility and nested scroll hit routing.",
+          "mechanism": "The symbol-based layout hook lets any component return vstack/hstack/scroll structure. A frame uses floor-normalized positive dimensions and a per-component/per-width render cache so measure and paint share results; fixed basis skips unnecessary intrinsic measurement. Leaves keep full rendered lines, allocate requested/natural height and shift lineOffset just far enough to keep their first cursor marker visible. VStack allocates each child vertically and computes natural height with gaps. HStack allocates widths, measures children at their own positive width, applies stretch/start/center/end vertical placement and represents zero-width children without painting.\n\nScroll layout recursively lays out the child at unbounded height and y−oldScrollTop, obtains actual constrained child geometry, updates state, translates descendants for the new scroll position and recalculates ancestor-intersected clips. Thus nested ScrollViews remain in the tree. Frame primary selection uses the first encountered scroll as fallback and replaces it whenever a later marked-primary scroll is encountered. getScrollViewBox searches by state identity; getScrollViewsAt returns containing clipped scrolls deepest-first. Every child has a real parent reference; coordinates may be negative for offscreen content.\n\nPainting iterates only clipped visible row ranges, removes leading OSC133 A/B/C zone markers, composes at allocated x/width and handles Kitty top/bottom cropping through image metadata. The full-width painted-row cache keys line+width, scrollbar cache also sampled style; lines>4096 code units bypass, and cache clears when reaching4096 entries. Image-specific protocol/cropping details belong with terminal images.",
+          "interfaces": "LAYOUT_NODE,getLayoutNode,LayoutNode/StackLayoutNode/ScrollLayoutNode/LayoutViewport; LayoutRect,LayoutBox,LayoutFrame,renderLayoutFrame,getScrollViewBox,getScrollViewsAt. Custom layout hooks must not require concrete built-in downcasts.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-203",
+            "TUI-211"
+          ],
+          "rust": "rust:crates/ice-tui/src/layout.rs:128-479 already has frame-local caching, concrete VStack/HStack recursion, constrained dock layout and leaf cursor offset. It ignores the exported LayoutNodeProvider trait and recognizes only three concrete downcasts. VStack passes height.unwrap_or(0) to constrained allocation even for unbounded intrinsic layout. HStack ignores cross-axis align and omits zero-width boxes. ScrollView is flattened to pre-sliced lines with no child boxes/scroll_content_lines, so nested geometry/hit routing is lost. Only the first explicitly primary scroll is registered (no unmarked fallback). get_scroll_views_at at661-680 traverses outer-first; parent_index is populated with each child's own ordinal rather than a navigable parent, and unsigned coordinates cannot represent negative content origins. Paint504-548 copies full-width lines directly and has no source zone stripping, image crop or painted-row cache. Preserve native scroll-content reuse and cache tests at layout.rs868-979.",
+          "port": "Move layout-node access onto Component or another dynamically callable trait hook, retain signed geometry until clipping and recurse through scroll children. Unify natural/constrained sizing with TUI-211, preserve render-once-per-width and native pure-scroll cache reuse, implement exact primary selection/depth order/parent relationships, and compose only visible cells. Link image cropping without converting its protocol bytes into text; use the source's billion-row sparse fixture concept as a bounded paint-work acceptance criterion, not a requirement to allocate that many Rust strings.",
+          "size_min": 320,
+          "size_max": 520,
+          "priority": "P1",
+          "priority_reason": "Extensibility and nested viewport coordinates underpin overlays, scrolling and cursor placement."
+        }
+      ]
+    },
+    {
+      "symbol": "LayoutComponent",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/layout-node.ts:44",
+      "covering_entries": [
+        "TUI-212"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/layout-node.ts",
+        "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+        "range": [
+          41,
+          53
+        ],
+        "text": "41 | \n42 | export type LayoutNode = StackLayoutNode | ScrollLayoutNode;\n43 | \n44 | export interface LayoutComponent extends Component {\n45 | \t[LAYOUT_NODE](): LayoutNode;\n46 | }\n47 | \n48 | export function getLayoutNode(component: Component): LayoutNode | undefined {\n49 | \tconst candidate = component as Partial<LayoutComponent>;\n50 | \tconst method = LAYOUT_NODE in candidate ? candidate[LAYOUT_NODE] : undefined;\n51 | \treturn typeof method === \"function\" ? method.call(component) : undefined;\n52 | }\n53 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-212",
+          "title": "Extensible constrained layout tree and nested scroll geometry",
+          "status": "partial",
+          "source": "ice:packages/tui/src/layout-node.ts:1-53; ice:packages/tui/src/layout.ts:30-261; ice:packages/tui/src/layout.ts:338-441; ice:packages/tui/test/layout.test.ts:302-323; ice:packages/tui/README.md:81-95",
+          "what": "Expose component layout nodes and produce one clipped geometry tree for rendering, cursor visibility and nested scroll hit routing.",
+          "mechanism": "The symbol-based layout hook lets any component return vstack/hstack/scroll structure. A frame uses floor-normalized positive dimensions and a per-component/per-width render cache so measure and paint share results; fixed basis skips unnecessary intrinsic measurement. Leaves keep full rendered lines, allocate requested/natural height and shift lineOffset just far enough to keep their first cursor marker visible. VStack allocates each child vertically and computes natural height with gaps. HStack allocates widths, measures children at their own positive width, applies stretch/start/center/end vertical placement and represents zero-width children without painting.\n\nScroll layout recursively lays out the child at unbounded height and y−oldScrollTop, obtains actual constrained child geometry, updates state, translates descendants for the new scroll position and recalculates ancestor-intersected clips. Thus nested ScrollViews remain in the tree. Frame primary selection uses the first encountered scroll as fallback and replaces it whenever a later marked-primary scroll is encountered. getScrollViewBox searches by state identity; getScrollViewsAt returns containing clipped scrolls deepest-first. Every child has a real parent reference; coordinates may be negative for offscreen content.\n\nPainting iterates only clipped visible row ranges, removes leading OSC133 A/B/C zone markers, composes at allocated x/width and handles Kitty top/bottom cropping through image metadata. The full-width painted-row cache keys line+width, scrollbar cache also sampled style; lines>4096 code units bypass, and cache clears when reaching4096 entries. Image-specific protocol/cropping details belong with terminal images.",
+          "interfaces": "LAYOUT_NODE,getLayoutNode,LayoutNode/StackLayoutNode/ScrollLayoutNode/LayoutViewport; LayoutRect,LayoutBox,LayoutFrame,renderLayoutFrame,getScrollViewBox,getScrollViewsAt. Custom layout hooks must not require concrete built-in downcasts.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-203",
+            "TUI-211"
+          ],
+          "rust": "rust:crates/ice-tui/src/layout.rs:128-479 already has frame-local caching, concrete VStack/HStack recursion, constrained dock layout and leaf cursor offset. It ignores the exported LayoutNodeProvider trait and recognizes only three concrete downcasts. VStack passes height.unwrap_or(0) to constrained allocation even for unbounded intrinsic layout. HStack ignores cross-axis align and omits zero-width boxes. ScrollView is flattened to pre-sliced lines with no child boxes/scroll_content_lines, so nested geometry/hit routing is lost. Only the first explicitly primary scroll is registered (no unmarked fallback). get_scroll_views_at at661-680 traverses outer-first; parent_index is populated with each child's own ordinal rather than a navigable parent, and unsigned coordinates cannot represent negative content origins. Paint504-548 copies full-width lines directly and has no source zone stripping, image crop or painted-row cache. Preserve native scroll-content reuse and cache tests at layout.rs868-979.",
+          "port": "Move layout-node access onto Component or another dynamically callable trait hook, retain signed geometry until clipping and recurse through scroll children. Unify natural/constrained sizing with TUI-211, preserve render-once-per-width and native pure-scroll cache reuse, implement exact primary selection/depth order/parent relationships, and compose only visible cells. Link image cropping without converting its protocol bytes into text; use the source's billion-row sparse fixture concept as a bounded paint-work acceptance criterion, not a requirement to allocate that many Rust strings.",
+          "size_min": 320,
+          "size_max": 520,
+          "priority": "P1",
+          "priority_reason": "Extensibility and nested viewport coordinates underpin overlays, scrolling and cursor placement."
+        }
+      ]
+    },
+    {
+      "symbol": "ModifierKey",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/native-modifiers.ts:7",
+      "covering_entries": [
+        "TUI-208"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/native-modifiers.ts",
+        "sha256": "480532c99bec123ef544c79e090c62dfbce5d4564aed29d07fed13c38f573987",
+        "range": [
+          4,
+          21
+        ],
+        "text": "4 | \n5 | const cjsRequire = createRequire(import.meta.url);\n6 | \n7 | export type ModifierKey = \"shift\" | \"command\" | \"control\" | \"option\";\n8 | \n9 | type NativeModifiersHelper = {\n10 | \tisModifierPressed: (name: ModifierKey) => boolean;\n11 | };\n12 | \n13 | let nativeModifiersHelper: NativeModifiersHelper | null | undefined;\n14 | \n15 | function isNativeModifiersHelper(value: unknown): value is NativeModifiersHelper {\n16 | \tif (typeof value !== \"object\" || value === null) return false;\n17 | \tconst candidate = (value as { isModifierPressed?: unknown }).isModifierPressed;\n18 | \treturn typeof candidate === \"function\";\n19 | }\n20 | \n21 | function loadNativeModifiersHelper(): NativeModifiersHelper | undefined {"
+      },
+      "entries": [
+        {
+          "id": "TUI-208",
+          "title": "Keyboard negotiation, platform modifier helpers and fallback input",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal.ts:12-367; ice:packages/tui/src/native-modifiers.ts:1-60; ice:packages/tui/native/darwin/src/darwin-modifiers.c:1-71; ice:packages/tui/native/win32/src/win32-console-mode.c:1-54; ice:packages/tui/test/terminal.test.ts:1-191; ice:packages/tui/native/darwin/README.md:1-21; ice:packages/tui/package.json:7-21",
+          "what": "Negotiate enhanced keys without swallowing user input and restore terminal protocol state across start, drain and stop.",
+          "mechanism": "TS starts raw UTF-8 stdin, enables bracketed paste, installs resize before Unix self-SIGWINCH, and enables Windows VT input after raw-mode setup. It pushes Kitty flags7, queries flags, and appends a device-attributes sentinel (ESC[>7u ESC[?u ESC[c). Nonzero flags activate global/terminal Kitty state and disable modifyOtherKeys; zero flags or DA before Kitty enables xterm modifyOtherKeys level2. There is no fixed whole-negotiation startup timeout; ordinary input is forwarded meanwhile. An incomplete ESC[ or ESC[?digits; prefix flushed by StdinBuffer receives a separate150ms fragment timer; valid continuations are consumed, invalid/expired prefixes replay as input. Pushed state is recorded independently of observed support so stop/drain can pop once.\n\nOn darwin TERM_PROGRAM=Apple_Terminal, raw CR becomes CSI13;2u only when the local native shift helper reports true. Unlike Rust's guard, this TS check does not exclude SSH. The lazy Darwin helper caches success/failure, supports x64/arm64, probes module-parent/module/executable native/prebuilds locations, validates isModifierPressed and returns false on unavailable/error. C reads combined-session CGEventSourceFlagsState for shift/command/control/option via a N-API bridge. Windows x64/arm64 loader probes analogous3 paths and calls optional enableVirtualTerminalInput; the C implementation ORs0x0200 onto existing stdin console mode and returns a boolean. TS ignores the boolean and returns after the first successfully loaded module.",
+          "interfaces": "Terminal.start/kittyProtocolActive, ProcessTerminal.modifyOtherKeysActive; parseKeyboardProtocolNegotiationSequence; isAppleTerminalSession,normalizeAppleTerminalInput,isNativeModifierPressed. Env TERM_PROGRAM,SSH_CONNECTION/SSH_CLIENT/SSH_TTY and platform/architecture have distinct source/native semantics.",
+          "dependencies": [
+            "TUI-206",
+            "TUI-207"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal.rs:16-65,187-290,340-369,469-506 implements flags7 negotiation through Crossterm, caches detected support across resumes and skips unsupported modifyOtherKeys because Crossterm cannot parse it. Native ICE_KITTY_KEYBOARD forces legacy only for value'0' and otherwise enables; macOS Otty TERM_PROGRAM/TERM bypasses protocol to preserve IME, and unmodified local Apple Terminal Enter consults CoreGraphics only outside SSH. These native safeguards and direct Unicode input tests at terminal.rs614-669 are valuable existing behavior. No TS-style DA/prefix replay state machine, generic exported4-modifier helper or Windows N-API adapter is needed literally in Rust, but the compatibility APIs/fallback reader contract remain partial.",
+          "port": "Implement negotiation as an owned state machine tied to the selected raw or structured reader. Add late/split response handling and fallback decoding where raw compatibility is required; never enable an encoding the active reader cannot consume. Expose equivalent modifier-query capability behind cfg(platform) and keep native Otty/SSH/IME safeguards, documenting intentional differences from TS. Use static fixtures and mock-terminal acceptance tests for ordering and one-pop restoration; OS helper packaging belongs only where a JS bridge is still distributed.",
+          "size_min": 240,
+          "size_max": 400,
+          "priority": "P1",
+          "priority_reason": "Protocol state and platform fallback determine whether Enter, modifiers and IME remain usable."
+        }
+      ]
+    },
+    {
+      "symbol": "StdinBufferOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/stdin-buffer.ts:257",
+      "covering_entries": [
+        "TUI-207"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/stdin-buffer.ts",
+        "sha256": "2a29562c1482ed69e77737f3a8a55034951e38f51abbd1979e479716ec1ee6bd",
+        "range": [
+          254,
+          271
+        ],
+        "text": "254 | \treturn { sequences, remainder: \"\" };\n255 | }\n256 | \n257 | export type StdinBufferOptions = {\n258 | \t/**\n259 | \t * Maximum time to wait for sequence completion (default: 10ms)\n260 | \t * After this time, the buffer is flushed even if incomplete\n261 | \t */\n262 | \ttimeout?: number;\n263 | };\n264 | \n265 | export type StdinBufferEventMap = {\n266 | \tdata: [string];\n267 | \tpaste: [string];\n268 | };\n269 | \n270 | /**\n271 |  * Buffers stdin input and emits complete sequences via the 'data' event."
+      },
+      "entries": [
+        {
+          "id": "TUI-207",
+          "title": "Incremental sequence framing and bracketed-paste assembly",
+          "status": "partial",
+          "source": "ice:packages/tui/src/stdin-buffer.ts:1-435; ice:packages/tui/test/stdin-buffer.test.ts:1-459; ice:packages/tui/src/terminal.ts:178-205",
+          "what": "Deliver complete escape events and paste payloads across arbitrary stdin chunks while keeping ordinary input responsive.",
+          "mechanism": "StdinBuffer emits individual data sequences immediately and retains incomplete CSI/OSC/DCS/APC/SS3/meta sequences behind a resettable10ms default timer. CSI ends at a final byte0x40–0x7e; SGR mouse requires three numeric fields, old X10 mouse consumes ESC[M plus3 code units; OSC accepts BEL/ST, DCS/APC ST. Lone ESC flushes as one unfinished sequence. Explicit flush returns buffered data without emitting, clears the timer and pending printable marker; clear/destroy discard buffer,paste state and timers. Empty input emits an empty data event when ordinary buffer is empty. A single Buffer byte>127 converts to ESC+(byte−128); other buffers use toString.\n\nBracketed paste recognizes ESC[200~ and collects through ESC[201~, including split markers while the ordinary10ms fragment budget has not expired; paste-mode buffering has no timeout/cap. Input before a paste is parsed and emitted, content is one paste event, suffix recursively processes; an incomplete pre-paste remainder is discarded by that branch. TS ProcessTerminal re-wraps the payload for existing editors. Ordinary text splitting uses UTF-16 code units, not graphemes, so this source does not guarantee one event per supplementary Unicode scalar. A raw ESC followed by a second ESC introducing [/] /O/P/_ emits a standalone first ESC to avoid WezTerm Escape-release suffix leakage. After an unmodified no-semicolon Kitty printable report, one immediately following matching single-code-unit raw character is suppressed, including across chunks; intervening sequences/paste/clear reset the marker. This is narrow duplicate-text suppression, not generic event deduplication.",
+          "interfaces": "StdinBuffer({timeout?}), process(string|Buffer), data/paste event listeners, flush():string[],clear,getBuffer,destroy. Preserve order and distinguish timer disposal from incomplete paste policy.",
+          "dependencies": [
+            "TUI-206"
+          ],
+          "rust": "rust:crates/ice-tui/src/stdin_buffer.rs:1-312 is a batch queue/callback abstraction, not a protocol framer. It searches paste markers only inside each input argument, so a marker split between calls is missed (split end stays permanently inside paste). No partial-escape parser/timer/duplicate-text suppression exists. process updates last_input immediately before should_batch; its usual elapsed<1ms branch emits the entire input chunk as Data, not individual sequences. Batching only occurs if that same call takes1ms to less than16ms before checking, and there is no timer-driven flush. A single oversized chunk can exceed the nominal64KiB buffer cap. Callbacks run under the callback mutex and, on some paths, buffer/paste-buffer locks, making reentrant on_event/flush/reset calls capable of deadlock. The bounded crates search found StdinBuffer construction only in its inline tests; primary terminal.rs uses Crossterm instead. Native windows_paste.rs:22-119 separately bulk-reads up to1024 safe console records for a sole reader, preserves UTF-16 pairs and trailing Enter, and must not be removed.",
+          "port": "Provide the source-compatible incremental framer only at raw-stream boundaries, with callback dispatch outside locks and owned cancellable timers. Retain native structured-event and Windows bulk-paste paths; explicitly document which host owns each stream. Preserve TS observable assembly/dedup rules and document its UTF-16/timeout/unclosed-paste limits rather than attributing stronger behavior. Fixture tests should split every marker and protocol response at each boundary and verify one ordered payload without executing real terminal state.",
+          "size_min": 280,
+          "size_max": 430,
+          "priority": "P1",
+          "priority_reason": "Fragmented input must not become commands or literal escape suffixes; the current native helper's name masks a materially different contract."
+        }
+      ]
+    },
+    {
+      "symbol": "StdinBufferEventMap",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/stdin-buffer.ts:265",
+      "covering_entries": [
+        "TUI-207"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/stdin-buffer.ts",
+        "sha256": "2a29562c1482ed69e77737f3a8a55034951e38f51abbd1979e479716ec1ee6bd",
+        "range": [
+          262,
+          279
+        ],
+        "text": "262 | \ttimeout?: number;\n263 | };\n264 | \n265 | export type StdinBufferEventMap = {\n266 | \tdata: [string];\n267 | \tpaste: [string];\n268 | };\n269 | \n270 | /**\n271 |  * Buffers stdin input and emits complete sequences via the 'data' event.\n272 |  * Handles partial escape sequences that arrive across multiple chunks.\n273 |  */\n274 | export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {\n275 | \tprivate buffer: string = \"\";\n276 | \tprivate timeout: ReturnType<typeof setTimeout> | null = null;\n277 | \tprivate readonly timeoutMs: number;\n278 | \tprivate pasteMode: boolean = false;\n279 | \tprivate pasteBuffer: string = \"\";"
+      },
+      "entries": [
+        {
+          "id": "TUI-207",
+          "title": "Incremental sequence framing and bracketed-paste assembly",
+          "status": "partial",
+          "source": "ice:packages/tui/src/stdin-buffer.ts:1-435; ice:packages/tui/test/stdin-buffer.test.ts:1-459; ice:packages/tui/src/terminal.ts:178-205",
+          "what": "Deliver complete escape events and paste payloads across arbitrary stdin chunks while keeping ordinary input responsive.",
+          "mechanism": "StdinBuffer emits individual data sequences immediately and retains incomplete CSI/OSC/DCS/APC/SS3/meta sequences behind a resettable10ms default timer. CSI ends at a final byte0x40–0x7e; SGR mouse requires three numeric fields, old X10 mouse consumes ESC[M plus3 code units; OSC accepts BEL/ST, DCS/APC ST. Lone ESC flushes as one unfinished sequence. Explicit flush returns buffered data without emitting, clears the timer and pending printable marker; clear/destroy discard buffer,paste state and timers. Empty input emits an empty data event when ordinary buffer is empty. A single Buffer byte>127 converts to ESC+(byte−128); other buffers use toString.\n\nBracketed paste recognizes ESC[200~ and collects through ESC[201~, including split markers while the ordinary10ms fragment budget has not expired; paste-mode buffering has no timeout/cap. Input before a paste is parsed and emitted, content is one paste event, suffix recursively processes; an incomplete pre-paste remainder is discarded by that branch. TS ProcessTerminal re-wraps the payload for existing editors. Ordinary text splitting uses UTF-16 code units, not graphemes, so this source does not guarantee one event per supplementary Unicode scalar. A raw ESC followed by a second ESC introducing [/] /O/P/_ emits a standalone first ESC to avoid WezTerm Escape-release suffix leakage. After an unmodified no-semicolon Kitty printable report, one immediately following matching single-code-unit raw character is suppressed, including across chunks; intervening sequences/paste/clear reset the marker. This is narrow duplicate-text suppression, not generic event deduplication.",
+          "interfaces": "StdinBuffer({timeout?}), process(string|Buffer), data/paste event listeners, flush():string[],clear,getBuffer,destroy. Preserve order and distinguish timer disposal from incomplete paste policy.",
+          "dependencies": [
+            "TUI-206"
+          ],
+          "rust": "rust:crates/ice-tui/src/stdin_buffer.rs:1-312 is a batch queue/callback abstraction, not a protocol framer. It searches paste markers only inside each input argument, so a marker split between calls is missed (split end stays permanently inside paste). No partial-escape parser/timer/duplicate-text suppression exists. process updates last_input immediately before should_batch; its usual elapsed<1ms branch emits the entire input chunk as Data, not individual sequences. Batching only occurs if that same call takes1ms to less than16ms before checking, and there is no timer-driven flush. A single oversized chunk can exceed the nominal64KiB buffer cap. Callbacks run under the callback mutex and, on some paths, buffer/paste-buffer locks, making reentrant on_event/flush/reset calls capable of deadlock. The bounded crates search found StdinBuffer construction only in its inline tests; primary terminal.rs uses Crossterm instead. Native windows_paste.rs:22-119 separately bulk-reads up to1024 safe console records for a sole reader, preserves UTF-16 pairs and trailing Enter, and must not be removed.",
+          "port": "Provide the source-compatible incremental framer only at raw-stream boundaries, with callback dispatch outside locks and owned cancellable timers. Retain native structured-event and Windows bulk-paste paths; explicitly document which host owns each stream. Preserve TS observable assembly/dedup rules and document its UTF-16/timeout/unclosed-paste limits rather than attributing stronger behavior. Fixture tests should split every marker and protocol response at each boundary and verify one ordered payload without executing real terminal state.",
+          "size_min": 280,
+          "size_max": 430,
+          "priority": "P1",
+          "priority_reason": "Fragmented input must not become commands or literal escape suffixes; the current native helper's name masks a materially different contract."
+        }
+      ]
+    },
+    {
+      "symbol": "TerminalColorScheme",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-colors.ts:7",
+      "covering_entries": [
+        "TUI-220"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-colors.ts",
+        "sha256": "2aa702f6e59dc51d78be64516f40c46981780a00d1f0900fb5504ad9da67b9e6",
+        "range": [
+          4,
+          21
+        ],
+        "text": "4 | \tb: number;\n5 | }\n6 | \n7 | export type TerminalColorScheme = \"dark\" | \"light\";\n8 | \n9 | function hexToRgb(hex: string): RgbColor {\n10 | \tconst normalized = hex.startsWith(\"#\") ? hex.slice(1) : hex;\n11 | \tconst r = parseInt(normalized.slice(0, 2), 16);\n12 | \tconst g = parseInt(normalized.slice(2, 4), 16);\n13 | \tconst b = parseInt(normalized.slice(4, 6), 16);\n14 | \treturn { r, g, b };\n15 | }\n16 | \n17 | function parseOscHexChannel(channel: string): number | undefined {\n18 | \tif (!/^[0-9a-f]+$/i.test(channel)) {\n19 | \t\treturn undefined;\n20 | \t}\n21 | \tconst max = 16 ** channel.length - 1;"
+      },
+      "entries": [
+        {
+          "id": "TUI-220",
+          "title": "Terminal background queries and color-scheme reply ownership",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-colors.ts:1-74; ice:packages/tui/src/tui.ts:906-964; ice:packages/tui/src/tui.ts:1208-1268; ice:packages/tui/test/terminal-colors.test.ts:1-253",
+          "what": "Parse terminal color replies with exact framing and ensure asynchronous requests, late replies and scheme notifications cannot leak response bytes into editor input.",
+          "mechanism": "OSC11 must be exactly ESC]11;body followed by BEL or ST. Body supports #RRGGBB or #RRRRGGGGBBBB and slash-separated rgb/rgba (prefix case-insensitive and optional); only first3 slash fields matter, each nonempty hexadecimal channel of arbitrary digit width scales and rounds to0..255. Scheme report is one or more concatenated CSI ?997;1n / ;2n, with only all-valid concatenations accepted and the last report deciding dark/light. queryBackgroundColor writes OSC11 and enqueues FIFO request records. A timeout resolves undefined but leaves its record and pending count so a late matching reply is swallowed against that record instead of resolving a newer request; no reply can therefore leave a timed-out record at the FIFO front indefinitely. Only replies while pending are intercepted; a matching malformed body still consumes and settles undefined. Scheme query subscribes once plus timeout then writes CSI ?996n; every matching report broadcasts to current subscriptions, including concurrent requests. Notification toggle uses CSI ?2031 h/l; received valid reports are recognized regardless of toggle. stop does not cancel outstanding color-query records/timers.",
+          "interfaces": "parseOsc11BackgroundColor(string)->RGB|undefined, parseTerminalColorSchemeReport->'dark'|'light'|undefined; queryBackgroundColor(timeoutMs?), queryColorScheme(timeoutMs?), onTerminalColorSchemeChange, setTerminalColorSchemeNotifications.",
+          "dependencies": [
+            "TUI-207",
+            "TUI-217"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_colors.rs:1-334 is materially different: OSC11 trims surrounding input and permits missing terminator; rgb prefix is case-sensitive; only2/4 hex digits are accepted and4-digit channels take first byte without validating tail digits; # supports6 digits only, and extra comma syntax exists. RgbColor::from_hex slices UTF-8 by byte offsets after length6 check, so certain non-ASCII length6 input can panic rather than return None; four-byte channel slicing has a similar boundary hazard. parse_terminal_color_scheme_report at198 always returns Some(default-or-collected palette), parses OSC10/11/12 and never the CSI997 preference protocol. query helpers only return strings; focused source search found exports/definitions, no runtime query consumer in crates. Preserve native foreground/cursor palette support and luminance helpers as additional APIs, not equivalent to dark/light notifications.",
+          "port": "Add safe character-boundary parsing with source-compatible normalization and strict framing as separate preference/background APIs; preserve palette helpers. Implement FIFO late-reply ownership and timeout/subscription disposal in the event owner, documenting the source's missing-reply head-of-line behavior rather than silently dropping old records. Coordinate appearance consumers through TUI-007.",
+          "size_min": 170,
+          "size_max": 280,
+          "priority": "P1",
+          "priority_reason": "Terminal replies must be consumed reliably and appearance consumers need the actual preference protocol, not a similarly named palette parser."
+        }
+      ]
+    },
+    {
+      "symbol": "isOsc11BackgroundColorResponse",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-colors.ts:31",
+      "covering_entries": [
+        "TUI-220"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-colors.ts",
+        "sha256": "2aa702f6e59dc51d78be64516f40c46981780a00d1f0900fb5504ad9da67b9e6",
+        "range": [
+          28,
+          45
+        ],
+        "text": "28 | const OSC11_BACKGROUND_COLOR_RESPONSE_PATTERN = /^\\x1b\\]11;([^\\x07\\x1b]*)(?:\\x07|\\x1b\\\\)$/i;\n29 | const COLOR_SCHEME_REPORT_PATTERN = /^(?:\\x1b\\[\\?997;(1|2)n)+$/;\n30 | \n31 | export function isOsc11BackgroundColorResponse(data: string): boolean {\n32 | \treturn OSC11_BACKGROUND_COLOR_RESPONSE_PATTERN.test(data);\n33 | }\n34 | \n35 | export function parseOsc11BackgroundColor(data: string): RgbColor | undefined {\n36 | \tconst match = data.match(OSC11_BACKGROUND_COLOR_RESPONSE_PATTERN);\n37 | \tif (!match) {\n38 | \t\treturn undefined;\n39 | \t}\n40 | \n41 | \tconst value = match[1].trim();\n42 | \tif (value.startsWith(\"#\")) {\n43 | \t\tconst hex = value.slice(1);\n44 | \t\tif (/^[0-9a-f]{6}$/i.test(hex)) {\n45 | \t\t\treturn hexToRgb(value);"
+      },
+      "entries": [
+        {
+          "id": "TUI-220",
+          "title": "Terminal background queries and color-scheme reply ownership",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-colors.ts:1-74; ice:packages/tui/src/tui.ts:906-964; ice:packages/tui/src/tui.ts:1208-1268; ice:packages/tui/test/terminal-colors.test.ts:1-253",
+          "what": "Parse terminal color replies with exact framing and ensure asynchronous requests, late replies and scheme notifications cannot leak response bytes into editor input.",
+          "mechanism": "OSC11 must be exactly ESC]11;body followed by BEL or ST. Body supports #RRGGBB or #RRRRGGGGBBBB and slash-separated rgb/rgba (prefix case-insensitive and optional); only first3 slash fields matter, each nonempty hexadecimal channel of arbitrary digit width scales and rounds to0..255. Scheme report is one or more concatenated CSI ?997;1n / ;2n, with only all-valid concatenations accepted and the last report deciding dark/light. queryBackgroundColor writes OSC11 and enqueues FIFO request records. A timeout resolves undefined but leaves its record and pending count so a late matching reply is swallowed against that record instead of resolving a newer request; no reply can therefore leave a timed-out record at the FIFO front indefinitely. Only replies while pending are intercepted; a matching malformed body still consumes and settles undefined. Scheme query subscribes once plus timeout then writes CSI ?996n; every matching report broadcasts to current subscriptions, including concurrent requests. Notification toggle uses CSI ?2031 h/l; received valid reports are recognized regardless of toggle. stop does not cancel outstanding color-query records/timers.",
+          "interfaces": "parseOsc11BackgroundColor(string)->RGB|undefined, parseTerminalColorSchemeReport->'dark'|'light'|undefined; queryBackgroundColor(timeoutMs?), queryColorScheme(timeoutMs?), onTerminalColorSchemeChange, setTerminalColorSchemeNotifications.",
+          "dependencies": [
+            "TUI-207",
+            "TUI-217"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_colors.rs:1-334 is materially different: OSC11 trims surrounding input and permits missing terminator; rgb prefix is case-sensitive; only2/4 hex digits are accepted and4-digit channels take first byte without validating tail digits; # supports6 digits only, and extra comma syntax exists. RgbColor::from_hex slices UTF-8 by byte offsets after length6 check, so certain non-ASCII length6 input can panic rather than return None; four-byte channel slicing has a similar boundary hazard. parse_terminal_color_scheme_report at198 always returns Some(default-or-collected palette), parses OSC10/11/12 and never the CSI997 preference protocol. query helpers only return strings; focused source search found exports/definitions, no runtime query consumer in crates. Preserve native foreground/cursor palette support and luminance helpers as additional APIs, not equivalent to dark/light notifications.",
+          "port": "Add safe character-boundary parsing with source-compatible normalization and strict framing as separate preference/background APIs; preserve palette helpers. Implement FIFO late-reply ownership and timeout/subscription disposal in the event owner, documenting the source's missing-reply head-of-line behavior rather than silently dropping old records. Coordinate appearance consumers through TUI-007.",
+          "size_min": 170,
+          "size_max": 280,
+          "priority": "P1",
+          "priority_reason": "Terminal replies must be consumed reliably and appearance consumers need the actual preference protocol, not a similarly named palette parser."
+        }
+      ]
+    },
+    {
+      "symbol": "ImageProtocol",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-image.ts:6",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          3,
+          20
+        ],
+        "text": "3 | import { isAbsolute } from \"node:path\";\n4 | import { pathToFileURL } from \"node:url\";\n5 | \n6 | export type ImageProtocol = \"kitty\" | \"iterm2\" | null;\n7 | \n8 | export interface TerminalCapabilities {\n9 | \timages: ImageProtocol;\n10 | \ttrueColor: boolean;\n11 | \thyperlinks: boolean;\n12 | }\n13 | \n14 | export interface CellDimensions {\n15 | \twidthPx: number;\n16 | \theightPx: number;\n17 | }\n18 | \n19 | export interface ImageDimensions {\n20 | \twidthPx: number;"
+      },
+      "entries": [
+        {
+          "id": "TUI-225",
+          "title": "Terminal image, color and hyperlink capability detection",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:1-152; ice:packages/tui/test/terminal-image.test.ts:212-376",
+          "what": "Expose a cached capability snapshot and independently mutable pixel cell dimensions that drive image rendering and hyperlink fallbacks.",
+          "mechanism": "Cell dimensions default to9x18 pixels and are set/get without validation; the capability cache is lazy and reset makes the next get redetect. Environment values are lowercased for terminal-name checks. TMUX or TERM starting tmux disables images and trusts only COLORTERM=truecolor/24bit for color; hyperlinks come from the injectable tmux probe. That probe synchronously runs tmux display-message -p '#{client_termfeatures}', splits comma features, recognizes hyperlinks and catches timeout/failure to false (250ms). TERM starting screen disables images and hyperlinks. Kitty, Ghostty (including GHOSTTY_RESOURCES_DIR), WezTerm and Warp program/session markers enable Kitty images, truecolor and hyperlinks. iTerm program/session markers enable iTerm2. Windows Terminal, VSCode and Alacritty enable truecolor/hyperlinks without images; JetBrains-JediTerm and otherwise win32 enable only truecolor. Unknown terminals expose COLORTERM hint only. CMUX_WORKSPACE_ID alone does not suppress Ghostty.",
+          "interfaces": "TerminalCapabilities {images:'kitty'|'iterm2'|null,trueColor,hyperlinks}; CellDimensions {widthPx,heightPx}; detect/get/set/resetCapabilitiesCache and get/setCellDimensions. Environment: TERM,TERM_PROGRAM,TERMINAL_EMULATOR,COLORTERM,TMUX,KITTY_WINDOW_ID,GHOSTTY_RESOURCES_DIR,WEZTERM_PANE,ITERM_SESSION_ID,WT_SESSION,WARP_SESSION_ID,WARP_TERMINAL_SESSION_UUID.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:15-175 implements image protocol detection with matching principal image terminals and multiplexer suppression, but its capability struct embeds8x16 cell dimensions and80x24 terminal cells and omits trueColor/hyperlinks. reset_capabilities_cache installs Default in OnceLock storage, so later get returns None protocol instead of redetecting. No corresponding tmux hyperlink probe or full color/hyperlink matrix exists in this module. Native cell setter also accepts0. Preserve native terminal-size fields and native capability overrides while separating cache reset semantics.",
+          "port": "Add the missing capability fields and environment decision order, retain injectable probing and explicit cache override, and reset to an uninitialized state rather than a default unsupported snapshot. Share the agreed cell-size source with terminal reports and invalidate dependent renderers when it changes. Source audit did not execute the tmux probe or read user state.",
+          "size_min": 130,
+          "size_max": 220,
+          "priority": "P1",
+          "priority_reason": "Incorrect cached support and cell geometry affect every image render and fallback link."
+        }
+      ]
+    },
+    {
+      "symbol": "ImageRenderOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-image.ts:24",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          21,
+          38
+        ],
+        "text": "21 | \theightPx: number;\n22 | }\n23 | \n24 | export interface ImageRenderOptions {\n25 | \tmaxWidthCells?: number;\n26 | \tmaxHeightCells?: number;\n27 | \tpreserveAspectRatio?: boolean;\n28 | \t/** Kitty image ID. If provided, reuses/replaces existing image with this ID. */\n29 | \timageId?: number;\n30 | \t/** Whether Kitty should apply its default cursor movement after placement. */\n31 | \tmoveCursor?: boolean;\n32 | }\n33 | \n34 | let cachedCapabilities: TerminalCapabilities | null = null;\n35 | \n36 | // Default cell dimensions - updated by TUI when terminal responds to query\n37 | let cellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 };\n38 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-225",
+          "title": "Terminal image, color and hyperlink capability detection",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:1-152; ice:packages/tui/test/terminal-image.test.ts:212-376",
+          "what": "Expose a cached capability snapshot and independently mutable pixel cell dimensions that drive image rendering and hyperlink fallbacks.",
+          "mechanism": "Cell dimensions default to9x18 pixels and are set/get without validation; the capability cache is lazy and reset makes the next get redetect. Environment values are lowercased for terminal-name checks. TMUX or TERM starting tmux disables images and trusts only COLORTERM=truecolor/24bit for color; hyperlinks come from the injectable tmux probe. That probe synchronously runs tmux display-message -p '#{client_termfeatures}', splits comma features, recognizes hyperlinks and catches timeout/failure to false (250ms). TERM starting screen disables images and hyperlinks. Kitty, Ghostty (including GHOSTTY_RESOURCES_DIR), WezTerm and Warp program/session markers enable Kitty images, truecolor and hyperlinks. iTerm program/session markers enable iTerm2. Windows Terminal, VSCode and Alacritty enable truecolor/hyperlinks without images; JetBrains-JediTerm and otherwise win32 enable only truecolor. Unknown terminals expose COLORTERM hint only. CMUX_WORKSPACE_ID alone does not suppress Ghostty.",
+          "interfaces": "TerminalCapabilities {images:'kitty'|'iterm2'|null,trueColor,hyperlinks}; CellDimensions {widthPx,heightPx}; detect/get/set/resetCapabilitiesCache and get/setCellDimensions. Environment: TERM,TERM_PROGRAM,TERMINAL_EMULATOR,COLORTERM,TMUX,KITTY_WINDOW_ID,GHOSTTY_RESOURCES_DIR,WEZTERM_PANE,ITERM_SESSION_ID,WT_SESSION,WARP_SESSION_ID,WARP_TERMINAL_SESSION_UUID.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:15-175 implements image protocol detection with matching principal image terminals and multiplexer suppression, but its capability struct embeds8x16 cell dimensions and80x24 terminal cells and omits trueColor/hyperlinks. reset_capabilities_cache installs Default in OnceLock storage, so later get returns None protocol instead of redetecting. No corresponding tmux hyperlink probe or full color/hyperlink matrix exists in this module. Native cell setter also accepts0. Preserve native terminal-size fields and native capability overrides while separating cache reset semantics.",
+          "port": "Add the missing capability fields and environment decision order, retain injectable probing and explicit cache override, and reset to an uninitialized state rather than a default unsupported snapshot. Share the agreed cell-size source with terminal reports and invalidate dependent renderers when it changes. Source audit did not execute the tmux probe or read user state.",
+          "size_min": 130,
+          "size_max": 220,
+          "priority": "P1",
+          "priority_reason": "Incorrect cached support and cell geometry affect every image render and fallback link."
+        }
+      ]
+    },
+    {
+      "symbol": "getCellDimensions",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:39",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          36,
+          53
+        ],
+        "text": "36 | // Default cell dimensions - updated by TUI when terminal responds to query\n37 | let cellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 };\n38 | \n39 | export function getCellDimensions(): CellDimensions {\n40 | \treturn cellDimensions;\n41 | }\n42 | \n43 | export function setCellDimensions(dims: CellDimensions): void {\n44 | \tcellDimensions = dims;\n45 | }\n46 | \n47 | /**\n48 |  * Checks whether the attached tmux client forwards OSC 8 hyperlinks to the\n49 |  * outer terminal. tmux only re-emits them when its `client_termfeatures` lists\n50 |  * `hyperlinks`, and strips them otherwise. On any error fallbacks `false`.\n51 |  */\n52 | function probeTmuxHyperlinks(): boolean {\n53 | \ttry {"
+      },
+      "entries": [
+        {
+          "id": "TUI-225",
+          "title": "Terminal image, color and hyperlink capability detection",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:1-152; ice:packages/tui/test/terminal-image.test.ts:212-376",
+          "what": "Expose a cached capability snapshot and independently mutable pixel cell dimensions that drive image rendering and hyperlink fallbacks.",
+          "mechanism": "Cell dimensions default to9x18 pixels and are set/get without validation; the capability cache is lazy and reset makes the next get redetect. Environment values are lowercased for terminal-name checks. TMUX or TERM starting tmux disables images and trusts only COLORTERM=truecolor/24bit for color; hyperlinks come from the injectable tmux probe. That probe synchronously runs tmux display-message -p '#{client_termfeatures}', splits comma features, recognizes hyperlinks and catches timeout/failure to false (250ms). TERM starting screen disables images and hyperlinks. Kitty, Ghostty (including GHOSTTY_RESOURCES_DIR), WezTerm and Warp program/session markers enable Kitty images, truecolor and hyperlinks. iTerm program/session markers enable iTerm2. Windows Terminal, VSCode and Alacritty enable truecolor/hyperlinks without images; JetBrains-JediTerm and otherwise win32 enable only truecolor. Unknown terminals expose COLORTERM hint only. CMUX_WORKSPACE_ID alone does not suppress Ghostty.",
+          "interfaces": "TerminalCapabilities {images:'kitty'|'iterm2'|null,trueColor,hyperlinks}; CellDimensions {widthPx,heightPx}; detect/get/set/resetCapabilitiesCache and get/setCellDimensions. Environment: TERM,TERM_PROGRAM,TERMINAL_EMULATOR,COLORTERM,TMUX,KITTY_WINDOW_ID,GHOSTTY_RESOURCES_DIR,WEZTERM_PANE,ITERM_SESSION_ID,WT_SESSION,WARP_SESSION_ID,WARP_TERMINAL_SESSION_UUID.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:15-175 implements image protocol detection with matching principal image terminals and multiplexer suppression, but its capability struct embeds8x16 cell dimensions and80x24 terminal cells and omits trueColor/hyperlinks. reset_capabilities_cache installs Default in OnceLock storage, so later get returns None protocol instead of redetecting. No corresponding tmux hyperlink probe or full color/hyperlink matrix exists in this module. Native cell setter also accepts0. Preserve native terminal-size fields and native capability overrides while separating cache reset semantics.",
+          "port": "Add the missing capability fields and environment decision order, retain injectable probing and explicit cache override, and reset to an uninitialized state rather than a default unsupported snapshot. Share the agreed cell-size source with terminal reports and invalidate dependent renderers when it changes. Source audit did not execute the tmux probe or read user state.",
+          "size_min": 130,
+          "size_max": 220,
+          "priority": "P1",
+          "priority_reason": "Incorrect cached support and cell geometry affect every image render and fallback link."
+        }
+      ]
+    },
+    {
+      "symbol": "detectCapabilities",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:68",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          65,
+          82
+        ],
+        "text": "65 | \t}\n66 | }\n67 | \n68 | export function detectCapabilities(tmuxForwardsHyperlink: () => boolean = probeTmuxHyperlinks): TerminalCapabilities {\n69 | \tconst termProgram = process.env.TERM_PROGRAM?.toLowerCase() || \"\";\n70 | \tconst terminalEmulator = process.env.TERMINAL_EMULATOR?.toLowerCase() || \"\";\n71 | \tconst term = process.env.TERM?.toLowerCase() || \"\";\n72 | \tconst colorTerm = process.env.COLORTERM?.toLowerCase() || \"\";\n73 | \tconst hasTrueColorHint = colorTerm === \"truecolor\" || colorTerm === \"24bit\";\n74 | \tconst isWindowsConsole = process.platform === \"win32\";\n75 | \n76 | \t// Emit OSC 8 hyperlinks only when tmux confirms it forwards.\n77 | \t// Image protocols are unreliable under tmux, so leave `images: null`.\n78 | \tif (process.env.TMUX || term.startsWith(\"tmux\")) {\n79 | \t\treturn { images: null, trueColor: hasTrueColorHint, hyperlinks: tmuxForwardsHyperlink() };\n80 | \t}\n81 | \n82 | \t// screen does not forward OSC 8 hyperlinks, so keep them off there."
+      },
+      "entries": [
+        {
+          "id": "TUI-225",
+          "title": "Terminal image, color and hyperlink capability detection",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:1-152; ice:packages/tui/test/terminal-image.test.ts:212-376",
+          "what": "Expose a cached capability snapshot and independently mutable pixel cell dimensions that drive image rendering and hyperlink fallbacks.",
+          "mechanism": "Cell dimensions default to9x18 pixels and are set/get without validation; the capability cache is lazy and reset makes the next get redetect. Environment values are lowercased for terminal-name checks. TMUX or TERM starting tmux disables images and trusts only COLORTERM=truecolor/24bit for color; hyperlinks come from the injectable tmux probe. That probe synchronously runs tmux display-message -p '#{client_termfeatures}', splits comma features, recognizes hyperlinks and catches timeout/failure to false (250ms). TERM starting screen disables images and hyperlinks. Kitty, Ghostty (including GHOSTTY_RESOURCES_DIR), WezTerm and Warp program/session markers enable Kitty images, truecolor and hyperlinks. iTerm program/session markers enable iTerm2. Windows Terminal, VSCode and Alacritty enable truecolor/hyperlinks without images; JetBrains-JediTerm and otherwise win32 enable only truecolor. Unknown terminals expose COLORTERM hint only. CMUX_WORKSPACE_ID alone does not suppress Ghostty.",
+          "interfaces": "TerminalCapabilities {images:'kitty'|'iterm2'|null,trueColor,hyperlinks}; CellDimensions {widthPx,heightPx}; detect/get/set/resetCapabilitiesCache and get/setCellDimensions. Environment: TERM,TERM_PROGRAM,TERMINAL_EMULATOR,COLORTERM,TMUX,KITTY_WINDOW_ID,GHOSTTY_RESOURCES_DIR,WEZTERM_PANE,ITERM_SESSION_ID,WT_SESSION,WARP_SESSION_ID,WARP_TERMINAL_SESSION_UUID.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:15-175 implements image protocol detection with matching principal image terminals and multiplexer suppression, but its capability struct embeds8x16 cell dimensions and80x24 terminal cells and omits trueColor/hyperlinks. reset_capabilities_cache installs Default in OnceLock storage, so later get returns None protocol instead of redetecting. No corresponding tmux hyperlink probe or full color/hyperlink matrix exists in this module. Native cell setter also accepts0. Preserve native terminal-size fields and native capability overrides while separating cache reset semantics.",
+          "port": "Add the missing capability fields and environment decision order, retain injectable probing and explicit cache override, and reset to an uninitialized state rather than a default unsupported snapshot. Share the agreed cell-size source with terminal reports and invalidate dependent renderers when it changes. Source audit did not execute the tmux probe or read user state.",
+          "size_min": 130,
+          "size_max": 220,
+          "priority": "P1",
+          "priority_reason": "Incorrect cached support and cell geometry affect every image render and fallback link."
+        }
+      ]
+    },
+    {
+      "symbol": "setCapabilities",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:150",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          147,
+          164
+        ],
+        "text": "147 | }\n148 | \n149 | /** Override the cached capabilities. Useful in tests to exercise both code paths. */\n150 | export function setCapabilities(caps: TerminalCapabilities): void {\n151 | \tcachedCapabilities = caps;\n152 | }\n153 | \n154 | const KITTY_PREFIX = \"\\x1b_G\";\n155 | const ITERM2_PREFIX = \"\\x1b]1337;File=\";\n156 | \n157 | export function isImageLine(line: string): boolean {\n158 | \t// Fast path: sequence at line start (single-row images)\n159 | \tif (line.startsWith(KITTY_PREFIX) || line.startsWith(ITERM2_PREFIX)) {\n160 | \t\treturn true;\n161 | \t}\n162 | \t// Slow path: sequence elsewhere (multi-row images have cursor-up prefix)\n163 | \treturn line.includes(KITTY_PREFIX) || line.includes(ITERM2_PREFIX);\n164 | }"
+      },
+      "entries": [
+        {
+          "id": "TUI-225",
+          "title": "Terminal image, color and hyperlink capability detection",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:1-152; ice:packages/tui/test/terminal-image.test.ts:212-376",
+          "what": "Expose a cached capability snapshot and independently mutable pixel cell dimensions that drive image rendering and hyperlink fallbacks.",
+          "mechanism": "Cell dimensions default to9x18 pixels and are set/get without validation; the capability cache is lazy and reset makes the next get redetect. Environment values are lowercased for terminal-name checks. TMUX or TERM starting tmux disables images and trusts only COLORTERM=truecolor/24bit for color; hyperlinks come from the injectable tmux probe. That probe synchronously runs tmux display-message -p '#{client_termfeatures}', splits comma features, recognizes hyperlinks and catches timeout/failure to false (250ms). TERM starting screen disables images and hyperlinks. Kitty, Ghostty (including GHOSTTY_RESOURCES_DIR), WezTerm and Warp program/session markers enable Kitty images, truecolor and hyperlinks. iTerm program/session markers enable iTerm2. Windows Terminal, VSCode and Alacritty enable truecolor/hyperlinks without images; JetBrains-JediTerm and otherwise win32 enable only truecolor. Unknown terminals expose COLORTERM hint only. CMUX_WORKSPACE_ID alone does not suppress Ghostty.",
+          "interfaces": "TerminalCapabilities {images:'kitty'|'iterm2'|null,trueColor,hyperlinks}; CellDimensions {widthPx,heightPx}; detect/get/set/resetCapabilitiesCache and get/setCellDimensions. Environment: TERM,TERM_PROGRAM,TERMINAL_EMULATOR,COLORTERM,TMUX,KITTY_WINDOW_ID,GHOSTTY_RESOURCES_DIR,WEZTERM_PANE,ITERM_SESSION_ID,WT_SESSION,WARP_SESSION_ID,WARP_TERMINAL_SESSION_UUID.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:15-175 implements image protocol detection with matching principal image terminals and multiplexer suppression, but its capability struct embeds8x16 cell dimensions and80x24 terminal cells and omits trueColor/hyperlinks. reset_capabilities_cache installs Default in OnceLock storage, so later get returns None protocol instead of redetecting. No corresponding tmux hyperlink probe or full color/hyperlink matrix exists in this module. Native cell setter also accepts0. Preserve native terminal-size fields and native capability overrides while separating cache reset semantics.",
+          "port": "Add the missing capability fields and environment decision order, retain injectable probing and explicit cache override, and reset to an uninitialized state rather than a default unsupported snapshot. Share the agreed cell-size source with terminal reports and invalidate dependent renderers when it changes. Source audit did not execute the tmux probe or read user state.",
+          "size_min": 130,
+          "size_max": 220,
+          "priority": "P1",
+          "priority_reason": "Incorrect cached support and cell geometry affect every image render and fallback link."
+        }
+      ]
+    },
+    {
+      "symbol": "allocateImageId",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:171",
+      "covering_entries": [
+        "TUI-226"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          168,
+          185
+        ],
+        "text": "168 |  * Uses random IDs to avoid collisions between different module instances\n169 |  * (e.g., main app vs extensions).\n170 |  */\n171 | export function allocateImageId(): number {\n172 | \t// Use random ID in range [1, 0xffffffff] to avoid collisions\n173 | \treturn Math.floor(Math.random() * 0xfffffffe) + 1;\n174 | }\n175 | \n176 | export function encodeKitty(\n177 | \tbase64Data: string,\n178 | \toptions: {\n179 | \t\tcolumns?: number;\n180 | \t\trows?: number;\n181 | \t\timageId?: number;\n182 | \t\t/** Whether Kitty should apply its default cursor movement after placement. Default: true. */\n183 | \t\tmoveCursor?: boolean;\n184 | \t} = {},\n185 | ): string {"
+      },
+      "entries": [
+        {
+          "id": "TUI-226",
+          "title": "Kitty and iTerm2 image serialization and deletion",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:154-265; ice:packages/tui/src/terminal-image.ts:568-615; ice:packages/tui/test/terminal-image.test.ts:378-458",
+          "what": "Transmit image payloads with correct continuation, cursor, placement and data-release controls, and support iTerm2 inline options.",
+          "mechanism": "isImageLine recognizes Kitty APC and iTerm2 File OSC anywhere in a line regardless of detected support, including large prefixed payloads. Kitty accepts already-base64 data, serializes a=T,f=100,q=2, adds C=1 only when moveCursor=false, and independently adds truthy columns,rows,imageId. Payloads up to4096 characters use one frame; longer payloads use4096-character chunks, full controls+m=1 on first, m=1 on intermediates and m=0 on last. Empty payload still produces a frame. Delete one uses a=d,d=I,i=id,q=2, all image data d=A,q=2, placements only d=a,q=2. iTerm2 defaults inline=1, emits defined width/height even0, base64-encodes optional name, emits preserveAspectRatio=0 only when false and terminates with BEL. renderImage always uses Kitty f=100 and does not itself transcode other image formats.",
+          "interfaces": "encodeKitty(base64,{columns,rows,imageId,moveCursor}); encodeITerm2(base64,{width,height,name,preserveAspectRatio,inline}); deletion strings; isImageLine; renderImage returning null when unsupported and otherwise sequence,columns,rows,imageId.",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:178-281 encodes raw bytes to base64 and always sets C=1. It emits dimensions only when both are Some and supports native z-index. Crucial source-read defect: chunks are4000 characters; _m is computed but never inserted, so multi-chunk output has no m=1/m=0, and after the first frame controls are empty. Empty input returns no frame. This is reachable through rust:crates/ice-tui/src/image.rs:245-269 -> terminal_image.rs:429-445, not merely an unused helper. Native iTerm2 omits inline=1 and aspect option, uses unencoded name=idN, and may serialize empty semicolon fields. Native single-image deletion uses lowercase d=i (placement deletion, keeping image data) and omits q=2; all-data deletion uses d=A. The small native inline test at500-520 does not cover continuations or iTerm2. No runtime/protocol experiment was performed.",
+          "port": "Fix continuation construction at the encoder before higher-level cache work; preserve native z-index/raw-byte convenience through adapters. Model independent width/height,cursor and iTerm2 controls explicitly. Add quiet placement-only versus data-release operations and retain image-sequence detection independent of runtime capabilities. Verify boundary, empty, multi-frame and quiet-delete serialization in future implementation tests.",
+          "size_min": 140,
+          "size_max": 240,
+          "priority": "P0",
+          "priority_reason": "The active native image component can emit malformed multi-chunk Kitty transmissions; higher-level image parity depends on repairing the wire output."
+        }
+      ]
+    },
+    {
+      "symbol": "ImageCellSize",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-image.ts:268",
+      "covering_entries": [
+        "TUI-227"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          265,
+          282
+        ],
+        "text": "265 | \treturn `\\x1b]1337;File=${params.join(\";\")}:${base64Data}\\x07`;\n266 | }\n267 | \n268 | export interface ImageCellSize {\n269 | \tcolumns: number;\n270 | \trows: number;\n271 | }\n272 | \n273 | export interface KittyImageMetadata extends ImageCellSize {\n274 | \timageId: number;\n275 | \twidthPx: number;\n276 | \theightPx: number;\n277 | }\n278 | \n279 | interface RegisteredKittyImageMetadata extends KittyImageMetadata {\n280 | \ttransmissionGeneration: number;\n281 | }\n282 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-227",
+          "title": "Kitty metadata generations, placement reuse and vertical cropping",
+          "status": "missing",
+          "source": "ice:packages/tui/src/terminal-image.ts:268-390; ice:packages/tui/src/terminal-image.ts:568-611; ice:packages/tui/test/terminal-image.test.ts:418-458",
+          "what": "Track transmitted image geometry and derive placement-only or cropped commands without retransmitting or corrupting the original line.",
+          "mechanism": "A global insertion-ordered map stores imageId,columns,rows,pixel width/height with an increasing transmissionGeneration. Registration replaces/reinserts an existing ID and evicts oldest entries above1000. renderImage registers only when the caller supplied imageId; ID allocation is separate. Metadata lookup parses the first Kitty header's decimal i. Placement parsing follows adjacent Kitty chunks while m=1, rejecting missing terminator,header or separator; it retains only i,p,x,y,w,h,X,Y,c,r,C,U,z,P,Q,H,V controls, prepends a=p,q=2, and returns imageId,generation,transmissionBytes,estimatedDecodedBytes=pixelWidth*pixelHeight*4,sequence and original-line replacement preserving prefix/suffix. Cropping requires known metadata, hiddenRows within[0,rows),positive visibleRows; clamp visible rows to remaining, retain unchanged full placement, compute source y=floor(pixelHeight*hidden/rows) and h from ceil bottom boundary with minimum1/clamping, then replace y,h,r in first header while preserving payload and all other line content.",
+          "interfaces": "register/getKittyImageMetadata; getKittyImagePlacement; cropKittyImageLine; KittyImageMetadata and KittyImagePlacement generation/byte-accounting contracts. Consumers include retained main/alternate-screen image caches.",
+          "dependencies": [
+            "TUI-226",
+            "TUI-228"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:249-281 only scans changed old rows for a=T and decimal i before issuing placement deletion. There is no per-image geometry/generation map, complete transmission-span parser, a=p replacement or source-pixel crop contract in the fully read559-line module. rust:crates/ice-tui/src/tui_alt_screen.rs:1-1471 retains image lines and deletes removed placements but lacks the corresponding bounded upload-reuse metadata. Existing row-based cleanup is partial infrastructure, not equivalent placement caching.",
+          "port": "Introduce an owned bounded metadata service and lossless Kitty transmission parser. Use generations plus byte estimates for renderer caching, preserve surrounding line text and carry crop controls into placement-only output. Scope cache lifetimes to terminal state and explicitly distinguish data eviction from visible placement deletion.",
+          "size_min": 200,
+          "size_max": 330,
+          "priority": "P1",
+          "priority_reason": "Scrolled or partially visible images need reusable placement and pixel cropping without repeated large transmissions."
+        }
+      ]
+    }
+  ]
+}

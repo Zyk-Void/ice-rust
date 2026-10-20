@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "created_at": "2026-10-20T07:25:59.056Z",
+  "phase": "complete",
+  "passed": true,
+  "command": "/usr/bin/python3 -I /home/mewtwo/Zykairotis/ice-rust/docs/ice-gap/tools/build-final-index.py complete",
+  "exit_code": 0,
+  "before": {
+    "captured_at": "2026-10-20T07:25:08.269Z",
+    "files": [
+      {
+        "path": "tools/fix-spacing.mjs",
+        "sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b"
+      },
+      {
+        "path": "evidence/spacing-dry-run.json",
+        "sha256": "359661c1c16d87315ad6cbdffb1239c768a59e73d3829e2d355ad01ac3c13de7"
+      },
+      {
+        "path": "evidence/spacing-validation.json",
+        "sha256": "3f209aeacef73eb7af2a2f671928654ac3dfaa5f464133fa3760068663db8257"
+      },
+      {
+        "path": "evidence/spacing-review.json",
+        "sha256": "bacdf41827d8938933943572cc95979b48af3dbaec73aa65b3533a3ff382b943"
+      },
+      {
+        "path": "evidence/spacing-residual-dry-run.json",
+        "sha256": "30413c47b14320dd185955e1623ddfa6d8963c72ce5e9de4515a75313cf4c280"
+      },
+      {
+        "path": "evidence/lane-residual-spacing-review.json",
+        "sha256": "e848581f4710a4ab501025fe66585060b87d826b9c1fdb9059e366988e331215"
+      },
+      {
+        "path": "evidence/spacing-residual-validation.json",
+        "sha256": "2e4fe4c3378f9cb510c6b8ab6e026732d8147eab35f0d5420617b12460650d36"
+      },
+      {
+        "path": "evidence/lane-residual-spacing-render-parity.json",
+        "sha256": "8424fe313b3ec73f02f5fb5b54fb71853a463762925bbc3f2f831f74dc1a6bd9"
+      }
+    ]
+  },
+  "after": [
+    {
+      "path": "tools/fix-spacing.mjs",
+      "sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b"
+    },
+    {
+      "path": "evidence/spacing-dry-run.json",
+      "sha256": "359661c1c16d87315ad6cbdffb1239c768a59e73d3829e2d355ad01ac3c13de7"
+    },
+    {
+      "path": "evidence/spacing-validation.json",
+      "sha256": "3f209aeacef73eb7af2a2f671928654ac3dfaa5f464133fa3760068663db8257"
+    },
+    {
+      "path": "evidence/spacing-review.json",
+      "sha256": "bacdf41827d8938933943572cc95979b48af3dbaec73aa65b3533a3ff382b943"
+    },
+    {
+      "path": "evidence/spacing-residual-dry-run.json",
+      "sha256": "30413c47b14320dd185955e1623ddfa6d8963c72ce5e9de4515a75313cf4c280"
+    },
+    {
+      "path": "evidence/lane-residual-spacing-review.json",
+      "sha256": "e848581f4710a4ab501025fe66585060b87d826b9c1fdb9059e366988e331215"
+    },
+    {
+      "path": "evidence/spacing-residual-validation.json",
+      "sha256": "2e4fe4c3378f9cb510c6b8ab6e026732d8147eab35f0d5420617b12460650d36"
+    },
+    {
+      "path": "evidence/lane-residual-spacing-render-parity.json",
+      "sha256": "8424fe313b3ec73f02f5fb5b54fb71853a463762925bbc3f2f831f74dc1a6bd9"
+    }
+  ],
+  "all_eight_spacing_artifact_hashes_unchanged": true,
+  "builder_sha256": "053bdb4a7e5b9c482baade139a30e19cec2b7cc6f4110fb22f0874f2645cc475",
+  "correction_record_sha256": "659e39b9484ca1e03716c62159c3219ce2a9d210bf5136526ec2496ae8303d58",
+  "readme_sha256": "4dbec9460799db532271a00aab9b50ad19e1086d9798650b0720532a15190752",
+  "readme_first_line": "# ICE → ICE-Rust parity and porting specification",
+  "readme_starts_with_heading": true,
+  "legacy_preview_json_prefix_absent": true,
+  "progress_complete": true,
+  "progress_phase": "complete-active",
+  "post_python_residue": []
+}

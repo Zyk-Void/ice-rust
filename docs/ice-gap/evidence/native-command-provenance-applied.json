@@ -1,0 +1,95 @@
+{
+  "captured_at": "2026-10-20T02:23:33.651Z",
+  "input_sha256": "b472f41620de1a72e5150a6d38fa3bb1ff8cb239bebed46c0767b949488afcce",
+  "patches": [
+    {
+      "id": "RUST-066",
+      "provenance_status": "predates-local-rebrand",
+      "provenance": "The reviewed command routing and handler logic are present in upstream bigfish1913/pi-rust at 0fb2d893206981527b14e86d68e3ddbdf2c8189a; every inspected line is blamed to upstream commit 539581cb90d2eb433dc4b73610d0948794995499. All significant texts match the corresponding rpi crate sources after crate-prefix normalization. No UI/subprocess execution was performed.",
+      "provenance_evidence": "evidence/rust-defect-provenance.json",
+      "provenance_review": {
+        "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+        "targets": [
+          {
+            "file": "crates/ice-cli/src/interactive_tui/commands.rs",
+            "range": [
+              24,
+              41
+            ],
+            "upstream_file": "crates/rpi-cli/src/interactive_tui/commands.rs",
+            "significant_lines_matched": 12,
+            "significant_lines_reviewed": 12,
+            "blame_commits": [
+              {
+                "sha": "539581cb90d2eb433dc4b73610d0948794995499",
+                "in_upstream": true
+              }
+            ]
+          },
+          {
+            "file": "crates/ice-cli/src/interactive_tui.rs",
+            "range": [
+              2996,
+              2999
+            ],
+            "upstream_file": "crates/rpi-cli/src/interactive_tui.rs",
+            "significant_lines_matched": 4,
+            "significant_lines_reviewed": 4,
+            "blame_commits": [
+              {
+                "sha": "539581cb90d2eb433dc4b73610d0948794995499",
+                "in_upstream": true
+              }
+            ]
+          }
+        ],
+        "method": "Independent coordinator source inspection plus local Git ancestry/source comparison."
+      }
+    },
+    {
+      "id": "RUST-067",
+      "provenance_status": "predates-local-rebrand",
+      "provenance": "The reviewed command routing and handler logic are present in upstream bigfish1913/pi-rust at 0fb2d893206981527b14e86d68e3ddbdf2c8189a; every inspected line is blamed to upstream commit 539581cb90d2eb433dc4b73610d0948794995499. All significant texts match the corresponding rpi crate sources after crate-prefix normalization. No UI/subprocess execution was performed.",
+      "provenance_evidence": "evidence/rust-defect-provenance.json",
+      "provenance_review": {
+        "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+        "targets": [
+          {
+            "file": "crates/ice-cli/src/interactive_tui.rs",
+            "range": [
+              3038,
+              3040
+            ],
+            "upstream_file": "crates/rpi-cli/src/interactive_tui.rs",
+            "significant_lines_matched": 3,
+            "significant_lines_reviewed": 3,
+            "blame_commits": [
+              {
+                "sha": "539581cb90d2eb433dc4b73610d0948794995499",
+                "in_upstream": true
+              }
+            ]
+          },
+          {
+            "file": "crates/ice-cli/src/interactive_tui/sessions.rs",
+            "range": [
+              48,
+              75
+            ],
+            "upstream_file": "crates/rpi-cli/src/interactive_tui/sessions.rs",
+            "significant_lines_matched": 23,
+            "significant_lines_reviewed": 23,
+            "blame_commits": [
+              {
+                "sha": "539581cb90d2eb433dc4b73610d0948794995499",
+                "in_upstream": true
+              }
+            ]
+          }
+        ],
+        "method": "Independent coordinator source inspection plus local Git ancestry/source comparison."
+      }
+    }
+  ],
+  "source_only": true
+}

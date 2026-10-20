@@ -1,0 +1,160 @@
+{
+  "area": "tui",
+  "source_only": true,
+  "owner": "/root/tui_closeout",
+  "shared_read_evidence": [
+    {
+      "path": "rust:crates/ice-cli/src/child_agents.rs",
+      "sha256": "ae87e5dbe0cd7c851ac32e4e821e282dcc4c14c843714af0907ec6affaa5ec9d",
+      "total_lines": 418,
+      "ranges": [
+        [
+          1,
+          418
+        ]
+      ],
+      "read_by": "/root/audit_subagents",
+      "evidence": "docs/ice-gap/evidence/subagents.json",
+      "baseline_match": true,
+      "notes": "Parent confirmed accepted full source-read credit; no reread or execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/export.rs",
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "total_lines": 367,
+      "ranges": [
+        [
+          1,
+          367
+        ]
+      ],
+      "read_by": "/root/audit_session",
+      "evidence": "docs/ice-gap/evidence/misc-source-review.json",
+      "baseline_match": true,
+      "notes": "Full source read at misc-source-review.read_ranges[85], corroborated by accepted session read manifest; no duplicate body read claimed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-command-paths.test.ts",
+      "sha256": "979a5ef435ed370a8a4c0e960e12a59f73169c27734e78664869a9cba5bf2451",
+      "total_lines": 796,
+      "ranges": [
+        [
+          1,
+          796
+        ]
+      ],
+      "read_by": "/root/audit_tools",
+      "evidence": "docs/ice-gap/evidence/cli-packaging-supplement-source-review.json",
+      "baseline_match": true,
+      "notes": "Parent confirmed clean frozen-HEAD full visible source read; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+      "sha256": "ab7df0db39dc6c15116818ff9c9c7309bd0ae546a2a327decc342e3851260170",
+      "total_lines": 126,
+      "ranges": [
+        [
+          1,
+          126
+        ]
+      ],
+      "read_by": "/root",
+      "evidence": "docs/ice-gap/evidence/qa-auth-test-closure.json",
+      "baseline_match": true,
+      "notes": "Parent confirmed accepted AUTH/AI full visible test-source credit, no exclusions and no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+      "sha256": "052c24aa2d145f30dc386a5982225cc8bfb0deb67da237d49d3e25923c56d4ba",
+      "total_lines": 47,
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "read_by": "/root",
+      "evidence": "docs/ice-gap/evidence/qa-auth-test-closure.json",
+      "baseline_match": true,
+      "notes": "Parent confirmed accepted AUTH/AI full visible test-source credit, no exclusions and no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5724-sigterm-signal-exit.test.ts",
+      "sha256": "a2976507f90769f90d0bc3e5a6de7b62387a7ed0403fc7d240ab93c9203a3707",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "read_by": "/root/audit_tools",
+      "evidence": "docs/ice-gap/evidence/tools.json",
+      "baseline_match": true,
+      "notes": "Parent confirmed full visible regression source credit, no exclusions and no execution."
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "ranges": [
+        [
+          1398,
+          1497
+        ],
+        [
+          2617,
+          2695
+        ]
+      ],
+      "read_by": "/root/tui_closeout",
+      "notes": "Direct numbered read of exact steering/follow-up failure branches; source only."
+    },
+    {
+      "path": "rust:crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "total_lines": 2420,
+      "ranges": [
+        [
+          1186,
+          1219
+        ]
+      ],
+      "read_by": "/root/tui_closeout",
+      "notes": "Direct numbered read of generic editor expanded submission, internal history, callback and clearing; source only."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/dynamic-border.ts",
+      "sha256": "9fdd9cf150e8da1a2f1ddc5e155b1a539685cb57217a2938035d0da5957e3abd",
+      "total_lines": 26,
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "read_by": "/root/tui_closeout",
+      "notes": "Complete visible body read to make the exported DynamicBorder candidate's mechanism explicit; no execution."
+    }
+  ],
+  "exclusion_policy": {
+    "redactions": "Remove all blocked/redacted lines from every normalized range before union, even where an earlier raw shared record called the full file read.",
+    "unverified_source_gaps": [
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+        "lines": [
+          627
+        ],
+        "reason": "Original TUI reader omitted line627 without a reason; accepted SESSION raw records claim full read. Parent directed conservative exclusion pending source-owner reconciliation. No recovery of possibly redacted data attempted."
+      }
+    ]
+  },
+  "finding_handoff": {
+    "native_queue_recovery": "Exact source branches and separate Editor/TuiState histories sent to coordinator for defect RUST068; no catalog mutation by TUI owner.",
+    "native_new_session": "Coordinator verified /new routes only to chat-container clear; full TUI-081 comparison.",
+    "native_share": "Coordinator verified blocking gh wait in awaited main loop; full TUI-078 comparison.",
+    "native_cursor_and_autocomplete": "Coordinator source-reviewed defects integrated into TUI-253/255 without duplicate catalog ownership."
+  }
+}

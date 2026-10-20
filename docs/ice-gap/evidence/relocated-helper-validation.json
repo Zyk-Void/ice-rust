@@ -1,0 +1,2804 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:19:53.925Z",
+  "owner": "/root/helper_migration",
+  "active_audit_root": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "historical_mutators_executed": false,
+  "read_credit_recorders_executed": false,
+  "safe_execution_complete": true,
+  "passed": true,
+  "plan_sha256": "73bc41a761e791c640d0267b1755d58f4c9825e06677f5277bfb7bbbc03cd9c3",
+  "receipt_sha256": "55f09fcf112514b8311e54475624529a8ea5cdcf25360ecd110f5e384974499e",
+  "correction_record_path": "evidence/active-closeout-corrections.json",
+  "correction_record_sha256": "659e39b9484ca1e03716c62159c3219ce2a9d210bf5136526ec2496ae8303d58",
+  "original_helper_validation_sha256": "9160fa342d5a48437181d705a6d70b0a17fa75041cf2df1063199771232e9415",
+  "actual_helper_hashes": [
+    {
+      "path": "tools/audit-util.mjs",
+      "baseline_sha256": "e6fda33bd0c1de276c836e7338a2345fedbd6935b0af30d652c47b36834b4168",
+      "sha256": "e6fda33bd0c1de276c836e7338a2345fedbd6935b0af30d652c47b36834b4168",
+      "bytes": 3438,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-agent-common.mjs",
+      "baseline_sha256": "6d5c28eab759c98c298b49e3317a3902392e70ecb5f591f496b837c043076c4b",
+      "sha256": "6d5c28eab759c98c298b49e3317a3902392e70ecb5f591f496b837c043076c4b",
+      "bytes": 4382,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-agent-env.mjs",
+      "baseline_sha256": "2aee4d0098e2130a391dbf6583247f64a5f75f2ab976de5b3e24c5d6dde688c6",
+      "sha256": "2aee4d0098e2130a391dbf6583247f64a5f75f2ab976de5b3e24c5d6dde688c6",
+      "bytes": 31384,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-agent-loop.mjs",
+      "baseline_sha256": "8ba418ddd6a2c0200152171a5e5713808bfe60fc1408c80cc6646e919507e870",
+      "sha256": "8ba418ddd6a2c0200152171a5e5713808bfe60fc1408c80cc6646e919507e870",
+      "bytes": 50728,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-agent-resources.mjs",
+      "baseline_sha256": "e56916728f69a2680d99a41f65e7f8a2e9b8bc669fb4b4e5d22e819d0b4a8db7",
+      "sha256": "e56916728f69a2680d99a41f65e7f8a2e9b8bc669fb4b4e5d22e819d0b4a8db7",
+      "bytes": 29602,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-agent-runtime.mjs",
+      "baseline_sha256": "9f99c656c7e1259346a88c47154081cf1960759f358d0baa4e5e1ec4b381e281",
+      "sha256": "9f99c656c7e1259346a88c47154081cf1960759f358d0baa4e5e1ec4b381e281",
+      "bytes": 24134,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-blackhole-rest.mjs",
+      "baseline_sha256": "f357940f86312190e3a1dc6c413bc2ce96e814e3473d255e759a5627380722c5",
+      "sha256": "f357940f86312190e3a1dc6c413bc2ce96e814e3473d255e759a5627380722c5",
+      "bytes": 45537,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-blackhole.mjs",
+      "baseline_sha256": "878c719301c2800d2d59cbe9b22220fd165138acdf6b5e818dfad767d88022fc",
+      "sha256": "878c719301c2800d2d59cbe9b22220fd165138acdf6b5e818dfad767d88022fc",
+      "bytes": 36404,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-cognee-client.mjs",
+      "baseline_sha256": "6a3dc8cbb20d117c0a984cdc6922e0f5b71746e7a46a5e3cb1083c5c8e0631e3",
+      "sha256": "6a3dc8cbb20d117c0a984cdc6922e0f5b71746e7a46a5e3cb1083c5c8e0631e3",
+      "bytes": 39536,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-cognee-runtime.mjs",
+      "baseline_sha256": "0af4f32b8bdec06997a1f7a4477c54a1d50ead19b839d45066bff9263745034f",
+      "sha256": "0af4f32b8bdec06997a1f7a4477c54a1d50ead19b839d45066bff9263745034f",
+      "bytes": 62543,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-extensions-common.mjs",
+      "baseline_sha256": "08d2d38a10e9c8fd4b2a3aa7b46f02d72dda189bbae37646f355d2feaca911c1",
+      "sha256": "08d2d38a10e9c8fd4b2a3aa7b46f02d72dda189bbae37646f355d2feaca911c1",
+      "bytes": 4882,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-extensions-dispatch.mjs",
+      "baseline_sha256": "3edbb027286a54b7df89c78b9503b51985c4ba8789cd299b04b913a9a5b113d1",
+      "sha256": "3edbb027286a54b7df89c78b9503b51985c4ba8789cd299b04b913a9a5b113d1",
+      "bytes": 36705,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-extensions-loader.mjs",
+      "baseline_sha256": "1abc01c3c537aee9eeaabd174da1d315f144f38127cbe237ffeb815cbf5a022c",
+      "sha256": "1abc01c3c537aee9eeaabd174da1d315f144f38127cbe237ffeb815cbf5a022c",
+      "bytes": 33784,
+      "corrected": false
+    },
+    {
+      "path": "tools/author-safe-verify.mjs",
+      "baseline_sha256": "e98f27454469cadddb92dca2bd921075885dc9d70db3aa079e8a5d5e6a1d144e",
+      "sha256": "e98f27454469cadddb92dca2bd921075885dc9d70db3aa079e8a5d5e6a1d144e",
+      "bytes": 74549,
+      "corrected": false
+    },
+    {
+      "path": "tools/compare-blackhole-copies.mjs",
+      "baseline_sha256": "f7180069cb0b48a22e528bbf0f2e0d13bcefb7da19d5ac5fd21cdf92e4859469",
+      "sha256": "f7180069cb0b48a22e528bbf0f2e0d13bcefb7da19d5ac5fd21cdf92e4859469",
+      "bytes": 1423,
+      "corrected": false
+    },
+    {
+      "path": "tools/direct-source.mjs",
+      "baseline_sha256": "c86815824ee7ead424442d980dd6b49fea28ce1e830550d68f0261241a176453",
+      "sha256": "c86815824ee7ead424442d980dd6b49fea28ce1e830550d68f0261241a176453",
+      "bytes": 3805,
+      "corrected": false
+    },
+    {
+      "path": "tools/active-checkout-compare.mjs",
+      "baseline_sha256": "ff3d89cd5dff0f0c41fa5452b98d073c479147fc363f9f6d10fb67ef56317633",
+      "sha256": "ff3d89cd5dff0f0c41fa5452b98d073c479147fc363f9f6d10fb67ef56317633",
+      "bytes": 11395,
+      "corrected": false
+    },
+    {
+      "path": "tools/ai-schema-read.mjs",
+      "baseline_sha256": "b06b779c556fb9dc3a56082a063696a7fdd48fc73d02941ec6c8e19465e78ee2",
+      "sha256": "b06b779c556fb9dc3a56082a063696a7fdd48fc73d02941ec6c8e19465e78ee2",
+      "bytes": 1850,
+      "corrected": false
+    },
+    {
+      "path": "tools/cli-packaging-supplement-read.mjs",
+      "baseline_sha256": "258e29779b1fdce43da393cd5cad57a1d8bc306549354dbba280d63265dd0b2f",
+      "sha256": "258e29779b1fdce43da393cd5cad57a1d8bc306549354dbba280d63265dd0b2f",
+      "bytes": 2266,
+      "corrected": false
+    },
+    {
+      "path": "tools/extensions-coverage-gaps.mjs",
+      "baseline_sha256": "10773b379e9ba4dfbcb7490e7fd4068bd3f0bde783f8317c1180687f9d5080ec",
+      "sha256": "10773b379e9ba4dfbcb7490e7fd4068bd3f0bde783f8317c1180687f9d5080ec",
+      "bytes": 1513,
+      "corrected": false
+    },
+    {
+      "path": "tools/extensions-final-review.mjs",
+      "baseline_sha256": "e836a30e7e3e5fcfe244961971a5f2814b9fd5e631ddd774ad85bf8c4435c6a8",
+      "sha256": "e836a30e7e3e5fcfe244961971a5f2814b9fd5e631ddd774ad85bf8c4435c6a8",
+      "bytes": 3306,
+      "corrected": false
+    },
+    {
+      "path": "tools/extensions-review-apply.mjs",
+      "baseline_sha256": "df6b4014e05536ca36cecfbbe1b8cd30156f210cfcb340af48655cd49c019bcb",
+      "sha256": "df6b4014e05536ca36cecfbbe1b8cd30156f210cfcb340af48655cd49c019bcb",
+      "bytes": 2691,
+      "corrected": false
+    },
+    {
+      "path": "tools/extensions-review-read.mjs",
+      "baseline_sha256": "75f1f0f297b773a584d8cabce2ad3940f46c674caf0f5d4f7f579de15a54d967",
+      "sha256": "75f1f0f297b773a584d8cabce2ad3940f46c674caf0f5d4f7f579de15a54d967",
+      "bytes": 2013,
+      "corrected": false
+    },
+    {
+      "path": "tools/qa-observability-independent-helper.mjs",
+      "baseline_sha256": "f813b86feb067d4ea808d52a19d032e84d4056013ee1485243fc9adf32fb77e6",
+      "sha256": "f813b86feb067d4ea808d52a19d032e84d4056013ee1485243fc9adf32fb77e6",
+      "bytes": 1260,
+      "corrected": false
+    },
+    {
+      "path": "tools/semantic-dependency-read.mjs",
+      "baseline_sha256": "60648f6af11f220f18028d6c07720b04c004e717bb1e65148ca1fe56fc840d88",
+      "sha256": "60648f6af11f220f18028d6c07720b04c004e717bb1e65148ca1fe56fc840d88",
+      "bytes": 1804,
+      "corrected": false
+    },
+    {
+      "path": "tools/subagents-read.mjs",
+      "baseline_sha256": "25566b7d7343116368a1aceb499898d06785a235b7b530718daf1df0ecc73d72",
+      "sha256": "25566b7d7343116368a1aceb499898d06785a235b7b530718daf1df0ecc73d72",
+      "bytes": 2758,
+      "corrected": false
+    },
+    {
+      "path": "tools/tools-read-metadata.mjs",
+      "baseline_sha256": "a9d6afd86d1438e54c67e2d0c5e8a6a71321341ddd36243a284ba81c9ad1494d",
+      "sha256": "a9d6afd86d1438e54c67e2d0c5e8a6a71321341ddd36243a284ba81c9ad1494d",
+      "bytes": 2061,
+      "corrected": false
+    },
+    {
+      "path": "tools/tools-read.mjs",
+      "baseline_sha256": "2ada7b6388a6b9588f839a66917ebd25759c53209b7e044af37349062fdf6557",
+      "sha256": "2ada7b6388a6b9588f839a66917ebd25759c53209b7e044af37349062fdf6557",
+      "bytes": 1871,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-candidates-read.mjs",
+      "baseline_sha256": "03873a356a1599bbed9489439fbd33dc136fd24f7914c67a906cd0bc1ea4e13d",
+      "sha256": "03873a356a1599bbed9489439fbd33dc136fd24f7914c67a906cd0bc1ea4e13d",
+      "bytes": 858,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-closeout-build-proposal.mjs",
+      "baseline_sha256": "a287438326df2e71ee6b368d68abefd621f63bf514a3c7b47d027aa9ab967688",
+      "sha256": "a287438326df2e71ee6b368d68abefd621f63bf514a3c7b47d027aa9ab967688",
+      "bytes": 18393,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-closeout-inspect.mjs",
+      "baseline_sha256": "c9ef52708477e127a8b85eb4975e50f3597f97c4e4d673901851c860a0786768",
+      "sha256": "c9ef52708477e127a8b85eb4975e50f3597f97c4e4d673901851c860a0786768",
+      "bytes": 2061,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-closeout-merge-spec.mjs",
+      "baseline_sha256": "0015de75aa2cc43a30234480e04724fb5a0b122bd8898a9785dd0ce9161613b1",
+      "sha256": "0015de75aa2cc43a30234480e04724fb5a0b122bd8898a9785dd0ce9161613b1",
+      "bytes": 6021,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-closeout-normalize.mjs",
+      "baseline_sha256": "62a3dd57f764189e2956f16b552a648d7b618c29b0b1850142ad5dc57270ee89",
+      "sha256": "62a3dd57f764189e2956f16b552a648d7b618c29b0b1850142ad5dc57270ee89",
+      "bytes": 2365,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-closeout-read.mjs",
+      "baseline_sha256": "89b8f7cb1ce6bc2f49bf9d4d755484c9576cbe14eb0696b2a93ff7c7f01293f3",
+      "sha256": "89b8f7cb1ce6bc2f49bf9d4d755484c9576cbe14eb0696b2a93ff7c7f01293f3",
+      "bytes": 2593,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-owned-evidence-read.mjs",
+      "baseline_sha256": "ad6c40e76b8ae59098b931951e75f94abe12a6e679460ea499f584ac9a7cb1d7",
+      "sha256": "ad6c40e76b8ae59098b931951e75f94abe12a6e679460ea499f584ac9a7cb1d7",
+      "bytes": 1805,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-publication-readonly-review.mjs",
+      "baseline_sha256": "da5c3fc177e37c6e819db85f1ec884f8d70fc38c1f7c83629575aed90151ce6a",
+      "sha256": "da5c3fc177e37c6e819db85f1ec884f8d70fc38c1f7c83629575aed90151ce6a",
+      "bytes": 5631,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-review-read.mjs",
+      "baseline_sha256": "6b301c3679825ebee25b3180900398197f1a694f39f0cda7bffa4863c1b6ae7d",
+      "sha256": "6b301c3679825ebee25b3180900398197f1a694f39f0cda7bffa4863c1b6ae7d",
+      "bytes": 2937,
+      "corrected": false
+    },
+    {
+      "path": "tools/tui-terminal-read.mjs",
+      "baseline_sha256": "55b2b9ccc124a1df00b660cc69d021f81c1c61fa33ec6ffb0924f93caa2426c7",
+      "sha256": "55b2b9ccc124a1df00b660cc69d021f81c1c61fa33ec6ffb0924f93caa2426c7",
+      "bytes": 2557,
+      "corrected": false
+    },
+    {
+      "path": "tools/extract-surfaces.mjs",
+      "baseline_sha256": "869fe85be87f9996469f7023aec3904cb3e9cb1ca4fbfec0161b2c76caadfc58",
+      "sha256": "869fe85be87f9996469f7023aec3904cb3e9cb1ca4fbfec0161b2c76caadfc58",
+      "bytes": 12640,
+      "corrected": false
+    },
+    {
+      "path": "tools/finalize-agent.mjs",
+      "baseline_sha256": "bebb7f6fe8be2af8beba7057274ab8e3dcbcf68d9f87edc4d48e0e10dd5b4b2e",
+      "sha256": "bebb7f6fe8be2af8beba7057274ab8e3dcbcf68d9f87edc4d48e0e10dd5b4b2e",
+      "bytes": 15391,
+      "corrected": false
+    },
+    {
+      "path": "tools/finalize-blackhole.mjs",
+      "baseline_sha256": "582a94038733e15b39b3779f9eb64fea93adf8a57bdcd970ebac39867c1b302e",
+      "sha256": "582a94038733e15b39b3779f9eb64fea93adf8a57bdcd970ebac39867c1b302e",
+      "bytes": 14721,
+      "corrected": false
+    },
+    {
+      "path": "tools/finalize-cognee.mjs",
+      "baseline_sha256": "41c251f74c8a2442b1ade61de2c1496578f5fd8403f5e7f36957be83be68be7f",
+      "sha256": "41c251f74c8a2442b1ade61de2c1496578f5fd8403f5e7f36957be83be68be7f",
+      "bytes": 21216,
+      "corrected": false
+    },
+    {
+      "path": "tools/finalize-extension-core-text.mjs",
+      "baseline_sha256": "00d397fe8ed9cf95376b19c858b4f162d700ff7550baf9e9f986202e2d835cc4",
+      "sha256": "00d397fe8ed9cf95376b19c858b4f162d700ff7550baf9e9f986202e2d835cc4",
+      "bytes": 11648,
+      "corrected": false
+    },
+    {
+      "path": "tools/finalize-safe-verify.mjs",
+      "baseline_sha256": "de8badb238b91ac47a772f7f40c0cc37cbc88d7e939484fc468f417c9906fba4",
+      "sha256": "de8badb238b91ac47a772f7f40c0cc37cbc88d7e939484fc468f417c9906fba4",
+      "bytes": 13426,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-blackhole.mjs",
+      "baseline_sha256": "dc873e2ff6287bcc5ba3158f97230c1c89114866b1806193216b8f62a591fa6b",
+      "sha256": "dc873e2ff6287bcc5ba3158f97230c1c89114866b1806193216b8f62a591fa6b",
+      "bytes": 1409,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-evidence.mjs",
+      "baseline_sha256": "b147fb8306641a0d88913a0cc2fc41a60161e86500874ab520931628c2982563",
+      "sha256": "b147fb8306641a0d88913a0cc2fc41a60161e86500874ab520931628c2982563",
+      "bytes": 941,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-spec.mjs",
+      "baseline_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "bytes": 1151,
+      "corrected": false
+    },
+    {
+      "path": "tools/inventory.mjs",
+      "baseline_sha256": "5bf09bceee5cae68517fca78880b6714053efd420ab15faec8549df4baf7bb11",
+      "sha256": "5bf09bceee5cae68517fca78880b6714053efd420ab15faec8549df4baf7bb11",
+      "bytes": 7602,
+      "corrected": false
+    },
+    {
+      "path": "tools/merge-progress.mjs",
+      "baseline_sha256": "baee92068be66ad20de8bbc58a939573ff8b412345b491e9d313041511858dae",
+      "sha256": "baee92068be66ad20de8bbc58a939573ff8b412345b491e9d313041511858dae",
+      "bytes": 3231,
+      "corrected": false
+    },
+    {
+      "path": "tools/prepare-workers.mjs",
+      "baseline_sha256": "1cbfccb573b667b94f6fc2d55a5672f5cb0302ae6fefeb8880d23e745653a279",
+      "sha256": "1cbfccb573b667b94f6fc2d55a5672f5cb0302ae6fefeb8880d23e745653a279",
+      "bytes": 13390,
+      "corrected": false
+    },
+    {
+      "path": "tools/publish-area.mjs",
+      "baseline_sha256": "82b8ab42ed70f9701261d3184bcb9fa657f494df39a019cd723d99efa7da6872",
+      "sha256": "82b8ab42ed70f9701261d3184bcb9fa657f494df39a019cd723d99efa7da6872",
+      "bytes": 7451,
+      "corrected": false
+    },
+    {
+      "path": "tools/read-evidence.mjs",
+      "baseline_sha256": "93635a781d8f1f4e0168c23d468d75298ef9aa8e9e9fa9ea0bf4e7e4f76eab7a",
+      "sha256": "93635a781d8f1f4e0168c23d468d75298ef9aa8e9e9fa9ea0bf4e7e4f76eab7a",
+      "bytes": 1125,
+      "corrected": false
+    },
+    {
+      "path": "tools/refine-blackhole-evidence.mjs",
+      "baseline_sha256": "1f4f3d33515f4da61225ff24578aa31eb9dd6637c2884eed1ea1bc90cb78818c",
+      "sha256": "1f4f3d33515f4da61225ff24578aa31eb9dd6637c2884eed1ea1bc90cb78818c",
+      "bytes": 4514,
+      "corrected": false
+    },
+    {
+      "path": "tools/render-area.mjs",
+      "baseline_sha256": "0e724fadfabd882e4e67cd8cd58e31ed0b709434ea4db2eb37833f2baad91924",
+      "sha256": "0e724fadfabd882e4e67cd8cd58e31ed0b709434ea4db2eb37833f2baad91924",
+      "bytes": 1893,
+      "corrected": false
+    },
+    {
+      "path": "tools/repair-extensions-dispatch.mjs",
+      "baseline_sha256": "86b76d23e8e21fc3e3b0decfb866d972b53264cad6d01721d55e0c71333673bd",
+      "sha256": "86b76d23e8e21fc3e3b0decfb866d972b53264cad6d01721d55e0c71333673bd",
+      "bytes": 1228,
+      "corrected": false
+    },
+    {
+      "path": "tools/resolve-extension-test-refs.mjs",
+      "baseline_sha256": "4a29117f3632459f615d5602506876c5344135361fd2b0f611d3a6b5b037ba3c",
+      "sha256": "4a29117f3632459f615d5602506876c5344135361fd2b0f611d3a6b5b037ba3c",
+      "bytes": 1468,
+      "corrected": false
+    },
+    {
+      "path": "tools/resume-integrity.py",
+      "baseline_sha256": "70fc6ceea777d372e0f0398919d4500b6a4a3b145cc0d997d0d11d89f4a89cbd",
+      "sha256": "70fc6ceea777d372e0f0398919d4500b6a4a3b145cc0d997d0d11d89f4a89cbd",
+      "bytes": 10276,
+      "corrected": false
+    },
+    {
+      "path": "tools/supplement-surfaces.mjs",
+      "baseline_sha256": "db0527924c2cd9faee1494cff9b9be8fb60c1b54f2b291d461ddd8f8b49fc8d2",
+      "sha256": "db0527924c2cd9faee1494cff9b9be8fb60c1b54f2b291d461ddd8f8b49fc8d2",
+      "bytes": 5270,
+      "corrected": false
+    },
+    {
+      "path": "tools/accept-canonical-read-coverage.mjs",
+      "baseline_sha256": "99ad64595a419363a900949e2235bc446c5dbc2af9ce0d4b0ed8549321f19158",
+      "sha256": "99ad64595a419363a900949e2235bc446c5dbc2af9ce0d4b0ed8549321f19158",
+      "bytes": 2358,
+      "corrected": false
+    },
+    {
+      "path": "tools/accept-final-area.mjs",
+      "baseline_sha256": "649649a50ef5fc6fdc625193ead0eb3d959aad47b9038def160a48bd0d2b4524",
+      "sha256": "649649a50ef5fc6fdc625193ead0eb3d959aad47b9038def160a48bd0d2b4524",
+      "bytes": 3514,
+      "corrected": false
+    },
+    {
+      "path": "tools/append-native-queue-defect.mjs",
+      "baseline_sha256": "06371fadffe548987a3b43907672bc75a104341d20c4af6b570a0c955a2d4660",
+      "sha256": "06371fadffe548987a3b43907672bc75a104341d20c4af6b570a0c955a2d4660",
+      "bytes": 1089,
+      "corrected": false
+    },
+    {
+      "path": "tools/apply-auth-json-precision.mjs",
+      "baseline_sha256": "a573d984ca3277cf72e57bc4a92c3fd36fff633341a3c80a0688c93e55d89d58",
+      "sha256": "a573d984ca3277cf72e57bc4a92c3fd36fff633341a3c80a0688c93e55d89d58",
+      "bytes": 2432,
+      "corrected": false
+    },
+    {
+      "path": "tools/apply-native-command-provenance.mjs",
+      "baseline_sha256": "fa58c7c117ab7529866406e9867996089fad1b6ea0225305fd82c4a104e4c316",
+      "sha256": "fa58c7c117ab7529866406e9867996089fad1b6ea0225305fd82c4a104e4c316",
+      "bytes": 4728,
+      "corrected": false
+    },
+    {
+      "path": "tools/build-final-index.py",
+      "baseline_sha256": "ad67ecbb592a1135e4c84edf07fa3ffa77574df8944aedb63efbc02bab089c36",
+      "sha256": "053bdb4a7e5b9c482baade139a30e19cec2b7cc6f4110fb22f0874f2645cc475",
+      "bytes": 23931,
+      "corrected": true
+    },
+    {
+      "path": "tools/clean-session-audit-aliases.mjs",
+      "baseline_sha256": "1e91fc7525b00f95b17ba2c6510131ff86a4235233658935c6d7af8794d75c50",
+      "sha256": "1e91fc7525b00f95b17ba2c6510131ff86a4235233658935c6d7af8794d75c50",
+      "bytes": 682,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-active-closeout.mjs",
+      "baseline_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+      "sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+      "bytes": 27233,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-build-root-export-proposal.mjs",
+      "baseline_sha256": "c64ab6c8603272f73267de193162c0e80438965ef015dd7c716036d14bc85408",
+      "sha256": "c64ab6c8603272f73267de193162c0e80438965ef015dd7c716036d14bc85408",
+      "bytes": 11205,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-checkpoint.mjs",
+      "baseline_sha256": "aba9507725cf0c240cf24ca4880493142f8f31ed3d437cb253fa9a76be7ebcfc",
+      "sha256": "aba9507725cf0c240cf24ca4880493142f8f31ed3d437cb253fa9a76be7ebcfc",
+      "bytes": 5673,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-closeout-inspect.mjs",
+      "baseline_sha256": "7dc8373ad821908964ce307797474b951761f4531da87a1b777377a574264109",
+      "sha256": "7dc8373ad821908964ce307797474b951761f4531da87a1b777377a574264109",
+      "bytes": 4324,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-complete-original-publication.mjs",
+      "baseline_sha256": "c5b2723c1cc716b75709cfedd5836777fc5b36c49bd0f82373dc1cda719d8017",
+      "sha256": "c5b2723c1cc716b75709cfedd5836777fc5b36c49bd0f82373dc1cda719d8017",
+      "bytes": 2271,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-fast-preflight.py",
+      "baseline_sha256": "dcb42edc14e23d849488c5cf3ad1d3ebae7570d8230787f6bed529a8e6d046f2",
+      "sha256": "dcb42edc14e23d849488c5cf3ad1d3ebae7570d8230787f6bed529a8e6d046f2",
+      "bytes": 6604,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-inspect-relocation.mjs",
+      "baseline_sha256": "8c75fb3040ca2126619d51a25c996a9597f9c41f278095005d5ce9fd1a6510bd",
+      "sha256": "8c75fb3040ca2126619d51a25c996a9597f9c41f278095005d5ce9fd1a6510bd",
+      "bytes": 1422,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-merge-exports.mjs",
+      "baseline_sha256": "b882e287d245b7bbf7e2ebecca4be65e6be7e91deab68acf6df1b73d39a0cec0",
+      "sha256": "b882e287d245b7bbf7e2ebecca4be65e6be7e91deab68acf6df1b73d39a0cec0",
+      "bytes": 7756,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-normalize-tui-metadata.mjs",
+      "baseline_sha256": "e08ac1511f0b1615bc1313c97a7f018ac4443b4ac2ad624ad4a80aa9b13a394f",
+      "sha256": "e08ac1511f0b1615bc1313c97a7f018ac4443b4ac2ad624ad4a80aa9b13a394f",
+      "bytes": 3464,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-prepare-native-prose.mjs",
+      "baseline_sha256": "15e79b647e407a9b98c58f0d8659876f5cfd65889b0aa6b31a6adeca06e047f8",
+      "sha256": "15e79b647e407a9b98c58f0d8659876f5cfd65889b0aa6b31a6adeca06e047f8",
+      "bytes": 10593,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-publish-closeout.mjs",
+      "baseline_sha256": "73c5a05e490f06548fcf776a5b0edbaa7bd9b611f639ddac10e665840e37282b",
+      "sha256": "73c5a05e490f06548fcf776a5b0edbaa7bd9b611f639ddac10e665840e37282b",
+      "bytes": 3373,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-record-native-hunks.mjs",
+      "baseline_sha256": "c307e9081dced5ea38a17799db1a1a38be4f81064ed564bfad09ed8f609cd6da",
+      "sha256": "c307e9081dced5ea38a17799db1a1a38be4f81064ed564bfad09ed8f609cd6da",
+      "bytes": 5766,
+      "corrected": false
+    },
+    {
+      "path": "tools/coordinator-relocate-audit.mjs",
+      "baseline_sha256": "9cd00b53e87cd675cafc4a776b78729a1b1c0532f91e751383a4504589d67e44",
+      "sha256": "9cd00b53e87cd675cafc4a776b78729a1b1c0532f91e751383a4504589d67e44",
+      "bytes": 3280,
+      "corrected": false
+    },
+    {
+      "path": "tools/extend-relocation-map.mjs",
+      "baseline_sha256": "d513d385a5ccd3dff9e799f23548396d1da5b00395fa7d843cddbe6ba65e8247",
+      "sha256": "d513d385a5ccd3dff9e799f23548396d1da5b00395fa7d843cddbe6ba65e8247",
+      "bytes": 3617,
+      "corrected": false
+    },
+    {
+      "path": "tools/finalize-audit-metadata.mjs",
+      "baseline_sha256": "d485a46bf3d6a27d6edb022df25b5b319646f04e38c333d95971f15db5b0f408",
+      "sha256": "d485a46bf3d6a27d6edb022df25b5b319646f04e38c333d95971f15db5b0f408",
+      "bytes": 3222,
+      "corrected": false
+    },
+    {
+      "path": "tools/fix-spacing.mjs",
+      "baseline_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+      "sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+      "bytes": 33416,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-authored.mjs",
+      "baseline_sha256": "0880098b5dad9364f4d8a02d3210d473c384ec9165e6038008ddc2ffd9be45d3",
+      "sha256": "0880098b5dad9364f4d8a02d3210d473c384ec9165e6038008ddc2ffd9be45d3",
+      "bytes": 1234,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-closeout.mjs",
+      "baseline_sha256": "144cf74e7c8928def5bbb510c735cf92f4e545f6a1c06cbd8eb42ce045d1d003",
+      "sha256": "144cf74e7c8928def5bbb510c735cf92f4e545f6a1c06cbd8eb42ce045d1d003",
+      "bytes": 4216,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-final-structure.mjs",
+      "baseline_sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "bytes": 3331,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-global-audit.mjs",
+      "baseline_sha256": "b8ff0f3af9f11a55d1f1a7748b3787446b5fefa271ff184d5f31eab13267c194",
+      "sha256": "b8ff0f3af9f11a55d1f1a7748b3787446b5fefa271ff184d5f31eab13267c194",
+      "bytes": 4736,
+      "corrected": false
+    },
+    {
+      "path": "tools/inspect-prose-queues.mjs",
+      "baseline_sha256": "8777ba84391bc54d8594d7922ce90c783610fb9fc5f322445c69f982a8fc8d17",
+      "sha256": "8777ba84391bc54d8594d7922ce90c783610fb9fc5f322445c69f982a8fc8d17",
+      "bytes": 1562,
+      "corrected": false
+    },
+    {
+      "path": "tools/integrate-ai-schema-supplement.mjs",
+      "baseline_sha256": "c00d58ec15ea1353787dbd31859e1038f82a22816873ff929d074ac844bc0542",
+      "sha256": "c00d58ec15ea1353787dbd31859e1038f82a22816873ff929d074ac844bc0542",
+      "bytes": 4345,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "baseline_sha256": "af3cd146d4fa054f9176691d822f5445cdb6de91b656abf2c58a847c503c34d8",
+      "sha256": "af3cd146d4fa054f9176691d822f5445cdb6de91b656abf2c58a847c503c34d8",
+      "bytes": 9748,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "baseline_sha256": "71ad7b90701e55d06d084db5d5373781f8bc78cb6a8a562788da3e25a7c7f704",
+      "sha256": "71ad7b90701e55d06d084db5d5373781f8bc78cb6a8a562788da3e25a7c7f704",
+      "bytes": 3944,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "baseline_sha256": "d24fa9cf784c48115c757ffcc158035477e49195015e39e81b00451f05fd54fa",
+      "sha256": "d24fa9cf784c48115c757ffcc158035477e49195015e39e81b00451f05fd54fa",
+      "bytes": 1953,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "baseline_sha256": "724aac8ff25210dc00a640203c0b5deebd9dc4004d43c45f4b5ac9cc848371e2",
+      "sha256": "724aac8ff25210dc00a640203c0b5deebd9dc4004d43c45f4b5ac9cc848371e2",
+      "bytes": 1879,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "baseline_sha256": "b7282b77014258abad114b43bf73cba03030f99666d4faca60e109fd7ec89eb5",
+      "sha256": "b7282b77014258abad114b43bf73cba03030f99666d4faca60e109fd7ec89eb5",
+      "bytes": 2486,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-sub-session-batch.mjs",
+      "baseline_sha256": "1e4f53cc4ae3b5dace9d4b33c8b12ad18bbfd3c2e12caee38a3c920005ea89ea",
+      "sha256": "1e4f53cc4ae3b5dace9d4b33c8b12ad18bbfd3c2e12caee38a3c920005ea89ea",
+      "bytes": 527,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-sub-session-decls.mjs",
+      "baseline_sha256": "a597c6a2d842de7d79aa342cbf50accac98d8b6537b8a85f17b4e9acea87833c",
+      "sha256": "a597c6a2d842de7d79aa342cbf50accac98d8b6537b8a85f17b4e9acea87833c",
+      "bytes": 1684,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-sub-session-inspect.mjs",
+      "baseline_sha256": "1de25de5c166f904ab89a88fec4dfef4f61c00bc0bf0e68be254bfe627a01614",
+      "sha256": "1de25de5c166f904ab89a88fec4dfef4f61c00bc0bf0e68be254bfe627a01614",
+      "bytes": 2518,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-sub-session-match.mjs",
+      "baseline_sha256": "3c4cf7deb2e52e4a3c46d81bc40327b2c4e7dae117c3ef627a17ad9222cd5a3a",
+      "sha256": "3c4cf7deb2e52e4a3c46d81bc40327b2c4e7dae117c3ef627a17ad9222cd5a3a",
+      "bytes": 518,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "baseline_sha256": "f778d76056e68d2d64a5afbd80e5106877150c00cc760e7b3c28dd394363a649",
+      "sha256": "f778d76056e68d2d64a5afbd80e5106877150c00cc760e7b3c28dd394363a649",
+      "bytes": 1289,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-sub-session-native-prose.mjs",
+      "baseline_sha256": "c17b4d00c0625c64cd8c285b5b70f5b34e23d210cdf0eefad0abd352df87a64f",
+      "sha256": "c17b4d00c0625c64cd8c285b5b70f5b34e23d210cdf0eefad0abd352df87a64f",
+      "bytes": 11580,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "baseline_sha256": "d47b5a31bffa54f6ab8402166c5f7381fc253c7be4ba0301be3c78df6d4038cd",
+      "sha256": "d47b5a31bffa54f6ab8402166c5f7381fc253c7be4ba0301be3c78df6d4038cd",
+      "bytes": 11162,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-active-identity.mjs",
+      "baseline_sha256": "5f579c3252a76a26b50eb194c9b1aba8ccc8e69cb7a1824dec4454d0e59e2433",
+      "sha256": "5f579c3252a76a26b50eb194c9b1aba8ccc8e69cb7a1824dec4454d0e59e2433",
+      "bytes": 3306,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "baseline_sha256": "cb0b54682e2ffe2f0231a333a21d619977726f33ed0fe451545abccab2de7aa3",
+      "sha256": "cb0b54682e2ffe2f0231a333a21d619977726f33ed0fe451545abccab2de7aa3",
+      "bytes": 9555,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-active-review.mjs",
+      "baseline_sha256": "17362916b29876dd861c542ce62b8534e6af63c41edddb7e6f934de28638b30a",
+      "sha256": "17362916b29876dd861c542ce62b8534e6af63c41edddb7e6f934de28638b30a",
+      "bytes": 1475,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-build-misc.mjs",
+      "baseline_sha256": "08c42dbc53173688646915b883e4b92919c742012640e28aae4583ebd609f2cb",
+      "sha256": "08c42dbc53173688646915b883e4b92919c742012640e28aae4583ebd609f2cb",
+      "bytes": 21615,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-exports.mjs",
+      "baseline_sha256": "6a2df53bd98a419746796bc6aae1a7ac44b7c2e874538cef401021c96f4947ad",
+      "sha256": "6a2df53bd98a419746796bc6aae1a7ac44b7c2e874538cef401021c96f4947ad",
+      "bytes": 2496,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "baseline_sha256": "6693e0961123f000cb290d54d5c15d5fbb975e9851adf91e61b6ef97c376cb30",
+      "sha256": "6693e0961123f000cb290d54d5c15d5fbb975e9851adf91e61b6ef97c376cb30",
+      "bytes": 9498,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-inspect.mjs",
+      "baseline_sha256": "56061a5d19b56cbe52c16200283c3a07b6bdef073675a433984594b25ffd10ee",
+      "sha256": "56061a5d19b56cbe52c16200283c3a07b6bdef073675a433984594b25ffd10ee",
+      "bytes": 1178,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-prepare.mjs",
+      "baseline_sha256": "61343e2cbc83360c2f4badcd2b2a1ad0e530e7e33918605b9623d16fd8b213fa",
+      "sha256": "61343e2cbc83360c2f4badcd2b2a1ad0e530e7e33918605b9623d16fd8b213fa",
+      "bytes": 4619,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "baseline_sha256": "d04a7342f09ceb4afce9b7634a40e4fb336820346e18a97c837d415f920e32f4",
+      "sha256": "d04a7342f09ceb4afce9b7634a40e4fb336820346e18a97c837d415f920e32f4",
+      "bytes": 3976,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "baseline_sha256": "71a0395080859d75c4b1dc5af9f16a3e8b6ba84eccf00acc36b4dba9df3d4bb5",
+      "sha256": "71a0395080859d75c4b1dc5af9f16a3e8b6ba84eccf00acc36b4dba9df3d4bb5",
+      "bytes": 6537,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage.mjs",
+      "baseline_sha256": "468855280d11b2b5b973d2ff1aff9b7378b3395dcbf3c3f66a747d4dae5abf8c",
+      "sha256": "468855280d11b2b5b973d2ff1aff9b7378b3395dcbf3c3f66a747d4dae5abf8c",
+      "bytes": 23771,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-read-ranges.mjs",
+      "baseline_sha256": "5711934e53a12066dbe75a803f7d5f2c51d6ea7a1ad4dd7305267fb043cf7e1a",
+      "sha256": "5711934e53a12066dbe75a803f7d5f2c51d6ea7a1ad4dd7305267fb043cf7e1a",
+      "bytes": 1188,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-readme-limits-review.mjs",
+      "baseline_sha256": "fae0997215685af2714cfd55252259df6cd7205aec895e32e9bdce0fbdd1da0c",
+      "sha256": "fae0997215685af2714cfd55252259df6cd7205aec895e32e9bdce0fbdd1da0c",
+      "bytes": 3982,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-remap-review.mjs",
+      "baseline_sha256": "1f0972980f476ff2516797c9020fbfa91af3eb9eee96a5a2f146e01bed98a76a",
+      "sha256": "1f0972980f476ff2516797c9020fbfa91af3eb9eee96a5a2f146e01bed98a76a",
+      "bytes": 19936,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-type-contracts.mjs",
+      "baseline_sha256": "36078f2a116d08fae496164a1542c3cebe5bdc572ada5de2ce5899434a727385",
+      "sha256": "36078f2a116d08fae496164a1542c3cebe5bdc572ada5de2ce5899434a727385",
+      "bytes": 2083,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-verify-exports.mjs",
+      "baseline_sha256": "4019f8bb3654fc73af91542ee6ea981a42d9eb1353bc3b9026609437ca17abd5",
+      "sha256": "4019f8bb3654fc73af91542ee6ea981a42d9eb1353bc3b9026609437ca17abd5",
+      "bytes": 3045,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-final-areas-verify.mjs",
+      "baseline_sha256": "aac760ce7720ffd2d6557fe6deddde1177235a94f5c7dfe9003e62e733ba3b44",
+      "sha256": "aac760ce7720ffd2d6557fe6deddde1177235a94f5c7dfe9003e62e733ba3b44",
+      "bytes": 4222,
+      "corrected": false
+    },
+    {
+      "path": "tools/lookup-read-credit.mjs",
+      "baseline_sha256": "18930e72a78e2536839bace8b006f2b2ffc7fefb2bd1922570b32cf6a886719d",
+      "sha256": "18930e72a78e2536839bace8b006f2b2ffc7fefb2bd1922570b32cf6a886719d",
+      "bytes": 1541,
+      "corrected": false
+    },
+    {
+      "path": "tools/merge-cli-fragments.mjs",
+      "baseline_sha256": "47d42a352f442672a0fe14e6dde9951187e5dd13668550b6abd885edf3daca7b",
+      "sha256": "47d42a352f442672a0fe14e6dde9951187e5dd13668550b6abd885edf3daca7b",
+      "bytes": 5779,
+      "corrected": false
+    },
+    {
+      "path": "tools/normalize-citations.mjs",
+      "baseline_sha256": "50c3134117d3d83277baa6e27e699718d43202a6c57fc0362899cd8fa782408d",
+      "sha256": "50c3134117d3d83277baa6e27e699718d43202a6c57fc0362899cd8fa782408d",
+      "bytes": 6821,
+      "corrected": false
+    },
+    {
+      "path": "tools/normalize-final-handoff.mjs",
+      "baseline_sha256": "0c2f3c94a89ca9c8a9d273637907682ad5f889fc1d8df10dc0b7989a54106e1c",
+      "sha256": "0c2f3c94a89ca9c8a9d273637907682ad5f889fc1d8df10dc0b7989a54106e1c",
+      "bytes": 4409,
+      "corrected": false
+    },
+    {
+      "path": "tools/normalize-final-schema.mjs",
+      "baseline_sha256": "8dcd0076762028fc8fe4c7b548751a61cc78823239b1c87f3fad11a7d9ae8c87",
+      "sha256": "8dcd0076762028fc8fe4c7b548751a61cc78823239b1c87f3fad11a7d9ae8c87",
+      "bytes": 4540,
+      "corrected": false
+    },
+    {
+      "path": "tools/prepare-citation-normalizer.mjs",
+      "baseline_sha256": "3e0e5a5276ca8df27ee2fb0e885bdad42395d2fc9676f9a31859c3873ae01415",
+      "sha256": "3e0e5a5276ca8df27ee2fb0e885bdad42395d2fc9676f9a31859c3873ae01415",
+      "bytes": 2414,
+      "corrected": false
+    },
+    {
+      "path": "tools/qa-first-pass-read.mjs",
+      "baseline_sha256": "9ab917d29e62ceb6c3b1b1a67f6577f8c82a5fff56da391ae5b315b9c3140697",
+      "sha256": "9ab917d29e62ceb6c3b1b1a67f6577f8c82a5fff56da391ae5b315b9c3140697",
+      "bytes": 1973,
+      "corrected": false
+    },
+    {
+      "path": "tools/read-audit-json-part.mjs",
+      "baseline_sha256": "82e1c115bf37393a5a3fbe5de0f901d65b2384543387462a2ed876304bbcb614",
+      "sha256": "82e1c115bf37393a5a3fbe5de0f901d65b2384543387462a2ed876304bbcb614",
+      "bytes": 931,
+      "corrected": false
+    },
+    {
+      "path": "tools/reconcile-final-dependencies.mjs",
+      "baseline_sha256": "10c1607a58798c9311c7113a23eacbae7a1cb1d64658a8efe1d4f2f2a8e99134",
+      "sha256": "10c1607a58798c9311c7113a23eacbae7a1cb1d64658a8efe1d4f2f2a8e99134",
+      "bytes": 9950,
+      "corrected": false
+    },
+    {
+      "path": "tools/reconcile-final-first-pass.mjs",
+      "baseline_sha256": "ef9d68c199028121d30ff263465b1f5db5ebe76db786559ae842b904b3caacff",
+      "sha256": "ef9d68c199028121d30ff263465b1f5db5ebe76db786559ae842b904b3caacff",
+      "bytes": 8222,
+      "corrected": false
+    },
+    {
+      "path": "tools/reconcile-first-pass-records.mjs",
+      "baseline_sha256": "21a8668adf4e1a83f8cb4d06642adcd56081065edb61615726582e0a58138e79",
+      "sha256": "21a8668adf4e1a83f8cb4d06642adcd56081065edb61615726582e0a58138e79",
+      "bytes": 4215,
+      "corrected": false
+    },
+    {
+      "path": "tools/reconcile-readability.mjs",
+      "baseline_sha256": "ac8aff0e0d50fba0cb26f917a7c073004b2bad6c2b3488870d23b1ed16fc269d",
+      "sha256": "ac8aff0e0d50fba0cb26f917a7c073004b2bad6c2b3488870d23b1ed16fc269d",
+      "bytes": 6741,
+      "corrected": false
+    },
+    {
+      "path": "tools/remap-rust-citations.mjs",
+      "baseline_sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+      "sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+      "bytes": 20182,
+      "corrected": false
+    },
+    {
+      "path": "tools/repair-agent57-literal.mjs",
+      "baseline_sha256": "e81f786ffffbffe4f96161f045a898e47d7a1a70a0d6274e603d9191bca62a84",
+      "sha256": "e81f786ffffbffe4f96161f045a898e47d7a1a70a0d6274e603d9191bca62a84",
+      "bytes": 1556,
+      "corrected": false
+    },
+    {
+      "path": "tools/review-spacing.mjs",
+      "baseline_sha256": "32e4533653ccac1c995a4b637f2f105527199a83e28ad8c98863ff516fd31dde",
+      "sha256": "32e4533653ccac1c995a4b637f2f105527199a83e28ad8c98863ff516fd31dde",
+      "bytes": 877,
+      "corrected": false
+    },
+    {
+      "path": "tools/verify-area-evidence.mjs",
+      "baseline_sha256": "3ac52585ad67886e55f884d07dd560e865b5e5e6e7dae75bbaa4cb5d15588ec0",
+      "sha256": "3ac52585ad67886e55f884d07dd560e865b5e5e6e7dae75bbaa4cb5d15588ec0",
+      "bytes": 4205,
+      "corrected": false
+    },
+    {
+      "path": "tools/verify-complete-audit.py",
+      "baseline_sha256": "2a863d60b2f4439313e1f8a72feb046880801de61081b55c83b1c802c84739d5",
+      "sha256": "2a863d60b2f4439313e1f8a72feb046880801de61081b55c83b1c802c84739d5",
+      "bytes": 26992,
+      "corrected": false
+    },
+    {
+      "path": "tools/verify-defect-provenance.mjs",
+      "baseline_sha256": "3477bdb9a92c26eb6c575e08eacb1a755d2e22622d391b2048a0d5dc68a49eff",
+      "sha256": "3477bdb9a92c26eb6c575e08eacb1a755d2e22622d391b2048a0d5dc68a49eff",
+      "bytes": 4514,
+      "corrected": false
+    },
+    {
+      "path": "tools/verify-supplemental-baseline.mjs",
+      "baseline_sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "bytes": 1481,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-audit-paths.mjs",
+      "baseline_sha256": "42112063eb2fff4ed8ee0748018d1903912f746c72233768728e44d7723b5683",
+      "sha256": "42112063eb2fff4ed8ee0748018d1903912f746c72233768728e44d7723b5683",
+      "bytes": 420,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+      "baseline_sha256": "d4031503f1c08c94812264d0e1c1eb7bbb54ca742805eeb5b704b539d0a85509",
+      "sha256": "d4031503f1c08c94812264d0e1c1eb7bbb54ca742805eeb5b704b539d0a85509",
+      "bytes": 653,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-core.mjs",
+      "baseline_sha256": "0fbdd506d0824f3cf37c2f4ae61f3b4fe797b6b27f064b41ea8c049bdecb1f6f",
+      "sha256": "0fbdd506d0824f3cf37c2f4ae61f3b4fe797b6b27f064b41ea8c049bdecb1f6f",
+      "bytes": 8761,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+      "baseline_sha256": "3d42595c1e9e88dd0474da861eddbcd897982c4072f067b43e236900b5caebbb",
+      "sha256": "3d42595c1e9e88dd0474da861eddbcd897982c4072f067b43e236900b5caebbb",
+      "bytes": 3601,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+      "baseline_sha256": "4f02668052ca90ac3b32e1809061643be1e1a84e326281f45b802aabd51a58da",
+      "sha256": "4f02668052ca90ac3b32e1809061643be1e1a84e326281f45b802aabd51a58da",
+      "bytes": 11046,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-prepare-migration.mjs",
+      "baseline_sha256": "816867616c229b1c88d666acb7e16bf960d9c1978bcec6904586ea040dfc0e06",
+      "sha256": "816867616c229b1c88d666acb7e16bf960d9c1978bcec6904586ea040dfc0e06",
+      "bytes": 7734,
+      "corrected": false
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-relocated-validation.mjs",
+      "baseline_sha256": "194d30e30b1152194c9f4650d4033c248402d4ee9aa78929f9fd28f7a59dc508",
+      "sha256": "d010a2a0ede852a15cfc37dfda9dbb9a62b42889b67dec9b1b5f9be1f66ca3b5",
+      "bytes": 13529,
+      "corrected": true
+    }
+  ],
+  "current_helper_inventory_sha256": "a669562dc5bf9805826e6dd5e82ff6de8a2068c63bfdd22a4839488f2889d077",
+  "node_version": "v24.22.0",
+  "python_command": "/usr/bin/python3 -I",
+  "summary": {
+    "helpers": 142,
+    "syntax_passed": 142,
+    "syntax_failed": 0,
+    "safe_validator_executions": 18,
+    "safe_validator_failures": 0,
+    "issues": 0
+  },
+  "syntax_results": [
+    {
+      "path": "tools/audit-util.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-common.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-env.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-loop.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-resources.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-agent-runtime.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-blackhole-rest.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-blackhole.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-cognee-client.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-cognee-runtime.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-extensions-common.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-extensions-dispatch.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-extensions-loader.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/author-safe-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/compare-blackhole-copies.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/direct-source.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/active-checkout-compare.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/ai-schema-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/cli-packaging-supplement-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-coverage-gaps.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-final-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-review-apply.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extensions-review-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/qa-observability-independent-helper.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/semantic-dependency-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/subagents-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tools-read-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tools-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-candidates-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-build-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-merge-spec.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-normalize.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-closeout-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-owned-evidence-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-publication-readonly-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-review-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/tui-terminal-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extract-surfaces.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-agent.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-blackhole.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-cognee.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-extension-core-text.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-safe-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-blackhole.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-spec.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inventory.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/merge-progress.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/prepare-workers.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/publish-area.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/read-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/refine-blackhole-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/render-area.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/repair-extensions-dispatch.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/resolve-extension-test-refs.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/resume-integrity.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/supplement-surfaces.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/accept-canonical-read-coverage.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/accept-final-area.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/append-native-queue-defect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/apply-auth-json-precision.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/apply-native-command-provenance.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/build-final-index.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/clean-session-audit-aliases.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-active-closeout.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-build-root-export-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-checkpoint.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-closeout-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-complete-original-publication.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-fast-preflight.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-inspect-relocation.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-merge-exports.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-normalize-tui-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-prepare-native-prose.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-publish-closeout.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-record-native-hunks.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/coordinator-relocate-audit.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/extend-relocation-map.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/finalize-audit-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/fix-spacing.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-authored.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-closeout.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-final-structure.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-global-audit.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/inspect-prose-queues.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/integrate-ai-schema-supplement.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-batch.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-decls.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-match.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-sub-session-native-prose.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-identity.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-active-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-build-misc.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-exports.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-prepare.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-coverage.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-read-ranges.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-readme-limits-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-remap-review.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-type-contracts.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-verify-exports.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-final-areas-verify.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lookup-read-credit.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/merge-cli-fragments.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/normalize-citations.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/normalize-final-handoff.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/normalize-final-schema.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/prepare-citation-normalizer.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/qa-first-pass-read.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/read-audit-json-part.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-final-dependencies.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-final-first-pass.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-first-pass-records.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/reconcile-readability.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/remap-rust-citations.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/repair-agent57-literal.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/review-spacing.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-area-evidence.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-complete-audit.py",
+      "method": "/usr/bin/python3 -I ast.parse from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-defect-provenance.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/verify-supplemental-baseline.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-audit-paths.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-core.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-prepare-migration.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-relocated-validation.mjs",
+      "method": "Node --check --input-type=module from stdin",
+      "passed": true,
+      "status": 0,
+      "error": null,
+      "stderr": ""
+    }
+  ],
+  "safe_executions": [
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "ai"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "cd6bf92055efeb5d4bd2622e5b83eefeb324179f044242059d030d3bb4590c3c",
+      "stderr": "",
+      "summary": {
+        "area": "ai",
+        "entries": 50,
+        "unique_line_references": 469,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "agent"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "5cc31016a95c203fac155dab78ba08cf710b858ea68e93db1faa792031b5778a",
+      "stderr": "",
+      "summary": {
+        "area": "agent",
+        "entries": 65,
+        "unique_line_references": 387,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "tools"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "e769e2913de8f94401582a5e32bdb36a22122d05c63dd7037bcd8cdd13eacc69",
+      "stderr": "",
+      "summary": {
+        "area": "tools",
+        "entries": 31,
+        "unique_line_references": 229,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "session"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "54c9b85ca798f7970c8324b6c71a62724439063234ee3c9720843ab1ece70806",
+      "stderr": "",
+      "summary": {
+        "area": "session",
+        "entries": 38,
+        "unique_line_references": 452,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "settings"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "c2bef32015c0a7b1cf52f1edcdb6d22815521b69d80d411ccabbfc1647ccadbe",
+      "stderr": "",
+      "summary": {
+        "area": "settings",
+        "entries": 33,
+        "unique_line_references": 214,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "extensions"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "2b959d3b6cc5c373c5c98c67c45ed19bddc8bd03f6da25ab11bf82b598e7fd00",
+      "stderr": "",
+      "summary": {
+        "area": "extensions",
+        "entries": 57,
+        "unique_line_references": 443,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "rpc-remote"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "3d2acf9c5f8937e591ac840c1e1010015fe3cb8bde92567253eab23eb26cfeca",
+      "stderr": "",
+      "summary": {
+        "area": "rpc-remote",
+        "entries": 36,
+        "unique_line_references": 589,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "tui"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "1974630d824622993709ddd3aa03858f5c2ba9f069097dd5e29ec4345063a322",
+      "stderr": "",
+      "summary": {
+        "area": "tui",
+        "entries": 151,
+        "unique_line_references": 1344,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "subagents"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "a28ef71c7d2ddbd156379ace646356be1ce30c678d420558244e03bc38de1497",
+      "stderr": "",
+      "summary": {
+        "area": "subagents",
+        "entries": 44,
+        "unique_line_references": 204,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "safe-verify"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "265690be12b24c922f0b22452b977340a19fcffc17e28eaa65c9bb61f22b4171",
+      "stderr": "",
+      "summary": {
+        "area": "safe-verify",
+        "entries": 26,
+        "unique_line_references": 166,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "observability"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "c8704b6d7e6c3008edc39a9fa1e6bec0e4d581d9194a475bd0becba6430d6ce5",
+      "stderr": "",
+      "summary": {
+        "area": "observability",
+        "entries": 29,
+        "unique_line_references": 211,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "cognee"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "dcbebb8c888b01247e2623f5f4add51355bc0706f37ee8dbdb9016a61526512f",
+      "stderr": "",
+      "summary": {
+        "area": "cognee",
+        "entries": 68,
+        "unique_line_references": 229,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "blackhole"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "41c200deb4df3d84797be87b65b5a0fc90295a1d4c20551277d30d68442fcf8f",
+      "stderr": "",
+      "summary": {
+        "area": "blackhole",
+        "entries": 41,
+        "unique_line_references": 128,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "providers-auth"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "e0b1a322a02d6ffbce319f6a902a84aea76804ce2b91b158e0552dbd08a48449",
+      "stderr": "",
+      "summary": {
+        "area": "providers-auth",
+        "entries": 33,
+        "unique_line_references": 475,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "cli-packaging"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "3e533bf17e007202f907027e20a519eda153a6e6c263d0bc8c3aca9c125359bb",
+      "stderr": "",
+      "summary": {
+        "area": "cli-packaging",
+        "entries": 46,
+        "unique_line_references": 375,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-spec.mjs",
+      "args": [
+        "misc"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "be8121bbebc62282024c2b282dfad65edd60b393cfa88241b5757d128fc106a9",
+      "stderr": "",
+      "summary": {
+        "area": "misc",
+        "entries": 43,
+        "unique_line_references": 407,
+        "problems": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/inspect-final-structure.mjs",
+      "args": [],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "841e420932c5ae80f8463c3daaf1c98eb47777a0dc6509849a883923bdf13e01",
+      "stderr": "",
+      "summary": {
+        "captured_at": "2026-10-20T07:19:53.756Z",
+        "areas": [
+          {
+            "area": "ai",
+            "entries": 50,
+            "accepted": true,
+            "published": true,
+            "sha256": "ea0b8114c78722dada0c77500125682b0c11a345266bcc202551529030d888eb",
+            "statuses": {
+              "partial": 26,
+              "missing": 23,
+              "different-by-design": 1
+            },
+            "priorities": {
+              "P1": 41,
+              "P0": 2,
+              "P2": 6,
+              "P3": 1
+            }
+          },
+          {
+            "area": "agent",
+            "entries": 65,
+            "accepted": true,
+            "published": true,
+            "sha256": "8397086a0648e510d2fc5be8438f9ca33dc3d655f8c8143dc6b3b8d97bf67562",
+            "statuses": {
+              "different-by-design": 11,
+              "partial": 49,
+              "missing": 5
+            },
+            "priorities": {
+              "P1": 35,
+              "P2": 13,
+              "P0": 14,
+              "P3": 3
+            }
+          },
+          {
+            "area": "tools",
+            "entries": 31,
+            "accepted": true,
+            "published": true,
+            "sha256": "c36ecb953c2df91a48b794ec3507f2a3b78472e28a4d6191192ebac807f447dd",
+            "statuses": {
+              "partial": 21,
+              "missing": 10
+            },
+            "priorities": {
+              "P0": 15,
+              "P1": 13,
+              "P2": 3
+            }
+          },
+          {
+            "area": "session",
+            "entries": 38,
+            "accepted": true,
+            "published": true,
+            "sha256": "b1af0cf4ce44197e4bf87d16290d3de96f26194ea262d1cc226866c5320976a6",
+            "statuses": {
+              "partial": 27,
+              "different-by-design": 7,
+              "missing": 4
+            },
+            "priorities": {
+              "P1": 27,
+              "P3": 1,
+              "P2": 10
+            }
+          },
+          {
+            "area": "settings",
+            "entries": 33,
+            "accepted": true,
+            "published": true,
+            "sha256": "5ab72a4e1ba824aceb3ec871bd27ccecf28e05c3839cf2504b18a3a0ba5a7ebd",
+            "statuses": {
+              "partial": 31,
+              "different-by-design": 1,
+              "missing": 1
+            },
+            "priorities": {
+              "P1": 18,
+              "P2": 9,
+              "P0": 6
+            }
+          },
+          {
+            "area": "extensions",
+            "entries": 57,
+            "accepted": true,
+            "published": true,
+            "sha256": "2593658a38806b3cffd5fd4f3d6199ed8a349e8bf7d3d09bcd19a284c1c67edf",
+            "statuses": {
+              "different-by-design": 3,
+              "partial": 46,
+              "missing": 8
+            },
+            "priorities": {
+              "P0": 11,
+              "P2": 16,
+              "P1": 30
+            }
+          },
+          {
+            "area": "rpc-remote",
+            "entries": 36,
+            "accepted": true,
+            "published": true,
+            "sha256": "2285698a6e97290a70cb65016dfea4aa190cb6777e438c807a6623999b04e766",
+            "statuses": {
+              "partial": 10,
+              "missing": 25,
+              "different-by-design": 1
+            },
+            "priorities": {
+              "P1": 36
+            }
+          },
+          {
+            "area": "tui",
+            "entries": 151,
+            "accepted": true,
+            "published": true,
+            "sha256": "aae91d897198883733eec48642839ad157551fc3955b150a138d0d9d26e6af98",
+            "statuses": {
+              "partial": 114,
+              "missing": 37
+            },
+            "priorities": {
+              "P1": 105,
+              "P2": 39,
+              "P3": 3,
+              "P0": 4
+            }
+          },
+          {
+            "area": "subagents",
+            "entries": 44,
+            "accepted": true,
+            "published": true,
+            "sha256": "9a4907c25aa409cf8f69cdb6eff97de1470f2e33bc80b6a9b4335e938c020a0b",
+            "statuses": {
+              "missing": 33,
+              "partial": 11
+            },
+            "priorities": {
+              "P1": 20,
+              "P2": 8,
+              "P0": 16
+            }
+          },
+          {
+            "area": "safe-verify",
+            "entries": 26,
+            "accepted": true,
+            "published": true,
+            "sha256": "58a28856c096814026a4350701f97a5877543eeaff62d50035aeca3da28d7d8b",
+            "statuses": {
+              "missing": 26
+            },
+            "priorities": {
+              "P0": 15,
+              "P1": 10,
+              "P2": 1
+            }
+          },
+          {
+            "area": "observability",
+            "entries": 29,
+            "accepted": true,
+            "published": true,
+            "sha256": "c4f4227102ddc2acea68c5ece85910c37a1613e44555265ee4a840f00cd35088",
+            "statuses": {
+              "missing": 28,
+              "partial": 1
+            },
+            "priorities": {
+              "P3": 3,
+              "P2": 12,
+              "P1": 14
+            }
+          },
+          {
+            "area": "cognee",
+            "entries": 68,
+            "accepted": true,
+            "published": true,
+            "sha256": "90ed5d21b12475d5b71b5c2251979de6e792064c9a6e7fdf6a219593f31c2ed2",
+            "statuses": {
+              "missing": 68
+            },
+            "priorities": {
+              "P1": 45,
+              "P0": 20,
+              "P2": 3
+            }
+          },
+          {
+            "area": "blackhole",
+            "entries": 41,
+            "accepted": true,
+            "published": true,
+            "sha256": "52b87872e9f0cb5cf1ec4dae68ad8455d51656bbc288fa9f8208eca0f2b4405c",
+            "statuses": {
+              "missing": 33,
+              "partial": 8
+            },
+            "priorities": {
+              "P1": 36,
+              "P2": 5
+            }
+          },
+          {
+            "area": "providers-auth",
+            "entries": 33,
+            "accepted": true,
+            "published": true,
+            "sha256": "30d6970865fa997d2a7379b2477801256e406e32586a4831bae2526681200da6",
+            "statuses": {
+              "partial": 19,
+              "missing": 14
+            },
+            "priorities": {
+              "P1": 29,
+              "P2": 4
+            }
+          },
+          {
+            "area": "cli-packaging",
+            "entries": 46,
+            "accepted": true,
+            "published": true,
+            "sha256": "b8fb2b25e785233ebf0169b02f08c8c638a03d86ea87a6178014aade8d50d0a0",
+            "statuses": {
+              "partial": 24,
+              "different-by-design": 6,
+              "missing": 16
+            },
+            "priorities": {
+              "P2": 9,
+              "P1": 31,
+              "P0": 3,
+              "P3": 3
+            }
+          },
+          {
+            "area": "misc",
+            "entries": 43,
+            "accepted": true,
+            "published": true,
+            "sha256": "3b785c94ba2652f7ed5cb87421add6ac196ceb5415d9209f4f573c06efaeddb1",
+            "statuses": {
+              "partial": 17,
+              "different-by-design": 6,
+              "missing": 20
+            },
+            "priorities": {
+              "P2": 25,
+              "P1": 16,
+              "P0": 2
+            }
+          }
+        ],
+        "duplicate_ids": [],
+        "missing_fields": [],
+        "invalid_values": [],
+        "unknown_dependencies": [],
+        "unknown_metadata_ids": [],
+        "citation_shorthand": [],
+        "missing_native_anchors": [],
+        "published_missing_ids": []
+      },
+      "issues": []
+    },
+    {
+      "script": "tools/verify-supplemental-baseline.mjs",
+      "args": [
+        "rust",
+        "crates/ice-cli/src/bin/icers.rs"
+      ],
+      "cwd": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+      "helper_sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "d2d2f868ac1dc42548d534d19b650cd58642a5eb566a034f3c468024f26a25bd",
+      "stderr": "",
+      "summary": {
+        "method": "Local Git object and working-file byte comparison; no application/test execution",
+        "rows": [
+          {
+            "path": "rust:crates/ice-cli/src/bin/icers.rs",
+            "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+            "current_sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+            "head_sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+            "matches_head": true,
+            "current_lines": 22
+          }
+        ]
+      },
+      "issues": []
+    }
+  ],
+  "python_residue": {
+    "checked_root": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+    "forbidden_names": [
+      ".venv",
+      "__pycache__"
+    ],
+    "found": []
+  },
+  "checks": [
+    "Original migration plan, receipt and prior helper validation remain hash-identical. Only the two approved helper corrections differ; their exact patches reconstruct current bytes from archived originals.",
+    "All 142 current helper hashes, paths, static inventory and unchanged independent-review hashes match the original evidence plus the approved correction.",
+    "Every helper was parsed, without importing or executing historical mutation code.",
+    "Current spec validators ran for every published area from the audit-directory cwd, proving the relocated data roots work.",
+    "Current structural reconciliation and visible-file local Git baseline comparison ran without application/test/build execution.",
+    "All current helper hashes and bound original/correction evidence were rechecked after the safe executions."
+  ],
+  "issues": [],
+  "limitations": [
+    "Syntax validation does not execute or semantically certify historical writers.",
+    "Safe validators inspect current accepted documentation and visible tracked source; they add no source-read credit.",
+    "The separate comprehensive active final gate remains the publication completion gate.",
+    "Independent review remains unfinished; its exact existing findings were only moved unchanged."
+  ]
+}

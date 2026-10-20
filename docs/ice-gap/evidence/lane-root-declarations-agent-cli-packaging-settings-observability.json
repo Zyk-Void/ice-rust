@@ -1,0 +1,825 @@
+{
+  "owner": "/root",
+  "source_only": true,
+  "records": [
+    {
+      "symbol": "SkillDiagnosticCode",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/skills.ts:11",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "agent",
+      "path": "ice:packages/agent/src/harness/skills.ts",
+      "sha256": "48e9307332ec9453cc401b8f981e5718e9637698d9b89594afce98170532f71d",
+      "ranges": [
+        [
+          11,
+          22
+        ]
+      ],
+      "excerpt": "11 | export type SkillDiagnosticCode =\n12 | \t| \"file_info_failed\"\n13 | \t| \"list_failed\"\n14 | \t| \"read_failed\"\n15 | \t| \"parse_failed\"\n16 | \t| \"invalid_metadata\";\n17 | \n18 | /** Warning produced while loading skills. */\n19 | export interface SkillDiagnostic {\n20 | \t/** Diagnostic severity. Currently only warnings are emitted. */\n21 | \ttype: \"warning\";\n22 | \t/** Stable diagnostic code. */"
+    },
+    {
+      "symbol": "CompactionErrorCode",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/types.ts:179",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "agent",
+      "path": "ice:packages/agent/src/harness/types.ts",
+      "sha256": "c5187bd964f987b65e250f421c352ed9b58a5dd6a0ca93ae3758fc414b8d9ea6",
+      "ranges": [
+        [
+          179,
+          190
+        ]
+      ],
+      "excerpt": "179 | export type CompactionErrorCode = \"aborted\" | \"summarization_failed\";\n180 | \n181 | /** Error returned by compaction helpers. */\n182 | export class CompactionError extends Error {\n183 | \t/** Backend-independent error code. */\n184 | \tpublic code: CompactionErrorCode;\n185 | \n186 | \tconstructor(code: CompactionErrorCode, message: string, cause?: Error) {\n187 | \t\tsuper(message, cause === undefined ? undefined : { cause });\n188 | \t\tthis.name = \"CompactionError\";\n189 | \t\tthis.code = code;\n190 | \t}"
+    },
+    {
+      "symbol": "BranchSummaryErrorCode",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/types.ts:194",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "agent",
+      "path": "ice:packages/agent/src/harness/types.ts",
+      "sha256": "c5187bd964f987b65e250f421c352ed9b58a5dd6a0ca93ae3758fc414b8d9ea6",
+      "ranges": [
+        [
+          194,
+          205
+        ]
+      ],
+      "excerpt": "194 | export type BranchSummaryErrorCode = \"aborted\" | \"summarization_failed\";\n195 | \n196 | /** Error returned by branch summarization helpers. */\n197 | export class BranchSummaryError extends Error {\n198 | \t/** Backend-independent error code. */\n199 | \tpublic code: BranchSummaryErrorCode;\n200 | \n201 | \tconstructor(code: BranchSummaryErrorCode, message: string, cause?: Error) {\n202 | \t\tsuper(message, cause === undefined ? undefined : { cause });\n203 | \t\tthis.name = \"BranchSummaryError\";\n204 | \t\tthis.code = code;\n205 | \t}"
+    },
+    {
+      "symbol": "BranchSummaryError",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/types.ts:197",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "agent",
+      "path": "ice:packages/agent/src/harness/types.ts",
+      "sha256": "c5187bd964f987b65e250f421c352ed9b58a5dd6a0ca93ae3758fc414b8d9ea6",
+      "ranges": [
+        [
+          197,
+          208
+        ]
+      ],
+      "excerpt": "197 | export class BranchSummaryError extends Error {\n198 | \t/** Backend-independent error code. */\n199 | \tpublic code: BranchSummaryErrorCode;\n200 | \n201 | \tconstructor(code: BranchSummaryErrorCode, message: string, cause?: Error) {\n202 | \t\tsuper(message, cause === undefined ? undefined : { cause });\n203 | \t\tthis.name = \"BranchSummaryError\";\n204 | \t\tthis.code = code;\n205 | \t}\n206 | }\n207 | \n208 | /** Metadata for one filesystem object in a {@link FileSystem}. */"
+    },
+    {
+      "symbol": "isValidThinkingLevel",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/args.ts:65",
+      "covering_entries": [
+        "CLI-003"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/args.ts",
+      "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "ranges": [
+        [
+          65,
+          76
+        ]
+      ],
+      "excerpt": "65 | export function isValidThinkingLevel(level: string): level is ThinkingLevel {\n66 | \treturn VALID_THINKING_LEVELS.includes(level as ThinkingLevel);\n67 | }\n68 | \n69 | export function parseArgs(args: string[]): Args {\n70 | \tconst result: Args = {\n71 | \t\tmessages: [],\n72 | \t\tfileArgs: [],\n73 | \t\tunknownFlags: new Map(),\n74 | \t\tdiagnostics: [],\n75 | \t};\n76 | "
+    },
+    {
+      "symbol": "printHelp",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/args.ts:249",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/args.ts",
+      "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "ranges": [
+        [
+          249,
+          260
+        ]
+      ],
+      "excerpt": "249 | export function printHelp(extensionFlags?: ExtensionFlag[]): void {\n250 | \tconst extensionFlagsText =\n251 | \t\textensionFlags && extensionFlags.length > 0\n252 | \t\t\t? `\\n${chalk.bold(\"Extension CLI Flags:\")}\\n${extensionFlags\n253 | \t\t\t\t\t.map((flag) => {\n254 | \t\t\t\t\t\tconst value = flag.type === \"string\" ? \" <value>\" : \"\";\n255 | \t\t\t\t\t\tconst description = flag.description ?? `Registered by ${flag.extensionPath}`;\n256 | \t\t\t\t\t\treturn `  --${flag.name}${value}`.padEnd(30) + description;\n257 | \t\t\t\t\t})\n258 | \t\t\t\t\t.join(\"\\n\")}\\n`\n259 | \t\t\t: \"\";\n260 | \tconsole.log(`${chalk.bold(APP_NAME)} - AI coding assistant with read, bash, edit, write tools"
+    },
+    {
+      "symbol": "ConfigSelectorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/config-selector.ts:10",
+      "covering_entries": [
+        "CLI-016"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/config-selector.ts",
+      "sha256": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+      "ranges": [
+        [
+          10,
+          21
+        ]
+      ],
+      "excerpt": "10 | export interface ConfigSelectorOptions {\n11 | \tresolvedPaths: ScopedResolvedPaths;\n12 | \tsettingsManager: SettingsManager;\n13 | \tcwd: string;\n14 | \tagentDir: string;\n15 | \twriteScope: \"global\" | \"project\";\n16 | \tprojectModeAvailable: boolean;\n17 | }\n18 | \n19 | /** Show TUI config selector and return when closed */\n20 | export async function selectConfig(options: ConfigSelectorOptions): Promise<void> {\n21 | \t// Initialize theme before showing TUI"
+    },
+    {
+      "symbol": "CredentialPrintKind",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:6",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "ranges": [
+        [
+          6,
+          17
+        ]
+      ],
+      "excerpt": "6 | export type CredentialPrintKind = \"api_key\" | \"bearer_token\";\n7 | \n8 | const DEFAULT_BEARER_TOKEN_MIN_EXPIRY_MS = 30 * 60_000;\n9 | \n10 | export interface CredentialPrintCommand {\n11 | \tkind: CredentialPrintKind;\n12 | \targs: string[];\n13 | \tminExpiryMs?: number;\n14 | }\n15 | \n16 | export class CredentialPrintError extends Error {}\n17 | "
+    },
+    {
+      "symbol": "CredentialPrintCommand",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:10",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "ranges": [
+        [
+          10,
+          21
+        ]
+      ],
+      "excerpt": "10 | export interface CredentialPrintCommand {\n11 | \tkind: CredentialPrintKind;\n12 | \targs: string[];\n13 | \tminExpiryMs?: number;\n14 | }\n15 | \n16 | export class CredentialPrintError extends Error {}\n17 | \n18 | export function isCredentialPrintHelp(args: string[]): boolean {\n19 | \treturn (\n20 | \t\targs[0] === \"auth\" && (args[1] === undefined || args[1] === \"help\" || args[1] === \"--help\" || args[1] === \"-h\")\n21 | \t);"
+    },
+    {
+      "symbol": "printCredentialPrintHelp",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:24",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "ranges": [
+        [
+          24,
+          35
+        ]
+      ],
+      "excerpt": "24 | export function printCredentialPrintHelp(): void {\n25 | \tconsole.log(`Usage:\n26 |   ice auth print-api-key --model <model> [--provider <provider>]\n27 |   ice auth print-bearer-token --model <model> [--provider <provider>] [--min-expiry <duration>]\n28 | \n29 | Prints the configured credential alone on stdout. Provider inference uses configured credentials; specify --provider to select explicitly. Bearer tokens have a 30-minute minimum expiry by default. --min-expiry accepts ms, s, m, or h (for example, 30m).`);\n30 | }\n31 | \n32 | /** Parse the small, extensible `ice auth` command surface before normal startup. */\n33 | export function parseCredentialPrintCommand(args: string[]): CredentialPrintCommand | undefined {\n34 | \tif (args[0] !== \"auth\") return undefined;\n35 | "
+    },
+    {
+      "symbol": "validateCredentialPrintArgs",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/cli/credential-print.ts:66",
+      "covering_entries": [
+        "CLI-011"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "ranges": [
+        [
+          66,
+          77
+        ]
+      ],
+      "excerpt": "66 | export function validateCredentialPrintArgs(args: Args): void {\n67 | \tif (!args.model?.trim()) {\n68 | \t\tthrow new CredentialPrintError(\"Credential printing requires --model <model>\");\n69 | \t}\n70 | \tif (args.apiKey !== undefined) {\n71 | \t\tthrow new CredentialPrintError(\"Credential printing reads configured credentials; --api-key is not supported\");\n72 | \t}\n73 | \tif (args.messages.length > 0 || args.fileArgs.length > 0 || args.unknownFlags.size > 0) {\n74 | \t\tthrow new CredentialPrintError(\"Credential printing only accepts --provider and --model\");\n75 | \t}\n76 | }\n77 | "
+    },
+    {
+      "symbol": "ProcessedFiles",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/file-processor.ts:12",
+      "covering_entries": [
+        "CLI-009",
+        "RPC-021"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/file-processor.ts",
+      "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "ranges": [
+        [
+          12,
+          23
+        ]
+      ],
+      "excerpt": "12 | export interface ProcessedFiles {\n13 | \ttext: string;\n14 | \timages: ImageContent[];\n15 | }\n16 | \n17 | export interface ProcessFileOptions {\n18 | \t/** Whether to auto-resize images to 2000x2000 max. Default: true */\n19 | \tautoResizeImages?: boolean;\n20 | \t/** Directory relative paths resolve against. Default: process.cwd() */\n21 | \tcwd?: string;\n22 | \t/** Reject text files larger than this many bytes. Default: no limit */\n23 | \tmaxTextBytes?: number;"
+    },
+    {
+      "symbol": "ProcessFileOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/file-processor.ts:17",
+      "covering_entries": [
+        "CLI-009",
+        "RPC-021"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/file-processor.ts",
+      "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "ranges": [
+        [
+          17,
+          28
+        ]
+      ],
+      "excerpt": "17 | export interface ProcessFileOptions {\n18 | \t/** Whether to auto-resize images to 2000x2000 max. Default: true */\n19 | \tautoResizeImages?: boolean;\n20 | \t/** Directory relative paths resolve against. Default: process.cwd() */\n21 | \tcwd?: string;\n22 | \t/** Reject text files larger than this many bytes. Default: no limit */\n23 | \tmaxTextBytes?: number;\n24 | }\n25 | \n26 | /** A file argument that cannot be attached; the message names the resolved path. */\n27 | export class FileArgumentError extends Error {\n28 | \treadonly code: \"not_found\" | \"too_large\" | \"unreadable\";"
+    },
+    {
+      "symbol": "InitialMessageInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/initial-message.ts:4",
+      "covering_entries": [
+        "CLI-010"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/initial-message.ts",
+      "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "ranges": [
+        [
+          4,
+          15
+        ]
+      ],
+      "excerpt": "4 | export interface InitialMessageInput {\n5 | \tparsed: Args;\n6 | \tfileText?: string;\n7 | \tfileImages?: ImageContent[];\n8 | \tstdinContent?: string;\n9 | }\n10 | \n11 | export interface InitialMessageResult {\n12 | \tinitialMessage?: string;\n13 | \tinitialImages?: ImageContent[];\n14 | }\n15 | "
+    },
+    {
+      "symbol": "InitialMessageResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/cli/initial-message.ts:11",
+      "covering_entries": [
+        "CLI-010"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/cli/initial-message.ts",
+      "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "ranges": [
+        [
+          11,
+          22
+        ]
+      ],
+      "excerpt": "11 | export interface InitialMessageResult {\n12 | \tinitialMessage?: string;\n13 | \tinitialImages?: ImageContent[];\n14 | }\n15 | \n16 | /**\n17 |  * Combine stdin content, @file text, and the first CLI message into a single\n18 |  * initial prompt for non-interactive mode.\n19 |  */\n20 | export function buildInitialMessage({\n21 | \tparsed,\n22 | \tfileText,"
+    },
+    {
+      "symbol": "ProgressCallback",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:88",
+      "covering_entries": [
+        "CLI-023",
+        "CLI-033"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/core/package-manager.ts",
+      "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+      "ranges": [
+        [
+          88,
+          99
+        ]
+      ],
+      "excerpt": "88 | export type ProgressCallback = (event: ProgressEvent) => void;\n89 | \n90 | export interface PackageUpdate {\n91 | \tsource: string;\n92 | \tdisplayName: string;\n93 | \ttype: \"npm\" | \"git\";\n94 | \tscope: Exclude<SourceScope, \"temporary\">;\n95 | }\n96 | \n97 | export interface ConfiguredPackage {\n98 | \tsource: string;\n99 | \tscope: \"user\" | \"project\";"
+    },
+    {
+      "symbol": "ConfiguredPackage",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:97",
+      "covering_entries": [
+        "CLI-023",
+        "CLI-033"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/core/package-manager.ts",
+      "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+      "ranges": [
+        [
+          97,
+          108
+        ]
+      ],
+      "excerpt": "97 | export interface ConfiguredPackage {\n98 | \tsource: string;\n99 | \tscope: \"user\" | \"project\";\n100 | \tfiltered: boolean;\n101 | \tinstalledPath?: string;\n102 | }\n103 | \n104 | export interface PackageManager {\n105 | \tresolve(onMissing?: (source: string) => Promise<MissingSourceAction>): Promise<ResolvedPaths>;\n106 | \tinstall(source: string, options?: { local?: boolean }): Promise<void>;\n107 | \tinstallAndPersist(source: string, options?: { local?: boolean }): Promise<void>;\n108 | \tremove(source: string, options?: { local?: boolean }): Promise<void>;"
+    },
+    {
+      "symbol": "getExtensionTempFolder",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:218",
+      "covering_entries": [
+        "CLI-022"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/core/package-manager.ts",
+      "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+      "ranges": [
+        [
+          218,
+          229
+        ]
+      ],
+      "excerpt": "218 | export function getExtensionTempFolder(agentDir: string): string {\n219 | \tconst tempFolder = join(agentDir, \"tmp\", \"extensions\");\n220 | \tmkdirSync(tempFolder, { recursive: true, mode: 0o700 });\n221 | \tchmodSync(tempFolder, 0o700);\n222 | \treturn tempFolder;\n223 | }\n224 | \n225 | function prefixIgnorePattern(line: string, prefix: string): string | null {\n226 | \tconst trimmed = line.trim();\n227 | \tif (!trimmed) return null;\n228 | \tif (trimmed.startsWith(\"#\") && !trimmed.startsWith(\"\\\\#\")) return null;\n229 | "
+    },
+    {
+      "symbol": "DefaultPackageManager",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/package-manager.ts:782",
+      "covering_entries": [
+        "CLI-021"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/core/package-manager.ts",
+      "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+      "ranges": [
+        [
+          782,
+          793
+        ]
+      ],
+      "excerpt": "782 | export class DefaultPackageManager implements PackageManager {\n783 | \tprivate cwd: string;\n784 | \tprivate agentDir: string;\n785 | \tprivate settingsManager: SettingsManager;\n786 | \tprivate globalNpmRoot: string | undefined;\n787 | \tprivate globalNpmRootCommandKey: string | undefined;\n788 | \tprivate progressCallback: ProgressCallback | undefined;\n789 | \n790 | \tconstructor(options: PackageManagerOptions) {\n791 | \t\tthis.cwd = resolvePath(options.cwd);\n792 | \t\tthis.agentDir = resolvePath(options.agentDir);\n793 | \t\tthis.settingsManager = options.settingsManager;"
+    },
+    {
+      "symbol": "MainOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/main.ts:522",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "ranges": [
+        [
+          522,
+          533
+        ]
+      ],
+      "excerpt": "522 | export interface MainOptions {\n523 | \textensionFactories?: InlineExtension[];\n524 | \t/** Opt-in distribution settings precedence, retained across session switches. */\n525 | \tglobalFirstSettings?: boolean;\n526 | \t/** Optional ICE-only view bridge; stock Ice leaves the interactive shell unchanged. */\n527 | \tagentViewBridge?: IceAgentViewBridge;\n528 | }\n529 | \n530 | export async function main(args: string[], options?: MainOptions) {\n531 | \tresetTimings();\n532 | \tconst extensionFactories = [...builtInExtensions, ...(options?.extensionFactories ?? [])];\n533 | \tconst offlineMode = args.includes(\"--offline\") || isTruthyEnvFlag(process.env.ICE_OFFLINE);"
+    },
+    {
+      "symbol": "migrateSessionsFromAgentRoot",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/migrations.ts:83",
+      "covering_entries": [
+        "CLI-014"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/migrations.ts",
+      "sha256": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+      "ranges": [
+        [
+          83,
+          94
+        ]
+      ],
+      "excerpt": "83 | export function migrateSessionsFromAgentRoot(): void {\n84 | \tconst agentDir = getAgentDir();\n85 | \n86 | \t// Find all .jsonl files directly in agentDir (not in subdirectories)\n87 | \tlet files: string[];\n88 | \ttry {\n89 | \t\tfiles = readdirSync(agentDir)\n90 | \t\t\t.filter((f) => f.endsWith(\".jsonl\"))\n91 | \t\t\t.map((f) => join(agentDir, f));\n92 | \t} catch {\n93 | \t\treturn;\n94 | \t}"
+    },
+    {
+      "symbol": "PackageCommand",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/package-manager-cli.ts:33",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/package-manager-cli.ts",
+      "sha256": "7d789b8cb6cef448396725801f5f21c08d7eb33289b85b9b153883882be87e66",
+      "ranges": [
+        [
+          33,
+          44
+        ]
+      ],
+      "excerpt": "33 | export type PackageCommand = \"install\" | \"remove\" | \"update\" | \"list\";\n34 | \n35 | type UpdateTarget = { type: \"all\" } | { type: \"self\" } | { type: \"extensions\"; source?: string } | { type: \"models\" };\n36 | \n37 | const SELF_UPDATE_NOTE_MARKDOWN_THEME: MarkdownTheme = {\n38 | \theading: (text) => chalk.bold(chalk.yellow(text)),\n39 | \tlink: (text) => chalk.cyan(text),\n40 | \tlinkUrl: (text) => chalk.dim(text),\n41 | \tcode: (text) => chalk.yellow(text),\n42 | \tcodeBlock: (text) => chalk.dim(text),\n43 | \tcodeBlockBorder: (text) => chalk.dim(text),\n44 | \tquote: (text) => chalk.dim(text),"
+    },
+    {
+      "symbol": "PackageCommandRuntimeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/package-manager-cli.ts:554",
+      "covering_entries": [
+        "CLI-038",
+        "CLI-043",
+        "CLI-046"
+      ],
+      "action": "name-in-entry",
+      "area": "cli-packaging",
+      "path": "ice:packages/coding-agent/src/package-manager-cli.ts",
+      "sha256": "7d789b8cb6cef448396725801f5f21c08d7eb33289b85b9b153883882be87e66",
+      "ranges": [
+        [
+          554,
+          565
+        ]
+      ],
+      "excerpt": "554 | export interface PackageCommandRuntimeOptions {\n555 | \textensionFactories?: InlineExtension[];\n556 | }\n557 | \n558 | interface CommandSettingsResult {\n559 | \tsettingsManager: SettingsManager;\n560 | \tprojectTrustWarnings: string[];\n561 | }\n562 | \n563 | function getCommandAppMode(): AppMode {\n564 | \treturn process.stdin.isTTY && process.stdout.isTTY ? \"interactive\" : \"print\";\n565 | }"
+    },
+    {
+      "symbol": "AppMode",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/project-trust.ts:12",
+      "covering_entries": [
+        "SET-003"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/project-trust.ts",
+      "sha256": "04a4cd25f6be0bd858364c1117fc6d16c481614ac2d7778879b3d7d4fad3c371",
+      "ranges": [
+        [
+          12,
+          23
+        ]
+      ],
+      "excerpt": "12 | export type AppMode = \"interactive\" | \"print\" | \"json\" | \"rpc\";\n13 | \n14 | export interface ResolveProjectTrustedOptions {\n15 | \tcwd: string;\n16 | \ttrustStore: ProjectTrustStore;\n17 | \ttrustOverride?: boolean;\n18 | \tdefaultProjectTrust?: DefaultProjectTrust;\n19 | \textensionsResult?: LoadExtensionsResult;\n20 | \tprojectTrustContext: ProjectTrustContext;\n21 | \tonExtensionError?: (message: string) => void;\n22 | }\n23 | "
+    },
+    {
+      "symbol": "isCommandConfigValue",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/resolve-config-value.ts:131",
+      "covering_entries": [
+        "SET-005",
+        "SET-006"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/resolve-config-value.ts",
+      "sha256": "88433e8f785ae56acd10ee6a2cf5eeb17c59093e1fb8cb8a559f5b417a5a705a",
+      "ranges": [
+        [
+          131,
+          142
+        ]
+      ],
+      "excerpt": "131 | export function isCommandConfigValue(config: string): boolean {\n132 | \treturn parseConfigValueReference(config).type === \"command\";\n133 | }\n134 | \n135 | export function isConfigValueConfigured(config: string, env?: Record<string, string>): boolean {\n136 | \treturn getMissingConfigValueEnvVarNames(config, env).length === 0;\n137 | }\n138 | \n139 | /**\n140 |  * Resolve a config value (API key, header value, etc.) to an actual value.\n141 |  * - If starts with \"!\", executes the rest as a shell command and uses stdout (cached)\n142 |  * - Interpolates \"$ENV_VAR\" or \"${ENV_VAR}\" references with the named environment variable"
+    },
+    {
+      "symbol": "BranchSummarySettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:33",
+      "covering_entries": [
+        "SET-012"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          33,
+          44
+        ]
+      ],
+      "excerpt": "33 | export interface BranchSummarySettings {\n34 | \treserveTokens?: number; // default: 16384 (tokens reserved for prompt + LLM response)\n35 | \tskipPrompt?: boolean; // default: false - when true, skips \"Summarize branch?\" prompt and defaults to no summary\n36 | }\n37 | \n38 | export interface ProviderRetrySettings {\n39 | \ttimeoutMs?: number; // SDK/provider request timeout in milliseconds\n40 | \tmaxRetries?: number; // SDK/provider retry attempts\n41 | \tmaxRetryDelayMs?: number; // default: 60000 (max server-requested delay before failing)\n42 | }\n43 | \n44 | export interface RetrySettings {"
+    },
+    {
+      "symbol": "ProviderRetrySettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:38",
+      "covering_entries": [
+        "SET-012"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          38,
+          49
+        ]
+      ],
+      "excerpt": "38 | export interface ProviderRetrySettings {\n39 | \ttimeoutMs?: number; // SDK/provider request timeout in milliseconds\n40 | \tmaxRetries?: number; // SDK/provider retry attempts\n41 | \tmaxRetryDelayMs?: number; // default: 60000 (max server-requested delay before failing)\n42 | }\n43 | \n44 | export interface RetrySettings {\n45 | \tenabled?: boolean; // default: true\n46 | \tmaxRetries?: number; // default: 3\n47 | \tbaseDelayMs?: number; // default: 2000 (exponential backoff: 2s, 4s, 8s)\n48 | \tprovider?: ProviderRetrySettings;\n49 | }"
+    },
+    {
+      "symbol": "RetrySettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:44",
+      "covering_entries": [
+        "SET-012"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          44,
+          55
+        ]
+      ],
+      "excerpt": "44 | export interface RetrySettings {\n45 | \tenabled?: boolean; // default: true\n46 | \tmaxRetries?: number; // default: 3\n47 | \tbaseDelayMs?: number; // default: 2000 (exponential backoff: 2s, 4s, 8s)\n48 | \tprovider?: ProviderRetrySettings;\n49 | }\n50 | \n51 | export type UiMode = TuiMode;\n52 | \n53 | export interface TerminalSettings {\n54 | \tshowImages?: boolean; // default: true (only relevant if terminal supports images)\n55 | \timageWidthCells?: number; // default: 60 (preferred inline image width in terminal cells)"
+    },
+    {
+      "symbol": "UiMode",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:51",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          51,
+          62
+        ]
+      ],
+      "excerpt": "51 | export type UiMode = TuiMode;\n52 | \n53 | export interface TerminalSettings {\n54 | \tshowImages?: boolean; // default: true (only relevant if terminal supports images)\n55 | \timageWidthCells?: number; // default: 60 (preferred inline image width in terminal cells)\n56 | \tclearOnShrink?: boolean; // default: false (clear empty rows when content shrinks)\n57 | \tshowTerminalProgress?: boolean; // default: false (OSC 9;4 terminal progress indicators)\n58 | }\n59 | \n60 | export interface ImageSettings {\n61 | \tautoResize?: boolean; // default: true (resize images to 2000x2000 max for better model compatibility)\n62 | \tblockImages?: boolean; // default: false - when true, prevents all images from being sent to LLM providers"
+    },
+    {
+      "symbol": "TerminalSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:53",
+      "covering_entries": [
+        "SET-016"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          53,
+          64
+        ]
+      ],
+      "excerpt": "53 | export interface TerminalSettings {\n54 | \tshowImages?: boolean; // default: true (only relevant if terminal supports images)\n55 | \timageWidthCells?: number; // default: 60 (preferred inline image width in terminal cells)\n56 | \tclearOnShrink?: boolean; // default: false (clear empty rows when content shrinks)\n57 | \tshowTerminalProgress?: boolean; // default: false (OSC 9;4 terminal progress indicators)\n58 | }\n59 | \n60 | export interface ImageSettings {\n61 | \tautoResize?: boolean; // default: true (resize images to 2000x2000 max for better model compatibility)\n62 | \tblockImages?: boolean; // default: false - when true, prevents all images from being sent to LLM providers\n63 | }\n64 | "
+    },
+    {
+      "symbol": "ImageSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:60",
+      "covering_entries": [
+        "SET-016"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          60,
+          71
+        ]
+      ],
+      "excerpt": "60 | export interface ImageSettings {\n61 | \tautoResize?: boolean; // default: true (resize images to 2000x2000 max for better model compatibility)\n62 | \tblockImages?: boolean; // default: false - when true, prevents all images from being sent to LLM providers\n63 | }\n64 | \n65 | export interface ThinkingBudgetsSettings {\n66 | \tminimal?: number;\n67 | \tlow?: number;\n68 | \tmedium?: number;\n69 | \thigh?: number;\n70 | }\n71 | "
+    },
+    {
+      "symbol": "MarkdownSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:72",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          72,
+          83
+        ]
+      ],
+      "excerpt": "72 | export interface MarkdownSettings {\n73 | \tcodeBlockIndent?: string; // default: \"  \"\n74 | }\n75 | \n76 | export interface WarningSettings {\n77 | \tanthropicExtraUsage?: boolean; // default: true\n78 | }\n79 | \n80 | export type DefaultProjectTrust = \"ask\" | \"always\" | \"never\";\n81 | \n82 | export type TransportSetting = Transport;\n83 | "
+    },
+    {
+      "symbol": "WarningSettings",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:76",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          76,
+          87
+        ]
+      ],
+      "excerpt": "76 | export interface WarningSettings {\n77 | \tanthropicExtraUsage?: boolean; // default: true\n78 | }\n79 | \n80 | export type DefaultProjectTrust = \"ask\" | \"always\" | \"never\";\n81 | \n82 | export type TransportSetting = Transport;\n83 | \n84 | /**\n85 |  * Package source for npm/git packages.\n86 |  * - String form: load all resources from the package\n87 |  * - Object form: filter which resources to load"
+    },
+    {
+      "symbol": "DefaultProjectTrust",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:80",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          80,
+          91
+        ]
+      ],
+      "excerpt": "80 | export type DefaultProjectTrust = \"ask\" | \"always\" | \"never\";\n81 | \n82 | export type TransportSetting = Transport;\n83 | \n84 | /**\n85 |  * Package source for npm/git packages.\n86 |  * - String form: load all resources from the package\n87 |  * - Object form: filter which resources to load\n88 |  * - autoload=false: start empty and only apply explicit resource patterns\n89 |  */\n90 | export type PackageSource =\n91 | \t| string"
+    },
+    {
+      "symbol": "TransportSetting",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:82",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          82,
+          93
+        ]
+      ],
+      "excerpt": "82 | export type TransportSetting = Transport;\n83 | \n84 | /**\n85 |  * Package source for npm/git packages.\n86 |  * - String form: load all resources from the package\n87 |  * - Object form: filter which resources to load\n88 |  * - autoload=false: start empty and only apply explicit resource patterns\n89 |  */\n90 | export type PackageSource =\n91 | \t| string\n92 | \t| {\n93 | \t\t\tsource: string;"
+    },
+    {
+      "symbol": "DEFAULT_BASH_AUTO_BACKGROUND_MS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/settings-manager.ts:216",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          216,
+          227
+        ]
+      ],
+      "excerpt": "216 | export const DEFAULT_BASH_AUTO_BACKGROUND_MS = 60_000;\n217 | \n218 | function parseTimeoutSetting(value: unknown, settingName: string): number | undefined {\n219 | \tconst timeoutMs = parseHttpIdleTimeoutMs(value);\n220 | \tif (timeoutMs !== undefined) {\n221 | \t\treturn timeoutMs;\n222 | \t}\n223 | \tif (value !== undefined) {\n224 | \t\tthrow new Error(`Invalid ${settingName} setting: ${String(value)}`);\n225 | \t}\n226 | \treturn undefined;\n227 | }"
+    },
+    {
+      "symbol": "SourceScope",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/source-info.ts:3",
+      "covering_entries": [
+        "SET-023"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/source-info.ts",
+      "sha256": "9736ba7876085249e036fdf5f4d3bba565b5bc11b832e200a0d3ba58743c747b",
+      "ranges": [
+        [
+          3,
+          14
+        ]
+      ],
+      "excerpt": "3 | export type SourceScope = \"user\" | \"project\" | \"temporary\";\n4 | export type SourceOrigin = \"package\" | \"top-level\";\n5 | \n6 | export interface SourceInfo {\n7 | \tpath: string;\n8 | \tsource: string;\n9 | \tscope: SourceScope;\n10 | \torigin: SourceOrigin;\n11 | \tbaseDir?: string;\n12 | }\n13 | \n14 | export function createSourceInfo(path: string, metadata: PathMetadata): SourceInfo {"
+    },
+    {
+      "symbol": "SourceOrigin",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/source-info.ts:4",
+      "covering_entries": [
+        "SET-023"
+      ],
+      "action": "name-in-entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/source-info.ts",
+      "sha256": "9736ba7876085249e036fdf5f4d3bba565b5bc11b832e200a0d3ba58743c747b",
+      "ranges": [
+        [
+          4,
+          15
+        ]
+      ],
+      "excerpt": "4 | export type SourceOrigin = \"package\" | \"top-level\";\n5 | \n6 | export interface SourceInfo {\n7 | \tpath: string;\n8 | \tsource: string;\n9 | \tscope: SourceScope;\n10 | \torigin: SourceOrigin;\n11 | \tbaseDir?: string;\n12 | }\n13 | \n14 | export function createSourceInfo(path: string, metadata: PathMetadata): SourceInfo {\n15 | \treturn {"
+    },
+    {
+      "symbol": "getProjectTrustParentPath",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/trust-manager.ts:60",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "settings",
+      "path": "ice:packages/coding-agent/src/core/trust-manager.ts",
+      "sha256": "33983da226dcf64dc3ecb24ff0293ab66513a198a82440b917b03e6a922a12bf",
+      "ranges": [
+        [
+          60,
+          71
+        ]
+      ],
+      "excerpt": "60 | export function getProjectTrustParentPath(cwd: string): string | undefined {\n61 | \tconst trustPath = normalizeCwd(cwd);\n62 | \tconst parentDir = dirname(trustPath);\n63 | \treturn parentDir === trustPath ? undefined : parentDir;\n64 | }\n65 | \n66 | export function getProjectTrustOptions(cwd: string, options?: { includeSessionOnly?: boolean }): ProjectTrustOption[] {\n67 | \tconst trustPath = normalizeCwd(cwd);\n68 | \tconst trustOptions: ProjectTrustOption[] = [\n69 | \t\t{ label: \"Trust\", trusted: true, updates: [{ path: trustPath, decision: true }], savedPath: trustPath },\n70 | \t];\n71 | \tconst parentPath = getProjectTrustParentPath(cwd);"
+    },
+    {
+      "symbol": "startObserveRecorder",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/observe/observe-recorder.ts:324",
+      "covering_entries": [
+        "OBS-004"
+      ],
+      "action": "name-in-entry",
+      "area": "observability",
+      "path": "ice:packages/coding-agent/src/observe/observe-recorder.ts",
+      "sha256": "c44e595384313d2bbce825e938b4c9b9feabb7480e9a2cf2351b5ab84d26651e",
+      "ranges": [
+        [
+          324,
+          335
+        ]
+      ],
+      "excerpt": "324 | export function startObserveRecorder(session: ObserveSessionLike, options?: ObserveRecorderOptions): ObserveRecorder {\n325 | \tconst pollMs = options?.pollMs ?? DEFAULT_POLL_MS;\n326 | \tconst persistence = options?.persistence;\n327 | \tconst startedAt = Date.now();\n328 | \tconst runId = `${session.sessionId}:${startedAt}:${randomUUID()}`;\n329 | \tconst items: ObserveItem[] = [];\n330 | \tconst lanes = new Map<string, ObserveLane>();\n331 | \t/** In-flight Cognee requests by request id, so the terminal phase updates its started item. */\n332 | \tconst pendingMemory = new Map<string, ObserveItem>();\n333 | \tconst listeners = new Set<(event: ObserveRecorderEvent) => void>();\n334 | \tlet nextId = 1;\n335 | \tlet usageTotals = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 };"
+    },
+    {
+      "symbol": "OBSERVE_DEFAULT_PORT",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/observe/observe-server.ts:33",
+      "covering_entries": [
+        "OBS-014",
+        "OBS-016"
+      ],
+      "action": "name-in-entry",
+      "area": "observability",
+      "path": "ice:packages/coding-agent/src/observe/observe-server.ts",
+      "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+      "ranges": [
+        [
+          33,
+          44
+        ]
+      ],
+      "excerpt": "33 | export const OBSERVE_DEFAULT_PORT = 4649;\n34 | /** SSE heartbeat interval in ms (keeps proxies from closing idle connections). */\n35 | const HEARTBEAT_MS = 15_000;\n36 | const SHARED_POLL_MS = 500;\n37 | const COMBINED_RUN_LIMIT = 50;\n38 | /** A run with no recorded event for this long drops out of the combined live view. */\n39 | const LIVE_RUN_ACTIVITY_MS = 10 * 60_000;\n40 | const COMBINED_ITEM_LIMIT = 1_000;\n41 | const COMBINED_STATE_ITEM_LIMIT = 250;\n42 | \n43 | type CombinedObserveState = ObserveState & {\n44 | \tview: \"all\";"
+    },
+    {
+      "symbol": "ObserveServer",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/observe/observe-server.ts:62",
+      "covering_entries": [
+        "OBS-014"
+      ],
+      "action": "name-in-entry",
+      "area": "observability",
+      "path": "ice:packages/coding-agent/src/observe/observe-server.ts",
+      "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+      "ranges": [
+        [
+          62,
+          73
+        ]
+      ],
+      "excerpt": "62 | export interface ObserveServer {\n63 | \turl: string;\n64 | \t/** Dashboard URL carrying the access token; open this in the browser. */\n65 | \tdashboardUrl: string;\n66 | \tport: number;\n67 | \t/** True when another ICE process already owns the shared port. */\n68 | \tshared?: boolean;\n69 | \tclose(): Promise<void>;\n70 | }\n71 | \n72 | let dashboardHtml: string | undefined;\n73 | "
+    },
+    {
+      "symbol": "startObserveServer",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/observe/observe-server.ts:264",
+      "covering_entries": [
+        "OBS-014",
+        "OBS-015",
+        "OBS-016"
+      ],
+      "action": "name-in-entry",
+      "area": "observability",
+      "path": "ice:packages/coding-agent/src/observe/observe-server.ts",
+      "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+      "ranges": [
+        [
+          264,
+          275
+        ]
+      ],
+      "excerpt": "264 | export function startObserveServer(\n265 | \tsession: ObserveSessionLike,\n266 | \toptions?: ObserveServerOptions,\n267 | ): Promise<ObserveServer> {\n268 | \tconst port = options?.port ?? OBSERVE_DEFAULT_PORT;\n269 | \tconst token = options?.token ?? randomBytes(32).toString(\"hex\");\n270 | \tconst recorder = options?.recorder ?? startObserveRecorder(session);\n271 | \tconst replayStore = options?.replayStore;\n272 | \tconst clients = new Set<ServerResponse>();\n273 | \tlet heartbeat: ReturnType<typeof setInterval> | undefined;\n274 | \tlet sharedPoller: ReturnType<typeof setInterval> | undefined;\n275 | \tconst tailSequences = new Map<string, number>();"
+    },
+    {
+      "symbol": "ObserveRunStore",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/observe/observe-store.ts:53",
+      "covering_entries": [
+        "OBS-011",
+        "OBS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "observability",
+      "path": "ice:packages/coding-agent/src/observe/observe-store.ts",
+      "sha256": "5b8d2a6da8f87dc04334e3fd10f5d87de84aebfcf6c33bf06480d27d5baccb82",
+      "ranges": [
+        [
+          53,
+          64
+        ]
+      ],
+      "excerpt": "53 | export interface ObserveRunStore extends ObservePersistence {\n54 | \tlistRuns(limit?: number): ObserveRunSummary[];\n55 | \t/** Unfinished runs that recorded an event at or after `activeSince` (excludes runs of crashed processes). */\n56 | \tlistLiveRuns(activeSince: number, limit?: number): ObserveRunSummary[];\n57 | \tgetRun(runId: string): ObserveRunSummary | undefined;\n58 | \tgetLatestRunForSession(sessionId: string): ObserveRunSummary | undefined;\n59 | \tgetEvents(runId: string, options?: { after?: number; limit?: number }): ObserveReplayEvent[];\n60 | \tgetLatestSequence(runId: string): number;\n61 | \tgetState(runId: string, options?: { limit?: number }): ObserveState | undefined;\n62 | }\n63 | \n64 | interface RunRow {"
+    }
+  ]
+}

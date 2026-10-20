@@ -1,0 +1,3224 @@
+{
+  "area": "observability",
+  "complete": true,
+  "draft_complete": true,
+  "independent_qa": {
+    "completed": true,
+    "file": "evidence/qa-observability-independent.json",
+    "reviewer": "/root/audit_extensions",
+    "reviewed_entry_ids": [
+      "OBS-013",
+      "OBS-014",
+      "OBS-016",
+      "OBS-018"
+    ],
+    "corrections_applied": [
+      "OBS-QA-001",
+      "OBS-QA-002"
+    ],
+    "optional_nuances_applied": true,
+    "tests_executed": false
+  },
+  "entries": [
+    {
+      "id": "OBS-001",
+      "title": "Install telemetry gate and best-effort version ping",
+      "status": "missing",
+      "priority": "P3",
+      "size_min": 80,
+      "size_max": 180,
+      "dependencies": [
+        "MISC-013",
+        "SET-001",
+        "SET-018"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "CLI-018",
+          "kind": "shared-contract",
+          "reason": "Version/assets come from SET-001 and changelog parsing/filtering from MISC-013. Startup notice presentation is TUI-072, which consumes OBS-001 and must not be added as a prerequisite. The exact User-Agent helper is independently read and recorded below; install reporting remains OBS-001, not the version-check service.",
+          "reviews": [
+            "DEPQA-043"
+          ]
+        },
+        {
+          "entry_id": "MISC-013",
+          "kind": "prerequisite",
+          "reason": "Version/assets come from SET-001 and changelog parsing/filtering from MISC-013. Startup notice presentation is TUI-072, which consumes OBS-001 and must not be added as a prerequisite. The exact User-Agent helper is independently read and recorded below; install reporting remains OBS-001, not the version-check service.",
+          "reviews": [
+            "DEPQA-043"
+          ]
+        },
+        {
+          "entry_id": "SET-001",
+          "kind": "prerequisite",
+          "reason": "Version/assets come from SET-001 and changelog parsing/filtering from MISC-013. Startup notice presentation is TUI-072, which consumes OBS-001 and must not be added as a prerequisite. The exact User-Agent helper is independently read and recorded below; install reporting remains OBS-001, not the version-check service.",
+          "reviews": [
+            "DEPQA-043"
+          ]
+        },
+        {
+          "entry_id": "SET-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-002",
+      "title": "Startup timing namespaces and emission timing",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 20,
+      "size_max": 70,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "OBS-003",
+      "title": "Always-on durable recording and opt-in dashboard startup",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 140,
+      "size_max": 280,
+      "dependencies": [
+        "COG-060",
+        "OBS-004",
+        "OBS-011",
+        "OBS-014",
+        "OBS-017",
+        "SET-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-060",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-004",
+      "title": "Recorder identity, event contracts and bounded live state",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 280,
+      "size_max": 480,
+      "dependencies": [
+        "SESSION-022",
+        "SESSION-027",
+        "SESSION-034"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-034",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-005",
+      "title": "User, skill and assistant-message projection with usage accumulation",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 240,
+      "dependencies": [
+        "AGENT-001",
+        "OBS-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-006",
+      "title": "One-row tool lifecycle, transient progress and forensic result storage",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 170,
+      "size_max": 300,
+      "dependencies": [
+        "AGENT-001",
+        "OBS-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-007",
+      "title": "Compaction, retry and queue activity projection",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 110,
+      "size_max": 200,
+      "dependencies": [
+        "OBS-004",
+        "SESSION-013",
+        "SESSION-015",
+        "SESSION-018",
+        "SESSION-020",
+        "SESSION-022"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-008",
+      "title": "Cognee observation correlation and recall evidence",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 110,
+      "size_max": 190,
+      "dependencies": [
+        "COG-059",
+        "COG-060",
+        "OBS-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-060",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-009",
+      "title": "Goal and verifier transition projection with exact deduplication",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 160,
+      "size_max": 280,
+      "dependencies": [
+        "OBS-004",
+        "SAFE-003",
+        "SAFE-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SAFE-022",
+          "kind": "shared-contract",
+          "reason": "The existing SAFE-003/021/022 prerequisites correctly cover guard/verifier data and the Goals authority host. SAFE does not implement the external optional goal scheduler's full ice-goals-state tree producer. Keep that producer explicitly unverified, not assigned to MISC or inferred from a host snapshot.",
+          "reviews": [
+            "original-entry",
+            "DEPQA-044"
+          ]
+        },
+        {
+          "entry_id": "SAFE-023",
+          "kind": "shared-contract",
+          "reason": "The existing SAFE-003/021/022 prerequisites correctly cover guard/verifier data and the Goals authority host. SAFE does not implement the external optional goal scheduler's full ice-goals-state tree producer. Keep that producer explicitly unverified, not assigned to MISC or inferred from a host snapshot.",
+          "reviews": [
+            "DEPQA-044"
+          ]
+        },
+        {
+          "entry_id": "SAFE-024",
+          "kind": "shared-contract",
+          "reason": "The existing SAFE-003/021/022 prerequisites correctly cover guard/verifier data and the Goals authority host. SAFE does not implement the external optional goal scheduler's full ice-goals-state tree producer. Keep that producer explicitly unverified, not assigned to MISC or inferred from a host snapshot.",
+          "reviews": [
+            "DEPQA-044"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-010",
+      "title": "Subagent threads, completion rows and extension custom messages",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 140,
+      "size_max": 250,
+      "dependencies": [
+        "OBS-004",
+        "SUB-016",
+        "SUB-017",
+        "SUB-036"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SUB-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SUB-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SUB-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-011",
+      "title": "SQLite run/event schema and synchronous append semantics",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 220,
+      "size_max": 360,
+      "dependencies": [
+        "OBS-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-012",
+      "title": "Durable redaction, retention pruning and SQLite open policy",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 240,
+      "dependencies": [
+        "OBS-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-013",
+      "title": "Historical run queries and ordered replay reconstruction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 180,
+      "size_max": 320,
+      "dependencies": [
+        "OBS-004",
+        "OBS-011",
+        "OBS-012"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-014",
+      "title": "Loopback dashboard authentication, token file and HTML asset loading",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 180,
+      "size_max": 320,
+      "dependencies": [
+        "OBS-003"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-015",
+      "title": "Read-only state, run replay and Server-Sent Event routes",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 230,
+      "size_max": 380,
+      "dependencies": [
+        "OBS-004",
+        "OBS-013",
+        "OBS-014",
+        "OBS-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-016",
+      "title": "Combined live runs, cross-process polling and shared-port lifecycle",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 200,
+      "size_max": 340,
+      "dependencies": [
+        "OBS-003",
+        "OBS-004",
+        "OBS-013",
+        "OBS-014"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-017",
+      "title": "Lazy shared Cognee connection and dashboard-source recovery",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 150,
+      "size_max": 250,
+      "dependencies": [
+        "COG-003",
+        "COG-004",
+        "COG-014",
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-018",
+      "title": "Cognee dataset summary cache, bounded previews and graph coalescing",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 160,
+      "size_max": 280,
+      "dependencies": [
+        "COG-022",
+        "COG-023",
+        "COG-024",
+        "COG-025",
+        "COG-026",
+        "COG-028",
+        "COG-029",
+        "COG-030",
+        "OBS-017"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-029",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-019",
+      "title": "Cognee HTTP routes, exact validation and cancellation/error boundary",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 180,
+      "size_max": 320,
+      "dependencies": [
+        "COG-026",
+        "OBS-014",
+        "OBS-017",
+        "OBS-018"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-020",
+      "title": "Bounded activity tape, exact search and stable incremental rendering",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 450,
+      "size_max": 750,
+      "dependencies": [
+        "OBS-004",
+        "OBS-015"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-021",
+      "title": "Forensic inspector, tool diff rendering and responsive pane controls",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 400,
+      "size_max": 700,
+      "dependencies": [
+        "OBS-020",
+        "OBS-025"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-022",
+      "title": "Epoch-aligned activity pulse, per-agent traces and header metrics",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 220,
+      "size_max": 380,
+      "dependencies": [
+        "OBS-004",
+        "OBS-020",
+        "OBS-023"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-023",
+      "title": "Dashboard run switching, live-event filtering and follow controls",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 180,
+      "size_max": 320,
+      "dependencies": [
+        "OBS-015",
+        "OBS-016",
+        "OBS-020"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-024",
+      "title": "Knowledge view lifecycle, coalesced polling and memory-triggered refresh",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 230,
+      "size_max": 400,
+      "dependencies": [
+        "OBS-008",
+        "OBS-018",
+        "OBS-019",
+        "OBS-023"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-025",
+      "title": "Knowledge document previews, session detail and context-query inspector",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 300,
+      "size_max": 500,
+      "dependencies": [
+        "COG-025",
+        "COG-030",
+        "OBS-018",
+        "OBS-019",
+        "OBS-024"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-026",
+      "title": "Dataset summary table and explicit cache-refresh semantics",
+      "status": "missing",
+      "priority": "P3",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "OBS-018",
+        "OBS-019",
+        "OBS-024"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-027",
+      "title": "Knowledge graph loading, type filtering and incremental dataset updates",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 240,
+      "size_max": 420,
+      "dependencies": [
+        "COG-027",
+        "COG-028",
+        "OBS-018",
+        "OBS-019",
+        "OBS-024"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-028",
+      "title": "Bounded-frame Barnes–Hut graph layout and level-of-detail drawing",
+      "status": "missing",
+      "priority": "P3",
+      "size_min": 250,
+      "size_max": 450,
+      "dependencies": [
+        "OBS-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OBS-029",
+      "title": "Graph navigation, directional relationships and document-to-entity tracing",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 260,
+      "size_max": 440,
+      "dependencies": [
+        "OBS-025",
+        "OBS-027",
+        "OBS-028"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "OBS-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/docs/observability.md",
+      "entry_ids": [
+        "OBS-001",
+        "OBS-002",
+        "OBS-003",
+        "OBS-004",
+        "OBS-005",
+        "OBS-006",
+        "OBS-007",
+        "OBS-008",
+        "OBS-009",
+        "OBS-010",
+        "OBS-011",
+        "OBS-012",
+        "OBS-013",
+        "OBS-014",
+        "OBS-015",
+        "OBS-016",
+        "OBS-017",
+        "OBS-018",
+        "OBS-019",
+        "OBS-020",
+        "OBS-021",
+        "OBS-022",
+        "OBS-023",
+        "OBS-024",
+        "OBS-025",
+        "OBS-026",
+        "OBS-027",
+        "OBS-028",
+        "OBS-029"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/core/telemetry.ts",
+      "entry_ids": [
+        "OBS-001"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/core/timings.ts",
+      "entry_ids": [
+        "OBS-002"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/observe/observe-cognee.ts",
+      "entry_ids": [
+        "OBS-017",
+        "OBS-018"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/observe/observe-dashboard.html",
+      "entry_ids": [
+        "OBS-020",
+        "OBS-021",
+        "OBS-022",
+        "OBS-023",
+        "OBS-024",
+        "OBS-025",
+        "OBS-026",
+        "OBS-027",
+        "OBS-028",
+        "OBS-029"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/observe/observe-recorder.ts",
+      "entry_ids": [
+        "OBS-004",
+        "OBS-005",
+        "OBS-006",
+        "OBS-007",
+        "OBS-008",
+        "OBS-009",
+        "OBS-010"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/observe/observe-server.ts",
+      "entry_ids": [
+        "OBS-014",
+        "OBS-015",
+        "OBS-016",
+        "OBS-019"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    },
+    {
+      "path": "packages/coding-agent/src/observe/observe-store.ts",
+      "entry_ids": [
+        "OBS-011",
+        "OBS-012",
+        "OBS-013"
+      ],
+      "status": "mapped",
+      "notes": "Full source/document read against the verified snapshot; exact runtime contracts and bounded tests documented. No behavior was executed. Independent QA is separately recorded before publication."
+    }
+  ],
+  "supplemental_ledger": [],
+  "surfaces": [
+    {
+      "category": "observability",
+      "name": "activity",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:135",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [
+        "C001891"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "observability",
+      "name": "activity_update",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:136",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [
+        "C001892"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "observability",
+      "name": "lane",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:137",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [
+        "C001893"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "observability",
+      "name": "thread",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [
+        "C001894"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "observability",
+      "name": "header",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:139",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [
+        "C001895"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "observability",
+      "name": "cognee_observation",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:171",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-008",
+      "candidate_ids": [
+        "C001896"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "getObserveDashboardPath()",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:75",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [
+        "C001899"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "path",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:95",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [
+        "C001900"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "dirname(path)",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:101",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [
+        "C001901"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "path",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:103",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [
+        "C001902"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "path",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:107",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [
+        "C001903"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "observability",
+      "name": "header",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:50",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-011",
+      "candidate_ids": [
+        "C001911"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "paths",
+      "name": "dirname(databasePath)",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:315",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-012",
+      "candidate_ids": [
+        "C001912"
+      ],
+      "notes": "Mechanically discovered occurrence confirmed in source; detailed contract in the entry."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_TELEMETRY",
+      "ice_ref": "packages/coding-agent/src/core/telemetry.ts:11",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-001",
+      "candidate_ids": [],
+      "notes": "Own environment property, defined values override setting; accepted 1/true/yes without trim."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_OFFLINE (install telemetry gate)",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:1414",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-001",
+      "candidate_ids": [],
+      "notes": "JavaScript truthiness gate; endpoint is not contacted by audit."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_TIMING",
+      "ice_ref": "packages/coding-agent/src/core/timings.ts:8",
+      "rust_ref": "crates/ice-cli/src/timings.rs:12",
+      "status": "partial",
+      "entry_id": "OBS-002",
+      "candidate_ids": [],
+      "notes": "Import-time TS gate versus first-use Rust OnceLock; timing semantics and flush point differ."
+    },
+    {
+      "category": "settings",
+      "name": "enableInstallTelemetry:boolean=true",
+      "ice_ref": "packages/coding-agent/src/core/settings-manager.ts:152",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "cli",
+      "name": "--observe[=port]",
+      "ice_ref": "packages/coding-agent/src/cli/args.ts:91",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-003",
+      "candidate_ids": [],
+      "notes": "true or integer1..65535 with equals form; default4649."
+    },
+    {
+      "category": "paths",
+      "name": "agentDir/observability.sqlite",
+      "ice_ref": "packages/coding-agent/src/main.ts:911",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-003",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "agentDir/observe.token",
+      "ice_ref": "packages/coding-agent/src/main.ts:935",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "localStorage:ice-observe-inspector-width",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:870",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-021",
+      "candidate_ids": [],
+      "notes": "Browser-local numeric CSS-pixel width; bounds500..min(1200,max(500,workspaceWidth-320))."
+    },
+    {
+      "category": "paths",
+      "name": "localStorage:ice-observe-view",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1978",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-024",
+      "candidate_ids": [],
+      "notes": "activity|knowledge."
+    },
+    {
+      "category": "observability",
+      "name": "ObserveItem",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:71",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveHeader",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:115",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveState",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:128",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveLane",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:97",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveThread",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:65",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveRecorder",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:141",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObservePersistence",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:149",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-011",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveRecorderOptions.pollMs=1000",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:156",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveSessionLike",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:179",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-004",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: message_end",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:625",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-005",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: tool_execution_start",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:654",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-006",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: tool_execution_update",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:667",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-006",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: tool_execution_end",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:677",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-006",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: compaction_start",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:702",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-007",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: compaction_end",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:711",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-007",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: auto_retry_start",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:740",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-007",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: auto_retry_end",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:749",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-007",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: queue_update",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:759",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-007",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: custom:ice-goals-state",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:514",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-009",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: custom:ice-safe-verify-state",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:515",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-009",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: custom:ice-subagent-v2-child",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:516",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-010",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: entry_appended",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:497",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-009",
+      "candidate_ids": [],
+      "notes": "Consumed event/custom-state projection, not a separate extension hook registration."
+    },
+    {
+      "category": "observability",
+      "name": "store:observe_runs",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:108",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-011",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "store:observe_events",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:121",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-011",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "store:ObserveReplayEvent",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:46",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-011",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "store:getEvents",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:225",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-013",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "store:getState",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:249",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-013",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "store:listLiveRuns",
+      "ice_ref": "packages/coding-agent/src/observe/observe-store.ts:198",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-013",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "HTTP / and /index* (HTML)",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:438",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "HTTP /state",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:448",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "HTTP /runs",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:466",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "HTTP /replay",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:470",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "HTTP /replay/events",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:470",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "HTTP /replay/:runId",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:472",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE /events",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:516",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE snapshot",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:524",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-016",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE runs",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:392",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-016",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE activity",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:415",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE activity_update",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:416",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE lane",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:417",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE thread",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:418",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE header",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:419",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "SSE comment heartbeat15000ms",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:536",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "loadObserveToken",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:93",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Host allowlist",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:83",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "token query/Bearer/cookie auth",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:430",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-014",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "shared listener EADDRINUSE",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:553",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-016",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee request body max16384bytes",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:132",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/overview",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:212",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/summary",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:213",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/status",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:216",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/datasets/:id/data",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:221",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/datasets/:id/data/:dataId",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:223",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/datasets/:id/graph",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:227",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/datasets/:id/sessions",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:230",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "GET /cognee/sessions/:id",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:233",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "POST /cognee/search",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:234",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "POST /cognee/recall",
+      "ice_ref": "packages/coding-agent/src/observe/observe-server.ts:241",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.createObserveCogneeSource",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:98",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-017",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.overview",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:184",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-017",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.summary",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:192",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.datasetData",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:203",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.datasetStatus",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:206",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.dataItem",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:209",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.search",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:217",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.datasetGraph",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:220",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.datasetSessions",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:231",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.session",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:237",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "ObserveCogneeSource.recall",
+      "ice_ref": "packages/coding-agent/src/observe/observe-cognee.ts:240",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-017",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Activity tape/search/filter",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:758",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-020",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Forensic inspector",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:767",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-021",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: 42-bin activity pulse",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:741",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-022",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Run selector/follow",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1785",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-023",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Knowledge view",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:772",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-024",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Documents/sessions/query",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:2250",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-025",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Datasets summary",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:2495",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-026",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Knowledge graph types/reload",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:2538",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-027",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Knowledge graph canvas layout",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:2796",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-028",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "tui",
+      "name": "Browser observation UI: Knowledge graph navigation",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:3067",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-029",
+      "candidate_ids": [],
+      "notes": "Browser UI surface, deliberately distinguished from terminal components."
+    },
+    {
+      "category": "keybindings",
+      "name": "Activity 0–9 filters",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1963",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-023",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "keybindings",
+      "name": "Activity Space follow",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1965",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-023",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "keybindings",
+      "name": "Activity Escape close",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1966",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-023",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "keybindings",
+      "name": "Activity ArrowUp/ArrowDown",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1967",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-023",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "keybindings",
+      "name": "Inspector ArrowLeft/ArrowRight ±24px",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1444",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-021",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "keybindings",
+      "name": "Inspector Home/End",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:1447",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-021",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "keybindings",
+      "name": "Graph Enter/Shift+Enter matches",
+      "ice_ref": "packages/coding-agent/src/observe/observe-dashboard.html:3314",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-029",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: message_start",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:602",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-005",
+      "candidate_ids": [],
+      "notes": "User/skill message-start projection."
+    },
+    {
+      "category": "observability",
+      "name": "recorder projection: custom:ice-subagent-v2-completion",
+      "ice_ref": "packages/coding-agent/src/observe/observe-recorder.ts:517",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "OBS-010",
+      "candidate_ids": [],
+      "notes": "Dedicated completion custom entry."
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C001897",
+      "reason": "Content block discriminator inside message extraction, not an emitted observation event; behavior is mapped by OBS-005 at packages/coding-agent/src/observe/observe-recorder.ts:251."
+    },
+    {
+      "candidate_id": "C001898",
+      "reason": "Content block discriminator inside message extraction, not an emitted observation event; behavior is mapped by OBS-005 at packages/coding-agent/src/observe/observe-recorder.ts:259."
+    },
+    {
+      "candidate_id": "C001904",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:165."
+    },
+    {
+      "candidate_id": "C001905",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:166."
+    },
+    {
+      "candidate_id": "C001906",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:167."
+    },
+    {
+      "candidate_id": "C001907",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:505."
+    },
+    {
+      "candidate_id": "C001908",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:528."
+    },
+    {
+      "candidate_id": "C001909",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:529."
+    },
+    {
+      "candidate_id": "C001910",
+      "reason": "Node HTTP request/response/server lifecycle listener, not an extension hook; exact behavior mapped by OBS-014/015/019 at packages/coding-agent/src/observe/observe-server.ts:572."
+    }
+  ],
+  "claims": [
+    {
+      "first_pass_lines": [
+        322,
+        325
+      ],
+      "claim": "Rust lacks observed run history/dashboard; telemetry/langfuse export traces and canonical SQLite stores sessions.",
+      "verdict": "qualified",
+      "finding": "The observation recorder/store/browser routes are absent from inspected mode wiring. Local Rust span APIs and canonical snapshot SQLite exist. The Langfuse file is documentation for an external plugin, not evidence of plugin implementation in this checkout; repository inventory/Cargo members contain no such implementation.",
+      "evidence": [
+        "rust:crates/ice-cli/src/app.rs:393-503",
+        "rust:crates/ice-telemetry/src/production.rs:19-115",
+        "rust:crates/ice-harness/src/session/sqlite.rs:175-218",
+        "rust:docs/promotion/langfuse.md:338-344",
+        "rust:Cargo.toml:1-30"
+      ],
+      "entry_ids": [
+        "OBS-003",
+        "OBS-004",
+        "OBS-011"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        327,
+        330
+      ],
+      "claim": "Recorder is always on and projects tools/messages/compaction/retries/skills/extensions/goals/subagents.",
+      "verdict": "confirmed",
+      "finding": "Normal CLI startup attaches the recorder independently of --observe; all listed projections are implemented with exact gates/deduplication in these entries.",
+      "evidence": [
+        "ice:packages/coding-agent/src/main.ts:906-946",
+        "ice:packages/coding-agent/src/observe/observe-recorder.ts:324-841"
+      ],
+      "entry_ids": [
+        "OBS-003",
+        "OBS-004",
+        "OBS-005",
+        "OBS-006",
+        "OBS-007",
+        "OBS-008",
+        "OBS-009",
+        "OBS-010"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        330,
+        331
+      ],
+      "claim": "The bounded live snapshot is redacted.",
+      "verdict": "corrected",
+      "finding": "Durable payload JSON is redacted by the store. Ordinary live items/SSE retain the recorder payload; Cognee producer redaction is a separate boundary. No general live snapshot redaction occurs.",
+      "evidence": [
+        "ice:packages/coding-agent/src/observe/observe-store.ts:20-29",
+        "ice:packages/coding-agent/src/observe/observe-store.ts:168-180",
+        "ice:packages/coding-agent/src/observe/observe-recorder.ts:338-354",
+        "ice:packages/coding-agent/test/observe-store.test.ts:64-83"
+      ],
+      "entry_ids": [
+        "OBS-004",
+        "OBS-012"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        331,
+        332
+      ],
+      "claim": "Activity updates are recorded so replay shows tool-call evolution.",
+      "verdict": "qualified",
+      "finding": "Terminal tool patches persist, but streaming progress updates emit with persist:false and do not retain partial result content. Replay does not reconstruct each intermediate update.",
+      "evidence": [
+        "ice:packages/coding-agent/src/observe/observe-recorder.ts:667-700"
+      ],
+      "entry_ids": [
+        "OBS-006",
+        "OBS-011"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        333,
+        337
+      ],
+      "claim": "Separate SQLite observation history, retention and warning-only open failure.",
+      "verdict": "confirmed",
+      "finding": "Dedicated observe_runs/observe_events schema and 30-day startup pruning leave canonical session storage separate. CLI open failure warns and continues.",
+      "evidence": [
+        "ice:packages/coding-agent/src/main.ts:906-924",
+        "ice:packages/coding-agent/src/observe/observe-store.ts:106-188",
+        "ice:packages/coding-agent/src/observe/observe-store.ts:311-330"
+      ],
+      "entry_ids": [
+        "OBS-003",
+        "OBS-011",
+        "OBS-012"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        336,
+        337
+      ],
+      "claim": "Replay is capped at 10000 events.",
+      "verdict": "qualified",
+      "finding": "10000 is the per-getEvents page maximum. getState without an explicit limit pages through the entire run; an explicit limit folds its first page.",
+      "evidence": [
+        "ice:packages/coding-agent/src/observe/observe-store.ts:83-86",
+        "ice:packages/coding-agent/src/observe/observe-store.ts:225-298"
+      ],
+      "entry_ids": [
+        "OBS-013",
+        "OBS-016"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        338,
+        342
+      ],
+      "claim": "--observe default 4649, loopback HTTP/SSE, per-user token and shared port; no agent commands.",
+      "verdict": "confirmed with limitations",
+      "finding": "Host/token checks protect every route; query auth sets the HttpOnly cookie. EADDRINUSE resolves shared:true without validating the existing listener, and ordinary read routes do not restrict HTTP method.",
+      "evidence": [
+        "ice:packages/coding-agent/src/observe/observe-server.ts:83-124",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:422-597",
+        "ice:packages/coding-agent/src/cli/args.ts:91-101"
+      ],
+      "entry_ids": [
+        "OBS-003",
+        "OBS-014",
+        "OBS-015",
+        "OBS-016"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        343,
+        344
+      ],
+      "claim": "Knowledge tab offers read-only datasets/documents/session cache/graph/context search.",
+      "verdict": "confirmed",
+      "finding": "createObserveCogneeSource provides the shared lazy connection, browse/cache/preview/recall adapter; POST search/recall remain context queries and the route allowlist exposes no memory write or completion.",
+      "evidence": [
+        "ice:packages/coding-agent/src/observe/observe-cognee.ts:98-248",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:196-245"
+      ],
+      "entry_ids": [
+        "OBS-017",
+        "OBS-018",
+        "OBS-019",
+        "OBS-024",
+        "OBS-025",
+        "OBS-026",
+        "OBS-027",
+        "OBS-028",
+        "OBS-029"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        345,
+        346
+      ],
+      "claim": "Dashboard has keyboard filters0–9 and epoch-anchored pulse bins.",
+      "verdict": "confirmed",
+      "finding": "Ten exact kind filters and 42 fixed epoch-aligned bins are implemented; keyboard focus/typing guards and historical time anchoring are detailed.",
+      "evidence": [
+        "ice:packages/coding-agent/src/observe/observe-dashboard.html:826-849",
+        "ice:packages/coding-agent/src/observe/observe-dashboard.html:1647-1752",
+        "ice:packages/coding-agent/src/observe/observe-dashboard.html:1956-1975"
+      ],
+      "entry_ids": [
+        "OBS-020",
+        "OBS-022",
+        "OBS-023"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        439,
+        439
+      ],
+      "claim": "--observe[=port] is a Rust CLI gap.",
+      "verdict": "confirmed",
+      "finding": "TS parser supports standalone true or equals-form integer 1..65535, with startup HTTP integration absent from the inspected Rust app mode flow.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/args.ts:91-101",
+        "rust:crates/ice-cli/src/app.rs:304-521"
+      ],
+      "entry_ids": [
+        "OBS-003"
+      ]
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/docs/observability.md",
+      "ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/telemetry.ts",
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/timings.ts",
+      "ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-cognee.ts",
+      "ranges": [
+        [
+          1,
+          252
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-store.ts",
+      "ranges": [
+        [
+          1,
+          331
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-recorder.ts",
+      "ranges": [
+        [
+          1,
+          842
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-server.ts",
+      "ranges": [
+        [
+          1,
+          597
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-dashboard.html",
+      "ranges": [
+        [
+          1,
+          3362
+        ]
+      ],
+      "notes": "Complete coordinator read, including re-emission of lines 353–383 lost to an earlier output truncation."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/timings.rs",
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/production.rs",
+      "ranges": [
+        [
+          1,
+          257
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/lib.rs",
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "Actual coordinator source read; no code executed. Full-file hashes are in the shared source identity manifest or read response. observe-server token-related assignment text is connector-redacted; do not claim its hidden value."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-cognee.test.ts",
+      "ranges": [
+        [
+          1,
+          169
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-store.test.ts",
+      "ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-recorder.test.ts",
+      "ranges": [
+        [
+          1,
+          530
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-server.test.ts",
+      "ranges": [
+        [
+          1,
+          583
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-cognee-observer.test.ts",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/sdk-openrouter-attribution.test.ts",
+      "ranges": [
+        [
+          1,
+          277
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/redact.ts",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/provider-attribution.ts",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/env.ts",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "ranges": [
+        [
+          880,
+          1007
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/config.ts",
+      "ranges": [
+        [
+          445,
+          500
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/args.ts",
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "ranges": [
+        [
+          140,
+          159
+        ],
+        [
+          1260,
+          1290
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "ranges": [
+        [
+          1360,
+          1460
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/context.rs",
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/noop.rs",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/types.rs",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/testing.rs",
+      "ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/README.md",
+      "ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-telemetry/Cargo.toml",
+      "ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/session/sqlite.rs",
+      "ranges": [
+        [
+          1,
+          494
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "ranges": [
+        [
+          1,
+          525
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/settings.rs",
+      "ranges": [
+        [
+          1,
+          340
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/mod.rs",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:docs/promotion/langfuse.md",
+      "ranges": [
+        [
+          1,
+          549
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:Cargo.toml",
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "rust:ICE_PORTING.md",
+      "ranges": [
+        [
+          318,
+          350
+        ],
+        [
+          430,
+          442
+        ]
+      ],
+      "notes": "Actual coordinator source read; source only, no runtime execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/extensions/types.ts",
+      "ranges": [
+        [
+          311,
+          322
+        ]
+      ],
+      "notes": "ContextUsage DTO inspected directly; current source SHA returned by connector."
+    }
+  ],
+  "dependency_requests": [],
+  "rust_only": [
+    {
+      "capability": "Monotonic synchronized timing collection",
+      "ts_comparison": "Rust uses Instant, Mutex and a fixed namespace print order; TS uses Date.now and Map insertion order. Preserve monotonic timing even if moving the Rust startup flush earlier.",
+      "evidence": [
+        "rust:crates/ice-cli/src/timings.rs:1-109",
+        "ice:packages/coding-agent/src/core/timings.ts:1-52"
+      ]
+    },
+    {
+      "capability": "Explicit local span contexts, no-op and in-memory test sinks",
+      "ts_comparison": "Rust supplies a Send+Sync TelemetryContext, RAII span guard, stdout/file/disabled production contexts and an in-memory completion sink. The inspected TS observation subsystem uses event projections rather than this trait/sink contract. Preserve these alongside observation; a separate source-read concurrent-drop defect is documented.",
+      "evidence": [
+        "rust:crates/ice-telemetry/src/context.rs:16-103",
+        "rust:crates/ice-telemetry/src/production.rs:19-115",
+        "rust:crates/ice-telemetry/src/noop.rs:1-19",
+        "rust:crates/ice-telemetry/src/testing.rs:1-72",
+        "ice:packages/coding-agent/src/observe/observe-recorder.ts:134-188"
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "OBS-Q01",
+      "entries": [
+        "OBS-001"
+      ],
+      "question": "Should icers retain an install-report/attribution feature, and which service/branding should it use? TS currently uses ice.dev; no Rust service choice is inferred."
+    },
+    {
+      "id": "OBS-Q02",
+      "entries": [
+        "OBS-012",
+        "OBS-014"
+      ],
+      "question": "Should the Rust port redact live browser/SSE data and strengthen token-file validation, or deliberately preserve TS's durable-only redaction and existing-token semantics? The source contract and implications are specified."
+    },
+    {
+      "id": "OBS-Q03",
+      "entries": [
+        "OBS-013",
+        "OBS-016"
+      ],
+      "question": "Should the Rust combined view correct the first-250-events stale-state shortcut and validate shared-port ownership? These are explicit TS limitations, not reasons to copy them accidentally."
+    }
+  ],
+  "dependency_request_history": [
+    {
+      "entry_id": "OBS-001",
+      "area": "cli-packaging",
+      "capability": "Version/changelog first-install detection and runtime User-Agent."
+    },
+    {
+      "entry_id": "OBS-009",
+      "area": "misc",
+      "capability": "Full Goals task tree/state schema and producer, if owned outside safe-verify host."
+    }
+  ],
+  "dependency_resolutions": [
+    {
+      "entry_id": "OBS-001",
+      "area": "cli-packaging",
+      "capability": "Version/changelog first-install detection and runtime User-Agent.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-001",
+        "MISC-013"
+      ],
+      "related_entry_ids": [
+        "CLI-018"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-043",
+      "rationale": "Version/assets come from SET-001 and changelog parsing/filtering from MISC-013. Startup notice presentation is TUI-072, which consumes OBS-001 and must not be added as a prerequisite. The exact User-Agent helper is independently read and recorded below; install reporting remains OBS-001, not the version-check service.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "OBS-009",
+      "area": "misc",
+      "capability": "Full Goals task tree/state schema and producer, if owned outside safe-verify host.",
+      "status": "externally-unverified-with-reason",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SAFE-022",
+        "SAFE-023",
+        "SAFE-024"
+      ],
+      "relation": "external-unverified",
+      "review_id": "DEPQA-044",
+      "rationale": "The existing SAFE-003/021/022 prerequisites correctly cover guard/verifier data and the Goals authority host. SAFE does not implement the external optional goal scheduler's full ice-goals-state tree producer. Keep that producer explicitly unverified, not assigned to MISC or inferred from a host snapshot.",
+      "previous_confirmed_entry_ids": []
+    }
+  ],
+  "source_evidence_coordinate_system": "Historical read/provenance records retain ff9270f coordinates and hashes; current rust: comparison citations and surfaces are remapped to 1891337. Canonical read-coverage.json separately records current source identity and exact transferred credit.",
+  "published": true,
+  "accepted_phase": "active-source-verified"
+}

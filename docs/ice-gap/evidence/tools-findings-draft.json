@@ -1,0 +1,46 @@
+[
+  {
+    "topic": "path",
+    "finding": "Rust UNICODE_SPACES omits U+2000 and U+2001 included by harness range 2000–200A; coding normalizePath source pending. Harness getOrThrow propagates exists errors, coding catches all local access failures; remote ops still local resolveReadPathAsync before remote access."
+  },
+  {
+    "topic": "mutation_queue",
+    "finding": "TS serial registration preserves invocation order before async key canonicalization. Rust independently awaits key before mutex lookup, so async canonicalization can reorder callers; cancellation passed during resolution can skip queue contrary invariant comments, TS queue resolution has no signal. Rust map retains locks forever vs TS delete drained keys. Coding global queue canonicalizes missing parents and dangling symlink targets; Rust/harness fallback policy differs unless env canonical_path compensates."
+  },
+  {
+    "topic": "read",
+    "finding": "Rust optionalu32 rejects negative/fractional values accepted by TS number schema; main TS offset clamp/limit JS slicing semantics; Rust matches validintegertextpagination. TSctx nonvision note absent Rust schema/context. Need actual nativeprocessor factorywiring."
+  },
+  {
+    "topic": "write",
+    "finding": "TS successfulwrite says content.length bytes (UTF16 count), Rust omits size. Bothenvharness/codingqueueabortholdvariants needtestread; codecustomopsuseslocalcanonicalizationbeforecustomremote."
+  },
+  {
+    "topic": "render",
+    "finding": "read collapsed successfulbodyhidden, compactSKILL/docs/resourceheaders; write10lines incrementalhighlightappend50lineprefix/fullargscomplete; tool wrapper forwards prepareArguments/executionMode/constrainedSampling &explicitcontextwins but no rendering/prompt inAgentTool; wrapperbackdropsctx."
+  },
+  {
+    "topic": "edit_exact_precedence",
+    "finding": "coding-agent edit-diff 340-376 differs from harness 317-339; unique exact match wins, maps exact index into fuzzy prefix-normalized space in mixedbatch. Rust uses old harness algorithm and fuzzy duplicate counting; current Rust test771-793 expects duplicate exact+smartquote. Preserve Rust duplicate context diagnostics max5match + neighborlines clip200chars."
+  },
+  {
+    "topic": "display_diff",
+    "finding": "Rust generate_diff_string selects new lines for Replace then emits '+' and '-' for same newtext, incrementsoldline usingnewcount. TSdiffLines separateadded/removedcorrect. Validunifiedpatch separate. source-derivedreachableReplace condition."
+  },
+  {
+    "topic": "truncate",
+    "finding": "Rust count_tail_output_lines277-284 ignoresmaxbytes => overreportsoutput_lines in nonpartialbyteboundtail; affects Bash rangemessages. format_size addsparentheses '(1.0)KB' vs '1.0KB'. Bothheadtailinit truncated_byNone vsTSlines default; trailingLFonlybyteoverflowcanresulttruncatedtrue,None. UTF16 vs scalartruncateLine divergent."
+  },
+  {
+    "topic": "find",
+    "finding": "RustinprocessBFS intentionallynoexternalfd; lacks.gitignore/Nestedrepoboundary and ./pathstrip; matchesrelativepath withabsolute/rootedglob impossible; symlinksdiscarded;u32max1insteadTSeffectiveLimitraw;readerrorinclcancel swallowed;noexactlimitnoticeifloopendsatnth. TS customglob trustlimitratherthanslice; ignore['**/node_modules/**','**/.git/**']; defaultfdargs --glob --color=never --hidden, conditional--no-require-git, --max-results, fullpathrewrite."
+  },
+  {
+    "topic": "grep",
+    "finding": "Rustinprocessregex+globsetBFSnogitignore; swallowsread/list cancellation; context0normalizesloneCR to LF creating extra lines vs rgstream stripsCR; trailingsplit emptysearchedrust e.g ^$ phantomline. limitnoticeonlynextiteration unlikeTS onlimitreached. Contextblocksduplicateoverlap both. TSalwayslocalrg evencustomops onlymetadata/context; pre-spawnabortgap afterensureTool. RustUTF8strictskipvsrgbytes behavior;globreject/negation differences needtests."
+  },
+  {
+    "topic": "ls",
+    "finding": "Rustfile_infokindSymlinkrootrejected vsTSstatfollows; childsymlinkdirnopostfix. sortedlowercasecmp vslocaleCompare. underlyinglistdirallornothingdifferences; limit0clamped1RustvsTSempty. TSabortrejectimmediatebutworkcontinues;earlyerrorlistenersleak.detailsnakecaseRust."
+  }
+]

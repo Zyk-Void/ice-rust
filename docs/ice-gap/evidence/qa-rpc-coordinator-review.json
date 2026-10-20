@@ -1,0 +1,356 @@
+{
+  "area": "rpc-remote",
+  "all_entry_narratives_reviewed": [
+    "RPC-001",
+    "RPC-002",
+    "RPC-003",
+    "RPC-004",
+    "RPC-005",
+    "RPC-006",
+    "RPC-007",
+    "RPC-008",
+    "RPC-009",
+    "RPC-010",
+    "RPC-011",
+    "RPC-012",
+    "RPC-013",
+    "RPC-014",
+    "RPC-015",
+    "RPC-016",
+    "RPC-017",
+    "RPC-018",
+    "RPC-019",
+    "RPC-020",
+    "RPC-021",
+    "RPC-022",
+    "RPC-023",
+    "RPC-024",
+    "RPC-025",
+    "RPC-026",
+    "RPC-027",
+    "RPC-028",
+    "RPC-029",
+    "RPC-030",
+    "RPC-031",
+    "RPC-032",
+    "RPC-033",
+    "RPC-034",
+    "RPC-035",
+    "RPC-036"
+  ],
+  "tests_executed": false,
+  "application_executed": false,
+  "source_reads": [
+    {
+      "path": "rust:crates/ice-cli/src/remote/framing.rs",
+      "sha256": "7ce5ebce46213673ff90fcd5a1fdbc2c7ca56c879198912194d2b1103c9d6c8e",
+      "total_lines": 214,
+      "ranges": [
+        [
+          69,
+          92
+        ],
+        [
+          117,
+          158
+        ]
+      ],
+      "owner": "coordinator",
+      "notes": "Initial display was truncated in the middle; omitted range subsequently reviewed in separate 90–125 record."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/cbor.rs",
+      "sha256": "6f7773ebd35659f720baf566bba93f9ce46a279e59cc78f08260816b71cdbbd0",
+      "total_lines": 378,
+      "ranges": [
+        [
+          179,
+          319
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/client.rs",
+      "sha256": "26a070f6dcdaee16f65ea00d5a179fc686f3b7cc0a3bb04b3061c0013ef724b2",
+      "total_lines": 192,
+      "ranges": [
+        [
+          20,
+          192
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/session_driver.rs",
+      "sha256": "920d1e0b7454015bddbf0e5d6015226dee04ce5958ed19b331653c12dc35b211",
+      "total_lines": 704,
+      "ranges": [
+        [
+          207,
+          283
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/output-guard.ts",
+      "sha256": "d1f0d31689404bcb72e6a524173b0092a232da48655e748688bbd3d1f7a2b364",
+      "total_lines": 148,
+      "ranges": [
+        [
+          29,
+          148
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+      "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "total_lines": 2253,
+      "ranges": [
+        [
+          151,
+          189
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+      "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "total_lines": 2253,
+      "ranges": [
+        [
+          239,
+          270
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/server/src/transports/unix/listener.ts",
+      "sha256": "01afebb4530c330db398bbbeee886e2699b96669a3dc0350594f2836c1db4a84",
+      "total_lines": 435,
+      "ranges": [
+        [
+          203,
+          305
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/framing.rs",
+      "sha256": "7ce5ebce46213673ff90fcd5a1fdbc2c7ca56c879198912194d2b1103c9d6c8e",
+      "total_lines": 214,
+      "ranges": [
+        [
+          90,
+          125
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-agent/src/message.rs",
+      "sha256": "83bd7674c178e802a4d84507964b6b093e4acce47b95156bdce4c17c1552d3c6",
+      "total_lines": 193,
+      "ranges": [
+        [
+          25,
+          31
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-agent/src/message.rs",
+      "sha256": "83bd7674c178e802a4d84507964b6b093e4acce47b95156bdce4c17c1552d3c6",
+      "total_lines": 193,
+      "ranges": [
+        [
+          82,
+          90
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-ai/src/types.rs",
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "total_lines": 1157,
+      "ranges": [
+        [
+          390,
+          414
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/protocol.rs",
+      "sha256": "9bca844a7f0c5ff0404e99013c4272aa9dc500933487abaa1dacc38ea3ffc939",
+      "total_lines": 521,
+      "ranges": [
+        [
+          147,
+          212
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total_lines": 1566,
+      "ranges": [
+        [
+          319,
+          353
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total_lines": 1566,
+      "ranges": [
+        [
+          768,
+          782
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-pages.ts",
+      "sha256": "171335f191bbae7f58208b1e2c3a25ed2d20bac6f8a904f17c7dd3c8d8887833",
+      "total_lines": 75,
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-response-validation.ts",
+      "sha256": "538122d78edb38d0abb6e74e27c698a77cc1517c74fc7d13bf320b26dfe675ed",
+      "total_lines": 653,
+      "ranges": [
+        [
+          535,
+          548
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+      "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "total_lines": 2253,
+      "ranges": [
+        [
+          1731,
+          1738
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+      "total_lines": 4036,
+      "ranges": [
+        [
+          3980,
+          4006
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts",
+      "sha256": "46e367c73910fbf62e30d5946dbb846ab2f6fd62c4b1a862b8fb701e55efbc5c",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "owner": "coordinator",
+      "fully_read": true
+    }
+  ],
+  "credited_source": {
+    "path": "evidence/rpc-source-review.json",
+    "sha256": "f860ee25c49beaafecb8e8da8cd353b77b9a5242052da0c3c4e642a6d044adad",
+    "owner": "audit_session",
+    "records": 134,
+    "fully_visible": 129,
+    "qualified_bounded": 5
+  },
+  "material_checks": [
+    "Native framing end can overwrite Failed with Ended and accepts repeated clean end.",
+    "CBOR tag recursion does not advance depth; native TCP driver does not call this binary codec.",
+    "Native event pump raw string search can terminate on an ordinary event's session_end-valued field; driver emits Ended on pump closure.",
+    "Actual native AgentMessage/AssistantMessage serde call chain emits tooluse while TS expects toolUse; as_str does not alter serde.",
+    "TS server Unix close marks closing before waiting the tail, so queued-but-not-entered writes reject; in-flight writes differ.",
+    "TS output guard immediately exits on asynchronous nonretryable sink failure; cooperative adapter shutdown is a different boundary.",
+    "TS message pagination hashes identity/count metadata, not message content.",
+    "TS no-assistant-text host omits undefined text while its client requires text:string|null.",
+    "Request cancellation preserves the target's active record and clears it only through finish; queued cancellation does not remove ordering latches."
+  ],
+  "corrections": [
+    {
+      "entries": [
+        "RPC-003",
+        "RPC-004",
+        "RPC-034"
+      ],
+      "change": "Removed AI-006 as a generic model/message schema dependency; it owns request options/hard output authority. Exact transport schemas remain specified in RPC."
+    }
+  ],
+  "readability": "Added two plain behavioral sentences to every mechanism, preserving all detailed clauses and tables.",
+  "structural_check": {
+    "area": "rpc-remote",
+    "entries": 36,
+    "proposal_entries": 36,
+    "ledger_rows": 63,
+    "surfaces": 573,
+    "unique_source_references": 1138,
+    "read_records": 134,
+    "problems": []
+  },
+  "limitations": [
+    "Source-only audit: no tests, application code, network calls, credential commands or provider/remote services were executed.",
+    "External ice-server and provider package implementations were not fetched or inspected. Native TCP integration tests contain an optional externally configured path but were only read.",
+    "Connector redactions at TS rpc-subagents.test.ts:230 and Rust app.rs:96 remain exact exclusions; bounded adjacent reads do not imply whole-file closure.",
+    "All tool read batches contained at most eight files and returned filenames were checked. Truncated displayed source was re-read before its ranges were credited.",
+    "Current dirty agent-session.ts is the frozen authorized baseline and was not modified. Test identity is established by tracked membership plus unchanged frozen-commit diff because the initial source-hash manifest omits some test files."
+  ]
+}

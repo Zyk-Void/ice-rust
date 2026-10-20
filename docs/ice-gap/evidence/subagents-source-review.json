@@ -1,0 +1,716 @@
+{
+  "area": "subagents",
+  "worker": "/root/audit_tools",
+  "draft_complete": true,
+  "independent_review": "passed-for-provisional-publication",
+  "method": "Full source and test-body reading only. No application run, tests, installation, network commands or real user-state access.",
+  "baseline": {
+    "typescript_head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust_head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "manifest": "docs/ice-gap/evidence/resume-source-identities-2026-10-19T222055Z.json",
+    "first_pass_report": {
+      "path": "ICE_PORTING.md",
+      "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+      "reviewed_ranges": [
+        [
+          49,
+          210
+        ]
+      ],
+      "notes": "Report snapshot is an audit input, not an implementation baseline. Additional subagent mentions were searched; claim corrections focus on the fully read area section."
+    }
+  },
+  "coverage": {
+    "ledger_files": 71,
+    "ledger_lines": 20516,
+    "typescript_ledger_docs_and_implementation": "All original 71 files, not an index or extracted function list.",
+    "typescript_supplemental_implementation": [
+      "packages/coding-agent/src/ice.ts",
+      "packages/coding-agent/src/utils/frontmatter.ts",
+      "packages/coding-agent/src/utils/redact.ts"
+    ],
+    "typescript_tests": 37,
+    "rust_implementation_and_docs": [
+      "crates/ice-cli/src/child_agents.rs",
+      "crates/ice-harness/src/agent_harness/child.rs",
+      "docs/extensions/subagents.md"
+    ],
+    "rust_tests": 7,
+    "total_distinct_files": 121,
+    "read_evidence": "subagents-read-evidence.json and identical metadata embedded in proposal-subagents.json",
+    "line_coverage": "Merged ranges cover lines 1 through the last nonempty terminal-split line for every file; no substantive gaps found.",
+    "test_baselines": "Additional TS tests are clean tracked files verified against frozen Git HEAD. Native files/tests use manifest hashes. No historical hashes were invented.",
+    "test_execution": "Not run; conditional DLL tests require an externally supplied ICE_TEST_SUBAGENT_LIBRARY and do not prove a repository-shipped plugin implementation.",
+    "transport_redaction": "Credential-like fixture values and four source variable assignments were transport-redacted. No attempt to recover redacted values was made; tests' control-flow/assertion structure remained visible.",
+    "repeated_anchor_checks": "Additional repeated anchor reads were performed inside already fully covered files. The rejected worker request-file overwrite was not retried; previously persisted complete source records suffice."
+  },
+  "inventory": {
+    "entries": 44,
+    "status_counts": {
+      "missing": 33,
+      "partial": 11
+    },
+    "size_sum": {
+      "min": 10140,
+      "max": 16550,
+      "unit": "estimated Rust source lines, excluding dependency work already counted elsewhere"
+    },
+    "candidates": 192,
+    "mapped_candidates": 67,
+    "candidate_exclusions": 125,
+    "candidate_bearing_surface_rows": 58,
+    "total_authored_surface_rows": 249,
+    "extra_surface_rows": 191,
+    "ledger_rows": 71,
+    "notes": "Every original candidate ID appears exactly once in a mapped row or a reasoned exclusion. Git subprocess flags, dynamic filesystem expressions, stream callbacks, derived parser fields and host-flag references are not misrepresented as new user-facing surfaces."
+  },
+  "native_comparison": [
+    {
+      "capability": "Owner-scoped native child handles and independent active-cleanup permits",
+      "ts_comparison": "Rust limits retained handles and active/cleanup work separately to16 each, reserves before await, and keeps an active permit until execution scopes actually become idle after the2s cleanup grace. TS admission releases after abandonment while an uncooperative operation can remain active; preserve Rust's stronger accounting while adding V2 lifecycle.",
+      "evidence": [
+        "rust:crates/ice-cli/src/child_agents.rs:44-130",
+        "rust:crates/ice-cli/src/child_agents.rs:207-418",
+        "rust:crates/ice-cli/src/child_agents/tests/security.rs:101-229",
+        "ice:packages/coding-agent/src/subagents/v2/runtime.ts:958-1309"
+      ]
+    },
+    {
+      "capability": "Lifetime-bounded delta/final output and owner-checked destructive polling",
+      "ts_comparison": "Native output budget counts delta plus final bytes cumulatively (4MiB/8192 events), regardless of polling; result is withheld until queued deltas drain. One oversized first delta may exceed the64KiB per-poll target. Retain lifetime bounds alongside new nondestructive artifacts.",
+      "evidence": [
+        "rust:crates/ice-cli/src/child_agents.rs:140-206",
+        "rust:crates/ice-cli/src/child_agents.rs:288-418",
+        "rust:crates/ice-cli/src/child_agents/tests.rs:1-240"
+      ]
+    },
+    {
+      "capability": "Invocation/plugin lifetime cancellation and fail-closed panic handling",
+      "ts_comparison": "Native children are linked to invocation, parent run, parent scope and explicit job cancellation/timeout, with expired invocations rejected and revoked owners unable to reenter. Child tool errors/panics are contained; no-grandchild narrowing and alias root reentry checks remain useful.",
+      "evidence": [
+        "rust:crates/ice-cli/src/child_agents.rs:44-130",
+        "rust:crates/ice-cli/src/child_agents.rs:207-418",
+        "rust:crates/ice-cli/src/child_agents/tests/invocation.rs:1-58",
+        "rust:crates/ice-cli/src/child_agents/tests/security.rs:1-230"
+      ]
+    },
+    {
+      "capability": "Exact inherited private provider/model binding and guarded tool scopes",
+      "ts_comparison": "create_child snapshots parent runtime policy/model/provider/thinking/resource configuration and wraps allowed parent tools under a tracked child scope. Preserve this native capability; TS V2 adds contract persistence, per-child tools and policy envelopes rather than replacing native binding isolation.",
+      "evidence": [
+        "rust:crates/ice-harness/src/agent_harness/child.rs:1-172",
+        "rust:crates/ice-harness/src/agent_harness/child/tests.rs:1-298"
+      ]
+    },
+    {
+      "capability": "Independent native side questions",
+      "ts_comparison": "Native one-turn tool-free side questions use a64KiB UTF-8 tail of committed user/assistant text, excluding tool/custom/image/thinking, and survive parent-run cancellation while remaining bounded by session close. This is a distinct capability from TS controllable persistent V2 child views.",
+      "evidence": [
+        "rust:crates/ice-harness/src/agent_harness/child.rs:178-300",
+        "rust:crates/ice-harness/src/agent_harness/child/tests.rs:1-298"
+      ]
+    }
+  ],
+  "source_discrepancies": [
+    {
+      "entry_ids": [
+        "SUB-012"
+      ],
+      "title": "Malformed global command-hook approval value can bypass the ask branch",
+      "conditions": "Host supplies a policy whose approval stringification equals ask/allow but whose original value is not the exact string, e.g. ['ask']; parser stores that original value and handler checks strict === 'ask'. Current authority/hash/argv checks still apply. This is not an observed runtime execution.",
+      "port_decision": "Strict enum decoding deliberately rejects malformed policy values.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/hooks/command-hooks.ts",
+          "range": [
+            29,
+            100
+          ],
+          "sha256": "01db7231fafbdaca4a9ebd380f32616af5f1211bcab75e8707b76ee7b15c382a",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-038"
+      ],
+      "title": "Ruflo importer generates metadata rejected by current V2 definitions",
+      "conditions": "Conversion emits ice-unsafe-host-exec: allowed for each generated native-style Markdown document; parseNativeAgentMarkdown treats that removed key as invalid. No successful import/launch was executed.",
+      "port_decision": "Produce current supported definition metadata or explicitly preserve diagnostics; do not reproduce a claimed successful compatibility flow.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/ice-agent-packs.ts",
+          "range": [
+            133,
+            154
+          ],
+          "sha256": "8afdd5b65e3110914fcc9e03c81990d2acdd584ba679f286aa72afc8f78e27ae",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        },
+        {
+          "path": "ice:packages/coding-agent/src/subagents/definitions/parse.ts",
+          "range": [
+            24,
+            54
+          ],
+          "sha256": "ed46d66e2f8c791389beeb86f32700ba85781deacb9fc3ac20feec120cc6aa9c",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-017"
+      ],
+      "title": "Completion delivery has an at-least-once crash window",
+      "conditions": "Parent post occurs before its delivered marker is durably confirmed from message_end. A crash between those steps can replay a completion. In-memory suppression is not a cross-restart exactly-once guarantee.",
+      "port_decision": "Specify the same recoverable delivery contract or intentionally strengthen it with a durable idempotency boundary.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/registry/registry.ts",
+          "range": [
+            391,
+            456
+          ],
+          "sha256": "10b1441941335a78cc1f4d423df461afbff90d928b69aa7362fc6e0acf1ff726",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        },
+        {
+          "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+          "range": [
+            1545,
+            1803
+          ],
+          "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-020",
+        "SUB-044"
+      ],
+      "title": "Abandoned TS turn can outlive its released admission slot",
+      "conditions": "Child operation ignores abort/cleanup and remains unresolved beyond abandonment grace; runtime releases admission while detached work can continue. Native permits stay held until tracked execution scopes are idle.",
+      "port_decision": "Preserve native active-cleanup permit retention while adding explicit TS-visible abandoned outcomes.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+          "range": [
+            958,
+            1309
+          ],
+          "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        },
+        {
+          "path": "rust:crates/ice-cli/src/child_agents.rs",
+          "range": [
+            288,
+            418
+          ],
+          "sha256": "ae87e5dbe0cd7c851ac32e4e821e282dcc4c14c843714af0907ec6affaa5ec9d",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        },
+        {
+          "path": "rust:crates/ice-cli/src/child_agents/tests/security.rs",
+          "range": [
+            101,
+            229
+          ],
+          "sha256": "1bdb79acb58cdf115c57c354b6427157fc5c289ee2c6421674dd07d0dd3e6245",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-024"
+      ],
+      "title": "An already-aborted control wait can miss cancellation registration",
+      "conditions": "A signal already aborted before the wait listener is installed does not trigger that later event listener; the current path can wait/classify timeout instead of promptly returning cancellation.",
+      "port_decision": "Check cancellation before and after waiter registration.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+          "range": [
+            2180,
+            2357
+          ],
+          "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-028"
+      ],
+      "title": "Artifact capture is not fsynced and stat-before-read does not bound concurrent growth allocation",
+      "conditions": "Capture writes/changes mode but does not fsync bytes or directory. Read verifies regular file metadata, size and hash after a readFileSync; external growth after fstat can cause excess allocation before integrity rejection.",
+      "port_decision": "Distinguish logical reference durability from power-loss byte durability; use bounded descriptor reads if strengthening the native port.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/results/output-artifacts.ts",
+          "range": [
+            619,
+            744
+          ],
+          "sha256": "893bec000bc39e8ad6029c555f89be88d44a90a01a6da1468b626bb6744540ca",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-034"
+      ],
+      "title": "Controller cancellation does not span launch approval and onLaunched failure can retain accepted child",
+      "conditions": "start checks pre-aborted input but does not pass the signal into launch; it invokes onLaunched after acceptance before runTurn. A throwing callback can leave an accepted child without beginning the requested turn.",
+      "port_decision": "Define launch cancellation and callback failure cleanup explicitly, preserving accepted-child visibility.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/v2/controller.ts",
+          "range": [
+            102,
+            137
+          ],
+          "sha256": "a24235ddb8de1608926cf000e710db6f00ab69d76029340ab0ba6bd894881441",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-038"
+      ],
+      "title": "Import creation has an existence-check/write race",
+      "conditions": "Target existence is checked before a nonexclusive mode0600 write; another actor creating that target in between can be overwritten. No race was reproduced.",
+      "port_decision": "Use exclusive creation when establishing a new generated profile.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/ice-agent-packs.ts",
+          "range": [
+            224,
+            245
+          ],
+          "sha256": "8afdd5b65e3110914fcc9e03c81990d2acdd584ba679f286aa72afc8f78e27ae",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    },
+    {
+      "entry_ids": [
+        "SUB-040",
+        "SUB-041",
+        "SUB-042",
+        "SUB-043"
+      ],
+      "title": "Retained legacy helpers are not active V2 pipeline steps",
+      "conditions": "Caller searches and full current runtime/factory reads do not establish active V2 calls into context-bootstrap, declarative preflight, legacy route selection or schema-v1 report writer. Their own quirks and exported contracts are audited separately.",
+      "port_decision": "Keep active parity and optional retained helper parity separate in implementation scheduling.",
+      "evidence": [
+        {
+          "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+          "range": [
+            500,
+            956
+          ],
+          "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        },
+        {
+          "path": "ice:packages/coding-agent/src/subagents/v2/session-factory.ts",
+          "range": [
+            1,
+            176
+          ],
+          "sha256": "18a6a67d883b5e74df9ccd43464b49f57fb578cebab98977c2d0ca10de6a9b3f",
+          "baseline": "coordinator source manifest; source read only, no execution"
+        }
+      ]
+    }
+  ],
+  "first_pass_claim_review": [
+    {
+      "first_pass_lines": [
+        54,
+        59
+      ],
+      "claim": "Rust has no subagent permissions or equivalent system.",
+      "verdict": "corrected",
+      "finding": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICE_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "evidence": [
+        "rust:ICE_PORTING.md:54-59",
+        "rust:crates/ice-cli/src/child_agents.rs:1-418",
+        "rust:crates/ice-harness/src/agent_harness/child.rs:1-172",
+        "rust:crates/ice-cli/tests/subagent_packages.rs:23-375"
+      ],
+      "entry_ids": [
+        "SUB-007",
+        "SUB-014",
+        "SUB-015",
+        "SUB-016",
+        "SUB-034"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        61,
+        78
+      ],
+      "claim": "V2 supports native/compatibility definitions, discovery and precedence.",
+      "verdict": "confirmed-with-scope",
+      "finding": "Strict definitions, layered source precedence and opt-in Claude conversion are present. Managed directories must be supplied by the caller; current normal V2 integration does not infer a machine-wide managed directory. Child-safe tools, unsupported metadata, required MCP and hidden/limited catalog behavior materially affect availability.",
+      "evidence": [
+        "rust:ICE_PORTING.md:61-78",
+        "ice:packages/coding-agent/src/subagents/definitions/schema.ts:1-164",
+        "ice:packages/coding-agent/src/subagents/definitions/discover.ts:1-183",
+        "ice:packages/coding-agent/src/subagents/definitions/load.ts:1-157",
+        "ice:packages/coding-agent/src/subagents/definitions/precedence.ts:1-74"
+      ],
+      "entry_ids": [
+        "SUB-001",
+        "SUB-002",
+        "SUB-003",
+        "SUB-004",
+        "SUB-014"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        81,
+        93
+      ],
+      "claim": "Three tools and batch/async control provide delegation.",
+      "verdict": "confirmed-with-scope",
+      "finding": "agent, agent_control and agent_patch are real registrations. Tasks are1..8; JSON-schema maxLength is a string bound, not automatically a UTF-8 byte cap. Runtime text/context/output limits are separately enforced. Batch acceptance can be partially completed before a later failure; foreground detachment and explicit control delivery modes require the detailed contracts.",
+      "evidence": [
+        "rust:ICE_PORTING.md:81-93",
+        "ice:packages/coding-agent/src/subagents/api/agent.ts:1-86",
+        "ice:packages/coding-agent/src/subagents/api/agent-control.ts:1-55",
+        "ice:packages/coding-agent/src/subagents/v2/extension.ts:569-950"
+      ],
+      "entry_ids": [
+        "SUB-023",
+        "SUB-024",
+        "SUB-025",
+        "SUB-032"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        95,
+        115
+      ],
+      "claim": "Active V2 launch calls runtime/preflight.ts, context-bootstrap.ts and legacy routing helpers.",
+      "verdict": "corrected",
+      "finding": "Current launch preflight, model selection and frozen context are implemented in v2/runtime.ts/runtime-support.ts. The declarative preflight, instruction-chain/orientation builder and legacy route/prompt helpers were fully read but no active V2 callers were established. They remain separately audited retained helper surfaces, not proof of current launch behavior.",
+      "evidence": [
+        "rust:ICE_PORTING.md:95-115",
+        "ice:packages/coding-agent/src/subagents/v2/runtime.ts:500-956",
+        "ice:packages/coding-agent/src/subagents/v2/runtime-support.ts:232-264",
+        "ice:packages/coding-agent/src/subagents/runtime/preflight.ts:1-239",
+        "ice:packages/coding-agent/src/subagents/runtime/context-bootstrap.ts:1-603",
+        "ice:packages/coding-agent/src/subagents/runtime/routing.ts:1-207"
+      ],
+      "entry_ids": [
+        "SUB-018",
+        "SUB-025",
+        "SUB-040",
+        "SUB-041",
+        "SUB-042",
+        "SUB-043"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        117,
+        128
+      ],
+      "claim": "Admission and lifecycle recovery are fully bounded.",
+      "verdict": "qualified",
+      "finding": "The TS admission queue is a wakeup mechanism, not an irrevocable FIFO reservation; uncooperative turn abandonment can release admission while underlying work remains active. Native active-cleanup permits stay held until tracked scopes are idle. Journals/generations/parking/recovery are detailed separately from process cleanup.",
+      "evidence": [
+        "rust:ICE_PORTING.md:117-128",
+        "ice:packages/coding-agent/src/subagents/registry/admission.ts:1-70",
+        "ice:packages/coding-agent/src/subagents/v2/runtime.ts:958-1309",
+        "rust:crates/ice-cli/src/child_agents.rs:288-418",
+        "rust:crates/ice-cli/src/child_agents/tests/security.rs:101-229"
+      ],
+      "entry_ids": [
+        "SUB-016",
+        "SUB-020",
+        "SUB-044"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        130,
+        143
+      ],
+      "claim": "Deny-first inherited permission ceilings and sub-yolo protect delegated execution.",
+      "verdict": "corrected",
+      "finding": "The pure child evaluator unconditionally intersects its result with the supplied parent decision and applies deny-first child rules/mode limits. However, active runtime parentDecision handles external_directory before ordinary parent rule sets: plan denies, authorized sub-yolo allows, otherwise ask. Thus the first-pass claim that external paths are always at most ask and cannot be allowed by sub-yolo is false for this snapshot. Scope-based user/managed raisers also do not categorically exclude every agent-definition carrier.",
+      "evidence": [
+        "rust:ICE_PORTING.md:130-143",
+        "ice:packages/coding-agent/src/subagents/permissions/derive-child.ts:1-98",
+        "ice:packages/coding-agent/src/subagents/permissions/evaluate.ts:1-112",
+        "ice:packages/coding-agent/src/subagents/types.ts:21-145",
+        "ice:packages/coding-agent/src/subagents/v2/runtime.ts:328-481",
+        "ice:packages/coding-agent/src/subagents/v2/runtime.ts:328-350",
+        "ice:packages/coding-agent/src/subagents/permissions/derive-child.ts:42-84"
+      ],
+      "entry_ids": [
+        "SUB-006",
+        "SUB-007",
+        "SUB-008",
+        "SUB-009",
+        "SUB-019"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        145,
+        156
+      ],
+      "claim": "Worktree baseline and patch integration preserve the parent with rollback.",
+      "verdict": "qualified",
+      "finding": "Raw dirty/untracked baseline and real-index preservation are implemented. Apply checks drift, pins bytes, journals preimages and preserves newer/unknown state during rollback. External index changes are not blindly restored, rollback is best effort, and recovery records are not an automatic crash replay engine. Even change inspection can write Git objects and temporary indexes.",
+      "evidence": [
+        "rust:ICE_PORTING.md:145-156",
+        "ice:packages/coding-agent/src/subagents/isolation/worktree.ts:1-487",
+        "ice:packages/coding-agent/src/subagents/isolation/patch-state.ts:1-133",
+        "ice:packages/coding-agent/src/subagents/isolation/apply.ts:1-289"
+      ],
+      "entry_ids": [
+        "SUB-030",
+        "SUB-031",
+        "SUB-032",
+        "SUB-033"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        158,
+        167
+      ],
+      "claim": "Assurance verifies results and batch synthesis deduplicates sibling findings.",
+      "verdict": "corrected",
+      "finding": "Generic assurance helpers evaluate caller-supplied evidence declarations; active V2 validates file evidence observed through its own guarded tools. Batch synthesis preserves sibling findings and reports overlap/disagreement rather than deduplicating their contents. Output artifacts enforce ownership/integrity but capture bytes are not fsynced merely because the registry reference later is durable.",
+      "evidence": [
+        "rust:ICE_PORTING.md:158-167",
+        "ice:packages/coding-agent/src/subagents/results/assurance.ts:1-466",
+        "ice:packages/coding-agent/src/subagents/results/batch-synthesis.ts:1-471",
+        "ice:packages/coding-agent/src/subagents/results/v2-result.ts:1-261",
+        "ice:packages/coding-agent/src/subagents/results/output-artifacts.ts:1-770"
+      ],
+      "entry_ids": [
+        "SUB-026",
+        "SUB-027",
+        "SUB-028",
+        "SUB-029"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        169,
+        180
+      ],
+      "claim": "Child tools/MCP and per-turn budgets are bounded.",
+      "verdict": "confirmed-with-scope",
+      "finding": "V2 uses explicit child-safe adapters and parent-owned MCP calls, without per-child server loading. Usage counts uncached input, cache writes and output; active V2 limits wrapper model requests to100. Its one tool-free wrap-up changes ordinary maxTokens to1024 but does not populate hardMaxOutputTokens, and session recovery suppression does not disable provider HTTP retries. Frozen temperature/topP are stored but the current V2 factory does not apply the legacy sampling helper.",
+      "evidence": [
+        "rust:ICE_PORTING.md:169-180",
+        "ice:packages/coding-agent/src/subagents/tools/adapters.ts:1-365",
+        "ice:packages/coding-agent/src/subagents/v2/session-factory.ts:1-176",
+        "ice:packages/coding-agent/src/subagents/v2/turn-budget.ts:1-222"
+      ],
+      "entry_ids": [
+        "SUB-014",
+        "SUB-015",
+        "SUB-021",
+        "SUB-041"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        182,
+        189
+      ],
+      "claim": "Eight ICE_SUBAGENT/ICE_CAPABILITY/ICE_HOOK exports are environment knobs.",
+      "verdict": "corrected",
+      "finding": "ICE_SUBAGENT_DECISION_EVENTS, ICE_SUBAGENT_HOOK_EVENTS, ICE_SUBAGENT_OBSERVATION_EVENTS, ICE_SUBAGENT_SETTINGS_LIMITS, ICE_BUILTIN_CHILD_TOOLS, ICE_CAPABILITY_LIMITS, ICE_HOOK_CONTEXT_ADDITION_LIMITS and ICE_HOOK_JOURNAL_ENTRY_TYPE are code constants, not process environment keys. checkpoint/attention are accepted event names without an established active V2 dispatch site.",
+      "evidence": [
+        "rust:ICE_PORTING.md:182-189",
+        "ice:packages/coding-agent/src/subagents/settings.ts:45-112",
+        "ice:packages/coding-agent/src/subagents/settings.ts:408-443",
+        "ice:packages/coding-agent/src/subagents/tools/adapters.ts:1-83"
+      ],
+      "entry_ids": [
+        "SUB-010",
+        "SUB-011",
+        "SUB-014"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        190,
+        193
+      ],
+      "claim": "defaultAgent, disabledAgents and askTimeoutMs are top-level settings.",
+      "verdict": "corrected",
+      "finding": "All three live under ice.subagents. Storage/scoped accessors are SET-020; SUB-005 owns strict validation, defaults, diagnostic invalidation and exact per-field merge behavior. askTimeoutMs is global-only; trusted project idleAlertMs shortening is accepted by current resolver.",
+      "evidence": [
+        "rust:ICE_PORTING.md:190-193",
+        "ice:packages/coding-agent/src/subagents/v2/settings.ts:1-194",
+        "ice:packages/coding-agent/src/subagents/settings.ts:217-261"
+      ],
+      "entry_ids": [
+        "SUB-005"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        194,
+        200
+      ],
+      "claim": "A versioned controller and --import-agent-pack provide integration.",
+      "verdict": "qualified",
+      "finding": "Both exist. SDK/controller signal/onLaunched failure semantics are narrower than a general cancellation guarantee. The importer always writes removed ice-unsafe-host-exec metadata, which current strict native V2 parser rejects; this exact source incompatibility is recorded rather than presented as successful import interoperability.",
+      "evidence": [
+        "rust:ICE_PORTING.md:194-200",
+        "ice:packages/coding-agent/src/subagents/v2/controller.ts:1-163",
+        "ice:packages/coding-agent/src/ice-agent-packs.ts:133-154",
+        "ice:packages/coding-agent/src/subagents/definitions/parse.ts:24-54",
+        "ice:packages/coding-agent/src/ice.ts:34-58"
+      ],
+      "entry_ids": [
+        "SUB-034",
+        "SUB-038"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        201,
+        209
+      ],
+      "claim": "Hub, SDK and view bridge expose child controls and presentation.",
+      "verdict": "confirmed-with-scope",
+      "finding": "Hub and bridge own roster/approval/display contracts, while generic keybindings/themes/rendering and RPC transport belong to their respective areas. Worker read bridge implementations and relevant RPC/footer tests without claiming to have read full transport/UI implementations. SDK subscriptions are on its bridge rather than a direct SDK subscribe method.",
+      "evidence": [
+        "rust:ICE_PORTING.md:201-209",
+        "ice:packages/coding-agent/src/subagents/ui/hub.ts:1-424",
+        "ice:packages/coding-agent/src/ice-agent-view-bridge.ts:1-904",
+        "ice:packages/coding-agent/src/subagents/v2/sdk.ts:1-85",
+        "ice:packages/coding-agent/test/suite/rpc-subagents.test.ts:1-359"
+      ],
+      "entry_ids": [
+        "SUB-034",
+        "SUB-035",
+        "SUB-036",
+        "SUB-037"
+      ]
+    }
+  ],
+  "dependency_requests": [
+    {
+      "entry_id": "SUB-009",
+      "area": "cli",
+      "capability": "Resolve concrete entries for --allow-external/--ice-allow-bash/--ice-mode/--mode/--print/--no-approve argv parsing and trusted startup grants; SUB owns their sub-yolo interaction only."
+    },
+    {
+      "entry_id": "SUB-013",
+      "area": "session",
+      "capability": "Persistent child SessionManager creation/open, validated session IDs and flushDurably barrier; native service currently chooses in-memory child storage."
+    },
+    {
+      "entry_id": "SUB-016",
+      "area": "session",
+      "capability": "Append-only parent custom journal, branch/session owner identity and durable replay; bind to existing session persistence entry."
+    },
+    {
+      "entry_id": "SUB-017",
+      "area": "session",
+      "capability": "Custom parent message insertion, queued steering, actual message_end delivery confirmation and owner-switch/shutdown flushing; at-least-once crash window must stay explicit."
+    },
+    {
+      "entry_id": "SUB-018",
+      "area": "ai",
+      "capability": "Resolve model reference against current model registry/auth and preserve private provider binding on accepted child; exact multi-candidate fallback remains SUB-owned."
+    },
+    {
+      "entry_id": "SUB-021",
+      "area": "agent",
+      "capability": "Model-request boundary hooks, actual assistant usage accounting, tool-free wrap-up and temporary retry suppression with restoration."
+    },
+    {
+      "entry_id": "SUB-025",
+      "area": "cli",
+      "capability": "Resource loader APIs for explicitly selected skills/prompts/context and parent provenance; SUB owns per-child frozen hashes/trust/revalidation."
+    },
+    {
+      "entry_id": "SUB-028",
+      "area": "session",
+      "capability": "Durable registry update before replacing/releasing prior output reference and safe owner restore; align actual persistence barrier with source's non-fsync artifact limitation."
+    },
+    {
+      "entry_id": "SUB-032",
+      "area": "agent",
+      "capability": "Existing safe verification/goal command classifier and execution runner, plus current build/trust authority used for patch integration. Do not infer a reviewer is launched by task-contract recommendations."
+    },
+    {
+      "entry_id": "SUB-035",
+      "area": "extensions",
+      "capability": "Concrete prerequisites for flag/command registration, event-emitter binding and dynamic built-in tool refresh; EXT-009/010 are already direct prerequisites."
+    },
+    {
+      "entry_id": "SUB-036",
+      "area": "rpc",
+      "capability": "get_subagents/get_subagent_messages/respond_subagent_approval/subagent_control/subagent_patch and subagents_update transport integration. Worker read bridge implementation and RPC tests, not full RPC implementation; assign only after area audit."
+    },
+    {
+      "entry_id": "SUB-036",
+      "area": "tui",
+      "capability": "Interactive parent/live/history display, transcript rendering and control handoff consume the view bridge. Native side-question UI remains a separate preserved capability."
+    },
+    {
+      "entry_id": "SUB-037",
+      "area": "tui",
+      "capability": "Component render/input/dispose, width/ANSI/theme routines and tui.select/app.agents/app.subagents keybinding definitions/defaults; SUB owns Hub actions and approval semantics."
+    }
+  ],
+  "verification": {
+    "entries": 44,
+    "surfaces": 249,
+    "explicit_refs_checked": 286,
+    "invalid_ranges": [],
+    "source_refs_missing_metadata": [],
+    "missing_fields": [],
+    "candidate_count": 192,
+    "covered_candidates": 192,
+    "duplicate_candidates": [],
+    "local_dependency_cycles": [],
+    "read_holes_excluding_terminal_empty_split_line": [],
+    "spec_checker": {
+      "area": "subagents",
+      "entries": 44,
+      "unique_line_references": 201,
+      "problems": []
+    },
+    "notes": "Read-only audit helper verified44 entries/201 unique spec references; in-memory structural checks verified286 explicit occurrences plus all498 single surface anchors, required fields,192 candidate identities, no local dependency cycles and no substantive read-range gaps. These are document checks, not application tests."
+  },
+  "approval_review_note": "Automatic approval review rejected only a later overwrite of subagents-read-requests.json, classifying worker metadata as shared read-coverage mutation. No retry or workaround was used; root explicitly confirmed existing complete source records suffice. This does not block the audit handoff.",
+  "handoff": "Spec/proposal/source-review are stable for coordinator independent review, dependency assignment and central publication. Worker makes no shared index, progress, README, read-coverage or final area-document mutation.",
+  "coordinator_review": {
+    "evidence": "evidence/qa-coordinator-subagents.json",
+    "corrections": [
+      "Corrected first-pass external-directory/sub-yolo claim from live parentDecision branch.",
+      "Recorded destructive queue clearing, ordinary maxTokens versus hardMaxOutputTokens, and session recovery versus provider HTTP retries.",
+      "Resolved established session/settings/agent/model dependencies; remaining bindings explicit for final reconciliation.",
+      "Normalized long mechanism openings to2–3 sentences, populated explicit dependency explanations and normalized open-question records."
+    ]
+  }
+}

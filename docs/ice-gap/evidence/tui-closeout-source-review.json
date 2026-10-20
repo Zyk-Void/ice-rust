@@ -1,0 +1,1271 @@
+{
+  "area": "tui",
+  "owner": "/root/tui_closeout",
+  "stage": "source-and-direct-controller-test-closure-complete-entry-drafting",
+  "source_only": true,
+  "tests_executed": false,
+  "application_executed": false,
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          1,
+          395
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          395
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          395
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead01",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          1201,
+          1467
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1201,
+          1467
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1201,
+          1467
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead02",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          1689,
+          1959
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1689,
+          1959
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1689,
+          1959
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead02",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          2071,
+          2420
+        ]
+      ],
+      "visible_ranges": [
+        [
+          2071,
+          2420
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          2071,
+          2420
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead03",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          2421,
+          2769
+        ]
+      ],
+      "visible_ranges": [
+        [
+          2421,
+          2769
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          2421,
+          2769
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead04",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          3821,
+          4029
+        ]
+      ],
+      "visible_ranges": [
+        [
+          3821,
+          4029
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          3821,
+          4029
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead05",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          4871,
+          5219
+        ]
+      ],
+      "visible_ranges": [
+        [
+          4871,
+          5219
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          4871,
+          5219
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead05",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          5796,
+          5869
+        ]
+      ],
+      "visible_ranges": [
+        [
+          5796,
+          5869
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          5796,
+          5869
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead06",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          7441,
+          7759
+        ]
+      ],
+      "visible_ranges": [
+        [
+          7441,
+          7759
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          7441,
+          7759
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead06",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/commands.rs",
+      "sha256": "b609a5bd9cf107eb722a55619abd4226c19f379e50748aee8342d72f8b68273d",
+      "total_lines": 871,
+      "ranges": [
+        [
+          654,
+          735
+        ]
+      ],
+      "visible_ranges": [
+        [
+          654,
+          735
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          654,
+          735
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead07",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/commands.rs",
+      "sha256": "b609a5bd9cf107eb722a55619abd4226c19f379e50748aee8342d72f8b68273d",
+      "total_lines": 871,
+      "ranges": [
+        [
+          778,
+          871
+        ]
+      ],
+      "visible_ranges": [
+        [
+          778,
+          871
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          778,
+          871
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead07",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+      "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+      "total_lines": 679,
+      "ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead07",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+      "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+      "total_lines": 679,
+      "ranges": [
+        [
+          447,
+          604
+        ]
+      ],
+      "visible_ranges": [
+        [
+          447,
+          604
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          447,
+          604
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead08",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/settings.rs",
+      "sha256": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3",
+      "total_lines": 1944,
+      "ranges": [
+        [
+          1321,
+          1545
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1321,
+          1545
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1321,
+          1545
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead08",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/settings.rs",
+      "sha256": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3",
+      "total_lines": 1944,
+      "ranges": [
+        [
+          1546,
+          1769
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1546,
+          1769
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1546,
+          1769
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead09",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/tui_shell.rs",
+      "sha256": "1e71bb4ecf156e05bc22087aa334db129b36dfa006c690d5adf58098e15e23a4",
+      "total_lines": 459,
+      "ranges": [
+        [
+          1,
+          349
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          349
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          349
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead10",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/tui_shell.rs",
+      "sha256": "1e71bb4ecf156e05bc22087aa334db129b36dfa006c690d5adf58098e15e23a4",
+      "total_lines": 459,
+      "ranges": [
+        [
+          413,
+          459
+        ]
+      ],
+      "visible_ranges": [
+        [
+          413,
+          459
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          413,
+          459
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead10",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/config.ts",
+      "sha256": "e4b690beca6ecfa772e8439c225537b43a8b763bd36691300965b131085b1337",
+      "total_lines": 605,
+      "ranges": [
+        [
+          530,
+          551
+        ]
+      ],
+      "visible_ranges": [
+        [
+          530,
+          551
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          530,
+          551
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead11",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "total_lines": 8282,
+      "ranges": [
+        [
+          7842,
+          7882
+        ]
+      ],
+      "visible_ranges": [
+        [
+          7842,
+          7882
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          7842,
+          7882
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead11",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "total_lines": 725,
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead11",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/rendering.rs",
+      "sha256": "8591b67159e2033020428f7d38c889379f0634b9e963a18e04965ac1b5ed1317",
+      "total_lines": 562,
+      "ranges": [
+        [
+          252,
+          310
+        ]
+      ],
+      "visible_ranges": [
+        [
+          252,
+          310
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          252,
+          310
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead11",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/commands.rs",
+      "sha256": "b609a5bd9cf107eb722a55619abd4226c19f379e50748aee8342d72f8b68273d",
+      "total_lines": 871,
+      "ranges": [
+        [
+          82,
+          106
+        ]
+      ],
+      "visible_ranges": [
+        [
+          82,
+          106
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          82,
+          106
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseRead11",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/commands.rs",
+      "sha256": "b609a5bd9cf107eb722a55619abd4226c19f379e50748aee8342d72f8b68273d",
+      "total_lines": 871,
+      "ranges": [
+        [
+          178,
+          304
+        ]
+      ],
+      "visible_ranges": [
+        [
+          178,
+          304
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          178,
+          304
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseInspect2",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/commands.rs",
+      "sha256": "b609a5bd9cf107eb722a55619abd4226c19f379e50748aee8342d72f8b68273d",
+      "total_lines": 871,
+      "ranges": [
+        [
+          422,
+          564
+        ]
+      ],
+      "visible_ranges": [
+        [
+          422,
+          564
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          422,
+          564
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseInspect2",
+      "notes": "Direct numbered source body visibly read during TUI closeout; no application or tests executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts",
+      "sha256": "c67a4d68512424886271408b3f9681c6091d07016aad3c0678108887a60a36a3",
+      "total_lines": 129,
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseWidgetRead",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts",
+      "sha256": "b13738ed38d26634a3e011fad97bb70fbfb6c3e4fd896720269b9ae71164c684",
+      "total_lines": 90,
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseWidgetRead",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts",
+      "sha256": "82c5ea3c36613bd1289a4f2b810295f1b11470b45f2f9e72e7cf5dfe3c0b983c",
+      "total_lines": 133,
+      "ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseWidgetRead",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-compaction-hold.test.ts",
+      "sha256": "32b6ef2facc735c6fa14a43ceaa240584d3aa47b694bf892b4dc79283ccd1d6b",
+      "total_lines": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest01",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+      "sha256": "b79e2811be061f8b73b96fee80d8a1cd54197ff80f1ae873edd3bc9d59db06fd",
+      "total_lines": 90,
+      "ranges": [
+        [
+          1,
+          18
+        ],
+        [
+          20,
+          90
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          18
+        ],
+        [
+          20,
+          90
+        ]
+      ],
+      "excluded_redacted_lines": [
+        19
+      ],
+      "requested_ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "full_file_read": false,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest01",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/format-resume-command.test.ts",
+      "sha256": "8e27f5d7b51972bc3baa5e06ef3d2ae9315012856c733b5555087a4e954a9c63",
+      "total_lines": 136,
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest01",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-send-now.test.ts",
+      "sha256": "b493faacd88923ed44bafbdb16a3db7cc1270fd2743455e3a90d7a64df2478fd",
+      "total_lines": 72,
+      "ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest02",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-bash-routing.test.ts",
+      "sha256": "757ae7e7b80d7e40e0abe3b50d9787697a9c4c5604050dfb5251cb1ee6bf217f",
+      "total_lines": 26,
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest02",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-compaction.test.ts",
+      "sha256": "bcf224bb5feb31f1bf18b22f8514234069d7fb558a4a237461cf484462df2025",
+      "total_lines": 88,
+      "ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest02",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-clone-command.test.ts",
+      "sha256": "9a1a93c08797b54f8819021b6283f43ad34699faea211fa091cf8aa91176dc20",
+      "total_lines": 73,
+      "ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest02",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-retry-errors.test.ts",
+      "sha256": "568c736ad568a0cd93b4fb2bf62132bdfbf3fce46c5cf207061f5802b8084a4a",
+      "total_lines": 38,
+      "ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest02",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-tui.test.ts",
+      "sha256": "5c08974ecefaf9ec3aca8569f616f48e729bd42c82a90e5aa1fa5eb0ec07a1f1",
+      "total_lines": 243,
+      "ranges": [
+        [
+          1,
+          243
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          243
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          243
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest03",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-import-command.test.ts",
+      "sha256": "4d1efb74cdc71799ddf9374b411dccac233997e6a6e7f362dd35628a7925627e",
+      "total_lines": 144,
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest03",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-suspend.test.ts",
+      "sha256": "a98127e3c150d941cb452159b64526919c27760020226253be987ceb6522bd93",
+      "total_lines": 150,
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest04",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5080-signal-shutdown-extension-cleanup.test.ts",
+      "sha256": "34dac52d1635ef5c4aa530fecbc1664d6fbc5430684ec85f7beb1a1968a76a82",
+      "total_lines": 186,
+      "ranges": [
+        [
+          1,
+          186
+        ]
+      ],
+      "visible_ranges": [
+        [
+          1,
+          186
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "requested_ranges": [
+        [
+          1,
+          186
+        ]
+      ],
+      "full_file_read": true,
+      "reader": "/root/tui_closeout",
+      "source_call": "tuiCloseTest04",
+      "notes": "Full requested source file visibly read except explicitly excluded connector redaction lines. Test bodies were read only and never executed."
+    }
+  ],
+  "findings": [
+    {
+      "ids": [
+        "TUI-055"
+      ],
+      "finding": "Existing draft unsupported background model-tool statement will be removed: native user Bash streaming/cancellation is real; it does not establish native TS background registry/control parity."
+    },
+    {
+      "ids": [
+        "TUI-078"
+      ],
+      "finding": "TS share uses fixed os.tmpdir()/session.html, synchronous unbounded gh auth status, async gist child with no error listener/timeout/output cap, explicit --public=false and cancellable loader. Native share builds text-only Markdown and invokes blocking std::process child on async path, with clipboard fallback and no matching HTML/viewer/cancellation contract."
+    },
+    {
+      "ids": [
+        "TUI-076"
+      ],
+      "finding": "TS signal-triggered shutdown disposes runtime before terminal restoration; interactive shutdown drains/stops terminal before runtime disposal. Dead-terminal EIO/EPIPE/ENOTCONN exit129 skips normal cleanup, uncaught exception restores terminal best effort then exits1. Native emergency exit status130 and registered normal cleanup differ."
+    }
+  ],
+  "remaining": "Integrate root native and documentation read credits, retain every visible range and redaction exclusion, author controller and widget entries, reconcile 390 original candidate leads, and rebuild the stale proposal from the complete spec. Root owns publication and final acceptance.",
+  "test_identities": [
+    {
+      "path": "packages/coding-agent/test/interactive-compaction-hold.test.ts",
+      "current_sha256": "32b6ef2facc735c6fa14a43ceaa240584d3aa47b694bf892b4dc79283ccd1d6b",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "32b6ef2facc735c6fa14a43ceaa240584d3aa47b694bf892b4dc79283ccd1d6b",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+      "current_sha256": "b79e2811be061f8b73b96fee80d8a1cd54197ff80f1ae873edd3bc9d59db06fd",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "b79e2811be061f8b73b96fee80d8a1cd54197ff80f1ae873edd3bc9d59db06fd",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/format-resume-command.test.ts",
+      "current_sha256": "8e27f5d7b51972bc3baa5e06ef3d2ae9315012856c733b5555087a4e954a9c63",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "8e27f5d7b51972bc3baa5e06ef3d2ae9315012856c733b5555087a4e954a9c63",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-send-now.test.ts",
+      "current_sha256": "b493faacd88923ed44bafbdb16a3db7cc1270fd2743455e3a90d7a64df2478fd",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "b493faacd88923ed44bafbdb16a3db7cc1270fd2743455e3a90d7a64df2478fd",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-bash-routing.test.ts",
+      "current_sha256": "757ae7e7b80d7e40e0abe3b50d9787697a9c4c5604050dfb5251cb1ee6bf217f",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "757ae7e7b80d7e40e0abe3b50d9787697a9c4c5604050dfb5251cb1ee6bf217f",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-tui.test.ts",
+      "current_sha256": "5c08974ecefaf9ec3aca8569f616f48e729bd42c82a90e5aa1fa5eb0ec07a1f1",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "5c08974ecefaf9ec3aca8569f616f48e729bd42c82a90e5aa1fa5eb0ec07a1f1",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-compaction.test.ts",
+      "current_sha256": "bcf224bb5feb31f1bf18b22f8514234069d7fb558a4a237461cf484462df2025",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "bcf224bb5feb31f1bf18b22f8514234069d7fb558a4a237461cf484462df2025",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-import-command.test.ts",
+      "current_sha256": "4d1efb74cdc71799ddf9374b411dccac233997e6a6e7f362dd35628a7925627e",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "4d1efb74cdc71799ddf9374b411dccac233997e6a6e7f362dd35628a7925627e",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-suspend.test.ts",
+      "current_sha256": "a98127e3c150d941cb452159b64526919c27760020226253be987ceb6522bd93",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "a98127e3c150d941cb452159b64526919c27760020226253be987ceb6522bd93",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-clone-command.test.ts",
+      "current_sha256": "9a1a93c08797b54f8819021b6283f43ad34699faea211fa091cf8aa91176dc20",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "9a1a93c08797b54f8819021b6283f43ad34699faea211fa091cf8aa91176dc20",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-retry-errors.test.ts",
+      "current_sha256": "568c736ad568a0cd93b4fb2bf62132bdfbf3fce46c5cf207061f5802b8084a4a",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "568c736ad568a0cd93b4fb2bf62132bdfbf3fce46c5cf207061f5802b8084a4a",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5080-signal-shutdown-extension-cleanup.test.ts",
+      "current_sha256": "34dac52d1635ef5c4aa530fecbc1664d6fbc5430684ec85f7beb1a1968a76a82",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "34dac52d1635ef5c4aa530fecbc1664d6fbc5430684ec85f7beb1a1968a76a82",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    },
+    {
+      "path": "packages/coding-agent/test/interactive-mode-status.test.ts",
+      "current_sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+      "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "revision_sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+      "revision_matches": true,
+      "status": "",
+      "historical_read_error": null
+    }
+  ],
+  "test_discovery": {
+    "command": "rg -l 'interactive-mode\\.ts|handleShareCommand|handleSendNow|handleChangelogCommand|checkTmuxKeyboardSetup|emergencyTerminalExit|uncaughtCrash|formatResumeCommand' packages/coding-agent/test -g '*.ts'",
+    "result": "packages/coding-agent/test/interactive-compaction-hold.test.ts\npackages/coding-agent/test/interactive-mode-anthropic-warning.test.ts\npackages/coding-agent/test/format-resume-command.test.ts\npackages/coding-agent/test/oauth-selector.test.ts\npackages/coding-agent/test/interactive-mode-send-now.test.ts\npackages/coding-agent/test/interactive-mode-bash-routing.test.ts\npackages/coding-agent/test/appearance-controller.test.ts\npackages/coding-agent/test/notice-center.test.ts\npackages/coding-agent/test/interactive-mode-startup-input.test.ts\npackages/coding-agent/test/interactive-tui.test.ts\npackages/coding-agent/test/interactive-mode-compaction.test.ts\npackages/coding-agent/test/interactive-mode-import-command.test.ts\npackages/coding-agent/test/interactive-mode-suspend.test.ts\npackages/coding-agent/test/new-messages-pill.test.ts\npackages/coding-agent/test/interactive-mode-clone-command.test.ts\npackages/coding-agent/test/interactive-mode-status.test.ts\npackages/coding-agent/test/interactive-mode-retry-errors.test.ts\npackages/coding-agent/test/suite/regressions/5724-sigterm-signal-exit.test.ts\npackages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts\npackages/coding-agent/test/suite/regressions/5080-signal-shutdown-extension-cleanup.test.ts\npackages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts\npackages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts\npackages/coding-agent/test/suite/regressions/4167-thinking-toggle-pending-tool-render.test.ts\npackages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts\npackages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts\npackages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts\n",
+    "tests_executed": false
+  },
+  "status_test_metadata_correction": {
+    "path": "ice:packages/coding-agent/test/interactive-mode-status.test.ts",
+    "sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+    "total_lines": 1545,
+    "ranges": [
+      [
+        1,
+        1545
+      ]
+    ],
+    "baseline_match": true,
+    "read_by": "original TUI owner",
+    "notes": "Existing full visible read credit lacked total-line metadata; closeout metadata and frozen-HEAD comparison now establish total 1545 and clean identity. No new full-body read claimed."
+  }
+}

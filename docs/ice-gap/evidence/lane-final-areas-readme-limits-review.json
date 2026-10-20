@@ -1,0 +1,298 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "status": "PASS",
+  "scope": "Original-checkout README evidence-limit wording compared against canonical coverage proposal/QA; no new source-body reads.",
+  "inputs": [
+    {
+      "path": "docs/ice-gap/README.md",
+      "sha256": "144460ec74b4c5e11196b5fc5b002b5ed9633d716cc9174680a5102276c2ef18",
+      "reviewed_lines": [
+        [
+          1,
+          61
+        ],
+        [
+          210,
+          225
+        ],
+        [
+          1021,
+          1027
+        ]
+      ]
+    },
+    {
+      "path": "docs/ice-gap/evidence/lane-final-areas-read-coverage-proposal.json",
+      "sha256": "3cf186a6e62e536dabcb60d903ee186f3a6d6e974991c70de268b4638909417e"
+    },
+    {
+      "path": "docs/ice-gap/evidence/lane-final-areas-read-coverage-qa.json",
+      "sha256": "8b043726f171d1f9b6dedc2a0c4bcaa8b967a0e044a6fb33347ab2fd772e9768"
+    }
+  ],
+  "checks": [
+    {
+      "claim": "1702 canonical paths",
+      "ok": true
+    },
+    {
+      "claim": "26 identical-copy derivations",
+      "ok": true
+    },
+    {
+      "claim": "86 connector-redacted lines",
+      "ok": true
+    },
+    {
+      "claim": "sessions.rs627 remains excluded",
+      "ok": true
+    },
+    {
+      "claim": "five unknown initial dirty hashes",
+      "ok": true
+    },
+    {
+      "claim": "generated model value rows remain unread",
+      "ok": true
+    },
+    {
+      "claim": "partial source ranges are disclosed",
+      "ok": true
+    },
+    {
+      "claim": "no runtime-test claims",
+      "ok": true
+    }
+  ],
+  "substantive_overclaims": [],
+  "details": {
+    "canonical_paths": 1702,
+    "direct_or_inherited_paths": 1676,
+    "derived_copy_paths": 26,
+    "redacted_lines": 86,
+    "unverified_lines": 1,
+    "dirty_baseline_missing_hashes": 5,
+    "generated_not_read": [
+      {
+        "path": "ice:packages/ai/src/image-models.generated.ts",
+        "ordinary_missing_ranges": [
+          [
+            36,
+            819
+          ]
+        ],
+        "missing_lines": 784,
+        "total_lines": 819
+      }
+    ],
+    "isolated_uncredited_lines": {
+      "files": 6,
+      "lines": 18,
+      "records": [
+        {
+          "path": "ice:packages/ai/test/azure-openai-base-url.test.ts",
+          "ordinary_missing_ranges": [
+            [
+              83,
+              83
+            ]
+          ],
+          "missing_lines": 1,
+          "total_lines": 204
+        },
+        {
+          "path": "ice:packages/ai/test/codex-sse-eof.test.ts",
+          "ordinary_missing_ranges": [
+            [
+              20,
+              20
+            ]
+          ],
+          "missing_lines": 1,
+          "total_lines": 39
+        },
+        {
+          "path": "ice:packages/ai/test/env-api-keys.test.ts",
+          "ordinary_missing_ranges": [
+            [
+              16,
+              16
+            ],
+            [
+              34,
+              34
+            ],
+            [
+              40,
+              40
+            ],
+            [
+              46,
+              46
+            ],
+            [
+              52,
+              52
+            ],
+            [
+              60,
+              60
+            ],
+            [
+              67,
+              67
+            ],
+            [
+              69,
+              69
+            ],
+            [
+              76,
+              76
+            ]
+          ],
+          "missing_lines": 9,
+          "total_lines": 116
+        },
+        {
+          "path": "ice:packages/ai/test/openai-codex-stream.test.ts",
+          "ordinary_missing_ranges": [
+            [
+              105,
+              105
+            ],
+            [
+              500,
+              500
+            ],
+            [
+              940,
+              940
+            ],
+            [
+              1139,
+              1139
+            ]
+          ],
+          "missing_lines": 4,
+          "total_lines": 2796
+        },
+        {
+          "path": "rust:crates/ice-ai/src/providers/openai_completions.rs",
+          "ordinary_missing_ranges": [
+            [
+              110,
+              110
+            ],
+            [
+              412,
+              412
+            ]
+          ],
+          "missing_lines": 2,
+          "total_lines": 1628
+        },
+        {
+          "path": "rust:crates/ice-ai/src/providers/openai_responses.rs",
+          "ordinary_missing_ranges": [
+            [
+              106,
+              106
+            ]
+          ],
+          "missing_lines": 1,
+          "total_lines": 3734
+        }
+      ]
+    },
+    "bounded_support": {
+      "files": 4,
+      "lines": 8887,
+      "records": [
+        {
+          "path": "rust:crates/ice-extensions/src/provider.rs",
+          "ordinary_missing_ranges": [
+            [
+              1,
+              79
+            ],
+            [
+              211,
+              460
+            ],
+            [
+              553,
+              1777
+            ]
+          ],
+          "missing_lines": 1554,
+          "total_lines": 1777
+        },
+        {
+          "path": "rust:crates/ice-harness/src/agent_harness.rs",
+          "ordinary_missing_ranges": [
+            [
+              136,
+              648
+            ],
+            [
+              821,
+              999
+            ],
+            [
+              1614,
+              2004
+            ],
+            [
+              2321,
+              3079
+            ],
+            [
+              3121,
+              3174
+            ],
+            [
+              3261,
+              3399
+            ],
+            [
+              4991,
+              5169
+            ],
+            [
+              5203,
+              5843
+            ]
+          ],
+          "missing_lines": 2855,
+          "total_lines": 5843
+        },
+        {
+          "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+          "ordinary_missing_ranges": [
+            [
+              470,
+              4085
+            ]
+          ],
+          "missing_lines": 3616,
+          "total_lines": 4085
+        },
+        {
+          "path": "rust:crates/ice-tools/src/in_memory.rs",
+          "ordinary_missing_ranges": [
+            [
+              36,
+              897
+            ]
+          ],
+          "missing_lines": 862,
+          "total_lines": 897
+        }
+      ]
+    }
+  },
+  "finding": "The README explicitly distinguishes generated grouping and copy derivation from direct reading, preserves historical hash limits, and links the exact ordinary partial-support ranges. It does not claim every native supporting file or test was fully read.",
+  "source_only": true,
+  "tests_executed": false
+}

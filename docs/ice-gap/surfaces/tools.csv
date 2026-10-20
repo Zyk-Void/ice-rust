@@ -1,0 +1,65 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+bash,packages/agent/src/harness/tools/bash.ts:55,crates/ice-tools/src/tools/bash.rs:1,partial,TOOLS-001
+bash,packages/coding-agent/src/core/tools/bash.ts:387,crates/ice-tools/src/tools/bash.rs:1,partial,TOOLS-001
+edit,packages/agent/src/harness/tools/edit.ts:83,crates/ice-tools/src/tools/edit.rs:1,partial,TOOLS-025
+edit,packages/coding-agent/src/core/tools/edit.ts:293,crates/ice-tools/src/tools/edit.rs:1,partial,TOOLS-025
+read,packages/agent/src/harness/tools/read.ts:49,crates/ice-tools/src/tools/read.rs:1,partial,TOOLS-022
+read,packages/coding-agent/src/core/tools/read.ts:210,crates/ice-tools/src/tools/read.rs:1,partial,TOOLS-022
+write,packages/agent/src/harness/tools/write.ts:21,crates/ice-tools/src/tools/write.rs:1,partial,TOOLS-024
+write,packages/coding-agent/src/core/tools/write.ts:187,crates/ice-tools/src/tools/write.rs:1,partial,TOOLS-024
+bash_output,packages/coding-agent/src/core/tools/bash-shells.ts:92,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-006
+bash_kill,packages/coding-agent/src/core/tools/bash-shells.ts:218,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-008
+bash_input,packages/coding-agent/src/core/tools/bash-shells.ts:259,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-009
+bash_watch,packages/coding-agent/src/core/tools/bash-watch.ts:146,crates/ice-tools/src/tools/mod.rs:1,missing,TOOLS-011
+find,packages/coding-agent/src/core/tools/find.ts:124,crates/ice-tools/src/tools/find.rs:1,partial,TOOLS-028
+grep,packages/coding-agent/src/core/tools/grep.ts:129,crates/ice-tools/src/tools/grep.rs:1,partial,TOOLS-029
+ls,packages/coding-agent/src/core/tools/ls.ts:101,crates/ice-tools/src/tools/ls.rs:1,partial,TOOLS-030
+agent,packages/coding-agent/src/subagents/v2/extension.ts:1045,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent_control,packages/coding-agent/src/subagents/v2/extension.ts:1046,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_patch,packages/coding-agent/src/subagents/v2/extension.ts:1047,crates/ice-cli/src/child_agents.rs:207,missing,SUB-032
+agent.tasks,packages/coding-agent/src/subagents/api/agent.ts:80,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.background,packages/coding-agent/src/subagents/api/agent.ts:82,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].agent,packages/coding-agent/src/subagents/api/agent.ts:30,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].name,packages/coding-agent/src/subagents/api/agent.ts:33,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].resume,packages/coding-agent/src/subagents/api/agent.ts:34,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].description,packages/coding-agent/src/subagents/api/agent.ts:35,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].prompt,packages/coding-agent/src/subagents/api/agent.ts:36,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].model,packages/coding-agent/src/subagents/api/agent.ts:37,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].thinking,packages/coding-agent/src/subagents/api/agent.ts:38,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].isolation,packages/coding-agent/src/subagents/api/agent.ts:39,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].scope,packages/coding-agent/src/subagents/api/agent.ts:40,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].scope.roots,packages/coding-agent/src/subagents/api/agent.ts:43,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].scope.targets,packages/coding-agent/src/subagents/api/agent.ts:47,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].outputSchema,packages/coding-agent/src/subagents/api/agent.ts:54,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].acceptance,packages/coding-agent/src/subagents/api/agent.ts:55,crates/ice-cli/src/child_agents.rs:207,missing,SUB-023
+agent.tasks[].context,packages/coding-agent/src/subagents/api/agent.ts:60,crates/ice-cli/src/child_agents.rs:207,missing,SUB-025
+agent.tasks[].context[].id,packages/coding-agent/src/subagents/api/agent.ts:64,crates/ice-cli/src/child_agents.rs:207,missing,SUB-025
+agent.tasks[].context[].kind,packages/coding-agent/src/subagents/api/agent.ts:65,crates/ice-cli/src/child_agents.rs:207,missing,SUB-025
+agent.tasks[].context[].content,packages/coding-agent/src/subagents/api/agent.ts:66,crates/ice-cli/src/child_agents.rs:207,missing,SUB-025
+agent_control.action,packages/coding-agent/src/subagents/api/agent-control.ts:39,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.id,packages/coding-agent/src/subagents/api/agent-control.ts:40,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.ids,packages/coding-agent/src/subagents/api/agent-control.ts:41,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.message,packages/coding-agent/src/subagents/api/agent-control.ts:42,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.delivery,packages/coding-agent/src/subagents/api/agent-control.ts:43,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.timeout,packages/coding-agent/src/subagents/api/agent-control.ts:44,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.offset,packages/coding-agent/src/subagents/api/agent-control.ts:45,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control.length,packages/coding-agent/src/subagents/api/agent-control.ts:46,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=status,packages/coding-agent/src/subagents/api/agent-control.ts:12,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=wait,packages/coding-agent/src/subagents/api/agent-control.ts:13,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=send,packages/coding-agent/src/subagents/api/agent-control.ts:14,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=resume,packages/coding-agent/src/subagents/api/agent-control.ts:15,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=stop,packages/coding-agent/src/subagents/api/agent-control.ts:16,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=delete,packages/coding-agent/src/subagents/api/agent-control.ts:17,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=output,packages/coding-agent/src/subagents/api/agent-control.ts:18,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=list,packages/coding-agent/src/subagents/api/agent-control.ts:19,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_control action=agents,packages/coding-agent/src/subagents/api/agent-control.ts:20,crates/ice-cli/src/child_agents.rs:207,missing,SUB-024
+agent_patch.id,packages/coding-agent/src/subagents/api/agent-patch.ts:16,crates/ice-cli/src/child_agents.rs:207,missing,SUB-032
+agent_patch.action,packages/coding-agent/src/subagents/api/agent-patch.ts:17,crates/ice-cli/src/child_agents.rs:207,missing,SUB-032
+agent_patch action=inspect,packages/coding-agent/src/subagents/api/agent-patch.ts:11,crates/ice-cli/src/child_agents.rs:207,missing,SUB-032
+agent_patch action=apply,packages/coding-agent/src/subagents/api/agent-patch.ts:11,crates/ice-cli/src/child_agents.rs:207,missing,SUB-032
+agent_patch action=reject,packages/coding-agent/src/subagents/api/agent-patch.ts:11,crates/ice-cli/src/child_agents.rs:207,missing,SUB-032
+ask,packages/coding-agent/src/ice-safe-verify.ts:1005,,missing,SAFE-009
+draft_plan,packages/coding-agent/src/ice-safe-verify.ts:1074,,missing,SAFE-010
+propose_plan,packages/coding-agent/src/ice-safe-verify.ts:1122,,missing,SAFE-011
+read_plan,packages/coding-agent/src/ice-safe-verify.ts:1186,,missing,SAFE-013
+cognee_search,packages/coding-agent/src/ice-cognee.ts:1780,,missing,COG-055

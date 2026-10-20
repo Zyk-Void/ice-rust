@@ -1,0 +1,876 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "phase": "source-displayed-awaiting-semantic-disposition",
+  "records": [
+    {
+      "symbol": "registerKittyImageMetadata",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:295",
+      "covering_entries": [
+        "TUI-227"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          292,
+          309
+        ],
+        "text": "292 | const kittyImageMetadata = new Map<number, RegisteredKittyImageMetadata>();\n293 | let kittyTransmissionGeneration = 0;\n294 | \n295 | export function registerKittyImageMetadata(metadata: KittyImageMetadata): void {\n296 | \tkittyTransmissionGeneration += 1;\n297 | \tkittyImageMetadata.delete(metadata.imageId);\n298 | \tkittyImageMetadata.set(metadata.imageId, { ...metadata, transmissionGeneration: kittyTransmissionGeneration });\n299 | \tif (kittyImageMetadata.size > 1000) {\n300 | \t\tconst oldestImageId = kittyImageMetadata.keys().next().value;\n301 | \t\tif (oldestImageId !== undefined) kittyImageMetadata.delete(oldestImageId);\n302 | \t}\n303 | }\n304 | \n305 | function getRegisteredKittyImageMetadata(line: string): RegisteredKittyImageMetadata | undefined {\n306 | \tconst controls = /\\x1b_G([^;]*);/.exec(line)?.[1];\n307 | \tif (!controls) return undefined;\n308 | \tconst imageId = /(?:^|,)i=(\\d+)(?:,|$)/.exec(controls)?.[1];\n309 | \treturn imageId === undefined ? undefined : kittyImageMetadata.get(Number.parseInt(imageId, 10));"
+      },
+      "entries": [
+        {
+          "id": "TUI-227",
+          "title": "Kitty metadata generations, placement reuse and vertical cropping",
+          "status": "missing",
+          "source": "ice:packages/tui/src/terminal-image.ts:268-390; ice:packages/tui/src/terminal-image.ts:568-611; ice:packages/tui/test/terminal-image.test.ts:418-458",
+          "what": "Track transmitted image geometry and derive placement-only or cropped commands without retransmitting or corrupting the original line.",
+          "mechanism": "A global insertion-ordered map stores imageId,columns,rows,pixel width/height with an increasing transmissionGeneration. Registration replaces/reinserts an existing ID and evicts oldest entries above1000. renderImage registers only when the caller supplied imageId; ID allocation is separate. Metadata lookup parses the first Kitty header's decimal i. Placement parsing follows adjacent Kitty chunks while m=1, rejecting missing terminator,header or separator; it retains only i,p,x,y,w,h,X,Y,c,r,C,U,z,P,Q,H,V controls, prepends a=p,q=2, and returns imageId,generation,transmissionBytes,estimatedDecodedBytes=pixelWidth*pixelHeight*4,sequence and original-line replacement preserving prefix/suffix. Cropping requires known metadata, hiddenRows within[0,rows),positive visibleRows; clamp visible rows to remaining, retain unchanged full placement, compute source y=floor(pixelHeight*hidden/rows) and h from ceil bottom boundary with minimum1/clamping, then replace y,h,r in first header while preserving payload and all other line content.",
+          "interfaces": "register/getKittyImageMetadata; getKittyImagePlacement; cropKittyImageLine; KittyImageMetadata and KittyImagePlacement generation/byte-accounting contracts. Consumers include retained main/alternate-screen image caches.",
+          "dependencies": [
+            "TUI-226",
+            "TUI-228"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:249-281 only scans changed old rows for a=T and decimal i before issuing placement deletion. There is no per-image geometry/generation map, complete transmission-span parser, a=p replacement or source-pixel crop contract in the fully read559-line module. rust:crates/ice-tui/src/tui_alt_screen.rs:1-1471 retains image lines and deletes removed placements but lacks the corresponding bounded upload-reuse metadata. Existing row-based cleanup is partial infrastructure, not equivalent placement caching.",
+          "port": "Introduce an owned bounded metadata service and lossless Kitty transmission parser. Use generations plus byte estimates for renderer caching, preserve surrounding line text and carry crop controls into placement-only output. Scope cache lifetimes to terminal state and explicitly distinguish data eviction from visible placement deletion.",
+          "size_min": 200,
+          "size_max": 330,
+          "priority": "P1",
+          "priority_reason": "Scrolled or partially visible images need reusable placement and pixel cropping without repeated large transmissions."
+        }
+      ]
+    },
+    {
+      "symbol": "calculateImageCellSize",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:393",
+      "covering_entries": [
+        "TUI-228"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          390,
+          407
+        ],
+        "text": "390 | \treturn `${line.slice(0, match.index)}\\x1b_G${controls.join(\",\")};${line.slice(match.index + match[0].length)}`;\n391 | }\n392 | \n393 | export function calculateImageCellSize(\n394 | \timageDimensions: ImageDimensions,\n395 | \tmaxWidthCells: number,\n396 | \tmaxHeightCells?: number,\n397 | \tcellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 },\n398 | ): ImageCellSize {\n399 | \tconst maxWidth = Math.max(1, Math.floor(maxWidthCells));\n400 | \tconst maxHeight = maxHeightCells === undefined ? undefined : Math.max(1, Math.floor(maxHeightCells));\n401 | \tconst imageWidth = Math.max(1, imageDimensions.widthPx);\n402 | \tconst imageHeight = Math.max(1, imageDimensions.heightPx);\n403 | \n404 | \tconst widthScale = (maxWidth * cellDimensions.widthPx) / imageWidth;\n405 | \tconst heightScale = maxHeight === undefined ? widthScale : (maxHeight * cellDimensions.heightPx) / imageHeight;\n406 | \tconst scale = Math.min(widthScale, heightScale);\n407 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-228",
+          "title": "Image dimensions and aspect-preserving cell fitting",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:393-565",
+          "what": "Read image geometry and fit it to explicit width/height cell limits using current pixel cell dimensions.",
+          "mechanism": "Size fitting floors and clamps maxWidthCells and optional maxHeightCells to at least1, clamps image pixel dimensions to1, computes min(widthScale,heightScale), allows upscaling, and ceil/clamps resulting columns and rows. Default cells are9x18; explicit zero cell dimensions are not validated. calculateImageRows shares fitting. Header helpers decode base64 and return null on caught failures. PNG requires24bytes and only first4 signature bytes before big-endian width/height at16/20. JPEG scans SOI and markers, recognizes SOF C0-C2, skips non-FF bytes and otherwise advances by2+segmentLength when length>=2. GIF checks87a/89a and reads little-endian width/height. WebP requires30bytes and RIFF/WEBP; handles VP8, VP8L dimension bits at21..24 and VP8X 24-bit fields at24/27. The public dispatcher uses exact MIME strings image/png,jpeg,gif,webp. These are header readers, not full decoders or validity checks.",
+          "interfaces": "ImageDimensions {widthPx,heightPx}; calculateImageRows; renderImage size result; getPng/Jpeg/Gif/Webp/ImageDimensions(base64,mimeType).",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:289-425 sniffs raw bytes independent of MIME, validates the full8-byte PNG signature and recognizes additional JPEG SOF forms; preserve those native strengths. Its WebP VP8L reads bytes17..20 instead of21..24 and has no VP8X case, so valid lossless headers can produce incorrect dimensions. calculate_image_rows computes integer(height+cellHeight-1)/cellHeight then narrows to u16, with no width-based fit and division by zero if the public cellHeight argument is0. The native Image component performs its own separate heuristic fit in image.rs:192-235, including a non-upscaling natural-width cap and floored width reduction, rather than the shared TS ceil/min-scale result.",
+          "port": "Unify dimension types and fitting behind a shared checked helper used by both component and direct rendering, while preserving stronger native signature/extra-JPEG handling. Correct WebP offsets/add VP8X and explicitly handle invalid cells and overflow. Provide a MIME-aware compatibility adapter without weakening native format sniffing.",
+          "size_min": 130,
+          "size_max": 210,
+          "priority": "P1",
+          "priority_reason": "Incorrect header geometry or differing fit arithmetic breaks layout, cropping and reserved image rows."
+        }
+      ]
+    },
+    {
+      "symbol": "getPngDimensions",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:427",
+      "covering_entries": [
+        "TUI-228"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          424,
+          441
+        ],
+        "text": "424 | \treturn calculateImageCellSize(imageDimensions, targetWidthCells, undefined, cellDimensions).rows;\n425 | }\n426 | \n427 | export function getPngDimensions(base64Data: string): ImageDimensions | null {\n428 | \ttry {\n429 | \t\tconst buffer = Buffer.from(base64Data, \"base64\");\n430 | \n431 | \t\tif (buffer.length < 24) {\n432 | \t\t\treturn null;\n433 | \t\t}\n434 | \n435 | \t\tif (buffer[0] !== 0x89 || buffer[1] !== 0x50 || buffer[2] !== 0x4e || buffer[3] !== 0x47) {\n436 | \t\t\treturn null;\n437 | \t\t}\n438 | \n439 | \t\tconst width = buffer.readUInt32BE(16);\n440 | \t\tconst height = buffer.readUInt32BE(20);\n441 | "
+      },
+      "entries": [
+        {
+          "id": "TUI-228",
+          "title": "Image dimensions and aspect-preserving cell fitting",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:393-565",
+          "what": "Read image geometry and fit it to explicit width/height cell limits using current pixel cell dimensions.",
+          "mechanism": "Size fitting floors and clamps maxWidthCells and optional maxHeightCells to at least1, clamps image pixel dimensions to1, computes min(widthScale,heightScale), allows upscaling, and ceil/clamps resulting columns and rows. Default cells are9x18; explicit zero cell dimensions are not validated. calculateImageRows shares fitting. Header helpers decode base64 and return null on caught failures. PNG requires24bytes and only first4 signature bytes before big-endian width/height at16/20. JPEG scans SOI and markers, recognizes SOF C0-C2, skips non-FF bytes and otherwise advances by2+segmentLength when length>=2. GIF checks87a/89a and reads little-endian width/height. WebP requires30bytes and RIFF/WEBP; handles VP8, VP8L dimension bits at21..24 and VP8X 24-bit fields at24/27. The public dispatcher uses exact MIME strings image/png,jpeg,gif,webp. These are header readers, not full decoders or validity checks.",
+          "interfaces": "ImageDimensions {widthPx,heightPx}; calculateImageRows; renderImage size result; getPng/Jpeg/Gif/Webp/ImageDimensions(base64,mimeType).",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:289-425 sniffs raw bytes independent of MIME, validates the full8-byte PNG signature and recognizes additional JPEG SOF forms; preserve those native strengths. Its WebP VP8L reads bytes17..20 instead of21..24 and has no VP8X case, so valid lossless headers can produce incorrect dimensions. calculate_image_rows computes integer(height+cellHeight-1)/cellHeight then narrows to u16, with no width-based fit and division by zero if the public cellHeight argument is0. The native Image component performs its own separate heuristic fit in image.rs:192-235, including a non-upscaling natural-width cap and floored width reduction, rather than the shared TS ceil/min-scale result.",
+          "port": "Unify dimension types and fitting behind a shared checked helper used by both component and direct rendering, while preserving stronger native signature/extra-JPEG handling. Correct WebP offsets/add VP8X and explicitly handle invalid cells and overflow. Provide a MIME-aware compatibility adapter without weakening native format sniffing.",
+          "size_min": 130,
+          "size_max": 210,
+          "priority": "P1",
+          "priority_reason": "Incorrect header geometry or differing fit arithmetic breaks layout, cropping and reserved image rows."
+        }
+      ]
+    },
+    {
+      "symbol": "getJpegDimensions",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:448",
+      "covering_entries": [
+        "TUI-228"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          445,
+          462
+        ],
+        "text": "445 | \t}\n446 | }\n447 | \n448 | export function getJpegDimensions(base64Data: string): ImageDimensions | null {\n449 | \ttry {\n450 | \t\tconst buffer = Buffer.from(base64Data, \"base64\");\n451 | \n452 | \t\tif (buffer.length < 2) {\n453 | \t\t\treturn null;\n454 | \t\t}\n455 | \n456 | \t\tif (buffer[0] !== 0xff || buffer[1] !== 0xd8) {\n457 | \t\t\treturn null;\n458 | \t\t}\n459 | \n460 | \t\tlet offset = 2;\n461 | \t\twhile (offset < buffer.length - 9) {\n462 | \t\t\tif (buffer[offset] !== 0xff) {"
+      },
+      "entries": [
+        {
+          "id": "TUI-228",
+          "title": "Image dimensions and aspect-preserving cell fitting",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:393-565",
+          "what": "Read image geometry and fit it to explicit width/height cell limits using current pixel cell dimensions.",
+          "mechanism": "Size fitting floors and clamps maxWidthCells and optional maxHeightCells to at least1, clamps image pixel dimensions to1, computes min(widthScale,heightScale), allows upscaling, and ceil/clamps resulting columns and rows. Default cells are9x18; explicit zero cell dimensions are not validated. calculateImageRows shares fitting. Header helpers decode base64 and return null on caught failures. PNG requires24bytes and only first4 signature bytes before big-endian width/height at16/20. JPEG scans SOI and markers, recognizes SOF C0-C2, skips non-FF bytes and otherwise advances by2+segmentLength when length>=2. GIF checks87a/89a and reads little-endian width/height. WebP requires30bytes and RIFF/WEBP; handles VP8, VP8L dimension bits at21..24 and VP8X 24-bit fields at24/27. The public dispatcher uses exact MIME strings image/png,jpeg,gif,webp. These are header readers, not full decoders or validity checks.",
+          "interfaces": "ImageDimensions {widthPx,heightPx}; calculateImageRows; renderImage size result; getPng/Jpeg/Gif/Webp/ImageDimensions(base64,mimeType).",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:289-425 sniffs raw bytes independent of MIME, validates the full8-byte PNG signature and recognizes additional JPEG SOF forms; preserve those native strengths. Its WebP VP8L reads bytes17..20 instead of21..24 and has no VP8X case, so valid lossless headers can produce incorrect dimensions. calculate_image_rows computes integer(height+cellHeight-1)/cellHeight then narrows to u16, with no width-based fit and division by zero if the public cellHeight argument is0. The native Image component performs its own separate heuristic fit in image.rs:192-235, including a non-upscaling natural-width cap and floored width reduction, rather than the shared TS ceil/min-scale result.",
+          "port": "Unify dimension types and fitting behind a shared checked helper used by both component and direct rendering, while preserving stronger native signature/extra-JPEG handling. Correct WebP offsets/add VP8X and explicitly handle invalid cells and overflow. Provide a MIME-aware compatibility adapter without weakening native format sniffing.",
+          "size_min": 130,
+          "size_max": 210,
+          "priority": "P1",
+          "priority_reason": "Incorrect header geometry or differing fit arithmetic breaks layout, cropping and reserved image rows."
+        }
+      ]
+    },
+    {
+      "symbol": "getGifDimensions",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:491",
+      "covering_entries": [
+        "TUI-228"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          488,
+          505
+        ],
+        "text": "488 | \t}\n489 | }\n490 | \n491 | export function getGifDimensions(base64Data: string): ImageDimensions | null {\n492 | \ttry {\n493 | \t\tconst buffer = Buffer.from(base64Data, \"base64\");\n494 | \n495 | \t\tif (buffer.length < 10) {\n496 | \t\t\treturn null;\n497 | \t\t}\n498 | \n499 | \t\tconst sig = buffer.slice(0, 6).toString(\"ascii\");\n500 | \t\tif (sig !== \"GIF87a\" && sig !== \"GIF89a\") {\n501 | \t\t\treturn null;\n502 | \t\t}\n503 | \n504 | \t\tconst width = buffer.readUInt16LE(6);\n505 | \t\tconst height = buffer.readUInt16LE(8);"
+      },
+      "entries": [
+        {
+          "id": "TUI-228",
+          "title": "Image dimensions and aspect-preserving cell fitting",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:393-565",
+          "what": "Read image geometry and fit it to explicit width/height cell limits using current pixel cell dimensions.",
+          "mechanism": "Size fitting floors and clamps maxWidthCells and optional maxHeightCells to at least1, clamps image pixel dimensions to1, computes min(widthScale,heightScale), allows upscaling, and ceil/clamps resulting columns and rows. Default cells are9x18; explicit zero cell dimensions are not validated. calculateImageRows shares fitting. Header helpers decode base64 and return null on caught failures. PNG requires24bytes and only first4 signature bytes before big-endian width/height at16/20. JPEG scans SOI and markers, recognizes SOF C0-C2, skips non-FF bytes and otherwise advances by2+segmentLength when length>=2. GIF checks87a/89a and reads little-endian width/height. WebP requires30bytes and RIFF/WEBP; handles VP8, VP8L dimension bits at21..24 and VP8X 24-bit fields at24/27. The public dispatcher uses exact MIME strings image/png,jpeg,gif,webp. These are header readers, not full decoders or validity checks.",
+          "interfaces": "ImageDimensions {widthPx,heightPx}; calculateImageRows; renderImage size result; getPng/Jpeg/Gif/Webp/ImageDimensions(base64,mimeType).",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:289-425 sniffs raw bytes independent of MIME, validates the full8-byte PNG signature and recognizes additional JPEG SOF forms; preserve those native strengths. Its WebP VP8L reads bytes17..20 instead of21..24 and has no VP8X case, so valid lossless headers can produce incorrect dimensions. calculate_image_rows computes integer(height+cellHeight-1)/cellHeight then narrows to u16, with no width-based fit and division by zero if the public cellHeight argument is0. The native Image component performs its own separate heuristic fit in image.rs:192-235, including a non-upscaling natural-width cap and floored width reduction, rather than the shared TS ceil/min-scale result.",
+          "port": "Unify dimension types and fitting behind a shared checked helper used by both component and direct rendering, while preserving stronger native signature/extra-JPEG handling. Correct WebP offsets/add VP8X and explicitly handle invalid cells and overflow. Provide a MIME-aware compatibility adapter without weakening native format sniffing.",
+          "size_min": 130,
+          "size_max": 210,
+          "priority": "P1",
+          "priority_reason": "Incorrect header geometry or differing fit arithmetic breaks layout, cropping and reserved image rows."
+        }
+      ]
+    },
+    {
+      "symbol": "getWebpDimensions",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:513",
+      "covering_entries": [
+        "TUI-228"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          510,
+          527
+        ],
+        "text": "510 | \t}\n511 | }\n512 | \n513 | export function getWebpDimensions(base64Data: string): ImageDimensions | null {\n514 | \ttry {\n515 | \t\tconst buffer = Buffer.from(base64Data, \"base64\");\n516 | \n517 | \t\tif (buffer.length < 30) {\n518 | \t\t\treturn null;\n519 | \t\t}\n520 | \n521 | \t\tconst riff = buffer.slice(0, 4).toString(\"ascii\");\n522 | \t\tconst webp = buffer.slice(8, 12).toString(\"ascii\");\n523 | \t\tif (riff !== \"RIFF\" || webp !== \"WEBP\") {\n524 | \t\t\treturn null;\n525 | \t\t}\n526 | \n527 | \t\tconst chunk = buffer.slice(12, 16).toString(\"ascii\");"
+      },
+      "entries": [
+        {
+          "id": "TUI-228",
+          "title": "Image dimensions and aspect-preserving cell fitting",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:393-565",
+          "what": "Read image geometry and fit it to explicit width/height cell limits using current pixel cell dimensions.",
+          "mechanism": "Size fitting floors and clamps maxWidthCells and optional maxHeightCells to at least1, clamps image pixel dimensions to1, computes min(widthScale,heightScale), allows upscaling, and ceil/clamps resulting columns and rows. Default cells are9x18; explicit zero cell dimensions are not validated. calculateImageRows shares fitting. Header helpers decode base64 and return null on caught failures. PNG requires24bytes and only first4 signature bytes before big-endian width/height at16/20. JPEG scans SOI and markers, recognizes SOF C0-C2, skips non-FF bytes and otherwise advances by2+segmentLength when length>=2. GIF checks87a/89a and reads little-endian width/height. WebP requires30bytes and RIFF/WEBP; handles VP8, VP8L dimension bits at21..24 and VP8X 24-bit fields at24/27. The public dispatcher uses exact MIME strings image/png,jpeg,gif,webp. These are header readers, not full decoders or validity checks.",
+          "interfaces": "ImageDimensions {widthPx,heightPx}; calculateImageRows; renderImage size result; getPng/Jpeg/Gif/Webp/ImageDimensions(base64,mimeType).",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:289-425 sniffs raw bytes independent of MIME, validates the full8-byte PNG signature and recognizes additional JPEG SOF forms; preserve those native strengths. Its WebP VP8L reads bytes17..20 instead of21..24 and has no VP8X case, so valid lossless headers can produce incorrect dimensions. calculate_image_rows computes integer(height+cellHeight-1)/cellHeight then narrows to u16, with no width-based fit and division by zero if the public cellHeight argument is0. The native Image component performs its own separate heuristic fit in image.rs:192-235, including a non-upscaling natural-width cap and floored width reduction, rather than the shared TS ceil/min-scale result.",
+          "port": "Unify dimension types and fitting behind a shared checked helper used by both component and direct rendering, while preserving stronger native signature/extra-JPEG handling. Correct WebP offsets/add VP8X and explicitly handle invalid cells and overflow. Provide a MIME-aware compatibility adapter without weakening native format sniffing.",
+          "size_min": 130,
+          "size_max": 210,
+          "priority": "P1",
+          "priority_reason": "Incorrect header geometry or differing fit arithmetic breaks layout, cropping and reserved image rows."
+        }
+      ]
+    },
+    {
+      "symbol": "getImageDimensions",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/terminal-image.ts:552",
+      "covering_entries": [
+        "TUI-228"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal-image.ts",
+        "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+        "range": [
+          549,
+          566
+        ],
+        "text": "549 | \t}\n550 | }\n551 | \n552 | export function getImageDimensions(base64Data: string, mimeType: string): ImageDimensions | null {\n553 | \tif (mimeType === \"image/png\") {\n554 | \t\treturn getPngDimensions(base64Data);\n555 | \t}\n556 | \tif (mimeType === \"image/jpeg\") {\n557 | \t\treturn getJpegDimensions(base64Data);\n558 | \t}\n559 | \tif (mimeType === \"image/gif\") {\n560 | \t\treturn getGifDimensions(base64Data);\n561 | \t}\n562 | \tif (mimeType === \"image/webp\") {\n563 | \t\treturn getWebpDimensions(base64Data);\n564 | \t}\n565 | \treturn null;\n566 | }"
+      },
+      "entries": [
+        {
+          "id": "TUI-228",
+          "title": "Image dimensions and aspect-preserving cell fitting",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal-image.ts:393-565",
+          "what": "Read image geometry and fit it to explicit width/height cell limits using current pixel cell dimensions.",
+          "mechanism": "Size fitting floors and clamps maxWidthCells and optional maxHeightCells to at least1, clamps image pixel dimensions to1, computes min(widthScale,heightScale), allows upscaling, and ceil/clamps resulting columns and rows. Default cells are9x18; explicit zero cell dimensions are not validated. calculateImageRows shares fitting. Header helpers decode base64 and return null on caught failures. PNG requires24bytes and only first4 signature bytes before big-endian width/height at16/20. JPEG scans SOI and markers, recognizes SOF C0-C2, skips non-FF bytes and otherwise advances by2+segmentLength when length>=2. GIF checks87a/89a and reads little-endian width/height. WebP requires30bytes and RIFF/WEBP; handles VP8, VP8L dimension bits at21..24 and VP8X 24-bit fields at24/27. The public dispatcher uses exact MIME strings image/png,jpeg,gif,webp. These are header readers, not full decoders or validity checks.",
+          "interfaces": "ImageDimensions {widthPx,heightPx}; calculateImageRows; renderImage size result; getPng/Jpeg/Gif/Webp/ImageDimensions(base64,mimeType).",
+          "dependencies": [
+            "TUI-225"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal_image.rs:289-425 sniffs raw bytes independent of MIME, validates the full8-byte PNG signature and recognizes additional JPEG SOF forms; preserve those native strengths. Its WebP VP8L reads bytes17..20 instead of21..24 and has no VP8X case, so valid lossless headers can produce incorrect dimensions. calculate_image_rows computes integer(height+cellHeight-1)/cellHeight then narrows to u16, with no width-based fit and division by zero if the public cellHeight argument is0. The native Image component performs its own separate heuristic fit in image.rs:192-235, including a non-upscaling natural-width cap and floored width reduction, rather than the shared TS ceil/min-scale result.",
+          "port": "Unify dimension types and fitting behind a shared checked helper used by both component and direct rendering, while preserving stronger native signature/extra-JPEG handling. Correct WebP offsets/add VP8X and explicitly handle invalid cells and overflow. Provide a MIME-aware compatibility adapter without weakening native format sniffing.",
+          "size_min": 130,
+          "size_max": 210,
+          "priority": "P1",
+          "priority_reason": "Incorrect header geometry or differing fit arithmetic breaks layout, cropping and reserved image rows."
+        }
+      ]
+    },
+    {
+      "symbol": "KeyboardProtocolNegotiationSequence",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal.ts:20",
+      "covering_entries": [
+        "TUI-208"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/terminal.ts",
+        "sha256": "bac9932448e21d559f1665074051fd3fe7e8f8ce94a6a60e18b6fb97d7095643",
+        "range": [
+          17,
+          34
+        ],
+        "text": "17 | const KEYBOARD_PROTOCOL_RESPONSE_FRAGMENT_TIMEOUT_MS = 150;\n18 | const KITTY_KEYBOARD_PROTOCOL_QUERY = `\\x1b[>${DESIRED_KITTY_KEYBOARD_PROTOCOL_FLAGS}u\\x1b[?u\\x1b[c`;\n19 | \n20 | export type KeyboardProtocolNegotiationSequence =\n21 | \t| { type: \"kitty-flags\"; flags: number }\n22 | \t| { type: \"device-attributes\" };\n23 | \n24 | export function parseKeyboardProtocolNegotiationSequence(\n25 | \tsequence: string,\n26 | ): KeyboardProtocolNegotiationSequence | undefined {\n27 | \tconst kittyFlags = sequence.match(/^\\x1b\\[\\?(\\d+)u$/);\n28 | \tif (kittyFlags) {\n29 | \t\treturn { type: \"kitty-flags\", flags: Number.parseInt(kittyFlags[1]!, 10) };\n30 | \t}\n31 | \tif (/^\\x1b\\[\\?[\\d;]*c$/.test(sequence)) {\n32 | \t\treturn { type: \"device-attributes\" };\n33 | \t}\n34 | \treturn undefined;"
+      },
+      "entries": [
+        {
+          "id": "TUI-208",
+          "title": "Keyboard negotiation, platform modifier helpers and fallback input",
+          "status": "partial",
+          "source": "ice:packages/tui/src/terminal.ts:12-367; ice:packages/tui/src/native-modifiers.ts:1-60; ice:packages/tui/native/darwin/src/darwin-modifiers.c:1-71; ice:packages/tui/native/win32/src/win32-console-mode.c:1-54; ice:packages/tui/test/terminal.test.ts:1-191; ice:packages/tui/native/darwin/README.md:1-21; ice:packages/tui/package.json:7-21",
+          "what": "Negotiate enhanced keys without swallowing user input and restore terminal protocol state across start, drain and stop.",
+          "mechanism": "TS starts raw UTF-8 stdin, enables bracketed paste, installs resize before Unix self-SIGWINCH, and enables Windows VT input after raw-mode setup. It pushes Kitty flags7, queries flags, and appends a device-attributes sentinel (ESC[>7u ESC[?u ESC[c). Nonzero flags activate global/terminal Kitty state and disable modifyOtherKeys; zero flags or DA before Kitty enables xterm modifyOtherKeys level2. There is no fixed whole-negotiation startup timeout; ordinary input is forwarded meanwhile. An incomplete ESC[ or ESC[?digits; prefix flushed by StdinBuffer receives a separate150ms fragment timer; valid continuations are consumed, invalid/expired prefixes replay as input. Pushed state is recorded independently of observed support so stop/drain can pop once.\n\nOn darwin TERM_PROGRAM=Apple_Terminal, raw CR becomes CSI13;2u only when the local native shift helper reports true. Unlike Rust's guard, this TS check does not exclude SSH. The lazy Darwin helper caches success/failure, supports x64/arm64, probes module-parent/module/executable native/prebuilds locations, validates isModifierPressed and returns false on unavailable/error. C reads combined-session CGEventSourceFlagsState for shift/command/control/option via a N-API bridge. Windows x64/arm64 loader probes analogous3 paths and calls optional enableVirtualTerminalInput; the C implementation ORs0x0200 onto existing stdin console mode and returns a boolean. TS ignores the boolean and returns after the first successfully loaded module.",
+          "interfaces": "Terminal.start/kittyProtocolActive, ProcessTerminal.modifyOtherKeysActive; parseKeyboardProtocolNegotiationSequence; isAppleTerminalSession,normalizeAppleTerminalInput,isNativeModifierPressed. Env TERM_PROGRAM,SSH_CONNECTION/SSH_CLIENT/SSH_TTY and platform/architecture have distinct source/native semantics.",
+          "dependencies": [
+            "TUI-206",
+            "TUI-207"
+          ],
+          "rust": "rust:crates/ice-tui/src/terminal.rs:16-65,187-290,340-369,469-506 implements flags7 negotiation through Crossterm, caches detected support across resumes and skips unsupported modifyOtherKeys because Crossterm cannot parse it. Native ICE_KITTY_KEYBOARD forces legacy only for value'0' and otherwise enables; macOS Otty TERM_PROGRAM/TERM bypasses protocol to preserve IME, and unmodified local Apple Terminal Enter consults CoreGraphics only outside SSH. These native safeguards and direct Unicode input tests at terminal.rs614-669 are valuable existing behavior. No TS-style DA/prefix replay state machine, generic exported4-modifier helper or Windows N-API adapter is needed literally in Rust, but the compatibility APIs/fallback reader contract remain partial.",
+          "port": "Implement negotiation as an owned state machine tied to the selected raw or structured reader. Add late/split response handling and fallback decoding where raw compatibility is required; never enable an encoding the active reader cannot consume. Expose equivalent modifier-query capability behind cfg(platform) and keep native Otty/SSH/IME safeguards, documenting intentional differences from TS. Use static fixtures and mock-terminal acceptance tests for ordering and one-pop restoration; OS helper packaging belongs only where a JS bridge is still distributed.",
+          "size_min": 240,
+          "size_max": 400,
+          "priority": "P1",
+          "priority_reason": "Protocol state and platform fallback determine whether Enter, modifiers and IME remain usable."
+        }
+      ]
+    },
+    {
+      "symbol": "TuiInputListenerResult",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:50",
+      "covering_entries": [
+        "TUI-217"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          47,
+          64
+        ],
+        "text": "47 | \tinvalidate(): void;\n48 | }\n49 | \n50 | export type TuiInputListenerResult = { consume?: boolean; data?: string } | undefined;\n51 | export type TuiInputListener = (data: string) => TuiInputListenerResult;\n52 | type PendingOsc11BackgroundQuery = {\n53 | \tsettled: boolean;\n54 | \tresolve: ((rgb: RgbColor | undefined) => void) | undefined;\n55 | \ttimer: NodeJS.Timeout | undefined;\n56 | };\n57 | \n58 | /**\n59 |  * Interface for components that can receive focus and display a hardware cursor.\n60 |  * When focused, the component should emit CURSOR_MARKER at the cursor position\n61 |  * in its render output. TUI will find this marker and position the hardware\n62 |  * cursor there for proper IME candidate window positioning.\n63 |  */\n64 | export interface Focusable {"
+      },
+      "entries": [
+        {
+          "id": "TUI-217",
+          "title": "Input interception, focusable delivery and hardware cursor markers",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:22-72; ice:packages/tui/src/tui.ts:830-964; ice:packages/tui/src/tui.ts:1162-1206; ice:packages/tui/src/tui-main-screen.ts:572-603; ice:packages/tui/src/tui-alt-screen.ts:924-930; ice:packages/tui/README.md:40-49",
+          "what": "Deliver framed input through ordered interception and current focus, consume terminal replies, and place the hardware cursor without leaking markers into terminal output.",
+          "mechanism": "Input order is pending OSC11 reply, color-scheme report, registered input listeners in insertion order, cell-size response, debug Ctrl+Shift+D, focus visibility/restore maintenance, then the focused component. A listener may consume, replace data, or replace it with empty data to stop processing. Input reaches components including Ctrl+C; key releases are withheld unless wantsKeyRelease===true. No generic keybinding layer consumes text at TuiBase. Positive CSI 6;height;width t updates global cell dimensions, invalidates mounted roots and every overlay, and requests rendering; nonpositive matching replies are consumed without state update. Focusability is structural via a focused property. Global frame line finalization normalizes legacy markers and appends SGR0 plus OSC8 close to each nonimage line. Cursor extraction scans bottom-up only within the terminal viewport, selects the first marker in the winning line and removes that marker; other markers are not globally removed by this helper. Main-screen cursor uses absolute column G and tracked row delta, hides when absent, and honors hardware visibility; alternate screen positions by absolute row/column and explicitly emits show or hide each frame.",
+          "interfaces": "Component.handleInput?, wantsKeyRelease?; Focusable.focused; addInputListener()->unsubscribe; CURSOR_MARKER and legacy normalization; terminal cell-size query/response; debug callback.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-206",
+            "TUI-207",
+            "TUI-216"
+          ],
+          "rust": "rust:crates/ice-tui/src/component.rs:1-109 provides separate Focusable trait but no TS-style optional raw-input/release declaration. rust:crates/ice-tui/src/tui_alt_screen.rs:1177-1203 public start installs terminal callbacks that discard events and resize callbacks do nothing; the CLI's readerless mode uses a separate host event loop, so the public-start defect is scoped to that API. set_focus only stores an Arc without toggling Focusable state. Native alternate renderer at 908-1054 removes every cursor marker (retain this stronger hygiene), but set_show_hardware_cursor(false) does not hide/request and a marker with disabled visibility emits no hide. Native regular renderer at 663-906 scans cursor markers outside viewport and unconditionally shows a found cursor, ignoring hardware visibility. Native general frame path lacks TS line normalization/reset closure and terminal-reply/listener pipeline.",
+          "port": "Define an explicit native input/focus adapter compatible with the CLI event owner, implement ordered interceptors and reply ownership, and make the public start path functional or clearly delegate to that adapter. Share viewport-bound cursor extraction while retaining all-marker stripping. Ensure show/hide policy is enforced on both frame modes and append closure only to ordinary text lines.",
+          "size_min": 230,
+          "size_max": 380,
+          "priority": "P1",
+          "priority_reason": "Focus, input consumption and cursor placement affect every interactive primitive and must be consistent across public and CLI entry points."
+        }
+      ]
+    },
+    {
+      "symbol": "TuiInputListener",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:51",
+      "covering_entries": [
+        "TUI-217"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          48,
+          65
+        ],
+        "text": "48 | }\n49 | \n50 | export type TuiInputListenerResult = { consume?: boolean; data?: string } | undefined;\n51 | export type TuiInputListener = (data: string) => TuiInputListenerResult;\n52 | type PendingOsc11BackgroundQuery = {\n53 | \tsettled: boolean;\n54 | \tresolve: ((rgb: RgbColor | undefined) => void) | undefined;\n55 | \ttimer: NodeJS.Timeout | undefined;\n56 | };\n57 | \n58 | /**\n59 |  * Interface for components that can receive focus and display a hardware cursor.\n60 |  * When focused, the component should emit CURSOR_MARKER at the cursor position\n61 |  * in its render output. TUI will find this marker and position the hardware\n62 |  * cursor there for proper IME candidate window positioning.\n63 |  */\n64 | export interface Focusable {\n65 | \t/** Set by TUI when focus changes. Component should emit CURSOR_MARKER when true. */"
+      },
+      "entries": [
+        {
+          "id": "TUI-217",
+          "title": "Input interception, focusable delivery and hardware cursor markers",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:22-72; ice:packages/tui/src/tui.ts:830-964; ice:packages/tui/src/tui.ts:1162-1206; ice:packages/tui/src/tui-main-screen.ts:572-603; ice:packages/tui/src/tui-alt-screen.ts:924-930; ice:packages/tui/README.md:40-49",
+          "what": "Deliver framed input through ordered interception and current focus, consume terminal replies, and place the hardware cursor without leaking markers into terminal output.",
+          "mechanism": "Input order is pending OSC11 reply, color-scheme report, registered input listeners in insertion order, cell-size response, debug Ctrl+Shift+D, focus visibility/restore maintenance, then the focused component. A listener may consume, replace data, or replace it with empty data to stop processing. Input reaches components including Ctrl+C; key releases are withheld unless wantsKeyRelease===true. No generic keybinding layer consumes text at TuiBase. Positive CSI 6;height;width t updates global cell dimensions, invalidates mounted roots and every overlay, and requests rendering; nonpositive matching replies are consumed without state update. Focusability is structural via a focused property. Global frame line finalization normalizes legacy markers and appends SGR0 plus OSC8 close to each nonimage line. Cursor extraction scans bottom-up only within the terminal viewport, selects the first marker in the winning line and removes that marker; other markers are not globally removed by this helper. Main-screen cursor uses absolute column G and tracked row delta, hides when absent, and honors hardware visibility; alternate screen positions by absolute row/column and explicitly emits show or hide each frame.",
+          "interfaces": "Component.handleInput?, wantsKeyRelease?; Focusable.focused; addInputListener()->unsubscribe; CURSOR_MARKER and legacy normalization; terminal cell-size query/response; debug callback.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-206",
+            "TUI-207",
+            "TUI-216"
+          ],
+          "rust": "rust:crates/ice-tui/src/component.rs:1-109 provides separate Focusable trait but no TS-style optional raw-input/release declaration. rust:crates/ice-tui/src/tui_alt_screen.rs:1177-1203 public start installs terminal callbacks that discard events and resize callbacks do nothing; the CLI's readerless mode uses a separate host event loop, so the public-start defect is scoped to that API. set_focus only stores an Arc without toggling Focusable state. Native alternate renderer at 908-1054 removes every cursor marker (retain this stronger hygiene), but set_show_hardware_cursor(false) does not hide/request and a marker with disabled visibility emits no hide. Native regular renderer at 663-906 scans cursor markers outside viewport and unconditionally shows a found cursor, ignoring hardware visibility. Native general frame path lacks TS line normalization/reset closure and terminal-reply/listener pipeline.",
+          "port": "Define an explicit native input/focus adapter compatible with the CLI event owner, implement ordered interceptors and reply ownership, and make the public start path functional or clearly delegate to that adapter. Share viewport-bound cursor extraction while retaining all-marker stripping. Ensure show/hide policy is enforced on both frame modes and append closure only to ordinary text lines.",
+          "size_min": 230,
+          "size_max": 380,
+          "priority": "P1",
+          "priority_reason": "Focus, input consumption and cursor placement affect every interactive primitive and must be consistent across public and CLI entry points."
+        }
+      ]
+    },
+    {
+      "symbol": "isFocusable",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/tui.ts:70",
+      "covering_entries": [
+        "TUI-217"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          67,
+          84
+        ],
+        "text": "67 | }\n68 | \n69 | /** Type guard to check if a component implements Focusable */\n70 | export function isFocusable(component: Component | null): component is Component & Focusable {\n71 | \treturn component !== null && \"focused\" in component;\n72 | }\n73 | \n74 | /**\n75 |  * Cursor position marker - APC (Application Program Command) sequence.\n76 |  * This is a zero-width escape sequence that terminals ignore.\n77 |  * Components emit this at the cursor position when focused.\n78 |  * TUI finds and strips this marker, then positions the hardware cursor there.\n79 |  */\n80 | export const CURSOR_MARKER = ICE_CURSOR_MARKER;\n81 | \n82 | export { visibleWidth };\n83 | \n84 | /**"
+      },
+      "entries": [
+        {
+          "id": "TUI-217",
+          "title": "Input interception, focusable delivery and hardware cursor markers",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:22-72; ice:packages/tui/src/tui.ts:830-964; ice:packages/tui/src/tui.ts:1162-1206; ice:packages/tui/src/tui-main-screen.ts:572-603; ice:packages/tui/src/tui-alt-screen.ts:924-930; ice:packages/tui/README.md:40-49",
+          "what": "Deliver framed input through ordered interception and current focus, consume terminal replies, and place the hardware cursor without leaking markers into terminal output.",
+          "mechanism": "Input order is pending OSC11 reply, color-scheme report, registered input listeners in insertion order, cell-size response, debug Ctrl+Shift+D, focus visibility/restore maintenance, then the focused component. A listener may consume, replace data, or replace it with empty data to stop processing. Input reaches components including Ctrl+C; key releases are withheld unless wantsKeyRelease===true. No generic keybinding layer consumes text at TuiBase. Positive CSI 6;height;width t updates global cell dimensions, invalidates mounted roots and every overlay, and requests rendering; nonpositive matching replies are consumed without state update. Focusability is structural via a focused property. Global frame line finalization normalizes legacy markers and appends SGR0 plus OSC8 close to each nonimage line. Cursor extraction scans bottom-up only within the terminal viewport, selects the first marker in the winning line and removes that marker; other markers are not globally removed by this helper. Main-screen cursor uses absolute column G and tracked row delta, hides when absent, and honors hardware visibility; alternate screen positions by absolute row/column and explicitly emits show or hide each frame.",
+          "interfaces": "Component.handleInput?, wantsKeyRelease?; Focusable.focused; addInputListener()->unsubscribe; CURSOR_MARKER and legacy normalization; terminal cell-size query/response; debug callback.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-206",
+            "TUI-207",
+            "TUI-216"
+          ],
+          "rust": "rust:crates/ice-tui/src/component.rs:1-109 provides separate Focusable trait but no TS-style optional raw-input/release declaration. rust:crates/ice-tui/src/tui_alt_screen.rs:1177-1203 public start installs terminal callbacks that discard events and resize callbacks do nothing; the CLI's readerless mode uses a separate host event loop, so the public-start defect is scoped to that API. set_focus only stores an Arc without toggling Focusable state. Native alternate renderer at 908-1054 removes every cursor marker (retain this stronger hygiene), but set_show_hardware_cursor(false) does not hide/request and a marker with disabled visibility emits no hide. Native regular renderer at 663-906 scans cursor markers outside viewport and unconditionally shows a found cursor, ignoring hardware visibility. Native general frame path lacks TS line normalization/reset closure and terminal-reply/listener pipeline.",
+          "port": "Define an explicit native input/focus adapter compatible with the CLI event owner, implement ordered interceptors and reply ownership, and make the public start path functional or clearly delegate to that adapter. Share viewport-bound cursor extraction while retaining all-marker stripping. Ensure show/hide policy is enforced on both frame modes and append closure only to ordinary text lines.",
+          "size_min": 230,
+          "size_max": 380,
+          "priority": "P1",
+          "priority_reason": "Focus, input consumption and cursor placement affect every interactive primitive and must be consistent across public and CLI entry points."
+        }
+      ]
+    },
+    {
+      "symbol": "OverlayAnchor",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:87",
+      "covering_entries": [
+        "TUI-218",
+        "TUI-219"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          84,
+          101
+        ],
+        "text": "84 | /**\n85 |  * Anchor position for overlays\n86 |  */\n87 | export type OverlayAnchor =\n88 | \t| \"center\"\n89 | \t| \"top-left\"\n90 | \t| \"top-right\"\n91 | \t| \"bottom-left\"\n92 | \t| \"bottom-right\"\n93 | \t| \"top-center\"\n94 | \t| \"bottom-center\"\n95 | \t| \"left-center\"\n96 | \t| \"right-center\";\n97 | \n98 | /**\n99 |  * Margin configuration for overlays\n100 |  */\n101 | export interface OverlayMargin {"
+      },
+      "entries": [
+        {
+          "id": "TUI-218",
+          "title": "Overlay focus stack, hidden-state transitions and deferred restoration",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:85-207; ice:packages/tui/src/tui.ts:431-694",
+          "what": "Maintain independent overlay membership, paint order, focus ownership and restoration so nested or temporarily hidden overlays do not steal focus from explicit caller targets.",
+          "mechanism": "showOverlay captures preFocus, assigns a monotonically increasing focusOrder and appends membership. Visible capturing overlays take focus; nonCapturing overlays may still be explicitly focused. Hide permanently removes membership, retargets other entries' preFocus links that pointed to it, and if focused restores the highest focusOrder visible capturing overlay or its prior target. hideOverlay removes the last inserted entry, not the latest focused entry. setHidden is a reversible visibility flag; hiding restores focus and clears restore state, showing a visible capturing entry raises focusOrder and focuses. handle.focus checks membership and visibility, raises order, then focuses. hasOverlay uses current terminal-size visibility predicate; raw hasOverlayEntries includes hidden entries. All entries are invalidated including hidden ones.\n\nFocus restoration has explicit eligible/blocked states. Moving from an eligible overlay to a target outside its preFocus ancestor chain blocks restoration on that target. A later explicit focus operation may carry or resolve the blocked state; unmounting the blocker allows restoration. handle.unfocus({target}) supports explicit target including null, and can store a deferred target while another blocker remains focused. Unfocus without target clears its restore claim. Structural focused flags are toggled for previous/new focusable components. The restoration graph and membership traversal, rather than simply popping a stack, determine behavior.\n\nSource-read regression matrix: ice:packages/tui/test/overlay-non-capturing.test.ts:55-1203 exercises explicit/null unfocus targets, blockers that move focus or unmount, invisible-but-eligible overlays, cycle prevention, handle no-op guards and visual order separate from membership. Tests were read, not executed.",
+          "interfaces": "OverlayHandle.hide,setHidden,isHidden,focus,unfocus({target?:Component|null}),isFocused; OverlayOptions.nonCapturing,visible; Component focus and mounted-root contract.",
+          "dependencies": [
+            "TUI-217"
+          ],
+          "rust": "rust:crates/ice-tui/src/overlay.rs:99-285 only owns membership/visible/z_id; its handles do not manage focus. rust:crates/ice-tui/src/tui_alt_screen.rs:1148-1175 and 1353-1397 and rust:crates/ice-tui/src/tui_main_screen.rs:120-141,235-265 wrap handles with local hidden/focused booleans. New handles report focused=true without changing TUI focus; focus only sets that local flag, never clears siblings, and hide/set_hidden do not request a redraw. No unfocus, preFocus retargeting or deferred restoration exists. has_overlay checks manager visible flags but not size-dependent predicate used at render time. Invalidation visits base roots without overlay components.",
+          "port": "Move overlay lifecycle operations behind an owner-aware manager that can request frames, toggle actual focus, and validate membership. Add an explicit restoration state machine and target graph matching the source transitions; avoid deadlocking component callbacks under manager locks. Preserve native Arc ownership and passive-overlay placement as separate concerns.",
+          "size_min": 290,
+          "size_max": 470,
+          "priority": "P1",
+          "priority_reason": "Transient UI and extension overlays rely on predictable return focus; local handle flags currently misrepresent actual state."
+        },
+        {
+          "id": "TUI-219",
+          "title": "Overlay size resolution, screen anchoring and passive placement",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:85-155; ice:packages/tui/src/tui.ts:966-1160",
+          "what": "Resolve overlay width/height/position deterministically against the viewport and composite visible overlays in focus order without retaining stale document high-water rows.",
+          "mechanism": "Margins may be one number or four edges, each clamped nonnegative. Available dimensions are at least1. Numeric width is used directly; a valid nonnegative decimal percentage is floored against full terminal width. Default width=min(80,availableWidth). minWidth is applied before clamping into1..availableWidth. maxHeight is optional, numeric or percentage of full terminal height and clamped1..availableHeight; absent maxHeight does not clip content to the viewport. Render occurs once at resolved width, maxHeight clips only when supplied, then final position uses actual rendered height. Explicit numeric row/col or percentages position within free remaining extent plus margins; invalid percentage falls back to centered. Nine anchors are the alternative, followed by offsets and margin clamps.\n\nVisible entries paint ascending focusOrder. Composite working height is max(current base rows,terminal rows,row+overlay rows), never historical maxLinesRendered; overlays address that resulting viewport. Blank overlay rows clear their allocated span through the compositor. This means presence of hidden entries can still cause the caller to enter overlay composition, but only visible entries render. TS allows passive/nonCapturing overlays to overlap; it is solely a focus policy.\n\nSource-read geometry checks at ice:packages/tui/test/overlay-options.test.ts:173-540 pin percentage widths/minWidth, margin clamps, anchor/absolute precedence, optional clipping and stacked paint order. Earlier overflow cases mostly assert no crash/visible content, not exact cell output; the exact CJK boundary assertions are ice:packages/tui/test/regression-overlay-cjk-boundary.test.ts:6-46.",
+          "interfaces": "OverlaySize number|`${number}%`; OverlayMargin; width,minWidth,maxHeight,row,col,anchor,offsetX/offsetY,margin,visible(terminalWidth,terminalHeight),nonCapturing.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-203",
+            "TUI-215",
+            "TUI-218"
+          ],
+          "rust": "rust:crates/ice-tui/src/tui.rs:40-106 has nine anchors and basic options but no row/col. Native Percent is a fractional value rounded against terminal size, so representation and rounding differ. rust:crates/ice-tui/src/overlay.rs:21-97 defaults width to all available width then shrinks to rendered text width if width omitted; defaults max height to available and clips every overlay; zero/empty geometry is dropped. A visibility fn pointer cannot capture environment. Manager render_visible at 178-248 preserves insertion/z order and additionally shifts passive overlays vertically to avoid prior passive overlays with a row gap, omitting those that cannot fit. Keep that native useful policy explicitly configurable, rather than silently claiming TS parity.",
+          "port": "Add a compatibility geometry resolver preserving percentage units, rounding and optional clipping; add captured visibility callbacks and explicit row/column. Route both native modes through one ordered screen compositor. Keep passive collision avoidance as an opt-in/native policy distinct from noncapturing focus behavior.",
+          "size_min": 170,
+          "size_max": 270,
+          "priority": "P1",
+          "priority_reason": "Geometry differences directly affect extension dialogs, previews and overlays near narrow or short viewport edges."
+        }
+      ]
+    },
+    {
+      "symbol": "SizeValue",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:109",
+      "covering_entries": [
+        "TUI-218",
+        "TUI-219"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          106,
+          123
+        ],
+        "text": "106 | }\n107 | \n108 | /** Value that can be absolute (number) or percentage (string like \"50%\") */\n109 | export type SizeValue = number | `${number}%`;\n110 | \n111 | /** Parse a SizeValue into absolute value given a reference size */\n112 | function parseSizeValue(value: SizeValue | undefined, referenceSize: number): number | undefined {\n113 | \tif (value === undefined) return undefined;\n114 | \tif (typeof value === \"number\") return value;\n115 | \t// Parse percentage string like \"50%\"\n116 | \tconst match = value.match(/^(\\d+(?:\\.\\d+)?)%$/);\n117 | \tif (match) {\n118 | \t\treturn Math.floor((referenceSize * parseFloat(match[1])) / 100);\n119 | \t}\n120 | \treturn undefined;\n121 | }\n122 | \n123 | /**"
+      },
+      "entries": [
+        {
+          "id": "TUI-218",
+          "title": "Overlay focus stack, hidden-state transitions and deferred restoration",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:85-207; ice:packages/tui/src/tui.ts:431-694",
+          "what": "Maintain independent overlay membership, paint order, focus ownership and restoration so nested or temporarily hidden overlays do not steal focus from explicit caller targets.",
+          "mechanism": "showOverlay captures preFocus, assigns a monotonically increasing focusOrder and appends membership. Visible capturing overlays take focus; nonCapturing overlays may still be explicitly focused. Hide permanently removes membership, retargets other entries' preFocus links that pointed to it, and if focused restores the highest focusOrder visible capturing overlay or its prior target. hideOverlay removes the last inserted entry, not the latest focused entry. setHidden is a reversible visibility flag; hiding restores focus and clears restore state, showing a visible capturing entry raises focusOrder and focuses. handle.focus checks membership and visibility, raises order, then focuses. hasOverlay uses current terminal-size visibility predicate; raw hasOverlayEntries includes hidden entries. All entries are invalidated including hidden ones.\n\nFocus restoration has explicit eligible/blocked states. Moving from an eligible overlay to a target outside its preFocus ancestor chain blocks restoration on that target. A later explicit focus operation may carry or resolve the blocked state; unmounting the blocker allows restoration. handle.unfocus({target}) supports explicit target including null, and can store a deferred target while another blocker remains focused. Unfocus without target clears its restore claim. Structural focused flags are toggled for previous/new focusable components. The restoration graph and membership traversal, rather than simply popping a stack, determine behavior.\n\nSource-read regression matrix: ice:packages/tui/test/overlay-non-capturing.test.ts:55-1203 exercises explicit/null unfocus targets, blockers that move focus or unmount, invisible-but-eligible overlays, cycle prevention, handle no-op guards and visual order separate from membership. Tests were read, not executed.",
+          "interfaces": "OverlayHandle.hide,setHidden,isHidden,focus,unfocus({target?:Component|null}),isFocused; OverlayOptions.nonCapturing,visible; Component focus and mounted-root contract.",
+          "dependencies": [
+            "TUI-217"
+          ],
+          "rust": "rust:crates/ice-tui/src/overlay.rs:99-285 only owns membership/visible/z_id; its handles do not manage focus. rust:crates/ice-tui/src/tui_alt_screen.rs:1148-1175 and 1353-1397 and rust:crates/ice-tui/src/tui_main_screen.rs:120-141,235-265 wrap handles with local hidden/focused booleans. New handles report focused=true without changing TUI focus; focus only sets that local flag, never clears siblings, and hide/set_hidden do not request a redraw. No unfocus, preFocus retargeting or deferred restoration exists. has_overlay checks manager visible flags but not size-dependent predicate used at render time. Invalidation visits base roots without overlay components.",
+          "port": "Move overlay lifecycle operations behind an owner-aware manager that can request frames, toggle actual focus, and validate membership. Add an explicit restoration state machine and target graph matching the source transitions; avoid deadlocking component callbacks under manager locks. Preserve native Arc ownership and passive-overlay placement as separate concerns.",
+          "size_min": 290,
+          "size_max": 470,
+          "priority": "P1",
+          "priority_reason": "Transient UI and extension overlays rely on predictable return focus; local handle flags currently misrepresent actual state."
+        },
+        {
+          "id": "TUI-219",
+          "title": "Overlay size resolution, screen anchoring and passive placement",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:85-155; ice:packages/tui/src/tui.ts:966-1160",
+          "what": "Resolve overlay width/height/position deterministically against the viewport and composite visible overlays in focus order without retaining stale document high-water rows.",
+          "mechanism": "Margins may be one number or four edges, each clamped nonnegative. Available dimensions are at least1. Numeric width is used directly; a valid nonnegative decimal percentage is floored against full terminal width. Default width=min(80,availableWidth). minWidth is applied before clamping into1..availableWidth. maxHeight is optional, numeric or percentage of full terminal height and clamped1..availableHeight; absent maxHeight does not clip content to the viewport. Render occurs once at resolved width, maxHeight clips only when supplied, then final position uses actual rendered height. Explicit numeric row/col or percentages position within free remaining extent plus margins; invalid percentage falls back to centered. Nine anchors are the alternative, followed by offsets and margin clamps.\n\nVisible entries paint ascending focusOrder. Composite working height is max(current base rows,terminal rows,row+overlay rows), never historical maxLinesRendered; overlays address that resulting viewport. Blank overlay rows clear their allocated span through the compositor. This means presence of hidden entries can still cause the caller to enter overlay composition, but only visible entries render. TS allows passive/nonCapturing overlays to overlap; it is solely a focus policy.\n\nSource-read geometry checks at ice:packages/tui/test/overlay-options.test.ts:173-540 pin percentage widths/minWidth, margin clamps, anchor/absolute precedence, optional clipping and stacked paint order. Earlier overflow cases mostly assert no crash/visible content, not exact cell output; the exact CJK boundary assertions are ice:packages/tui/test/regression-overlay-cjk-boundary.test.ts:6-46.",
+          "interfaces": "OverlaySize number|`${number}%`; OverlayMargin; width,minWidth,maxHeight,row,col,anchor,offsetX/offsetY,margin,visible(terminalWidth,terminalHeight),nonCapturing.",
+          "dependencies": [
+            "TUI-201",
+            "TUI-203",
+            "TUI-215",
+            "TUI-218"
+          ],
+          "rust": "rust:crates/ice-tui/src/tui.rs:40-106 has nine anchors and basic options but no row/col. Native Percent is a fractional value rounded against terminal size, so representation and rounding differ. rust:crates/ice-tui/src/overlay.rs:21-97 defaults width to all available width then shrinks to rendered text width if width omitted; defaults max height to available and clips every overlay; zero/empty geometry is dropped. A visibility fn pointer cannot capture environment. Manager render_visible at 178-248 preserves insertion/z order and additionally shifts passive overlays vertically to avoid prior passive overlays with a row gap, omitting those that cannot fit. Keep that native useful policy explicitly configurable, rather than silently claiming TS parity.",
+          "port": "Add a compatibility geometry resolver preserving percentage units, rounding and optional clipping; add captured visibility callbacks and explicit row/column. Route both native modes through one ordered screen compositor. Keep passive collision avoidance as an opt-in/native policy distinct from noncapturing focus behavior.",
+          "size_min": 170,
+          "size_max": 270,
+          "priority": "P1",
+          "priority_reason": "Geometry differences directly affect extension dialogs, previews and overlays near narrow or short viewport edges."
+        }
+      ]
+    },
+    {
+      "symbol": "OverlayUnfocusOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:166",
+      "covering_entries": [
+        "TUI-218"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          163,
+          180
+        ],
+        "text": "163 | }\n164 | \n165 | /** Options for {@link OverlayHandle.unfocus}. */\n166 | export interface OverlayUnfocusOptions {\n167 | \t/** Explicit target to focus after releasing this overlay. */\n168 | \ttarget: Component | null;\n169 | }\n170 | \n171 | /**\n172 |  * Handle returned by showOverlay for controlling the overlay\n173 |  */\n174 | export interface OverlayHandle {\n175 | \t/** Permanently remove the overlay (cannot be shown again) */\n176 | \thide(): void;\n177 | \t/** Temporarily hide or show the overlay */\n178 | \tsetHidden(hidden: boolean): void;\n179 | \t/** Check if overlay is temporarily hidden */\n180 | \tisHidden(): boolean;"
+      },
+      "entries": [
+        {
+          "id": "TUI-218",
+          "title": "Overlay focus stack, hidden-state transitions and deferred restoration",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:85-207; ice:packages/tui/src/tui.ts:431-694",
+          "what": "Maintain independent overlay membership, paint order, focus ownership and restoration so nested or temporarily hidden overlays do not steal focus from explicit caller targets.",
+          "mechanism": "showOverlay captures preFocus, assigns a monotonically increasing focusOrder and appends membership. Visible capturing overlays take focus; nonCapturing overlays may still be explicitly focused. Hide permanently removes membership, retargets other entries' preFocus links that pointed to it, and if focused restores the highest focusOrder visible capturing overlay or its prior target. hideOverlay removes the last inserted entry, not the latest focused entry. setHidden is a reversible visibility flag; hiding restores focus and clears restore state, showing a visible capturing entry raises focusOrder and focuses. handle.focus checks membership and visibility, raises order, then focuses. hasOverlay uses current terminal-size visibility predicate; raw hasOverlayEntries includes hidden entries. All entries are invalidated including hidden ones.\n\nFocus restoration has explicit eligible/blocked states. Moving from an eligible overlay to a target outside its preFocus ancestor chain blocks restoration on that target. A later explicit focus operation may carry or resolve the blocked state; unmounting the blocker allows restoration. handle.unfocus({target}) supports explicit target including null, and can store a deferred target while another blocker remains focused. Unfocus without target clears its restore claim. Structural focused flags are toggled for previous/new focusable components. The restoration graph and membership traversal, rather than simply popping a stack, determine behavior.\n\nSource-read regression matrix: ice:packages/tui/test/overlay-non-capturing.test.ts:55-1203 exercises explicit/null unfocus targets, blockers that move focus or unmount, invisible-but-eligible overlays, cycle prevention, handle no-op guards and visual order separate from membership. Tests were read, not executed.",
+          "interfaces": "OverlayHandle.hide,setHidden,isHidden,focus,unfocus({target?:Component|null}),isFocused; OverlayOptions.nonCapturing,visible; Component focus and mounted-root contract.",
+          "dependencies": [
+            "TUI-217"
+          ],
+          "rust": "rust:crates/ice-tui/src/overlay.rs:99-285 only owns membership/visible/z_id; its handles do not manage focus. rust:crates/ice-tui/src/tui_alt_screen.rs:1148-1175 and 1353-1397 and rust:crates/ice-tui/src/tui_main_screen.rs:120-141,235-265 wrap handles with local hidden/focused booleans. New handles report focused=true without changing TUI focus; focus only sets that local flag, never clears siblings, and hide/set_hidden do not request a redraw. No unfocus, preFocus retargeting or deferred restoration exists. has_overlay checks manager visible flags but not size-dependent predicate used at render time. Invalidation visits base roots without overlay components.",
+          "port": "Move overlay lifecycle operations behind an owner-aware manager that can request frames, toggle actual focus, and validate membership. Add an explicit restoration state machine and target graph matching the source transitions; avoid deadlocking component callbacks under manager locks. Preserve native Arc ownership and passive-overlay placement as separate concerns.",
+          "size_min": 290,
+          "size_max": 470,
+          "priority": "P1",
+          "priority_reason": "Transient UI and extension overlays rely on predictable return focus; local handle flags currently misrepresent actual state."
+        }
+      ]
+    },
+    {
+      "symbol": "TuiMode",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:285",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          282,
+          299
+        ],
+        "text": "282 | \treturn visibleWidth(result) <= totalWidth ? result : sliceByColumn(result, 0, totalWidth, true);\n283 | }\n284 | \n285 | export type TuiMode = \"regular\" | \"fullscreen\";\n286 | \n287 | export interface TuiStopOptions {\n288 | \t/** Leave renderer output in place for another TUI taking over the same terminal. */\n289 | \tpreserveScreen?: boolean;\n290 | }\n291 | \n292 | export interface TUI extends Component {\n293 | \treadonly mode: TuiMode;\n294 | \tchildren: Component[];\n295 | \tterminal: Terminal;\n296 | \tonDebug?: () => void;\n297 | \treadonly fullRedraws: number;\n298 | \t/** True between start() and stop(), while the TUI owns the terminal. */\n299 | \treadonly isRunning: boolean;"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "VIEWPORT_TUI",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/tui.ts:323",
+      "covering_entries": [
+        "TUI-216"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          320,
+          337
+        ],
+        "text": "320 | \tqueryTerminalColorScheme(options: { timeoutMs: number }): Promise<TerminalColorScheme | undefined>;\n321 | }\n322 | \n323 | export const VIEWPORT_TUI = Symbol.for(\"@zykairotis/ice-tui/viewport\");\n324 | \n325 | export interface ViewportTUI extends TUI {\n326 | \treadonly [VIEWPORT_TUI]: true;\n327 | \tsetLayoutRoot(component: Component | undefined): void;\n328 | }\n329 | \n330 | export function isViewportTUI(tui: TUI): tui is ViewportTUI {\n331 | \tconst candidate = tui as Partial<ViewportTUI>;\n332 | \treturn VIEWPORT_TUI in candidate && candidate[VIEWPORT_TUI] === true;\n333 | }\n334 | \n335 | export abstract class TuiBase extends Container implements TUI {\n336 | \tabstract readonly mode: TuiMode;\n337 | \tpublic terminal: Terminal;"
+      },
+      "entries": [
+        {
+          "id": "TUI-216",
+          "title": "Renderer lifecycle, frame scheduling and restart ownership",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:301-429; ice:packages/tui/src/tui.ts:695-829; ice:packages/tui/README.md:55-79",
+          "what": "Coalesce component invalidations into paced frames while preserving forced redraw, start/stop order, and correct ownership of terminal resources.",
+          "mechanism": "TuiBase starts with stopped=false/running=false. start clears stopped, runs beforeTerminalStart, installs terminal input/resize callbacks, runs afterTerminalStart, hides cursor, optionally enables color notifications, queries cell size for image-capable terminals, and requests rendering. stop marks stopped/running first, cancels pending render timeout, disables requested notifications, runs before-stop hook, restores cursor/terminal and after-stop hook. Normal requestRender coalesces through nextTick plus a 16ms minimum frame interval measured with performance.now; requests raised while painting cause another schedule. Force resets subclass render state and queues nextTick while bypassing the interval. renderNow cancels pending work, resets state only when forced, updates timestamp, and paints immediately; subclasses guard stopped state. Restart can install fresh scheduling after stop. clearOnShrink defaults true unless ICE_CLEAR_ON_SHRINK='0'; hardware cursor defaults false unless ICE_HARDWARE_CURSOR='1', with explicit constructor option taking precedence. Changing hardware cursor immediately hides it if disabling and requests a frame.",
+          "interfaces": "TuiBase.start/stop(TuiStopOptions{preserveScreen?}), requestRender(force=false), renderNow(force=false), isRunning, fullRedraws, get/setShowHardwareCursor, get/setClearOnShrink; lifecycle subclass hooks; environment ICE_HARDWARE_CURSOR and ICE_CLEAR_ON_SHRINK.",
+          "dependencies": [
+            "TUI-208",
+            "TUI-209"
+          ],
+          "rust": "rust:crates/ice-tui/src/tui_alt_screen.rs:1-347 implements a useful 16ms condvar scheduler, merged fresh/cached requests, render-lock and suspension checks. Force renders synchronously; normal requests require running and can be host-flushed or scheduler-driven. start_render_scheduler records scheduler_started, but stop_render_scheduler sets shutdown and joins without clearing scheduler_started or resetting shutdown: restarting this same scheduled TuiAltScreen cannot start another scheduler and subsequent normal requests park without a worker. Inline initial render still occurs, so this is a restart-specific source defect, not failure of first start. rust:crates/ice-tui/src/tui_alt_screen.rs:1079-1349 defaults clear_on_shrink=false, setters only store, and invalidate omits overlays. The distinct rust:crates/ice-tui/src/tui_main_screen.rs:143-187 immediately rerenders even when stopped and request_render discards force. Preserve native scheduler merge priority, readerless CLI mode, resize watchdog and foreign-runtime suspension rather than replacing them wholesale.",
+          "port": "Add lifecycle state transitions to crates/ice-tui scheduler that can restart or explicitly reject reuse, with owned cancellation and correct flags. Align settings defaults and setter invalidation. Unify public regular-mode scheduling with the active renderer and ensure overlay caches are invalidated. Keep synchronous native flush as an explicit API while exposing TS-compatible queued force semantics where needed.",
+          "size_min": 170,
+          "size_max": 270,
+          "priority": "P1",
+          "priority_reason": "Leaked or dead scheduling and mismatched lifecycle defaults can leave an otherwise correct UI stale after runtime transitions."
+        }
+      ]
+    },
+    {
+      "symbol": "isViewportTUI",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/tui.ts:330",
+      "covering_entries": [
+        "TUI-216"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/tui.ts",
+        "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+        "range": [
+          327,
+          344
+        ],
+        "text": "327 | \tsetLayoutRoot(component: Component | undefined): void;\n328 | }\n329 | \n330 | export function isViewportTUI(tui: TUI): tui is ViewportTUI {\n331 | \tconst candidate = tui as Partial<ViewportTUI>;\n332 | \treturn VIEWPORT_TUI in candidate && candidate[VIEWPORT_TUI] === true;\n333 | }\n334 | \n335 | export abstract class TuiBase extends Container implements TUI {\n336 | \tabstract readonly mode: TuiMode;\n337 | \tpublic terminal: Terminal;\n338 | \tprivate focusedComponent: Component | null = null;\n339 | \tprivate inputListeners = new Set<TuiInputListener>();\n340 | \n341 | \t/** Global callback for debug key (Shift+Ctrl+D). Called before input is forwarded to focused component. */\n342 | \tpublic onDebug?: () => void;\n343 | \tprivate renderRequested = false;\n344 | \tprivate renderTimer: NodeJS.Timeout | undefined;"
+      },
+      "entries": [
+        {
+          "id": "TUI-216",
+          "title": "Renderer lifecycle, frame scheduling and restart ownership",
+          "status": "partial",
+          "source": "ice:packages/tui/src/tui.ts:301-429; ice:packages/tui/src/tui.ts:695-829; ice:packages/tui/README.md:55-79",
+          "what": "Coalesce component invalidations into paced frames while preserving forced redraw, start/stop order, and correct ownership of terminal resources.",
+          "mechanism": "TuiBase starts with stopped=false/running=false. start clears stopped, runs beforeTerminalStart, installs terminal input/resize callbacks, runs afterTerminalStart, hides cursor, optionally enables color notifications, queries cell size for image-capable terminals, and requests rendering. stop marks stopped/running first, cancels pending render timeout, disables requested notifications, runs before-stop hook, restores cursor/terminal and after-stop hook. Normal requestRender coalesces through nextTick plus a 16ms minimum frame interval measured with performance.now; requests raised while painting cause another schedule. Force resets subclass render state and queues nextTick while bypassing the interval. renderNow cancels pending work, resets state only when forced, updates timestamp, and paints immediately; subclasses guard stopped state. Restart can install fresh scheduling after stop. clearOnShrink defaults true unless ICE_CLEAR_ON_SHRINK='0'; hardware cursor defaults false unless ICE_HARDWARE_CURSOR='1', with explicit constructor option taking precedence. Changing hardware cursor immediately hides it if disabling and requests a frame.",
+          "interfaces": "TuiBase.start/stop(TuiStopOptions{preserveScreen?}), requestRender(force=false), renderNow(force=false), isRunning, fullRedraws, get/setShowHardwareCursor, get/setClearOnShrink; lifecycle subclass hooks; environment ICE_HARDWARE_CURSOR and ICE_CLEAR_ON_SHRINK.",
+          "dependencies": [
+            "TUI-208",
+            "TUI-209"
+          ],
+          "rust": "rust:crates/ice-tui/src/tui_alt_screen.rs:1-347 implements a useful 16ms condvar scheduler, merged fresh/cached requests, render-lock and suspension checks. Force renders synchronously; normal requests require running and can be host-flushed or scheduler-driven. start_render_scheduler records scheduler_started, but stop_render_scheduler sets shutdown and joins without clearing scheduler_started or resetting shutdown: restarting this same scheduled TuiAltScreen cannot start another scheduler and subsequent normal requests park without a worker. Inline initial render still occurs, so this is a restart-specific source defect, not failure of first start. rust:crates/ice-tui/src/tui_alt_screen.rs:1079-1349 defaults clear_on_shrink=false, setters only store, and invalidate omits overlays. The distinct rust:crates/ice-tui/src/tui_main_screen.rs:143-187 immediately rerenders even when stopped and request_render discards force. Preserve native scheduler merge priority, readerless CLI mode, resize watchdog and foreign-runtime suspension rather than replacing them wholesale.",
+          "port": "Add lifecycle state transitions to crates/ice-tui scheduler that can restart or explicitly reject reuse, with owned cancellation and correct flags. Align settings defaults and setter invalidation. Unify public regular-mode scheduling with the active renderer and ensure overlay caches are invalidated. Keep synchronous native flush as an explicit API while exposing TS-compatible queued force semantics where needed.",
+          "size_min": 170,
+          "size_max": 270,
+          "priority": "P1",
+          "priority_reason": "Leaked or dead scheduling and mismatched lifecycle defaults can leave an otherwise correct UI stale after runtime transitions."
+        }
+      ]
+    },
+    {
+      "symbol": "stripTerminalSequences",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/utils.ts:297",
+      "covering_entries": [
+        "TUI-201"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/utils.ts",
+        "sha256": "be3dc4a66bf8e01c0f7f4fdf9085fab7943bd8c695d8592b07e42abc37089fa9",
+        "range": [
+          294,
+          311
+        ],
+        "text": "294 | }\n295 | \n296 | /** Remove ANSI, OSC, and APC control sequences while preserving visible text. */\n297 | export function stripTerminalSequences(str: string): string {\n298 | \tif (!str.includes(\"\\x1b\")) return str;\n299 | \tlet result = \"\";\n300 | \tlet i = 0;\n301 | \twhile (i < str.length) {\n302 | \t\tconst ansi = extractAnsiCode(str, i);\n303 | \t\tif (ansi) {\n304 | \t\t\ti += ansi.length;\n305 | \t\t\tcontinue;\n306 | \t\t}\n307 | \t\tresult += str[i];\n308 | \t\ti++;\n309 | \t}\n310 | \treturn result;\n311 | }"
+      },
+      "entries": [
+        {
+          "id": "TUI-201",
+          "title": "Consistent grapheme cell widths and output-only normalization",
+          "status": "partial",
+          "source": "ice:packages/tui/src/utils.ts:1-339; ice:packages/tui/src/utils.ts:423-456; ice:packages/tui/test/truncate-to-width.test.ts:58-119; ice:packages/tui/test/regression-regional-indicator-width.test.ts:1-53; ice:packages/tui/test/tab-width.test.ts:37-71",
+          "what": "Measure and navigate terminal cells consistently for Unicode, ANSI, tabs and streamed emoji, then normalize only the bytes written to the terminal.",
+          "mechanism": "TS shares Intl.Segmenter instances for grapheme and word segmentation. Printable ASCII returns length directly; non-ASCII widths are cached in an insertion-order Map capped512, evicting its first key rather than refreshing access order. Tabs occupy3 cells. Supported CSI/OSC/APC sequences are removed before grapheme width calculation.\n\nGrapheme width first counts terminal-spacing mark-only clusters, then zeroes clusters composed entirely of default-ignorable/control/mark/surrogate code points. RGI emoji clusters are2 cells, and isolated regional indicators U+1F1E6..1F1FF are conservatively2 even before a complete flag arrives. Other clusters use the first visible base's east-Asian width plus terminal-spacing marks and selected trailing visible code points after marks, half/fullwidth forms and Thai/Lao AM vowels. The exact mark exceptions are in utils.ts40–48 and must be kept as data, not approximated by scalar summation. Tests cover Indic conjuncts, Myanmar, combining marks, CJK and flag intermediates.\n\ngetGraphemeCellRange returns the whole nonzero-width grapheme cell interval containing a column, including the second cell of a wide glyph. normalizeTerminalOutput decomposes Thai U+0E33 to U+0E4D U+0E32 and Lao U+0EB3 to U+0ECD U+0EB2 throughout its input, then expands visible tabs to3 spaces while leaving tabs inside recognized terminal sequences intact. It does not rewrite logical editor content. The Thai/Lao replacement happens before terminal-sequence parsing, so unlike tabs it is not restricted to visible text.",
+          "interfaces": "getGraphemeSegmenter,getWordSegmenter,visibleWidth,getGraphemeCellRange,normalizeTerminalOutput; cjkBreakRegex identifies Han/Hiragana/Katakana/Hangul/Bopomofo. Integer cell positions differ from UTF-16 source offsets and Rust byte offsets.",
+          "dependencies": [],
+          "rust": "rust:crates/ice-tui/src/utils.rs:9-67 counts UnicodeWidthStr per scalar and skips controls/tabs unless an OSC/APC prefix triggers delegation to ansi.rs. rust:crates/ice-tui/src/ansi.rs:15-87 measures the whole stripped string with UnicodeWidthStr. Those two public width paths can disagree on multi-scalar emoji, and neither applies the TS tab/spacing-mark/output-normalization contract. ansi.rs:135-142 only appends SGR0 when needed. utils.rs:354-377 exposes a grapheme wrapper whose index is an ordinal from enumerate(), unlike Intl's UTF-16 offset. Native general stripping recognizes more protocols than TS and should be preserved.",
+          "port": "Consolidate crates/ice-tui cell measurement around unicode-segmentation plus explicit terminal-width policy, keeping byte/UTF-16/cell coordinates distinct at boundaries. Add the fixed tab policy, mark exceptions and output-only Thai/Lao normalization to the terminal writer; retain native broad protocol stripping and test it separately. Use read TS fixtures as acceptance cases, not a scalar-width proxy.",
+          "size_min": 180,
+          "size_max": 300,
+          "priority": "P1",
+          "priority_reason": "Visible behavior shared by terminal consumers must agree before higher-level component parity is reliable."
+        }
+      ]
+    },
+    {
+      "symbol": "PUNCTUATION_REGEX",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/utils.ts:971",
+      "covering_entries": [
+        "TUI-202"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/utils.ts",
+        "sha256": "be3dc4a66bf8e01c0f7f4fdf9085fab7943bd8c695d8592b07e42abc37089fa9",
+        "range": [
+          968,
+          985
+        ],
+        "text": "968 | \treturn wrapped.length > 0 ? wrapped.map((line) => line.trimEnd()) : [\"\"];\n969 | }\n970 | \n971 | export const PUNCTUATION_REGEX = /[(){}[\\]<>.,;:'\"!?+\\-=*/\\\\|&%^$#@~`]/;\n972 | \n973 | /**\n974 |  * Check if a character is whitespace.\n975 |  */\n976 | export function isWhitespaceChar(char: string): boolean {\n977 | \treturn /\\s/.test(char);\n978 | }\n979 | \n980 | /**\n981 |  * Check if a character is punctuation.\n982 |  */\n983 | export function isPunctuationChar(char: string): boolean {\n984 | \treturn PUNCTUATION_REGEX.test(char);\n985 | }"
+      },
+      "entries": [
+        {
+          "id": "TUI-202",
+          "title": "ANSI-aware word wrapping and stable style carry across rows",
+          "status": "partial",
+          "source": "ice:packages/tui/src/utils.ts:461-1054; ice:packages/tui/test/wrap-ansi.test.ts:1-267",
+          "what": "Wrap readable words and CJK graphemes without losing active styling or hyperlink clickability across logical and physical line breaks.",
+          "mechanism": "TS extractAnsiCode recognizes CSI by scanning to m/G/K/H/J, OSC by BEL/ST, and APC by BEL/ST; unrecognized/incomplete sequences return null. This is deliberately narrower than a general terminal parser and can scan beyond an unsupported CSI final byte until a later accepted letter. Preserve native general parsing rather than reproducing that limitation silently.\n\nAnsiCodeTracker separately tracks bold,dim,italic,underline,blink,inverse,hidden,strike,foreground/background and active OSC8 link including params and original BEL/ST terminator. Empty/0 SGR resets styling but not the link. It understands selective resets,8/16-color,256-color and RGB38/48;2;r;g;b with5 consumed parameters. Logical CRLF/CR/LF lines inherit active codes. Tokens keep ANSI attached to following visible content; literal spaces form whitespace runs and CJK-script graphemes are independent break opportunities. Overflow trims trailing whitespace, suppresses whitespace at a new line, and breaks a long token at grapheme boundaries.\n\nA wrapped nonfinal line closes underline and an active hyperlink, reopens active codes on continuation, and intentionally leaves background/other styles for caller padding. Final segments do not receive an automatic full reset. A whole input line that already fits is returned as-is. Empty input yields one empty line. TS has no explicit nonpositive-width guard here: an indivisible grapheme wider than the requested width may produce an empty prefix then an overwide grapheme, so the documented universal <=width claim has that boundary limitation.",
+          "interfaces": "wrapTextWithAnsi(text,width):string[]; internal AnsiCodeTracker/getLineEndReset and token/long-word helpers. Source line902's token assignment was transport-redacted; surrounding tokenization implementation and consuming loop were fully visible.",
+          "dependencies": [
+            "TUI-201"
+          ],
+          "rust": "rust:crates/ice-tui/src/utils.rs:275-351 hard-wraps scalar characters, keeps leading wrap spaces, drops tabs/CR/control characters, drops a trailing empty newline and returns one empty line for width0. It subsequently calls rust:crates/ice-tui/src/line_diff.rs:223-234 to isolate ANSI rows; therefore style carry is present, not wholly missing. That isolator appends full reset plus BEL OSC8 close on every parsed row and preserves supported SGR/OSC8 state. Exact defect in line_diff.rs:111-178: RGB checks index+5 and consumes6 parameters, but standard38/48;2;r;g;b has5; normal RGB state is interpreted as unrelated SGR fragments on the next row, while an extra following parameter can be absorbed. Bold anddim share one native Intensity slot. Native atoms/slice/patch correctly use graphemes and reject unsupported controls to a fallback.",
+          "port": "Implement token/CJK word wrapping in crates/ice-tui with the common width function and an explicit attribute/link state machine; retain the native row-isolation/column-patch approach while fixing RGB parameter cardinality and independent bold/dim state. Choose/document final reset and padding ownership to match TS visible output without regressing safe independent row repaint. Keep width0 and indivisible-wide-grapheme behavior explicit.",
+          "size_min": 210,
+          "size_max": 340,
+          "priority": "P1",
+          "priority_reason": "Visible behavior shared by terminal consumers must agree before higher-level component parity is reliable."
+        }
+      ]
+    },
+    {
+      "symbol": "isWhitespaceChar",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/utils.ts:976",
+      "covering_entries": [
+        "TUI-202"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/utils.ts",
+        "sha256": "be3dc4a66bf8e01c0f7f4fdf9085fab7943bd8c695d8592b07e42abc37089fa9",
+        "range": [
+          973,
+          990
+        ],
+        "text": "973 | /**\n974 |  * Check if a character is whitespace.\n975 |  */\n976 | export function isWhitespaceChar(char: string): boolean {\n977 | \treturn /\\s/.test(char);\n978 | }\n979 | \n980 | /**\n981 |  * Check if a character is punctuation.\n982 |  */\n983 | export function isPunctuationChar(char: string): boolean {\n984 | \treturn PUNCTUATION_REGEX.test(char);\n985 | }\n986 | \n987 | function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): string[] {\n988 | \tconst lines: string[] = [];\n989 | \tlet currentLine = tracker.getActiveCodes();\n990 | \tlet currentWidth = 0;"
+      },
+      "entries": [
+        {
+          "id": "TUI-202",
+          "title": "ANSI-aware word wrapping and stable style carry across rows",
+          "status": "partial",
+          "source": "ice:packages/tui/src/utils.ts:461-1054; ice:packages/tui/test/wrap-ansi.test.ts:1-267",
+          "what": "Wrap readable words and CJK graphemes without losing active styling or hyperlink clickability across logical and physical line breaks.",
+          "mechanism": "TS extractAnsiCode recognizes CSI by scanning to m/G/K/H/J, OSC by BEL/ST, and APC by BEL/ST; unrecognized/incomplete sequences return null. This is deliberately narrower than a general terminal parser and can scan beyond an unsupported CSI final byte until a later accepted letter. Preserve native general parsing rather than reproducing that limitation silently.\n\nAnsiCodeTracker separately tracks bold,dim,italic,underline,blink,inverse,hidden,strike,foreground/background and active OSC8 link including params and original BEL/ST terminator. Empty/0 SGR resets styling but not the link. It understands selective resets,8/16-color,256-color and RGB38/48;2;r;g;b with5 consumed parameters. Logical CRLF/CR/LF lines inherit active codes. Tokens keep ANSI attached to following visible content; literal spaces form whitespace runs and CJK-script graphemes are independent break opportunities. Overflow trims trailing whitespace, suppresses whitespace at a new line, and breaks a long token at grapheme boundaries.\n\nA wrapped nonfinal line closes underline and an active hyperlink, reopens active codes on continuation, and intentionally leaves background/other styles for caller padding. Final segments do not receive an automatic full reset. A whole input line that already fits is returned as-is. Empty input yields one empty line. TS has no explicit nonpositive-width guard here: an indivisible grapheme wider than the requested width may produce an empty prefix then an overwide grapheme, so the documented universal <=width claim has that boundary limitation.",
+          "interfaces": "wrapTextWithAnsi(text,width):string[]; internal AnsiCodeTracker/getLineEndReset and token/long-word helpers. Source line902's token assignment was transport-redacted; surrounding tokenization implementation and consuming loop were fully visible.",
+          "dependencies": [
+            "TUI-201"
+          ],
+          "rust": "rust:crates/ice-tui/src/utils.rs:275-351 hard-wraps scalar characters, keeps leading wrap spaces, drops tabs/CR/control characters, drops a trailing empty newline and returns one empty line for width0. It subsequently calls rust:crates/ice-tui/src/line_diff.rs:223-234 to isolate ANSI rows; therefore style carry is present, not wholly missing. That isolator appends full reset plus BEL OSC8 close on every parsed row and preserves supported SGR/OSC8 state. Exact defect in line_diff.rs:111-178: RGB checks index+5 and consumes6 parameters, but standard38/48;2;r;g;b has5; normal RGB state is interpreted as unrelated SGR fragments on the next row, while an extra following parameter can be absorbed. Bold anddim share one native Intensity slot. Native atoms/slice/patch correctly use graphemes and reject unsupported controls to a fallback.",
+          "port": "Implement token/CJK word wrapping in crates/ice-tui with the common width function and an explicit attribute/link state machine; retain the native row-isolation/column-patch approach while fixing RGB parameter cardinality and independent bold/dim state. Choose/document final reset and padding ownership to match TS visible output without regressing safe independent row repaint. Keep width0 and indivisible-wide-grapheme behavior explicit.",
+          "size_min": 210,
+          "size_max": 340,
+          "priority": "P1",
+          "priority_reason": "Visible behavior shared by terminal consumers must agree before higher-level component parity is reliable."
+        }
+      ]
+    },
+    {
+      "symbol": "isPunctuationChar",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/utils.ts:983",
+      "covering_entries": [
+        "TUI-202"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/utils.ts",
+        "sha256": "be3dc4a66bf8e01c0f7f4fdf9085fab7943bd8c695d8592b07e42abc37089fa9",
+        "range": [
+          980,
+          997
+        ],
+        "text": "980 | /**\n981 |  * Check if a character is punctuation.\n982 |  */\n983 | export function isPunctuationChar(char: string): boolean {\n984 | \treturn PUNCTUATION_REGEX.test(char);\n985 | }\n986 | \n987 | function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): string[] {\n988 | \tconst lines: string[] = [];\n989 | \tlet currentLine = tracker.getActiveCodes();\n990 | \tlet currentWidth = 0;\n991 | \n992 | \t// First, separate ANSI codes from visible content\n993 | \t// We need to handle ANSI codes specially since they're not graphemes\n994 | \tlet i = 0;\n995 | \tconst segments: Array<{ type: \"ansi\" | \"grapheme\"; value: string }> = [];\n996 | \n997 | \twhile (i < word.length) {"
+      },
+      "entries": [
+        {
+          "id": "TUI-202",
+          "title": "ANSI-aware word wrapping and stable style carry across rows",
+          "status": "partial",
+          "source": "ice:packages/tui/src/utils.ts:461-1054; ice:packages/tui/test/wrap-ansi.test.ts:1-267",
+          "what": "Wrap readable words and CJK graphemes without losing active styling or hyperlink clickability across logical and physical line breaks.",
+          "mechanism": "TS extractAnsiCode recognizes CSI by scanning to m/G/K/H/J, OSC by BEL/ST, and APC by BEL/ST; unrecognized/incomplete sequences return null. This is deliberately narrower than a general terminal parser and can scan beyond an unsupported CSI final byte until a later accepted letter. Preserve native general parsing rather than reproducing that limitation silently.\n\nAnsiCodeTracker separately tracks bold,dim,italic,underline,blink,inverse,hidden,strike,foreground/background and active OSC8 link including params and original BEL/ST terminator. Empty/0 SGR resets styling but not the link. It understands selective resets,8/16-color,256-color and RGB38/48;2;r;g;b with5 consumed parameters. Logical CRLF/CR/LF lines inherit active codes. Tokens keep ANSI attached to following visible content; literal spaces form whitespace runs and CJK-script graphemes are independent break opportunities. Overflow trims trailing whitespace, suppresses whitespace at a new line, and breaks a long token at grapheme boundaries.\n\nA wrapped nonfinal line closes underline and an active hyperlink, reopens active codes on continuation, and intentionally leaves background/other styles for caller padding. Final segments do not receive an automatic full reset. A whole input line that already fits is returned as-is. Empty input yields one empty line. TS has no explicit nonpositive-width guard here: an indivisible grapheme wider than the requested width may produce an empty prefix then an overwide grapheme, so the documented universal <=width claim has that boundary limitation.",
+          "interfaces": "wrapTextWithAnsi(text,width):string[]; internal AnsiCodeTracker/getLineEndReset and token/long-word helpers. Source line902's token assignment was transport-redacted; surrounding tokenization implementation and consuming loop were fully visible.",
+          "dependencies": [
+            "TUI-201"
+          ],
+          "rust": "rust:crates/ice-tui/src/utils.rs:275-351 hard-wraps scalar characters, keeps leading wrap spaces, drops tabs/CR/control characters, drops a trailing empty newline and returns one empty line for width0. It subsequently calls rust:crates/ice-tui/src/line_diff.rs:223-234 to isolate ANSI rows; therefore style carry is present, not wholly missing. That isolator appends full reset plus BEL OSC8 close on every parsed row and preserves supported SGR/OSC8 state. Exact defect in line_diff.rs:111-178: RGB checks index+5 and consumes6 parameters, but standard38/48;2;r;g;b has5; normal RGB state is interpreted as unrelated SGR fragments on the next row, while an extra following parameter can be absorbed. Bold anddim share one native Intensity slot. Native atoms/slice/patch correctly use graphemes and reject unsupported controls to a fallback.",
+          "port": "Implement token/CJK word wrapping in crates/ice-tui with the common width function and an explicit attribute/link state machine; retain the native row-isolation/column-patch approach while fixing RGB parameter cardinality and independent bold/dim state. Choose/document final reset and padding ownership to match TS visible output without regressing safe independent row repaint. Keep width0 and indivisible-wide-grapheme behavior explicit.",
+          "size_min": 210,
+          "size_max": 340,
+          "priority": "P1",
+          "priority_reason": "Visible behavior shared by terminal consumers must agree before higher-level component parity is reliable."
+        }
+      ]
+    },
+    {
+      "symbol": "findWordForward",
+      "kind": "runtime",
+      "ts": "ice:packages/tui/src/word-navigation.ts:78",
+      "covering_entries": [
+        "TUI-233"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/tui/src/word-navigation.ts",
+        "sha256": "b73e915a524926ac8881731e89026b0bc7b5b0bd465de67257af81a420465c7f",
+        "range": [
+          75,
+          92
+        ],
+        "text": "75 |  *\n76 |  * Pure function - does not mutate any state.\n77 |  */\n78 | export function findWordForward(text: string, cursor: number, options?: WordNavigationOptions): number {\n79 | \tif (cursor >= text.length) return text.length;\n80 | \n81 | \tconst textAfterCursor = text.slice(cursor);\n82 | \tconst segmentFn = options?.segment;\n83 | \tconst isAtomic = options?.isAtomicSegment;\n84 | \tconst segments = segmentFn ? segmentFn(textAfterCursor) : wordSegmenter.segment(textAfterCursor);\n85 | \tconst iterator = segments[Symbol.iterator]();\n86 | \tlet next = iterator.next();\n87 | \tlet newCursor = cursor;\n88 | \n89 | \t// Skip leading whitespace\n90 | \twhile (!next.done && !isAtomic?.(next.value.segment) && isWhitespaceChar(next.value.segment)) {\n91 | \t\tnewCursor += next.value.segment.length;\n92 | \t\tnext = iterator.next();"
+      },
+      "entries": [
+        {
+          "id": "TUI-233",
+          "title": "Unicode word navigation and atomic segments",
+          "status": "partial",
+          "source": "ice:packages/tui/src/word-navigation.ts:1-118; ice:packages/tui/test/word-navigation.test.ts:1-192",
+          "what": "Move and delete by linguistic word, punctuation run or caller-defined atomic marker without merging distinct boundaries.",
+          "mechanism": "Backward slices text before the UTF16 cursor, segments with Intl.Segmenter or a supplied segment callback, skips trailing whitespace unless atomic, then consumes exactly one atomic segment, one word-like segment up to its last ASCII punctuation boundary, or a contiguous nonword/nonwhitespace run. Forward symmetrically skips leading whitespace then consumes one unit; inside word-like segments it stops at the first ASCII punctuation. Atomic checks precede whitespace/word logic. Word segmentation therefore splits CJK linguistic units and handles a whole paste marker independent of spaces inside it. Examples from read tests: forward hello world at0=>5 and at5=>11; foo.bar visits0,3,4,7; backward7=>4=>3=>0.",
+          "interfaces": "findWordBackward/Forward(text,cursor,options?); WordNavigationOptions.segment(text),isAtomicSegment(segment); UTF16 source positions require an explicit native position adapter.",
+          "dependencies": [
+            "TUI-201"
+          ],
+          "rust": "rust:crates/ice-tui/src/word_navigation.rs:5-201 uses Unicode scalar indices and a fixed ASCII boundary list. Forward skips the current word plus subsequent punctuation/space, giving hello world0=>6, and backward skips punctuation together with whitespace before a word. It has no linguistic segmentation or atomic marker hooks. Non-ASCII punctuation absent from the boundary list is treated as a word character; a cursor beyond scalar length can index out of bounds in backward helpers. Keep native line/current-word/word-end helpers, but do not treat them as source-equivalent word movement.",
+          "port": "Create a shared segment/position abstraction that preserves grapheme-safe storage while exposing linguistic word and atomic-marker boundaries. Keep punctuation runs separate, adopt the exact direction order, and bind both Input and Editor navigation/deletion to it. Clamp public out-of-range positions without weakening existing native byte-safety.",
+          "size_min": 110,
+          "size_max": 190,
+          "priority": "P1",
+          "priority_reason": "Word deletion is user-visible destructive editing; punctuation, CJK and paste markers need precise shared boundaries."
+        }
+      ]
+    }
+  ]
+}

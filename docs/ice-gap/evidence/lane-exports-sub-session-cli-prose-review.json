@@ -1,0 +1,1843 @@
+{
+  "schema_version": 1,
+  "reviewer": "/root/exports_sub_session",
+  "status": "independent CLI prose review complete",
+  "source_only": true,
+  "proposal": {
+    "path": "evidence/coordinator-native-prose-replacements.json",
+    "sha256": "e3c8a805c6cf0c66c669f93285a15a3a107d22eb7365b0cae83c57921eb13476",
+    "changes": 25
+  },
+  "accepted_spec": {
+    "path": "evidence/spec-cli-packaging.json",
+    "sha256": "a3914d875ed10e29096c9e562a111d3a9726423a427567c219ad6cf3c57151cc"
+  },
+  "verdict": "accept all 25 guarded changes; no correction required",
+  "reviews": [
+    {
+      "index": 0,
+      "id": "CLI-001",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "Cargo bin target and SDK HOST_NAME identify icers; config constants identify ICERS_CODING_AGENT_DIR. The explicit absent TypeScript marker/bridge facts remain untouched."
+    },
+    {
+      "index": 1,
+      "id": "CLI-003",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The executable args.rs:277 lookup is ICERS_EXTENSIONS_DIR; parser semantics are preserved."
+    },
+    {
+      "index": 2,
+      "id": "CLI-004",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "args.rs:715 prints APP_NAME and VERSION, APP_NAME aliases SDK HOST_NAME=icers, and app.rs:366 reads ICERS_FORCE_TUI. Existing startup ordering is unchanged."
+    },
+    {
+      "index": 3,
+      "id": "CLI-006",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "session.rs:191 joins .icers/sessions. Existing selection, resume and failure behavior is untouched."
+    },
+    {
+      "index": 4,
+      "id": "CLI-008",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "app.rs:779 reads ICERS_SKIP_STDIN. The error-to-None and blocking-read limitations are preserved."
+    },
+    {
+      "index": 5,
+      "id": "CLI-018",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "Config constants/read behavior use ICERS_CODING_AGENT_DIR and .icers; native session root is .icers/sessions. The bounded legacy migration uses the selected config root and does not establish cross-identity directory migration."
+    },
+    {
+      "index": 6,
+      "id": "CLI-019",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "args.rs normalizes ICERS_OFFLINE; app.rs uses ICERS_SKIP_STDIN and ICERS_FORCE_TUI. Explicit TS ICE_SKIP_VERSION_CHECK is preserved."
+    },
+    {
+      "index": 7,
+      "id": "CLI-022",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "packages.rs:136 places native project artifacts below .icers/packages; backend differences remain stated."
+    },
+    {
+      "index": 8,
+      "id": "CLI-039",
+      "field": "mechanism",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The link/unlink/registry/discovery join roots change to .icers. The existing dot-name preconditions, mutation order and OS-specific outcome limits remain intact."
+    },
+    {
+      "index": 9,
+      "id": "CLI-039",
+      "field": "interfaces",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The link/unlink/registry/discovery join roots change to .icers. The existing dot-name preconditions, mutation order and OS-specific outcome limits remain intact."
+    },
+    {
+      "index": 10,
+      "id": "CLI-041",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "CLI prebuilt repository correction is source-confirmed and is scoped separately from the unchanged extension canonicalization protocol."
+    },
+    {
+      "index": 11,
+      "id": "CLI-042",
+      "field": "mechanism",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "Native control keys/notice command match changed source. The required nested freshness.icers field, enclosing default, exact checkedAt fallback and read_cache Option failure path support the conditional cache paragraph."
+    },
+    {
+      "index": 12,
+      "id": "CLI-042",
+      "field": "interfaces",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "Native control keys/notice command match changed source. The required nested freshness.icers field, enclosing default, exact checkedAt fallback and read_cache Option failure path support the conditional cache paragraph."
+    },
+    {
+      "index": 13,
+      "id": "CLI-044",
+      "field": "mechanism",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The retained helper identifiers call a parser using APP_NAME=icers, preserve strict successful-exit/no-stderr/one-line semver validation, and keep prior output-memory and path caveats."
+    },
+    {
+      "index": 14,
+      "id": "CLI-045",
+      "field": "title",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 15,
+      "id": "CLI-045",
+      "field": "status",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 16,
+      "id": "CLI-045",
+      "field": "what",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 17,
+      "id": "CLI-045",
+      "field": "mechanism",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 18,
+      "id": "CLI-045",
+      "field": "interfaces",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 19,
+      "id": "CLI-045",
+      "field": "rust",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 20,
+      "id": "CLI-045",
+      "field": "port",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 21,
+      "id": "CLI-045",
+      "field": "priority",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 22,
+      "id": "CLI-045",
+      "field": "priority_reason",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 23,
+      "id": "CLI-045",
+      "field": "size_min",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    },
+    {
+      "index": 24,
+      "id": "CLI-045",
+      "field": "size_max",
+      "decision": "accept",
+      "expected_old_matches": true,
+      "types_preserved": true,
+      "reason": "The active lowercase repository constant matches canonical_repository at manifest and release-asset boundaries. Native binary names are icers/icers.exe; ice-release.json and ice-cli remain exact protocol names. Status different-by-design, P2 and numeric 0–0 describe preservation/compatibility work after the specific case rejection is fixed; no remote success is claimed."
+    }
+  ],
+  "cache_freshness_review": {
+    "entry": "CLI-042",
+    "decision": "accept",
+    "source_file": "crates/ice-cli/src/updates.rs",
+    "source_sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+    "ranges": [
+      [
+        64,
+        82
+      ],
+      [
+        254,
+        259
+      ],
+      [
+        321,
+        340
+      ],
+      [
+        480,
+        494
+      ]
+    ],
+    "reason": "UpdateCacheFreshness.icers is an i64 field without serde(default) or serde(alias). Deriving Rust Default does not itself apply missing-field defaults during Deserialize. The parent UpdateCache.freshness field separately has serde(default), so complete absence yields a default freshness object, while an older present object with ice and no icers fails to deserialize. read_cache uses serde_json::from_str(...).ok(), so that failure yields None for the whole cache. The merge writer can start from unwrap_or_default; fallback from freshness.icers<=0 to aggregate checked_at remains present. The proposal correctly limits the consequence to reused/copied historical cache content and does not claim a real cache was examined, silently migrated or erased.",
+    "preserved_names": [
+      "ice_latest serialized as iceLatest",
+      "ice_cache_checked_at",
+      "cached_latest_ice"
+    ],
+    "limits": "Source-derived behavior only; no serde/app test, cache file access or migration was executed."
+  },
+  "release_identity_review": {
+    "entry": "CLI-045",
+    "decision": "accept",
+    "reason": "Active REPOSITORY is https://github.com/zyk-void/ice-rust. canonical_repository lowercases owner/repository, and validate_release_asset_url canonicalizes the asset owner/repository before exact comparison to the supplied constant. Both former case-mismatch boundaries now agree. The required manifest name remains ice-cli; the fetched file remains ice-release.json; binary path must be icers/icers.exe. Changed fixtures follow the constant and new binary spelling. The proposal retains all manifest/archive/hash/target/path checks and explicitly leaves remote asset/platform success unverified.",
+    "scheduling": "The accepted numeric replacements 15→0 and 45→0 retain number types. A zero additional estimate is appropriate for the completed repository-case correction, with remaining acquisition/activation/selection work assigned to the other existing CLI entries.",
+    "catalog_consistency": "The active-copy merge must keep RUST-045's historical finding and provenance while marking active_status=fixed, as the proposal states."
+  },
+  "rust069_wording_confirmation": {
+    "decision": "conditional wording confirmed",
+    "review_kind": "Reread own previously source-reviewed proposal against its saved bounded trace; not a claim of a second independent source review.",
+    "proposal_path": "evidence/lane-exports-sub-session-native-prose-replacements.json",
+    "proposal_sha256": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423",
+    "behavior": "When a historical native session still contains customType='ice.value' records and no external migration has rewritten them before loading, active SessionValues omits those records from its latest-wins value view. The underlying generic custom entries can remain in the session log. A concrete native caller loads display.hide_thinking through this API; under that condition, an older saved session preference is not restored and the existing settings default remains.",
+    "assumptions": "Requires historical raw native ice.value records to reach the active API without an external migration. This is source-level reasoning, not a reproduced runtime result. No real sessions or user configuration directories were inspected; no application, test, terminal or migration was executed. External import/migration utilities and arbitrary third-party SessionStorage implementations were not exhaustively inspected. This finding concerns values omitted from the projected view, not deletion of the generic log records.",
+    "reason": "Both behavior and assumptions explicitly require historical raw ice.value records to reach the active value API without external migration. They distinguish omission from SessionValues' projected view from deletion of generic custom log records. The concrete display.hide_thinking caller is conditioned the same way; no real user-state or runtime result is claimed."
+  },
+  "source_artifacts": [
+    {
+      "path": "evidence/coordinator-native-hunk-review.json",
+      "sha256": "43fdc0bb77cd3287901dbdcceb697328df3d55d7dd9b3e4e4000cadbb5cbc9b1"
+    },
+    {
+      "path": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+      "sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7"
+    }
+  ],
+  "hunk_review_scope": "Read the exact old/new changed lines in the selected source hunks recorded below and direct active contexts recorded below. Other previously reviewed baseline statements were preserved rather than re-audited wholesale.",
+  "reviewed_coordinator_hunks": [
+    {
+      "file": "crates/ice-cli/src/changelog.rs",
+      "index": 2,
+      "old_start": 27,
+      "old_count": 1,
+      "active_start": 27,
+      "active_count": 1,
+      "old_lines": [
+        "    \"https://raw.githubusercontent.com/Zyk-Void/ice-rust/main/CHANGELOG.md\";"
+      ],
+      "active_lines": [
+        "    \"https://raw.githubusercontent.com/zyk-void/ice-rust/main/CHANGELOG.md\";"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "index": 5,
+      "old_start": 43,
+      "old_count": 1,
+      "active_start": 43,
+      "active_count": 1,
+      "old_lines": [
+        "pub const CONFIG_DIR_NAME: &str = \".ice\";"
+      ],
+      "active_lines": [
+        "pub const CONFIG_DIR_NAME: &str = \".icers\";"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "index": 6,
+      "old_start": 47,
+      "old_count": 1,
+      "active_start": 47,
+      "active_count": 1,
+      "old_lines": [
+        "pub const CONFIG_DIR_ENV: &str = \"ICE_CODING_AGENT_DIR\";"
+      ],
+      "active_lines": [
+        "pub const CONFIG_DIR_ENV: &str = \"ICERS_CODING_AGENT_DIR\";"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "index": 8,
+      "old_start": 89,
+      "old_count": 1,
+      "active_start": 89,
+      "active_count": 1,
+      "old_lines": [
+        "/// The ice config directory (`~/.ice/agent` by default, `ICE_CODING_AGENT_DIR`"
+      ],
+      "active_lines": [
+        "/// The icers config directory (`~/.icers/agent` by default, `ICERS_CODING_AGENT_DIR`"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "index": 9,
+      "old_start": 110,
+      "old_count": 1,
+      "active_start": 110,
+      "active_count": 1,
+      "old_lines": [
+        "/// The config dir one level above the agent dir (`~/.ice`, or the parent of an"
+      ],
+      "active_lines": [
+        "/// The config dir one level above the agent dir (`~/.icers`, or the parent of an"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 0,
+      "old_start": 11,
+      "old_count": 1,
+      "active_start": 11,
+      "active_count": 1,
+      "old_lines": [
+        "const REPOSITORY: &str = \"https://github.com/Zyk-Void/ice-rust\";"
+      ],
+      "active_lines": [
+        "const REPOSITORY: &str = \"https://github.com/zyk-void/ice-rust\";"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 1,
+      "old_start": 76,
+      "old_count": 1,
+      "active_start": 76,
+      "active_count": 1,
+      "old_lines": [
+        "            \"ice.exe\""
+      ],
+      "active_lines": [
+        "            \"icers.exe\""
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 2,
+      "old_start": 78,
+      "old_count": 1,
+      "active_start": 78,
+      "active_count": 1,
+      "old_lines": [
+        "            \"ice\""
+      ],
+      "active_lines": [
+        "            \"icers\""
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 3,
+      "old_start": 81,
+      "old_count": 1,
+      "active_start": 81,
+      "active_count": 1,
+      "old_lines": [
+        "        return Err(\"CLI manifest must declare the flat ice executable filename\".into());"
+      ],
+      "active_lines": [
+        "        return Err(\"CLI manifest must declare the flat icers executable filename\".into());"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 4,
+      "old_start": 101,
+      "old_count": 1,
+      "active_start": 101,
+      "active_count": 1,
+      "old_lines": [
+        "        .user_agent(format!(\"ice/{}\", crate::VERSION))"
+      ],
+      "active_lines": [
+        "        .user_agent(format!(\"icers/{}\", crate::VERSION))"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 5,
+      "old_start": 105,
+      "old_count": 1,
+      "active_start": 105,
+      "active_count": 1,
+      "old_lines": [
+        "    println!(\"downloading prebuilt ice {version} for {target}\");"
+      ],
+      "active_lines": [
+        "    println!(\"downloading prebuilt icers {version} for {target}\");"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 6,
+      "old_start": 237,
+      "old_count": 1,
+      "active_start": 237,
+      "active_count": 1,
+      "old_lines": [
+        "    #[ignore = \"requires ICE_RELEASE_SMOKE_MANIFEST and GitHub access\"]"
+      ],
+      "active_lines": [
+        "    #[ignore = \"requires ICERS_RELEASE_SMOKE_MANIFEST and GitHub access\"]"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 7,
+      "old_start": 239,
+      "old_count": 1,
+      "active_start": 239,
+      "active_count": 1,
+      "old_lines": [
+        "        let path = std::env::var(\"ICE_RELEASE_SMOKE_MANIFEST\").unwrap();"
+      ],
+      "active_lines": [
+        "        let path = std::env::var(\"ICERS_RELEASE_SMOKE_MANIFEST\").unwrap();"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 8,
+      "old_start": 273,
+      "old_count": 1,
+      "active_start": 273,
+      "active_count": 1,
+      "old_lines": [
+        "            .start_file(\"ice.exe\", zip::write::SimpleFileOptions::default())"
+      ],
+      "active_lines": [
+        "            .start_file(\"icers.exe\", zip::write::SimpleFileOptions::default())"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 9,
+      "old_start": 277,
+      "old_count": 1,
+      "active_start": 277,
+      "active_count": 1,
+      "old_lines": [
+        "        let manifest = serde_json::json!({\"schema_version\":1,\"name\":\"ice-cli\",\"version\":\"1.2.3\",\"repository\":REPOSITORY,\"tag\":\"v1.2.3\",\"source_commit\":\"a\".repeat(40),\"targets\":{\"x86_64-pc-windows-msvc\":{\"url\":format!(\"{REPOSITORY}/releases/download/v1.2.3/ice.zip\"),\"format\":\"zip\",\"size\":archive.len(),\"sha256\":hash(&archive),\"binary\":{\"path\":\"ice.exe\",\"sha256\":hash(&executable)}}}});"
+      ],
+      "active_lines": [
+        "        let manifest = serde_json::json!({\"schema_version\":1,\"name\":\"ice-cli\",\"version\":\"1.2.3\",\"repository\":REPOSITORY,\"tag\":\"v1.2.3\",\"source_commit\":\"a\".repeat(40),\"targets\":{\"x86_64-pc-windows-msvc\":{\"url\":format!(\"{REPOSITORY}/releases/download/v1.2.3/icers.zip\"),\"format\":\"zip\",\"size\":archive.len(),\"sha256\":hash(&archive),\"binary\":{\"path\":\"icers.exe\",\"sha256\":hash(&executable)}}}});"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "index": 10,
+      "old_start": 300,
+      "old_count": 1,
+      "active_start": 300,
+      "active_count": 1,
+      "old_lines": [
+        "                serde_json::json!(\"../ice.exe\"),"
+      ],
+      "active_lines": [
+        "                serde_json::json!(\"../icers.exe\"),"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "index": 0,
+      "old_start": 9,
+      "old_count": 2,
+      "active_start": 9,
+      "active_count": 2,
+      "old_lines": [
+        "//!   `-nc` each suppress one channel; project `.ice/<sub>` + legacy",
+        "//!   `.ice/<sub>` + global"
+      ],
+      "active_lines": [
+        "//!   `-nc` each suppress one channel; project `.icers/<sub>` + legacy",
+        "//!   `.icers/<sub>` + global"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "index": 1,
+      "old_start": 96,
+      "old_count": 1,
+      "active_start": 96,
+      "active_count": 1,
+      "old_lines": [
+        "        \"You are an expert coding assistant operating inside ice, a coding agent harness. \\"
+      ],
+      "active_lines": [
+        "        \"You are an expert coding assistant operating inside icers, a coding agent harness. \\"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "index": 2,
+      "old_start": 104,
+      "old_count": 1,
+      "active_start": 104,
+      "active_count": 1,
+      "old_lines": [
+        "- docs  — Look up ice usage, extension, package, and compatibility documentation"
+      ],
+      "active_lines": [
+        "- docs  — Look up icers usage, extension, package, and compatibility documentation"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "index": 3,
+      "old_start": 124,
+      "old_count": 1,
+      "active_start": 124,
+      "active_count": 1,
+      "old_lines": [
+        "- When unsure about ice commands, extensions, Pi package compatibility, or .ice configuration, consult the project documentation before guessing"
+      ],
+      "active_lines": [
+        "- When unsure about icers commands, extensions, Pi package compatibility, or .icers configuration, consult the project documentation before guessing"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "index": 4,
+      "old_start": 189,
+      "old_count": 1,
+      "active_start": 189,
+      "active_count": 1,
+      "old_lines": [
+        "/// The default session directory is `<cwd>/.ice/sessions`."
+      ],
+      "active_lines": [
+        "/// The default session directory is `<cwd>/.icers/sessions`."
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "index": 5,
+      "old_start": 191,
+      "old_count": 1,
+      "active_start": 191,
+      "active_count": 1,
+      "old_lines": [
+        "    cwd.join(\".ice\").join(\"sessions\")"
+      ],
+      "active_lines": [
+        "    cwd.join(\".icers\").join(\"sessions\")"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 0,
+      "old_start": 22,
+      "old_count": 2,
+      "active_start": 22,
+      "active_count": 2,
+      "old_lines": [
+        "const STAGED_ICE_CHECK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);",
+        "const MAX_STAGED_ICE_OUTPUT_BYTES: usize = 4 * 1024;"
+      ],
+      "active_lines": [
+        "const STAGED_ICERS_CHECK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);",
+        "const MAX_STAGED_ICERS_OUTPUT_BYTES: usize = 4 * 1024;"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 1,
+      "old_start": 31,
+      "old_count": 1,
+      "active_start": 31,
+      "active_count": 1,
+      "old_lines": [
+        "/// How long a completed update keeps its status record. `ice update` prints"
+      ],
+      "active_lines": [
+        "/// How long a completed update keeps its status record. `icers update` prints"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 2,
+      "old_start": 79,
+      "old_count": 1,
+      "active_start": 79,
+      "active_count": 1,
+      "old_lines": [
+        "    ice: i64,"
+      ],
+      "active_lines": [
+        "    icers: i64,"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 3,
+      "old_start": 119,
+      "old_count": 1,
+      "active_start": 119,
+      "active_count": 1,
+      "old_lines": [
+        "/// Best-effort startup check for the ice release and installed Rust extensions."
+      ],
+      "active_lines": [
+        "/// Best-effort startup check for the icers release and installed Rust extensions."
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 4,
+      "old_start": 125,
+      "old_count": 1,
+      "active_start": 125,
+      "active_count": 1,
+      "old_lines": [
+        "/// Check the ice release and every installed Rust cdylib extension."
+      ],
+      "active_lines": [
+        "/// Check the icers release and every installed Rust cdylib extension."
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 5,
+      "old_start": 137,
+      "old_count": 1,
+      "active_start": 137,
+      "active_count": 1,
+      "old_lines": [
+        "    crate::args::offline_env_enabled() || std::env::var_os(\"ICE_DISABLE_UPDATE_CHECK\").is_some()"
+      ],
+      "active_lines": [
+        "    crate::args::offline_env_enabled() || std::env::var_os(\"ICERS_DISABLE_UPDATE_CHECK\").is_some()"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 6,
+      "old_start": 155,
+      "old_count": 1,
+      "active_start": 155,
+      "active_count": 1,
+      "old_lines": [
+        "        .user_agent(format!(\"ice/{}\", crate::VERSION))"
+      ],
+      "active_lines": [
+        "        .user_agent(format!(\"icers/{}\", crate::VERSION))"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 7,
+      "old_start": 169,
+      "old_count": 1,
+      "active_start": 169,
+      "active_count": 1,
+      "old_lines": [
+        "    // Installed Rust extensions come from `ice install`'s registry, so this"
+      ],
+      "active_lines": [
+        "    // Installed Rust extensions come from `icers install`'s registry, so this"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 8,
+      "old_start": 255,
+      "old_count": 2,
+      "active_start": 255,
+      "active_count": 2,
+      "old_lines": [
+        "    if cache.freshness.ice > 0 {",
+        "        cache.freshness.ice"
+      ],
+      "active_lines": [
+        "    if cache.freshness.icers > 0 {",
+        "        cache.freshness.icers"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 9,
+      "old_start": 336,
+      "old_count": 1,
+      "active_start": 336,
+      "active_count": 1,
+      "old_lines": [
+        "        cache.freshness.ice = latest_checked_at;"
+      ],
+      "active_lines": [
+        "        cache.freshness.icers = latest_checked_at;"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 10,
+      "old_start": 380,
+      "old_count": 1,
+      "active_start": 380,
+      "active_count": 1,
+      "old_lines": [
+        "                name: \"ice\".into(),"
+      ],
+      "active_lines": [
+        "                name: \"icers\".into(),"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 11,
+      "old_start": 383,
+      "old_count": 1,
+      "active_start": 383,
+      "active_count": 1,
+      "old_lines": [
+        "                command: \"ice update\".into(),"
+      ],
+      "active_lines": [
+        "                command: \"icers update\".into(),"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 12,
+      "old_start": 403,
+      "old_count": 1,
+      "active_start": 403,
+      "active_count": 1,
+      "old_lines": [
+        "                        \"ice install {} --github {}\","
+      ],
+      "active_lines": [
+        "                        \"icers install {} --github {}\","
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 13,
+      "old_start": 407,
+      "old_count": 1,
+      "active_start": 407,
+      "active_count": 1,
+      "old_lines": [
+        "                    format!(\"ice install {}\", package.name)"
+      ],
+      "active_lines": [
+        "                    format!(\"icers install {}\", package.name)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 14,
+      "old_start": 409,
+      "old_count": 1,
+      "active_start": 409,
+      "active_count": 1,
+      "old_lines": [
+        "                    format!(\"ice install {} --build\", package.name)"
+      ],
+      "active_lines": [
+        "                    format!(\"icers install {} --build\", package.name)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 70,
+      "old_start": 1889,
+      "old_count": 2,
+      "active_start": 1893,
+      "active_count": 2,
+      "old_lines": [
+        "        STAGED_ICE_CHECK_TIMEOUT,",
+        "        MAX_STAGED_ICE_OUTPUT_BYTES,"
+      ],
+      "active_lines": [
+        "        STAGED_ICERS_CHECK_TIMEOUT,",
+        "        MAX_STAGED_ICERS_OUTPUT_BYTES,"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 71,
+      "old_start": 1905,
+      "old_count": 1,
+      "active_start": 1909,
+      "active_count": 1,
+      "old_lines": [
+        "        return Err(\"staged ice --version wrote unexpected stderr output\".to_string());"
+      ],
+      "active_lines": [
+        "        return Err(\"staged icers --version wrote unexpected stderr output\".to_string());"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 72,
+      "old_start": 1908,
+      "old_count": 1,
+      "active_start": 1912,
+      "active_count": 1,
+      "old_lines": [
+        "        .ok_or_else(|| \"staged ice returned an invalid --version response\".to_string())?;"
+      ],
+      "active_lines": [
+        "        .ok_or_else(|| \"staged icers returned an invalid --version response\".to_string())?;"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 73,
+      "old_start": 1910,
+      "old_count": 1,
+      "active_start": 1914,
+      "active_count": 1,
+      "old_lines": [
+        "        .map_err(|_| \"the running ice version is not valid semantic versioning\".to_string())?;"
+      ],
+      "active_lines": [
+        "        .map_err(|_| \"the running icers version is not valid semantic versioning\".to_string())?;"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 74,
+      "old_start": 1913,
+      "old_count": 1,
+      "active_start": 1917,
+      "active_count": 1,
+      "old_lines": [
+        "            \"refusing to replace ice {current} with older version {staged}\""
+      ],
+      "active_lines": [
+        "            \"refusing to replace icers {current} with older version {staged}\""
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "index": 75,
+      "old_start": 1937,
+      "old_count": 1,
+      "active_start": 1941,
+      "active_count": 1,
+      "old_lines": [
+        "/// refused — a launch path such as `C:\\tools\\current\\ice.exe` where `current`"
+      ],
+      "active_lines": [
+        "/// refused — a launch path such as `C:\\tools\\current\\icers.exe` where `current`"
+      ]
+    }
+  ],
+  "reviewed_rpc_hunks": [
+    {
+      "file": "crates/ice-cli/Cargo.toml",
+      "hunk_number": 3,
+      "header": "@@ -103,5 +103,5 @@ clipboard = [\"dep:arboard\"]",
+      "old_range": [
+        103,
+        107
+      ],
+      "active_range": [
+        103,
+        107
+      ],
+      "changed_lines": [
+        "-name = \"ice\"",
+        "-path = \"src/bin/ice.rs\"",
+        "+name = \"icers\"",
+        "+path = \"src/bin/icers.rs\""
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 3,
+      "header": "@@ -71 +71 @@ fn resolve_connect_token(argv: &[String]) -> Option<String> {",
+      "old_range": [
+        71,
+        71
+      ],
+      "active_range": [
+        71,
+        71
+      ],
+      "changed_lines": [
+        "-/// ([`crate::bin`] / `src/bin/ice.rs`) calls this under a tokio runtime and",
+        "+/// ([`crate::bin`] / `src/bin/icers.rs`) calls this under a tokio runtime and"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 7,
+      "header": "@@ -100 +100 @@ async fn run_inner() -> i32 {",
+      "old_range": [
+        100,
+        100
+      ],
+      "active_range": [
+        100,
+        100
+      ],
+      "changed_lines": [
+        "-    // Normalize the CLI flag into ICE_OFFLINE so early-dispatch subcommands and",
+        "+    // Normalize the CLI flag into ICERS_OFFLINE so early-dispatch subcommands and"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 11,
+      "header": "@@ -187,2 +187,2 @@ async fn run_inner() -> i32 {",
+      "old_range": [
+        187,
+        188
+      ],
+      "active_range": [
+        187,
+        188
+      ],
+      "changed_lines": [
+        "-    // ---- Legacy-layout migration (flat ~/.ice → ~/.ice/agent/) ----",
+        "-    // Best-effort; never blocks startup. Skipped when ICE_CODING_AGENT_DIR is",
+        "+    // ---- Legacy-layout migration (flat ~/.icers → ~/.icers/agent/) ----",
+        "+    // Best-effort; never blocks startup. Skipped when ICERS_CODING_AGENT_DIR is"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 13,
+      "header": "@@ -364 +364 @@ async fn run_inner() -> i32 {",
+      "old_range": [
+        364,
+        364
+      ],
+      "active_range": [
+        364,
+        364
+      ],
+      "changed_lines": [
+        "-    // Debug/testing escape hatch: ICE_FORCE_TUI=1 forces interactive mode",
+        "+    // Debug/testing escape hatch: ICERS_FORCE_TUI=1 forces interactive mode"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 14,
+      "header": "@@ -366 +366 @@ async fn run_inner() -> i32 {",
+      "old_range": [
+        366,
+        366
+      ],
+      "active_range": [
+        366,
+        366
+      ],
+      "changed_lines": [
+        "-    let mode = if std::env::var(\"ICE_FORCE_TUI\")",
+        "+    let mode = if std::env::var(\"ICERS_FORCE_TUI\")"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 15,
+      "header": "@@ -378 +378 @@ async fn run_inner() -> i32 {",
+      "old_range": [
+        378,
+        378
+      ],
+      "active_range": [
+        378,
+        378
+      ],
+      "changed_lines": [
+        "-    // authoritative — it must win over TTY detection and ICE_FORCE_TUI,",
+        "+    // authoritative — it must win over TTY detection and ICERS_FORCE_TUI,"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 22,
+      "header": "@@ -777 +777 @@ fn read_piped_stdin() -> Option<String> {",
+      "old_range": [
+        777,
+        777
+      ],
+      "active_range": [
+        777,
+        777
+      ],
+      "changed_lines": [
+        "-    // Debug/testing escape hatch: ICE_SKIP_STDIN=1 skips reading piped stdin",
+        "+    // Debug/testing escape hatch: ICERS_SKIP_STDIN=1 skips reading piped stdin"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 23,
+      "header": "@@ -779 +779 @@ fn read_piped_stdin() -> Option<String> {",
+      "old_range": [
+        779,
+        779
+      ],
+      "active_range": [
+        779,
+        779
+      ],
+      "changed_lines": [
+        "-    if std::env::var(\"ICE_SKIP_STDIN\")",
+        "+    if std::env::var(\"ICERS_SKIP_STDIN\")"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "hunk_number": 24,
+      "header": "@@ -900 +900 @@ fn print_resolve_error(e: &ResolveError) {",
+      "old_range": [
+        900,
+        900
+      ],
+      "active_range": [
+        900,
+        900
+      ],
+      "changed_lines": [
+        "-            eprintln!(\"Check ~/.ice/auth.json / ~/.ice/models.json (set ICE_CODING_AGENT_DIR to relocate).\");",
+        "+            eprintln!(\"Check ~/.icers/auth.json / ~/.icers/models.json (set ICERS_CODING_AGENT_DIR to relocate).\");"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 1,
+      "header": "@@ -34 +34 @@ use ice_ai::ThinkingLevel;",
+      "old_range": [
+        34,
+        34
+      ],
+      "active_range": [
+        34,
+        34
+      ],
+      "changed_lines": [
+        "-pub(crate) const ICE_OFFLINE_ENV: &str = \"ICE_OFFLINE\";",
+        "+pub(crate) const ICERS_OFFLINE_ENV: &str = \"ICERS_OFFLINE\";"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 2,
+      "header": "@@ -46 +46 @@ pub(crate) fn offline_env_enabled() -> bool {",
+      "old_range": [
+        46,
+        46
+      ],
+      "active_range": [
+        46,
+        46
+      ],
+      "changed_lines": [
+        "-    is_truthy_env_flag(std::env::var(ICE_OFFLINE_ENV).ok().as_deref())",
+        "+    is_truthy_env_flag(std::env::var(ICERS_OFFLINE_ENV).ok().as_deref())"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 3,
+      "header": "@@ -54 +54 @@ pub(crate) fn offline_mode_enabled(cli_offline: bool) -> bool {",
+      "old_range": [
+        54,
+        54
+      ],
+      "active_range": [
+        54,
+        54
+      ],
+      "changed_lines": [
+        "-/// This mirrors upstream setting `ICE_OFFLINE=1` after either input enables it,",
+        "+/// This mirrors upstream setting `ICERS_OFFLINE=1` after either input enables it,"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 4,
+      "header": "@@ -59 +59 @@ pub(crate) fn normalize_offline_mode(args: &[String]) -> bool {",
+      "old_range": [
+        59,
+        59
+      ],
+      "active_range": [
+        59,
+        59
+      ],
+      "changed_lines": [
+        "-        std::env::set_var(ICE_OFFLINE_ENV, \"1\");",
+        "+        std::env::set_var(ICERS_OFFLINE_ENV, \"1\");"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 7,
+      "header": "@@ -180 +180 @@ pub struct Args {",
+      "old_range": [
+        180,
+        180
+      ],
+      "active_range": [
+        180,
+        180
+      ],
+      "changed_lines": [
+        "-    /// (`.dll`/`.so`/`.dylib`), in addition to project `.ice/extensions`",
+        "+    /// (`.dll`/`.so`/`.dylib`), in addition to project `.icers/extensions`"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 8,
+      "header": "@@ -184 +184 @@ pub struct Args {",
+      "old_range": [
+        184,
+        184
+      ],
+      "active_range": [
+        184,
+        184
+      ],
+      "changed_lines": [
+        "-    /// pi's registration order). `ICE_EXTENSIONS_DIR` (colon-separated on Unix,",
+        "+    /// pi's registration order). `ICERS_EXTENSIONS_DIR` (colon-separated on Unix,"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 9,
+      "header": "@@ -274 +274 @@ pub fn parse_args(args: &[String]) -> Args {",
+      "old_range": [
+        274,
+        274
+      ],
+      "active_range": [
+        274,
+        274
+      ],
+      "changed_lines": [
+        "-    // `ICE_EXTENSIONS_DIR` env: an extra list of plugin dirs prepended to any",
+        "+    // `ICERS_EXTENSIONS_DIR` env: an extra list of plugin dirs prepended to any"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 10,
+      "header": "@@ -277 +277 @@ pub fn parse_args(args: &[String]) -> Args {",
+      "old_range": [
+        277,
+        277
+      ],
+      "active_range": [
+        277,
+        277
+      ],
+      "changed_lines": [
+        "-    if let Ok(raw) = std::env::var(\"ICE_EXTENSIONS_DIR\") {",
+        "+    if let Ok(raw) = std::env::var(\"ICERS_EXTENSIONS_DIR\") {"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 12,
+      "header": "@@ -616 +616 @@ pub fn print_help() {",
+      "old_range": [
+        616,
+        616
+      ],
+      "active_range": [
+        616,
+        616
+      ],
+      "changed_lines": [
+        "-  --offline                      Disable startup network operations (same as ICE_OFFLINE=1)",
+        "+  --offline                      Disable startup network operations (same as ICERS_OFFLINE=1)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 13,
+      "header": "@@ -636 +636 @@ pub fn print_help() {",
+      "old_range": [
+        636,
+        636
+      ],
+      "active_range": [
+        636,
+        636
+      ],
+      "changed_lines": [
+        "-                                 (also via ICE_EXTENSIONS_DIR env: ';' on Windows, ':' on Unix)",
+        "+                                 (also via ICERS_EXTENSIONS_DIR env: ';' on Windows, ':' on Unix)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 14,
+      "header": "@@ -639 +639 @@ pub fn print_help() {",
+      "old_range": [
+        639,
+        639
+      ],
+      "active_range": [
+        639,
+        639
+      ],
+      "changed_lines": [
+        "-                                 .ice/extensions, no global extensions)",
+        "+                                 .icers/extensions, no global extensions)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 15,
+      "header": "@@ -648,3 +648,3 @@ pub fn print_help() {",
+      "old_range": [
+        648,
+        650
+      ],
+      "active_range": [
+        648,
+        650
+      ],
+      "changed_lines": [
+        "-  update                       Update the ice CLI from crates.io",
+        "-  auth login|check|logout        Manage persisted credentials in ~/.ice/auth.json",
+        "-                                (see `ice auth --help`)",
+        "+  update                       Update the icers CLI from crates.io",
+        "+  auth login|check|logout        Manage persisted credentials in ~/.icers/auth.json",
+        "+                                (see `icers auth --help`)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 21,
+      "header": "@@ -693,4 +693,4 @@ pub fn print_help() {",
+      "old_range": [
+        693,
+        696
+      ],
+      "active_range": [
+        693,
+        696
+      ],
+      "changed_lines": [
+        "-  ICE_OFFLINE                     Disable startup network operations when set to 1/true/yes",
+        "-  ICE_CODING_AGENT_DIR           Override the ~/.ice config directory (auth.json + models.json)",
+        "-  ICE_SESSION_ID                 Session id served by a plugin (set by the host; also honored as an override)",
+        "-  ICE_NO_EMOJI                   Render the brand lockup without the crab (1/true/yes)",
+        "+  ICERS_OFFLINE                     Disable startup network operations when set to 1/true/yes",
+        "+  ICERS_CODING_AGENT_DIR           Override the ~/.icers config directory (auth.json + models.json)",
+        "+  ICERS_SESSION_ID                 Session id served by a plugin (set by the host; also honored as an override)",
+        "+  ICERS_NO_EMOJI                   Render the brand lockup without the crab (1/true/yes)"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 22,
+      "header": "@@ -701 +701 @@ pub fn print_help() {",
+      "old_range": [
+        701,
+        701
+      ],
+      "active_range": [
+        701,
+        701
+      ],
+      "changed_lines": [
+        "-  ~/.ice/agent/models.json. The interactive TUI, Rust extensions, skills,",
+        "+  ~/.icers/agent/models.json. The interactive TUI, Rust extensions, skills,"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 23,
+      "header": "@@ -727,2 +727,2 @@ mod tests {",
+      "old_range": [
+        727,
+        728
+      ],
+      "active_range": [
+        727,
+        728
+      ],
+      "changed_lines": [
+        "-                Some(value) => std::env::set_var(ICE_OFFLINE_ENV, value),",
+        "-                None => std::env::remove_var(ICE_OFFLINE_ENV),",
+        "+                Some(value) => std::env::set_var(ICERS_OFFLINE_ENV, value),",
+        "+                None => std::env::remove_var(ICERS_OFFLINE_ENV),"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 24,
+      "header": "@@ -910 +910 @@ mod tests {",
+      "old_range": [
+        910,
+        910
+      ],
+      "active_range": [
+        910,
+        910
+      ],
+      "changed_lines": [
+        "-        let _restore = RestoreOfflineEnv(std::env::var_os(ICE_OFFLINE_ENV));",
+        "+        let _restore = RestoreOfflineEnv(std::env::var_os(ICERS_OFFLINE_ENV));"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 25,
+      "header": "@@ -912 +912 @@ mod tests {",
+      "old_range": [
+        912,
+        912
+      ],
+      "active_range": [
+        912,
+        912
+      ],
+      "changed_lines": [
+        "-        std::env::set_var(ICE_OFFLINE_ENV, \"YeS\");",
+        "+        std::env::set_var(ICERS_OFFLINE_ENV, \"YeS\");"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 26,
+      "header": "@@ -915 +915 @@ mod tests {",
+      "old_range": [
+        915,
+        915
+      ],
+      "active_range": [
+        915,
+        915
+      ],
+      "changed_lines": [
+        "-        assert_eq!(std::env::var(ICE_OFFLINE_ENV).as_deref(), Ok(\"1\"));",
+        "+        assert_eq!(std::env::var(ICERS_OFFLINE_ENV).as_deref(), Ok(\"1\"));"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 27,
+      "header": "@@ -917 +917 @@ mod tests {",
+      "old_range": [
+        917,
+        917
+      ],
+      "active_range": [
+        917,
+        917
+      ],
+      "changed_lines": [
+        "-        std::env::set_var(ICE_OFFLINE_ENV, \"0\");",
+        "+        std::env::set_var(ICERS_OFFLINE_ENV, \"0\");"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "hunk_number": 28,
+      "header": "@@ -921 +921 @@ mod tests {",
+      "old_range": [
+        921,
+        921
+      ],
+      "active_range": [
+        921,
+        921
+      ],
+      "changed_lines": [
+        "-        assert_eq!(std::env::var(ICE_OFFLINE_ENV).as_deref(), Ok(\"1\"));",
+        "+        assert_eq!(std::env::var(ICERS_OFFLINE_ENV).as_deref(), Ok(\"1\"));"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/lib.rs",
+      "hunk_number": 2,
+      "header": "@@ -27,2 +27,2 @@",
+      "old_range": [
+        27,
+        28
+      ],
+      "active_range": [
+        27,
+        28
+      ],
+      "changed_lines": [
+        "-//! Resources load from `.ice/` and `~/.ice/agent/`; extensions are Rust",
+        "-//! `cdylib` plugins installed and developed with `ice install` / `ice dev`.",
+        "+//! Resources load from `.icers/` and `~/.icers/agent/`; extensions are Rust",
+        "+//! `cdylib` plugins installed and developed with `icers install` / `icers dev`."
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 1,
+      "header": "@@ -4 +4 @@",
+      "old_range": [
+        4,
+        4
+      ],
+      "active_range": [
+        4,
+        4
+      ],
+      "changed_lines": [
+        "-//! directories under `.ice/packages/<name>`. The registry is deliberately",
+        "+//! directories under `.icers/packages/<name>`. The registry is deliberately"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 2,
+      "header": "@@ -136 +136 @@ fn link(args: &[String]) -> i32 {",
+      "old_range": [
+        136,
+        136
+      ],
+      "active_range": [
+        136,
+        136
+      ],
+      "changed_lines": [
+        "-    let root = project_root.join(\".ice/packages\").join(&package_name);",
+        "+    let root = project_root.join(\".icers/packages\").join(&package_name);"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 7,
+      "header": "@@ -415 +415 @@ fn unlink(args: &[String]) -> i32 {",
+      "old_range": [
+        415,
+        415
+      ],
+      "active_range": [
+        415,
+        415
+      ],
+      "changed_lines": [
+        "-    let dir = cwd.join(\".ice/packages\").join(name);",
+        "+    let dir = cwd.join(\".icers/packages\").join(name);"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 8,
+      "header": "@@ -588 +588 @@ fn read_registry(cwd: &Path) -> Result<PackageRegistry, String> {",
+      "old_range": [
+        588,
+        588
+      ],
+      "active_range": [
+        588,
+        588
+      ],
+      "changed_lines": [
+        "-    let path = cwd.join(\".ice\").join(REGISTRY);",
+        "+    let path = cwd.join(\".icers\").join(REGISTRY);"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 9,
+      "header": "@@ -598 +598 @@ fn write_registry(cwd: &Path, r: &PackageRegistry) -> Result<(), String> {",
+      "old_range": [
+        598,
+        598
+      ],
+      "active_range": [
+        598,
+        598
+      ],
+      "changed_lines": [
+        "-    let dir = cwd.join(\".ice\");",
+        "+    let dir = cwd.join(\".icers\");"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 10,
+      "header": "@@ -611 +611 @@ pub fn project_package_dirs(cwd: &Path, kind: &str) -> Vec<PathBuf> {",
+      "old_range": [
+        611,
+        611
+      ],
+      "active_range": [
+        611,
+        611
+      ],
+      "changed_lines": [
+        "-            .map(|p| cwd.join(\".ice/packages\").join(p.name).join(kind))",
+        "+            .map(|p| cwd.join(\".icers/packages\").join(p.name).join(kind))"
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "hunk_number": 14,
+      "header": "@@ -794 +794 @@ mod tests {",
+      "old_range": [
+        794,
+        794
+      ],
+      "active_range": [
+        794,
+        794
+      ],
+      "changed_lines": [
+        "-            assert!(!cwd.join(\".ice/packages/project-extension\").exists());",
+        "+            assert!(!cwd.join(\".icers/packages/project-extension\").exists());"
+      ]
+    },
+    {
+      "file": "crates/ice-plugin-sdk/src/lib.rs",
+      "hunk_number": 5,
+      "header": "@@ -666 +666 @@ pub const EVENT_TAG_COUNT: usize = 37;",
+      "old_range": [
+        666,
+        666
+      ],
+      "active_range": [
+        666,
+        666
+      ],
+      "changed_lines": [
+        "-pub const HOST_NAME: &str = \"ice\";",
+        "+pub const HOST_NAME: &str = \"icers\";"
+      ]
+    }
+  ],
+  "hunk_file_identities": [
+    {
+      "file": "crates/ice-cli/src/changelog.rs",
+      "old_sha256": "e758eade22f55011e3a67b366a126fa475028f5db315c0495c9a2c97dfae57e9",
+      "active_sha256": "8ab8bfa468d64174fd6f3173cb2ff61e415821431092bce3115d684432dac491",
+      "diff_sha256": "93058ead063f62580cf84526605f614de43d2d0dc14b21fa8007357689ccca2e"
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "old_sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "active_sha256": "44b07f8b3e3708bb04963678efa527928815696174bba870cfba34aa8bc02510",
+      "diff_sha256": "4c8d2c3c9c9a5b56905f2113d7ae24e77ac6d0fe111726cb2c7bc15be6ea0a11"
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_sha256": "97ab5b041b5eacb663fb37369b5cfef9497b991062f9460fb6a9d75f74e4ef64",
+      "active_sha256": "79ad9c42983ecc01f1b635d7def8e05ee9a42e5cdbf83611d1ccda5f53c09316",
+      "diff_sha256": "647089e47814a358814f4fef64afcc28e0c6d4e640db7cd30d18fccd490b4373"
+    },
+    {
+      "file": "crates/ice-cli/src/session.rs",
+      "old_sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "active_sha256": "c528a01013fa065cd367e698957e0a082bf9acb4b89a283d7f82b6c7a452b16f",
+      "diff_sha256": "8bd3fce372a9b6ffbc8418b1dd8eeed5f09178becc8a902cb67d506d1b4eb5be"
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "old_sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "active_sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "diff_sha256": "7952b442a554c6e7916cbcf80c0c95b22ffbdc54357b26632e6de24c61f82034"
+    },
+    {
+      "file": "crates/ice-cli/Cargo.toml",
+      "old_sha256": "922866ba16f97f770202870c56181e5060b183afed6e9d9b0f5fc799eb3af225",
+      "active_sha256": "76c7c13b4d0a7de69b310921358cdd8c170f4dc2553a1748ce06f62b9930b22f",
+      "diff_sha256": "d601d1b83729cdee5cabbb9bb9c86a6d2177f35b493ce34014d91ab2a85343fe"
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "old_sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "active_sha256": "56c23b1661616dbdfafd662e0b4afb0368afe93bda756ac79102c8e7c4413815",
+      "diff_sha256": "efd407c7bef170f7e6459b683785b5bca86f0f8936836fdc16c440180ab90028"
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "old_sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "active_sha256": "d88c9e506fd30a7a4d49a5477d58f185416dd9cf1f73740d82cbe7a5e5658acf",
+      "diff_sha256": "3f34a3d836fb5f36ea3b9c3ed04d74a6fe8af2dab1109397e55646f43b403e3d"
+    },
+    {
+      "file": "crates/ice-cli/src/lib.rs",
+      "old_sha256": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478",
+      "active_sha256": "c1bd647b4f6730bf403899e5d326d0c5aa4c0d654bc21f013542b7d218efb0ba",
+      "diff_sha256": "391d9f60a29aee14af1b79f672542a0dbb9f6895f090ac89682074a78640f9ac"
+    },
+    {
+      "file": "crates/ice-cli/src/packages.rs",
+      "old_sha256": "fae4872621bea7dd14e580faf2f4a72cf6341d399d857daf70d805cb90a0a4ac",
+      "active_sha256": "42389364acb6114df8dbb4d680fba25fb4843cc5b30d756cfba8a55f32f6974a",
+      "diff_sha256": "353f1ad80ebfc5a774b5190a0f2e6180295a813fff6da00db84ba450c874e79c"
+    },
+    {
+      "file": "crates/ice-plugin-sdk/src/lib.rs",
+      "old_sha256": "3a61438fbc4f495e820942da7f7662377027a95cf49b6bba81c5ecf01e5c5f31",
+      "active_sha256": "dffb48ef806f7b04efba33c666a805d07e24566e9529abc5c9e0db061ee76655",
+      "diff_sha256": "ae37469033558276556dd2806b8fffc4d695afd3b60cb570e93edd7cf1663942"
+    }
+  ],
+  "direct_active_source_reads": [
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "range": [
+        64,
+        82
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "text": "64 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]\n65 | #[serde(rename_all = \"camelCase\")]\n66 | struct UpdateCache {\n67 |     /// Legacy aggregate timestamp retained for backward-compatible cache reads.\n68 |     checked_at: i64,\n69 |     ice_latest: Option<String>,\n70 |     #[serde(default)]\n71 |     native_packages: BTreeMap<String, String>,\n72 |     #[serde(default)]\n73 |     freshness: UpdateCacheFreshness,\n74 | }\n75 | \n76 | #[derive(Debug, Clone, Serialize, Deserialize, Default)]\n77 | #[serde(rename_all = \"camelCase\")]\n78 | struct UpdateCacheFreshness {\n79 |     icers: i64,\n80 |     #[serde(default)]\n81 |     native_packages: BTreeMap<String, i64>,\n82 | }",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "range": [
+        254,
+        259
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "text": "254 | fn ice_cache_checked_at(cache: &UpdateCache) -> i64 {\n255 |     if cache.freshness.icers > 0 {\n256 |         cache.freshness.icers\n257 |     } else {\n258 |         cache.checked_at\n259 |     }",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "range": [
+        321,
+        340
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "text": "321 | fn merge_and_write_cache(\n322 |     path: &Path,\n323 |     checked_at: i64,\n324 |     ice_update: Option<(Option<String>, i64)>,\n325 |     native_packages: RegistryCacheUpdate,\n326 | ) -> UpdateCache {\n327 |     let _guard = UPDATE_CACHE_WRITE_LOCK\n328 |         .lock()\n329 |         .unwrap_or_else(std::sync::PoisonError::into_inner);\n330 |     let mut cache = read_cache(path).unwrap_or_default();\n331 |     if cache.checked_at <= 0 {\n332 |         cache.checked_at = checked_at;\n333 |     }\n334 |     if let Some((latest, latest_checked_at)) = ice_update {\n335 |         cache.ice_latest = latest;\n336 |         cache.freshness.icers = latest_checked_at;\n337 |     }\n338 |     cache.native_packages = native_packages.0;\n339 |     cache.freshness.native_packages = native_packages.1;\n340 |     let _ = write_cache(path, &cache);",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "range": [
+        480,
+        494
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "text": "480 | }\n481 | \n482 | fn read_cache(path: &Path) -> Option<UpdateCache> {\n483 |     serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()\n484 | }\n485 | \n486 | fn write_cache(path: &Path, cache: &UpdateCache) -> Result<(), String> {\n487 |     if let Some(parent) = path.parent() {\n488 |         std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;\n489 |     }\n490 |     let data = serde_json::to_vec_pretty(cache).map_err(|error| error.to_string())?;\n491 |     crate::config::atomic_write(path, &data).map_err(|error| error.to_string())\n492 | }\n493 | \n494 | fn now_ms() -> i64 {",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_release.rs",
+      "range": [
+        1,
+        106
+      ],
+      "sha256": "79ad9c42983ecc01f1b635d7def8e05ee9a42e5cdbf83611d1ccda5f53c09316",
+      "text": "  1 | //! CLI adaptation of the prebuilt package protocol. Executables use `binary`\n  2 | //! instead of `library`; the CLI's existing versioned Release tag remains vX.Y.Z.\n  3 | use crate::prebuilt_extensions::{\n  4 |     body_limited, canonical_repository, check_hash, extract_library, host_target,\n  5 |     validate_executable_target, validate_release_asset_url,\n  6 | };\n  7 | use serde::Deserialize;\n  8 | use std::collections::BTreeMap;\n  9 | use std::path::{Path, PathBuf};\n 10 | \n 11 | const REPOSITORY: &str = \"https://github.com/zyk-void/ice-rust\";\n 12 | const MAX_MANIFEST: u64 = 256 * 1024;\n 13 | const MAX_ARCHIVE: u64 = 256 * 1024 * 1024;\n 14 | \n 15 | #[derive(Debug, Deserialize)]\n 16 | struct Manifest {\n 17 |     schema_version: u32,\n 18 |     name: String,\n 19 |     version: String,\n 20 |     repository: String,\n 21 |     tag: String,\n 22 |     source_commit: String,\n 23 |     targets: BTreeMap<String, Distribution>,\n 24 | }\n 25 | \n 26 | #[derive(Debug, Deserialize)]\n 27 | struct Distribution {\n 28 |     url: String,\n 29 |     format: String,\n 30 |     size: u64,\n 31 |     sha256: String,\n 32 |     binary: Binary,\n 33 | }\n 34 | \n 35 | #[derive(Debug, Deserialize)]\n 36 | struct Binary {\n 37 |     path: String,\n 38 |     sha256: String,\n 39 | }\n 40 | \n 41 | fn validate<'a>(\n 42 |     manifest: &'a Manifest,\n 43 |     version: &str,\n 44 |     target: &str,\n 45 | ) -> Result<&'a Distribution, String> {\n 46 |     semver::Version::parse(version).map_err(|_| \"invalid CLI release version\")?;\n 47 |     if manifest.schema_version != 1\n 48 |         || manifest.name != \"ice-cli\"\n 49 |         || manifest.version != version\n 50 |         || canonical_repository(&manifest.repository)? != REPOSITORY\n 51 |         || manifest.tag != format!(\"v{version}\")\n 52 |     {\n 53 |         return Err(\n 54 |             \"CLI manifest schema, package, version, repository or tag does not match\".into(),\n 55 |         );\n 56 |     }\n 57 |     if manifest.source_commit.len() != 40\n 58 |         || !manifest\n 59 |             .source_commit\n 60 |             .bytes()\n 61 |             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))\n 62 |     {\n 63 |         return Err(\"CLI manifest must identify its full source commit\".into());\n 64 |     }\n 65 |     let distribution = manifest.targets.get(target).ok_or_else(|| {\n 66 |         format!(\"no prebuilt CLI for exact target {target}; select --build explicitly\")\n 67 |     })?;\n 68 |     if distribution.size == 0\n 69 |         || distribution.size > MAX_ARCHIVE\n 70 |         || !matches!(distribution.format.as_str(), \"zip\" | \"tar.gz\")\n 71 |     {\n 72 |         return Err(\"invalid CLI archive format or size\".into());\n 73 |     }\n 74 |     if distribution.binary.path\n 75 |         != if target.contains(\"windows\") {\n 76 |             \"icers.exe\"\n 77 |         } else {\n 78 |             \"icers\"\n 79 |         }\n 80 |     {\n 81 |         return Err(\"CLI manifest must declare the flat icers executable filename\".into());\n 82 |     }\n 83 |     for sha in [&distribution.sha256, &distribution.binary.sha256] {\n 84 |         if sha.len() != 64\n 85 |             || !sha\n 86 |                 .bytes()\n 87 |                 .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))\n 88 |         {\n 89 |             return Err(\"invalid CLI manifest SHA-256\".into());\n 90 |         }\n 91 |     }\n 92 |     validate_release_asset_url(&distribution.url, REPOSITORY, &manifest.tag)?;\n 93 |     Ok(distribution)\n 94 | }\n 95 | \n 96 | pub(crate) async fn download_to(version: &str, staging: &Path) -> Result<(), String> {\n 97 |     semver::Version::parse(version).map_err(|_| \"invalid CLI release version\")?;\n 98 |     let target = host_target()?;\n 99 |     let client = reqwest::Client::builder()\n100 |         .timeout(std::time::Duration::from_secs(180))\n101 |         .user_agent(format!(\"icers/{}\", crate::VERSION))\n102 |         .build()\n103 |         .map_err(|e| e.to_string())?;\n104 |     let url = format!(\"{REPOSITORY}/releases/download/v{version}/ice-release.json\");\n105 |     println!(\"downloading prebuilt icers {version} for {target}\");\n106 |     let response = client",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "range": [
+        158,
+        195
+      ],
+      "sha256": "24472af4fb9916c2d43be48ed0d6209ce29705828eda0b73f82509e37e4096a2",
+      "text": "158 | pub(crate) fn canonical_repository(value: &str) -> Result<String, String> {\n159 |     let value = value.trim().strip_prefix(\"git+\").unwrap_or(value.trim());\n160 |     let value = if value.contains(\"://\") {\n161 |         value.to_string()\n162 |     } else {\n163 |         format!(\"https://github.com/{value}\")\n164 |     };\n165 |     let url = reqwest::Url::parse(&value).map_err(|_| \"invalid GitHub repository\".to_string())?;\n166 |     if url.scheme() != \"https\"\n167 |         || url.host_str() != Some(\"github.com\")\n168 |         || !url.username().is_empty()\n169 |         || url.password().is_some()\n170 |         || url.port().is_some()\n171 |     {\n172 |         return Err(\"prebuilt repository must be an HTTPS GitHub repository; use --build for other repositories\".into());\n173 |     }\n174 |     let segments: Vec<_> = url\n175 |         .path_segments()\n176 |         .ok_or(\"invalid GitHub repository path\")?\n177 |         .collect();\n178 |     if segments.len() < 2 || !valid_segment(segments[0]) {\n179 |         return Err(\"repository must identify a GitHub owner and repository\".into());\n180 |     }\n181 |     let repo = segments[1].strip_suffix(\".git\").unwrap_or(segments[1]);\n182 |     if !valid_segment(repo) {\n183 |         return Err(\"invalid GitHub repository name\".into());\n184 |     }\n185 |     if segments.len() > 2\n186 |         && !segments[2..].iter().all(|s| s.is_empty())\n187 |         && !matches!(segments[2], \"tree\" | \"blob\")\n188 |     {\n189 |         return Err(\"unsupported GitHub repository URL path\".into());\n190 |     }\n191 |     Ok(format!(\n192 |         \"https://github.com/{}/{}\",\n193 |         segments[0].to_ascii_lowercase(),\n194 |         repo.to_ascii_lowercase()\n195 |     ))",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "range": [
+        44,
+        63
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "text": "44 | }\n45 | \n46 | #[derive(Debug, Clone, PartialEq, Eq)]\n47 | pub struct UpdateWarning {\n48 |     pub message: String,\n49 |     pub command: String,\n50 | }\n51 | \n52 | #[derive(Debug, Clone, Default, PartialEq, Eq)]\n53 | pub struct UpdateReport {\n54 |     pub notices: Vec<UpdateNotice>,\n55 |     pub warnings: Vec<UpdateWarning>,\n56 | }\n57 | \n58 | impl UpdateReport {\n59 |     pub fn is_empty(&self) -> bool {\n60 |         self.notices.is_empty() && self.warnings.is_empty()\n61 |     }\n62 | }\n63 | ",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/updates.rs",
+      "range": [
+        1875,
+        1985
+      ],
+      "sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+      "text": "1875 |         }\n1876 |     }\n1877 | }\n1878 | \n1879 | fn validate_ice_executable_version(\n1880 |     executable: &Path,\n1881 |     cwd: &Path,\n1882 |     current: &str,\n1883 |     label: &str,\n1884 | ) -> Result<semver::Version, String> {\n1885 |     let program = executable\n1886 |         .to_str()\n1887 |         .ok_or_else(|| format!(\"{label} path cannot be represented as Unicode\"))?;\n1888 |     let args = vec![\"--version\".to_string()];\n1889 |     let output = run_bounded_process_blocking(\n1890 |         program,\n1891 |         &args,\n1892 |         cwd,\n1893 |         STAGED_ICERS_CHECK_TIMEOUT,\n1894 |         MAX_STAGED_ICERS_OUTPUT_BYTES,\n1895 |     )\n1896 |     .map_err(|error| format!(\"{label} version check failed: {error}\"))?;\n1897 |     if !output.status.success() {\n1898 |         return Err(format!(\"{label} --version exited with {}\", output.status));\n1899 |     }\n1900 |     validate_staged_ice_version_output(&output.stdout, &output.stderr, current)\n1901 | }\n1902 | \n1903 | fn validate_staged_ice_version_output(\n1904 |     stdout: &[u8],\n1905 |     stderr: &[u8],\n1906 |     current: &str,\n1907 | ) -> Result<semver::Version, String> {\n1908 |     if !stderr.is_empty() {\n1909 |         return Err(\"staged icers --version wrote unexpected stderr output\".to_string());\n1910 |     }\n1911 |     let staged = parse_ice_version_output(stdout)\n1912 |         .ok_or_else(|| \"staged icers returned an invalid --version response\".to_string())?;\n1913 |     let current = semver::Version::parse(current)\n1914 |         .map_err(|_| \"the running icers version is not valid semantic versioning\".to_string())?;\n1915 |     if staged < current {\n1916 |         return Err(format!(\n1917 |             \"refusing to replace icers {current} with older version {staged}\"\n1918 |         ));\n1919 |     }\n1920 |     Ok(staged)\n1921 | }\n1922 | \n1923 | fn parse_ice_version_output(output: &[u8]) -> Option<semver::Version> {\n1924 |     let output = std::str::from_utf8(output).ok()?;\n1925 |     let line = output\n1926 |         .strip_suffix(\"\\r\\n\")\n1927 |         .or_else(|| output.strip_suffix('\\n'))\n1928 |         .unwrap_or(output);\n1929 |     if line.contains(['\\r', '\\n']) {\n1930 |         return None;\n1931 |     }\n1932 |     let version = line.strip_prefix(crate::APP_NAME)?.strip_prefix(' ')?;\n1933 |     if version.is_empty() || version.chars().any(char::is_whitespace) {\n1934 |         return None;\n1935 |     }\n1936 |     semver::Version::parse(version).ok()\n1937 | }\n1938 | \n1939 | /// A real directory *by its own entry*: the leaf is not a link, so the update\n1940 | /// is free to write into it. Links further up are resolved rather than\n1941 | /// refused — a launch path such as `C:\\tools\\current\\icers.exe` where `current`\n1942 | /// is a junction names the real install directory, which is exactly what an\n1943 | /// update should rewrite.\n1944 | fn validated_real_directory(path: &Path, label: &str) -> Result<PathBuf, String> {\n1945 |     if !path.is_absolute() {\n1946 |         return Err(format!(\"{label} must be absolute\"));\n1947 |     }\n1948 |     let metadata = std::fs::symlink_metadata(path)\n1949 |         .map_err(|error| format!(\"could not inspect {label}: {error}\"))?;\n1950 |     if metadata.file_type().is_symlink() {\n1951 |         return Err(format!(\n1952 |             \"{label} is a link or junction, not a real directory ({} -> {})\",\n1953 |             path.display(),\n1954 |             canonical_display(path),\n1955 |         ));\n1956 |     }\n1957 |     if !metadata.is_dir() {\n1958 |         return Err(format!(\"{label} is not a real directory\"));\n1959 |     }\n1960 |     std::fs::canonicalize(path)\n1961 |         .map(normalize_windows_path)\n1962 |         .map_err(|error| format!(\"could not canonicalize {label}: {error}\"))\n1963 | }\n1964 | \n1965 | /// A non-empty regular file *by its own entry*: a link to a file is refused\n1966 | /// with both paths named, because replacing the link would leave the real\n1967 | /// target stale. Ancestor links are resolved, as in\n1968 | /// [`validated_real_directory`].\n1969 | fn validated_regular_file(path: &Path, label: &str) -> Result<PathBuf, String> {\n1970 |     if !path.is_absolute() {\n1971 |         return Err(format!(\"{label} must be absolute\"));\n1972 |     }\n1973 |     let metadata = std::fs::symlink_metadata(path)\n1974 |         .map_err(|error| format!(\"could not inspect {label}: {error}\"))?;\n1975 |     if metadata.file_type().is_symlink() {\n1976 |         return Err(format!(\n1977 |             \"{label} is a link or junction, not a non-empty regular file ({} -> {})\",\n1978 |             path.display(),\n1979 |             canonical_display(path),\n1980 |         ));\n1981 |     }\n1982 |     if !metadata.is_file() || metadata.len() == 0 {\n1983 |         return Err(format!(\"{label} is not a non-empty regular file\"));\n1984 |     }\n1985 |     std::fs::canonicalize(path)",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "range": [
+        198,
+        243
+      ],
+      "sha256": "24472af4fb9916c2d43be48ed0d6209ce29705828eda0b73f82509e37e4096a2",
+      "text": "198 | fn release_url(repository: &str, name: &str, version: &str, file: &str) -> Result<String, String> {\n199 |     let mut url = reqwest::Url::parse(repository).map_err(|e| e.to_string())?;\n200 |     url.path_segments_mut()\n201 |         .map_err(|_| \"invalid release repository\")?\n202 |         .push(\"releases\")\n203 |         .push(\"download\")\n204 |         .push(&format!(\"{name}-v{version}\"))\n205 |         .push(file);\n206 |     Ok(url.into())\n207 | }\n208 | \n209 | fn select_version(versions: &[RegistryVersion], requested: Option<&str>) -> Result<String, String> {\n210 |     if let Some(requested) = requested {\n211 |         let version = semver::Version::parse(requested)\n212 |             .map_err(|_| \"--version requires an exact semantic version\".to_string())?;\n213 |         return versions\n214 |             .iter()\n215 |             .find(|v| !v.yanked && v.num == version.to_string())\n216 |             .map(|v| v.num.clone())\n217 |             .ok_or_else(|| format!(\"version {requested} is absent or yanked on crates.io\"));\n218 |     }\n219 |     versions\n220 |         .iter()\n221 |         .filter(|v| !v.yanked)\n222 |         .filter_map(|v| semver::Version::parse(&v.num).ok())\n223 |         .filter(|v| v.pre.is_empty())\n224 |         .max()\n225 |         .map(|v| v.to_string())\n226 |         .ok_or_else(|| \"no non-yanked stable version is available\".into())\n227 | }\n228 | \n229 | pub(crate) async fn body_limited(\n230 |     mut response: reqwest::Response,\n231 |     limit: u64,\n232 | ) -> Result<Vec<u8>, String> {\n233 |     if response.content_length().is_some_and(|n| n > limit) {\n234 |         return Err(\"download exceeds size limit\".into());\n235 |     }\n236 |     let mut bytes = Vec::new();\n237 |     while let Some(chunk) = response\n238 |         .chunk()\n239 |         .await\n240 |         .map_err(|e| format!(\"download failed: {e}\"))?\n241 |     {\n242 |         if bytes.len() as u64 + chunk.len() as u64 > limit {\n243 |             return Err(\"download exceeds size limit\".into());",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/changelog.rs",
+      "range": [
+        23,
+        31
+      ],
+      "sha256": "8ab8bfa468d64174fd6f3173cb2ff61e415821431092bce3115d684432dac491",
+      "text": "23 | }\n24 | \n25 | /// Default remote changelog URL. Overridable via `ICERS_CHANGELOG_URL`.\n26 | pub const DEFAULT_CHANGELOG_URL: &str =\n27 |     \"https://raw.githubusercontent.com/zyk-void/ice-rust/main/CHANGELOG.md\";\n28 | \n29 | /// The remote changelog URL to use, honoring `ICERS_CHANGELOG_URL`.\n30 | pub fn changelog_url() -> String {\n31 |     std::env::var(\"ICERS_CHANGELOG_URL\").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "range": [
+        31,
+        47
+      ],
+      "sha256": "44b07f8b3e3708bb04963678efa527928815696174bba870cfba34aa8bc02510",
+      "text": "31 | //! `apiKey`/`headers` exactly like upstream's `resolve-config-value.ts` — so a\n32 | //! copied pi `models.json`/`auth.json` that references env vars or shell\n33 | //! commands resolves the same way. Applied where icers consumes those values\n34 | //! (auth.json key, models.json bearer apiKey, provider/model `headers`).\n35 | \n36 | use std::collections::BTreeMap;\n37 | use std::io::Write;\n38 | use std::path::{Path, PathBuf};\n39 | \n40 | use ice_ai::{Api, InputModality, Model, ModelCost, StreamingProtocolCompat, ThinkingLevelMap};\n41 | \n42 | /// The config directory name under the home dir.\n43 | pub const CONFIG_DIR_NAME: &str = \".icers\";\n44 | \n45 | /// Env var that overrides the whole config dir. Absolute path; relative\n46 | /// values are rejected.\n47 | pub const CONFIG_DIR_ENV: &str = \"ICERS_CODING_AGENT_DIR\";",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/lib.rs",
+      "range": [
+        82,
+        89
+      ],
+      "sha256": "c1bd647b4f6730bf403899e5d326d0c5aa4c0d654bc21f013542b7d218efb0ba",
+      "text": "82 | /// The application name used in help + version output. Mirrors TS `APP_NAME`\n83 | /// (the TS bin is `\"pi\"`; the Rust crate publishes under the `ice-` namespace,\n84 | /// so the binary + displayed name is `\"icers\"` to match).\n85 | ///\n86 | /// Aliases [`ice_plugin_sdk::HOST_NAME`] — the plugin contract owns the\n87 | /// identity, so an extension can label its output (a trace name, a tag) without\n88 | /// hardcoding a brand that a rename would silently invalidate.\n89 | pub const APP_NAME: &str = ice_plugin_sdk::HOST_NAME;",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/config.rs",
+      "range": [
+        176,
+        225
+      ],
+      "sha256": "44b07f8b3e3708bb04963678efa527928815696174bba870cfba34aa8bc02510",
+      "text": "176 | pub fn migrate_legacy_layout() -> Result<usize, ConfigError> {\n177 |     // Only migrate the default home-backed layout — never an env override.\n178 |     if std::env::var_os(CONFIG_DIR_ENV).is_some() {\n179 |         return Ok(0);\n180 |     }\n181 |     let root = match config_root_dir() {\n182 |         Ok(p) => p,\n183 |         Err(_) => return Ok(0),\n184 |     };\n185 |     let agent = agent_dir()?;\n186 |     migrate_legacy_layout_in(&root, &agent)\n187 | }\n188 | \n189 | /// The core migration (no env gate): if `agent/` is absent but flat files exist\n190 | /// under `root`, move `{auth.json,models.json,.setup_done}` into\n191 | /// `agent/`. Idempotent. Factored out so tests can drive it against a temp\n192 | /// root/agent pair without touching the env (the public\n193 | /// [`migrate_legacy_layout`] short-circuits on an env override, which tests\n194 | /// can't unset portably while other tests run).\n195 | fn migrate_legacy_layout_in(root: &Path, agent: &Path) -> Result<usize, ConfigError> {\n196 |     // If the agent dir already exists with any content, assume already migrated.\n197 |     if agent.exists() {\n198 |         return Ok(0);\n199 |     }\n200 |     // Probe for a flat file. If none, nothing to migrate.\n201 |     let flat_auth = root.join(\"auth.json\");\n202 |     let flat_models = root.join(\"models.json\");\n203 |     if !flat_auth.exists() && !flat_models.exists() {\n204 |         return Ok(0);\n205 |     }\n206 |     std::fs::create_dir_all(agent).map_err(|e| ConfigError::Write {\n207 |         path: agent.to_path_buf(),\n208 |         source: e,\n209 |     })?;\n210 |     let mut moved = 0usize;\n211 |     for leaf in [\"auth.json\", \"models.json\", \".setup_done\"] {\n212 |         let from = root.join(leaf);\n213 |         let to = agent.join(leaf);\n214 |         if from.exists() && !to.exists() {\n215 |             // `rename` across the same filesystem is atomic; fall back to copy\n216 |             // + remove on cross-device (rare for a home dir).\n217 |             if let Err(_e) = std::fs::rename(&from, &to) {\n218 |                 if std::fs::copy(&from, &to).is_ok() {\n219 |                     let _ = std::fs::remove_file(&from);\n220 |                 }\n221 |             }\n222 |             moved += 1;\n223 |         }\n224 |     }\n225 |     Ok(moved)",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/app.rs",
+      "range": [
+        523,
+        550
+      ],
+      "sha256": "56c23b1661616dbdfafd662e0b4afb0368afe93bda756ac79102c8e7c4413815",
+      "text": "523 | fn handle_parse_short_circuits(parsed: &Args) -> Option<i32> {\n524 |     // ---- --help / --version short-circuit (before any heavy work) ----\n525 |     if parsed.help {\n526 |         print_help();\n527 |         return Some(0);\n528 |     }\n529 |     if parsed.version {\n530 |         print_version();\n531 |         return Some(0);\n532 |     }\n533 | \n534 |     // ---- Parse errors → help + usage exit ----\n535 |     if !parsed.errors.is_empty() {\n536 |         for err in &parsed.errors {\n537 |             eprintln!(\"error: {err}\");\n538 |         }\n539 |         eprintln!();\n540 |         print_help();\n541 |         return Some(EXIT_USAGE);\n542 |     }\n543 | \n544 |     None\n545 | }\n546 | \n547 | fn resolve_cwd() -> Result<std::path::PathBuf, i32> {\n548 |     std::env::current_dir().map_err(|error| {\n549 |         eprintln!(\"error: could not determine the current directory: {error}\");\n550 |         EXIT_USAGE",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "range": [
+        403,
+        444
+      ],
+      "sha256": "24472af4fb9916c2d43be48ed0d6209ce29705828eda0b73f82509e37e4096a2",
+      "text": "403 | pub(crate) fn validate_release_asset_url(\n404 |     value: &str,\n405 |     repository: &str,\n406 |     tag: &str,\n407 | ) -> Result<(), String> {\n408 |     let url = reqwest::Url::parse(value).map_err(|_| \"invalid archive URL\")?;\n409 |     let segments: Vec<String> = url\n410 |         .path_segments()\n411 |         .ok_or(\"archive URL has no path\")?\n412 |         .map(|s| {\n413 |             percent_encoding::percent_decode_str(s)\n414 |                 .decode_utf8()\n415 |                 .map(|s| s.into_owned())\n416 |                 .map_err(|_| \"invalid encoded archive URL\")\n417 |         })\n418 |         .collect::<Result<_, _>>()?;\n419 |     if url.scheme() != \"https\"\n420 |         || url.host_str() != Some(\"github.com\")\n421 |         || url.port().is_some()\n422 |         || !url.username().is_empty()\n423 |         || url.password().is_some()\n424 |         || url.query().is_some()\n425 |         || url.fragment().is_some()\n426 |         || segments.len() != 6\n427 |         || segments[2] != \"releases\"\n428 |         || segments[3] != \"download\"\n429 |         || segments[4] != tag\n430 |         || canonical_repository(&format!(\n431 |             \"https://github.com/{}/{}\",\n432 |             segments[0], segments[1]\n433 |         ))? != repository\n434 |         || segments[5].is_empty()\n435 |         || matches!(segments[5].as_str(), \".\" | \"..\")\n436 |         || !segments[5]\n437 |             .bytes()\n438 |             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'+'))\n439 |     {\n440 |         return Err(\n441 |             \"archive URL must belong to the same GitHub repository and package Release\".into(),\n442 |         );\n443 |     }\n444 |     Ok(())",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "range": [
+        581,
+        600
+      ],
+      "sha256": "d88c9e506fd30a7a4d49a5477d58f185416dd9cf1f73740d82cbe7a5e5658acf",
+      "text": "581 | #[derive(Debug, Clone, Copy, PartialEq, Eq)]\n582 | pub enum RunMode {\n583 |     Interactive,\n584 |     Print,\n585 |     Json,\n586 |     Rpc,\n587 | }\n588 | \n589 | /// Print the help text to stdout. Mirrors TS `printHelp`, scoped to v1 flags.\n590 | pub fn print_help() {\n591 |     let builtin = \"read, bash, edit, write, docs\";\n592 |     println!(\n593 |         \"{name} - AI coding assistant with read, bash, edit, write, docs tools\n594 | \n595 | {u}Usage:{r}\n596 |   {name} [options] [@files...] [messages...]\n597 | \n598 | {u}Options:{r}\n599 |   --provider <name>              Provider name (built-in, installed package, or models.json id)\n600 |   --model <pattern>              Model pattern or ID (supports \\\"provider/id\\\" and optional \\\":<thinking>\\\")",
+      "scope": "bounded active source"
+    },
+    {
+      "file": "crates/ice-cli/src/args.rs",
+      "range": [
+        708,
+        717
+      ],
+      "sha256": "d88c9e506fd30a7a4d49a5477d58f185416dd9cf1f73740d82cbe7a5e5658acf",
+      "text": "708 |         u = \"\\x1b[1m\",\n709 |         r = \"\\x1b[0m\",\n710 |     );\n711 | }\n712 | \n713 | /// Print the version line. Mirrors TS `--version` output (`pi <version>`).\n714 | pub fn print_version() {\n715 |     println!(\"{} {}\", crate::APP_NAME, crate::VERSION);\n716 | }\n717 | ",
+      "scope": "bounded active source"
+    }
+  ],
+  "requested_corrections": [],
+  "limitations": [
+    "No shared or active files were written; only lane evidence/helper files in the old audit root.",
+    "No application, compiler, package, migration, network or runtime test was executed.",
+    "The proposal's existing citation coordinates remain old until the coordinator's mechanical remap.",
+    "No real historical cache/session or private user directory was inspected; all existing redactions/source-credit conflicts stay preserved."
+  ]
+}

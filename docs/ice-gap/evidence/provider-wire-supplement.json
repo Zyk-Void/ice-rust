@@ -1,0 +1,1885 @@
+{
+  "area": "ai",
+  "fragment": "provider-wire-bedrock-google-mistral",
+  "title": "Provider wire supplement: Bedrock, Google/Vertex and Mistral",
+  "status": "ready_for_coordinator_review",
+  "entries": [
+    {
+      "id": "AI-030",
+      "title": "Bedrock Converse transport, endpoint precedence and signed request headers",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/bedrock-converse-stream.ts:71-274; ice:packages/ai/src/api/bedrock-converse-stream.ts:438-472; ice:packages/ai/src/api/bedrock-converse-stream.ts:1054-1102; ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts:1-31; ice:packages/ai/test/bedrock-custom-headers.test.ts:1-203; ice:packages/ai/test/bedrock-endpoint-resolution.test.ts:1-209",
+      "what": "Send Bedrock ConverseStream requests through AWS authentication and endpoint rules while preserving custom endpoints, scoped credentials, proxy selection and signed extra headers.",
+      "mechanism": "Direct stream builds a fresh BedrockRuntimeClient per request. Explicit profile is options.profile || options.env.AWS_PROFILE; client profile otherwise comes from scoped/ambient provider environment. Configured region is option, AWS_REGION, AWS_DEFAULT_REGION. Standard endpoint host matches bedrock-runtime[-fips].REGION.amazonaws.com[.cn]; a standard URL is pinned only if no configured region and no ambient AWS_PROFILE. Custom URL is always pinned. Node/Bun region precedence is model ARN region > configured region > pinned standard-endpoint region > us-east-1 only without ambient profile, otherwise SDK chain. Explicit/scoped profile alone still allows endpoint-derived region; the ambient-profile test uses process environment independently of scoped profile. Browser path skips ARN extraction and uses configured/pinned/default region.\n\nBearer precedence is bearerToken, apiKey, scoped/ambient AWS_BEARER_TOKEN_BEDROCK, unless AWS_BEDROCK_SKIP_AUTH='1'. Bearer config uses token and httpBearerAuth scheme. Skip-auth sets dummy credentials but does not install a no-op signer; describe the actual config rather than promising unsigned requests. Complete scoped/ambient key pair plus optional session token is supplied explicitly only when no explicit/scoped profile and not skip-auth. Proxy selection examines model.baseUrl and scoped environment; a proxy forces Smithy NodeHttpHandler with HTTP/HTTPS agents, otherwise AWS_BEDROCK_FORCE_HTTP1='1' forces HTTP1. Custom headers come from options.headers, are injected in a low-priority build middleware before signing, skip authorization/host/x-amz-* case-insensitively, and use original key spelling for other assignments. Model headers are not directly merged here. Response hook sees SDK status and request ID header when status exists. Signal is passed to client.send.\n\nCommon timeout, maxRetries and fetch options are not wired into this client config; AWS SDK defaults still apply. No explicit destroy occurs. Configuration/proxy construction precedes try/catch, a source failure-boundary limitation. Lazy loading uses a variable module specifier rewritten .ts→.js for compiled output; setBedrockProviderModule supports a statically supplied Bun module, while public bedrock-provider exports stream/streamSimple.",
+      "interfaces": "BedrockOptions region,profile,bearerToken,headers,env,signal,onPayload,onResponse,requestMetadata; AWS_PROFILE/AWS_REGION/AWS_DEFAULT_REGION/AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN/AWS_BEARER_TOKEN_BEDROCK/AWS_BEDROCK_SKIP_AUTH/AWS_BEDROCK_FORCE_HTTP1; ConverseStreamCommand; setBedrockProviderModule.",
+      "dependencies": [
+        "AI-003",
+        "AI-006",
+        "AI-016",
+        "AUTH-009",
+        "AUTH-012"
+      ],
+      "dependency_text": "AUTH supplies credential choices and request preparation; AI-016 owns scoped environment/proxy parsing. Native transport implementation must distinguish source SDK behavior from intended common retry/timeout improvements.",
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392 and rust:crates/ice-ai/src/lib.rs:1-47 plus full26-file ice-ai/src inventory show no Bedrock Converse implementation. Native Provider/SimpleStreamOptions and common event types exist, with Anthropic/OpenAI/Faux concrete producers only. AUTH-011/012 own catalog/credential selection; those do not implement the missing AWS wire protocol. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Implement an AWS Converse provider behind native Provider with explicit regional/endpoint resolution, credential provider chain or bearer path, proxy support and middleware-equivalent header policy. Wrap all setup failures into the returned assistant stream and make native timeout/retry configuration explicit. Keep auth storage/catalog outside this adapter. Expose direct Bedrock options without forcing AWS-only fields into every provider.",
+      "size_min": 330,
+      "size_max": 560,
+      "priority": "P1",
+      "priority_reason": "Bedrock catalog/auth availability cannot produce requests without its distinct transport and signature contract."
+    },
+    {
+      "id": "AI-031",
+      "title": "Bedrock Claude reasoning payloads and bounded output allowance",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/bedrock-converse-stream.ts:235-265; ice:packages/ai/src/api/bedrock-converse-stream.ts:474-524; ice:packages/ai/src/api/bedrock-converse-stream.ts:650-709; ice:packages/ai/src/api/bedrock-converse-stream.ts:1104-1166; ice:packages/ai/test/bedrock-thinking-payload.test.ts:1-267",
+      "what": "Map direct/simple reasoning options into Bedrock Claude adaptive or fixed-budget fields and preserve the hard output ceiling through payload hooks.",
+      "mechanism": "Direct inference maxTokens is caller maxTokens clamped to hard limit, else Claude model.maxTokens clamped to hard limit, else only hard limit if present; non-Claude requests without a cap omit maxTokens. Temperature is included whenever defined, without a Bedrock-specific reasoning incompatibility gate. onPayload can replace the complete command input; afterward hardMaxOutputTokens is re-enforced inside inferenceConfig. requestMetadata is passed unchanged, with documented tag constraints not locally validated.\n\nClaude recognition checks id for anthropic.claude or anthropic/claude and name additionally for claude. Version matching lowercases id and name and also normalizes spaces/underscore/dot/colon to hyphen. Adaptive list is opus4.6/4.7/4.8/5, sonnet4.6/5 and fable5. With reasoning requested and model.reasoning true, adaptive fields are thinking{type:adaptive,display} and output_config.effort. xhigh is forced native for opus4.7/4.8/5,sonnet5,fable5; otherwise string thinkingLevelMap entry wins, then minimal/low→low,medium→medium,high/default→high. Extended levels therefore need explicit map outside native-xhigh support.\n\nFixed-budget direct reasoning defaults minimal1024,low2048,medium8192,high16384; xhigh/max/ultra use high override/default. It emits enabled/budget_tokens and defaults interleavedThinking true with the exact interleaved-thinking beta. thinkingDisplay defaults summarized, but is entirely omitted for configured us-gov region or model IDs starting us-gov. or arn:aws-us-gov:. Non-Claude reasoning adds no additional fields. streamSimple uses shared base options; absent reasoning removes it, adaptive forwards levels/budgets, fixed-budget adjusts output then context/hard clamps and limits chosen budget to max(0,maxTokens-1024). The transport redacted the assignment name at503, so only surrounding visible policy is asserted. Credential-gated live test exists at165–196; it was read but not run.",
+      "interfaces": "BedrockOptions.reasoning,thinkingBudgets,interleavedThinking,thinkingDisplay,requestMetadata; inferenceConfig.maxTokens; additionalModelRequestFields.thinking/output_config/anthropic_beta; model.name fallback for application inference profiles.",
+      "dependencies": [
+        "AI-005",
+        "AI-006",
+        "AI-008",
+        "AI-030"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392 and rust:crates/ice-ai/src/lib.rs:1-47 plus full26-file ice-ai/src inventory show no Bedrock Converse implementation. Native Provider/SimpleStreamOptions and common event types exist, with Anthropic/OpenAI/Faux concrete producers only. AUTH-011/012 own catalog/credential selection; those do not implement the missing AWS wire protocol. Native shared options have reasoning/budgets/max_tokens but no immutable hardMaxOutputTokens or direct Bedrock display/interleaved/requestMetadata carrier; those prerequisites are scoped to AI-006. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Add Bedrock-specific reasoning builders and exact source model/name matching. Reuse shared allowance calculation without allowing payload hooks or adaptive/default expansion to exceed hard authority. Keep source limitations (direct fixed budget can be incompatible with a small cap; unconditional temperature) explicit design decisions, and preserve GovCloud omission.",
+      "size_min": 190,
+      "size_max": 320,
+      "priority": "P1",
+      "priority_reason": "Thinking and output limits differ by Claude generation and endpoint; wrong payloads fail or consume unintended output allowance."
+    },
+    {
+      "id": "AI-032",
+      "title": "Bedrock history projection, multimodal tool results and cache points",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/bedrock-converse-stream.ts:711-805; ice:packages/ai/src/api/bedrock-converse-stream.ts:807-1035; ice:packages/ai/src/api/bedrock-converse-stream.ts:1168-1196; ice:packages/ai/test/bedrock-convert-messages.test.ts:1-275",
+      "what": "Encode normalized history in Converse roles and content unions, combine parallel tool results, preserve signed thinking and place supported cache markers.",
+      "mechanism": "transformMessages first normalizes tool IDs by replacing nonalphanumeric/underscore/hyphen with underscore and truncating64. User strings require a nonblank sanitized text block or '<empty>'; arrays drop blank text and unknown block types but preserve supported images, adding placeholder only when all content disappears. Assistant empty arrays/all-filtered content are skipped. Text/thinking is surrogate-sanitized; blank thinking is omitted even if a signature exists. Claude thinking with missing/blank signature falls back to text, otherwise reasoningText carries text+signature; non-Claude reasoningText omits signature. Consecutive toolResult messages are combined into one user message, each toolUseId/status and ordered text/image content; empty result becomes '<empty>'. Images decode base64 into bytes and accept jpeg/jpg/png/gif/webp only; unknown MIME throws.\n\nRetention explicit value wins, else scoped ICE_CACHE_RETENTION='long', else short. Cache support examines normalized id/name: a Claude reference plus fable/opus/sonnet5, any '-4-', claude3.7sonnet or3.5haiku is allowed. AWS_BEDROCK_FORCE_CACHE='1' applies only when no Claude reference was found, not an override for an unsupported known Claude. Cache points follow a nonempty system text and the final message only if that final message is user; long adds ONE_HOUR TTL, none omits. Tools preserve full JSON schema under inputSchema.json, with native strict true only when constraint resolution and compat.supportsStrictMode allow. Empty tools or toolChoice='none' omit entire toolConfig. auto/any/named choices serialize distinct Converse toolChoice variants; unspecified choice omits only that field. No tool cache point is added.",
+      "interfaces": "Converse Message role/content, reasoningContent.reasoningText, toolUse/toolResult/status, binary image source; ToolConfiguration.toolSpec.inputSchema.json/strict/toolChoice; CachePointType.DEFAULT and CacheTTL.ONE_HOUR; AWS_BEDROCK_FORCE_CACHE, ICE_CACHE_RETENTION.",
+      "dependencies": [
+        "AI-011",
+        "AI-013",
+        "AI-014",
+        "AI-030"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392 and rust:crates/ice-ai/src/lib.rs:1-47 plus full26-file ice-ai/src inventory show no Bedrock Converse implementation. Native Provider/SimpleStreamOptions and common event types exist, with Anthropic/OpenAI/Faux concrete producers only. AUTH-011/012 own catalog/credential selection; those do not implement the missing AWS wire protocol. Native Anthropic message conversion is a different wire union and is not a Converse substitute. Reuse shared projection/schema infrastructure only after preserving these Bedrock-specific blank, image, signature and cache rules. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Create a typed Converse history/tool encoder with source-compatible ID normalization, consecutive-result grouping and cache eligibility. Reuse common sanitation and constrained-schema validation; keep MIME decoding failures inside stream setup. Preserve full tool schemas and avoid injecting Anthropic JSON message blocks directly into Bedrock.",
+      "size_min": 280,
+      "size_max": 460,
+      "priority": "P1",
+      "priority_reason": "Role grouping, empty blocks, signatures and cache markers determine whether Bedrock accepts multi-turn tool conversations."
+    },
+    {
+      "id": "AI-033",
+      "title": "Bedrock event-stream deltas, completion integrity and failure metadata",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/bedrock-converse-stream.ts:109-135; ice:packages/ai/src/api/bedrock-converse-stream.ts:267-436; ice:packages/ai/src/api/bedrock-converse-stream.ts:526-648; ice:packages/ai/src/api/bedrock-converse-stream.ts:1037-1052; ice:packages/ai/test/bedrock-error-metadata.test.ts:1-213; ice:packages/ai/test/bedrock-raw-stop-reason.test.ts:1-83",
+      "what": "Turn AWS Converse streaming union events into ordered assistant deltas, retain raw stop reasons and diagnostic correlation, and reject an incomplete response.",
+      "mechanism": "messageStart must be assistant and emits start. Tool start allocates an indexed tool block with empty arguments/scratch JSON; text/thinking blocks are lazily created on their first delta. Text deltas append and emit immediately, tool input reparses cumulative JSON, thinking text appends and emits while signature chunks append silently. contentBlockStop removes SDK index, emits the corresponding end event, and finalizes/removes tool scratch. Metadata overwrites input/output/cacheRead/cacheWrite with value-or-zero and recalculates cost; total assignment at617 is transport-redacted, so the unknown operand is not reconstructed, with visible fallback input+output. messageStop retains raw reason; end_turn/stop_sequence→stop, max_tokens/model_context_window_exceeded→length,tool_use→toolUse,other→error plus 'Provider stopped with: VALUE'. EOF requires a nonpending reason; abort is checked again after iteration. Error/aborted mapped stop triggers error terminal. Event union exceptions for internal/model-stream/validation/throttling/unavailable are thrown; processing continues after messageStop until iterator ends.\n\nCatch preserves partial content, removes index and partialJson from every block, maps signal-aborted to aborted, formats normalized raw body/status when message omitted body and adds a data-retention documentation hint on matching text. SDK ServiceException names receive stable human prefixes used by downstream retry classification. A separate bedrock_response_failure diagnostic is emitted only for nonabort errors with known details: numeric status, Error.name ending Exception, request ID from error metadata or captured response. Header-derived strings are trim/nonempty/max200, dropped if oversized; bare object stream exceptions may supply only fallback request ID. Error message is not modified by diagnostics. Success cleanup relies on block-stop events and does not globally strip unfinished-block scratch at done, a source limitation to address deliberately.",
+      "interfaces": "AWS response.stream union; AssistantMessageEvent start/text_*/thinking_*/toolcall_*/done/error; rawStopReason; bedrock_response_failure details.status/errorCode/requestId; options.signal and onResponse.",
+      "dependencies": [
+        "AI-004",
+        "AI-009",
+        "AI-010",
+        "AI-011",
+        "AI-030"
+      ],
+      "dependency_text": "AI-004 supplies common retry contracts; source Bedrock delegates request retry to SDK defaults and has no explicit replay-after-delta loop. AI-009/010 own generic diagnostics/error normalization, not the AWS metadata mapping.",
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392 and rust:crates/ice-ai/src/lib.rs:1-47 plus full26-file ice-ai/src inventory show no Bedrock Converse implementation. Native Provider/SimpleStreamOptions and common event types exist, with Anthropic/OpenAI/Faux concrete producers only. AUTH-011/012 own catalog/credential selection; those do not implement the missing AWS wire protocol. Existing native SSE decoders do not parse AWS event-stream unions. Common assistant stream/result types can be reused, retaining cancellation and partial-message delivery rather than duplicating them. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Implement a Converse stream mapper using AWS SDK events or a native event-stream decoder, with correct indexed block lifecycle, usage, raw reasons and bounded diagnostic metadata. Require terminal integrity, clean scratch at all terminal paths and preserve cancellation during stalled reads. Keep retries before any emitted content unless an explicit resumable protocol is introduced.",
+      "size_min": 260,
+      "size_max": 440,
+      "priority": "P1",
+      "priority_reason": "Reliable completion/error distinction and recoverable partial output are necessary for tool loops and retry classification."
+    },
+    {
+      "id": "AI-034",
+      "title": "Google Generative AI request transport, hooks and retry envelope",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/google-generative-ai.ts:40-101; ice:packages/ai/src/api/google-generative-ai.ts:303-422; ice:packages/ai/src/api/google-shared.ts:384-415; ice:packages/ai/src/api/google-generative-ai.lazy.ts:1-5; ice:packages/ai/test/google-shared-retry.test.ts:1-41",
+      "what": "Create Gemini API requests with explicit credentials, configured endpoint/headers, payload observation, bounded output and pre-stream retry.",
+      "mechanism": "Direct stream returns an assistant event stream and performs setup inside its async catch boundary. It rejects a custom fetch only when supplied and not the current globalThis.fetch, requires truthy options.apiKey with no local environment fallback, constructs GoogleGenAI and builds model/contents/config. streamSimple instead checks missing API key synchronously before returning any stream, then uses common base options and explicit thinking enable/disable mapping. Model baseUrl, when truthy, is passed verbatim with httpOptions.apiVersion='' regardless of whether it already contains a version. Model headers and request headers are spread in that order then converted to SDK headers. Temperature is emitted whenever defined; systemInstruction only for truthy system prompt after surrogate sanitation; tools only when nonempty. No timeout or onResponse integration is present in this source adapter.\n\nonPayload can replace the entire params object; hardMaxOutputTokens is enforced again in params.config.maxOutputTokens afterward. The initial maxOutputTokens assignment at377 was transport-redacted and is not reconstructed. Abort is rejected before request and its signal passed in config. retryGoogleRequest wraps only generateContentStream acquisition, forwarding maxRetries/maxRetryDelayMs/signal to common provider retry; an Error with status but no headers is given an own headers:undefined field to satisfy common status retry classification. It does not retry errors from later async iteration or arbitrary plain objects. Lazy factory imports the implementation through lazyApi. Mock retry tests pin unset maxRetries as no retries; no live request was executed.",
+      "interfaces": "GoogleOptions extends StreamOptions, toolChoice auto/none/any, thinking{enabled,budgetTokens?,level?}; GoogleGenAI apiKey/httpOptions; GenerateContentParameters model,contents,config; onPayload; custom-fetch rejection; retryGoogleRequest.",
+      "dependencies": [
+        "AI-003",
+        "AI-004",
+        "AI-006",
+        "AUTH-009"
+      ],
+      "dependency_text": "Credential lookup precedes the direct adapter; AUTH-009 request preparation supplies apiKey and headers. Shared history, strict mode and result mapping are separate entries AI-037/038/039, avoiding duplicate effort estimates.",
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and the full26-file ice-ai/src inventory establish that no Google Generative AI or Vertex concrete producer is present. Native common provider/event/schema infrastructure is usable but Anthropic/OpenAI wire adapters do not implement Google Content/Part and generateContentStream. AUTH-011/012 cover catalog/auth metadata only; external package factories are an extension seam, not evidence of an installed Google wire implementation. Native SimpleStreamOptions has no payload/response hooks, custom fetch carrier, strict tool choice or provider-specific thinking struct; AI-006 owns shared envelope additions. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Implement a Gemini producer with an idiomatic native HTTP or SDK client, explicit auth/endpoint/header rules and a catch-all setup-to-stream boundary. Reuse common bounded retry only before streamed output. Carry hard authority after payload transforms. Expose deliberate native timeout/transport injection improvements rather than asserting the source already supports them.",
+      "size_min": 190,
+      "size_max": 320,
+      "priority": "P1",
+      "priority_reason": "Google catalog entries need their actual request transport before any shared protocol parity is reachable."
+    },
+    {
+      "id": "AI-035",
+      "title": "Vertex API-key versus ADC client selection and custom endpoint scope",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/google-vertex.ts:45-119; ice:packages/ai/src/api/google-vertex.ts:320-520; ice:packages/ai/test/google-vertex-api-key-resolution.test.ts:1-224; ice:packages/ai/src/api/google-vertex.lazy.ts:1-5",
+      "what": "Select the correct Vertex authentication/client form and endpoint resource scope without sending credential markers as API keys.",
+      "mechanism": "resolveApiKey trims only options.apiKey and treats empty, exact gcp-vertex-credentials, or /^<[^>]+>$/ placeholder as absent. It does not itself consult GOOGLE_CLOUD_API_KEY; that is upstream credential preparation, despite a test title referring to environment. A real key creates GoogleGenAI{vertexai:true,apiKey,apiVersion:'v1'} without project/location. Otherwise ADC requires project from option, scoped/ambient GOOGLE_CLOUD_PROJECT then GCLOUD_PROJECT and location from option then GOOGLE_CLOUD_LOCATION, throwing descriptive errors if missing. GOOGLE_APPLICATION_CREDENTIALS via scoped/ambient provider environment becomes googleAuthOptions.keyFilename; ambient SDK credential resolution is left to GoogleGenAI.\n\nCustom baseUrl is trimmed; empty or containing literal {location} is omitted so generated templates are not sent. A retained URL sets ResourceScope.COLLECTION; if any URL path segment matches vDIGITS optionally betaDIGITS (beta digits optional), httpOptions.apiVersion='' avoids double version. Invalid URL strings use equivalent slash regex fallback. Both auth clients merge model/request headers and use this HTTP option builder. Request config/hook/hard limit/abort and pre-stream retry follow the same ordering as Gemini; custom non-global fetch is rejected, and timeout/onResponse are not wired. streamSimple builds shared base options without a local key gate and then delegates to the direct API. Exact credential marker tests and constructor option tests were read; test environment assignment values redacted by transport were not recovered.",
+      "interfaces": "GoogleVertexOptions.project/location plus common Google thinking/tool options; GOOGLE_CLOUD_PROJECT,GCLOUD_PROJECT,GOOGLE_CLOUD_LOCATION,GOOGLE_APPLICATION_CREDENTIALS; gcp-vertex-credentials and angle-bracket placeholder markers; ResourceScope.COLLECTION; GoogleGenAI vertexai/apiVersion.",
+      "dependencies": [
+        "AI-003",
+        "AI-004",
+        "AI-006",
+        "AI-016",
+        "AUTH-009",
+        "AUTH-012"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and the full26-file ice-ai/src inventory establish that no Google Generative AI or Vertex concrete producer is present. Native common provider/event/schema infrastructure is usable but Anthropic/OpenAI wire adapters do not implement Google Content/Part and generateContentStream. AUTH-011/012 cover catalog/auth metadata only; external package factories are an extension seam, not evidence of an installed Google wire implementation. A generic bearer key header is insufficient to replace ADC token acquisition/project/location routing; native source inventory has no Vertex client implementation. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Implement Vertex as a distinct client/auth configuration on the shared Google wire mapper, accepting an explicit resolved credential mode rather than inferring all auth from arbitrary strings. Preserve source marker compatibility at the public boundary, regional collection URL behavior and scoped key-file selection. Reuse AUTH storage/selection; add no duplicate credential store.",
+      "size_min": 200,
+      "size_max": 340,
+      "priority": "P1",
+      "priority_reason": "Vertex API keys and ADC need different request construction; placeholder credentials and versioned proxies otherwise fail before generation."
+    },
+    {
+      "id": "AI-036",
+      "title": "Gemini and Vertex thinking levels, disable policy and token budgets",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/google-generative-ai.ts:303-342; ice:packages/ai/src/api/google-generative-ai.ts:392-405; ice:packages/ai/src/api/google-generative-ai.ts:424-535; ice:packages/ai/src/api/google-vertex.ts:320-357; ice:packages/ai/src/api/google-vertex.ts:491-503; ice:packages/ai/src/api/google-vertex.ts:522-610; ice:packages/ai/test/google-thinking-disable.test.ts:1-161",
+      "what": "Translate common reasoning choices into Google level or budget payloads, including model-specific lowest-thinking behavior when the caller requests no visible reasoning.",
+      "mechanism": "Direct API applies thinking only for model.reasoning. Enabled emits includeThoughts=true and prefers explicit level over budget; nonnegative budget is min(budget,hardMaxOutputTokens) when hard cap exists, while negative dynamic budget is retained. An absent thinking option emits no thinkingConfig; explicit enabled=false emits a model-specific disable form. Simple absent reasoning always passes enabled=false. Simple requested reasoning is clampThinkingLevel(model,requested), coerces returned off to high, then casts to minimal/low/medium/high without a further runtime extended-level guard.\n\nGemini3 Pro matches /gemini-3(?:\\.\\d+)?-pro/ and maps minimal/low→LOW,medium/high→HIGH; disable uses LOW without includeThoughts. Gemini3 Flash matches equivalent flash regex or exact gemini-flash-latest/gemini-flash-lite-latest, maps minimal/low/medium/high→MINIMAL/LOW/MEDIUM/HIGH and disables with MINIMAL. Generative AI also recognizes /gemma-?4/: minimal/low→MINIMAL,medium/high→HIGH and disable MINIMAL; Vertex has no Gemma4 special case. Other models disable with thinkingBudget0.\n\nBudget override by selected level wins. Case-sensitive id substring2.5-pro defaults128/2048/8192/32768. Generative AI2.5-flash-lite defaults512/2048/8192/24576 before its2.5-flash128/2048/8192/24576 branch; Vertex has only the latter flash branch, so flash-lite minimal differs128. Unknown budget family returns-1. Level helpers do not handle extended values at runtime if a custom model advertises them; the cast alone cannot clamp them, a source limitation. Output cap is separately enforced after payload hook, but thinking budget itself is not re-clamped after arbitrary hook replacement. The thinking-disable test spans other providers and uses credential-gated E2E assertions; it establishes intended cases only, not executed acceptance.",
+      "interfaces": "thinkingConfig includeThoughts,thinkingLevel,thinkingBudget; GoogleThinkingLevel enum-string mapping; direct thinking.enabled vs absent; common reasoning/thinkingBudgets/hardMaxOutputTokens.",
+      "dependencies": [
+        "AI-005",
+        "AI-006",
+        "AI-034",
+        "AI-035"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and the full26-file ice-ai/src inventory establish that no Google Generative AI or Vertex concrete producer is present. Native common provider/event/schema infrastructure is usable but Anthropic/OpenAI wire adapters do not implement Google Content/Part and generateContentStream. AUTH-011/012 cover catalog/auth metadata only; external package factories are an extension seam, not evidence of an installed Google wire implementation. Native shared reasoning enum/budgets are not converted into Google generationConfig. Preserve native common clamp infrastructure while adding exact Google model branches. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Implement shared Google reasoning conversion with explicit per-API differences for Gemma4 and flash-lite. Validate extended-level handling instead of relying on a type cast, and define whether hooks may change thinking budgets under hard authority. Preserve hidden minimum reasoning semantics rather than promising the provider performs zero internal reasoning.",
+      "size_min": 170,
+      "size_max": 270,
+      "priority": "P1",
+      "priority_reason": "Reasoning-off and budget behavior materially affect latency, cost and provider request validity."
+    },
+    {
+      "id": "AI-037",
+      "title": "Google history signatures, function IDs and multimodal response grouping",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/google-shared.ts:18-248; ice:packages/ai/test/google-shared-gemini3-unsigned-tool-call.test.ts:1-168; ice:packages/ai/test/google-shared-signed-empty-blocks.test.ts:1-118; ice:packages/ai/test/google-shared-image-tool-result-routing.test.ts:1-103; ice:packages/ai/test/google-thinking-signature.test.ts:1-39",
+      "what": "Preserve replay-valid Google signatures and function identity while converting history and tool images into the correct Content/Part arrangement.",
+      "mechanism": "transformMessages precedes conversion. IDs are required for case-sensitive claude-/gpt-oss- prefixes and Gemini major>=3 parsed case-insensitively from ^gemini(?:-live)?-(digits); only required IDs are sanitized to alphanumeric/underscore/hyphen and64 chars. User strings become sanitized text even if empty; array text/images preserve order, and only empty arrays are skipped. Assistant signature reuse additionally requires same provider/model plus base64-looking nonempty signature, length divisible4, alphabet A-Z/a-z/0-9/+// and up to2 trailing=. It is a syntax check, not cryptographic validation. Text/thinking blocks with empty visible content survive only if a usable signature exists. Same-model thinking carries thought:true; foreign thinking becomes plain text without tags and signature. Tool calls carry name,args(default{}), required ID and usable thoughtSignature. Unsigned Gemini3 calls stay unsigned: no skip-validator sentinel and no synthetic historical text is injected.\n\nTool text joins with newline. Images are retained only if model.input includes image. response is {output:text} or {error:text}; no text with images uses '(see attached image)', no text/images uses ''. For Gemini major>=3 and every non-Gemini model, images nest in functionResponse.parts; Gemini<3 gets a separate user turn with 'Tool result image:' and image parts. The actual helper returns true for non-Gemini, despite a nearby contrary comment. Function responses merge only into the immediately prior user content if it already contains a functionResponse. Thus a separate image turn for Gemini2 can split a consecutive result group; tests explicitly pin this. IDs are added to functionResponse only for required-ID models. Unknown user array types fall through to the image-shaped branch rather than generic unknown-block filtering.",
+      "interfaces": "Google Content role user/model; Part text/thought/thoughtSignature/functionCall/functionResponse/inlineData; TextContent.textSignature,ThinkingContent.thinkingSignature,ToolCall.thoughtSignature; requiresToolCallId; convertMessages.",
+      "dependencies": [
+        "AI-014",
+        "AI-034",
+        "AI-035"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and the full26-file ice-ai/src inventory establish that no Google Generative AI or Vertex concrete producer is present. Native common provider/event/schema infrastructure is usable but Anthropic/OpenAI wire adapters do not implement Google Content/Part and generateContentStream. AUTH-011/012 cover catalog/auth metadata only; external package factories are an extension seam, not evidence of an installed Google wire implementation. Native common Content fields and Anthropic/OpenAI history handling cannot substitute for these Google signature rules or functionResponse image layouts. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Add a shared Google history encoder with separate signature validity/provenance checks, explicit model-family ID rules and source-compatible result grouping. Keep signed empty parts and caller tool IDs through persistence. Resolve the non-Gemini multimodal comment discrepancy from actual desired protocol behavior before changing the source-derived policy.",
+      "size_min": 250,
+      "size_max": 410,
+      "priority": "P1",
+      "priority_reason": "Dropping or moving signed parts and mismatching function IDs breaks multi-turn reasoning/tool continuity."
+    },
+    {
+      "id": "AI-038",
+      "title": "Google function schemas, validated mode and legacy OpenAPI conversion",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/google-shared.ts:250-337; ice:packages/ai/src/api/google-generative-ai.ts:380-390; ice:packages/ai/src/api/google-vertex.ts:479-489; ice:packages/ai/test/google-shared-convert-tools.test.ts:1-204",
+      "what": "Publish tool declarations using the correct schema field and choose validated function-calling mode when strict sampling is requested and supported.",
+      "mechanism": "convertTools returns undefined for empty input, otherwise one wrapper containing functionDeclarations in input order with name,description and full parametersJsonSchema by default. Optional useParameters=true uses legacy parameters and recursively clones ordinary objects while dropping $schema,$id,$anchor,$dynamicAnchor,$vocabulary,$comment,$defs,definitions. Arrays are returned untouched, so this is not recursive through anyOf/items arrays; $ref is retained even if definitions are removed. The sanitizer also has no schema-position distinction when dropping matching keys. These are source limitations, not proof of a valid fully transformed OpenAPI schema. Both direct Gemini/Vertex builders use the default JSON-schema branch.\n\nStrict support is inferred from Gemini parsed major>=3, not a general compat override. resolveGoogleFunctionCallingMode evaluates tools.some(resolveJsonSchemaStrictSampling===true) before handling toolChoice; a required unsupported tool encountered before short-circuit throws even if choice='none'. Conversely, once an earlier tool returns true, later tool constraints are not checked by this some call. none→NONE and any→ANY take precedence over strict mode after this evaluation; otherwise any strict result→VALIDATED, explicit auto/unknown→AUTO, absent choice→undefined. Tool declarations remain present when mode NONE, unlike Bedrock's omission policy.",
+      "interfaces": "functionDeclarations.parametersJsonSchema vs parameters; Google FunctionCallingConfigMode AUTO/NONE/ANY/VALIDATED; Tool.constrainedSampling; convertTools(tools,useParameters=false).",
+      "dependencies": [
+        "AI-013",
+        "AI-034",
+        "AI-035"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and the full26-file ice-ai/src inventory establish that no Google Generative AI or Vertex concrete producer is present. Native common provider/event/schema infrastructure is usable but Anthropic/OpenAI wire adapters do not implement Google Content/Part and generateContentStream. AUTH-011/012 cover catalog/auth metadata only; external package factories are an extension seam, not evidence of an installed Google wire implementation. Native strict-schema and constrained-sampling infrastructure exists, but no Google declaration builder or VALIDATED mode serializer is present. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Implement schema-field selection and validated-mode request integration using shared constraint policy. Preserve complete JSON Schema in default mode. Treat legacy schema transformation as a deliberate compatibility path, address dangling refs/array traversal if strengthening it, and validate all required constraints rather than preserving accidental short-circuit omissions.",
+      "size_min": 100,
+      "size_max": 180,
+      "priority": "P1",
+      "priority_reason": "Strict tool requirements and schema compatibility must remain enforceable at the provider boundary."
+    },
+    {
+      "id": "AI-039",
+      "title": "Google and Vertex stream block assembly, usage and finish-reason precedence",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/google-generative-ai.ts:99-298; ice:packages/ai/src/api/google-vertex.ts:117-315; ice:packages/ai/src/api/google-shared.ts:35-51; ice:packages/ai/src/api/google-shared.ts:338-415; ice:packages/ai/test/google-raw-stop-reason.test.ts:1-107",
+      "what": "Convert Gemini/Vertex streamed parts into assistant events while retaining response/signature identity, usage and the exact completion/error state.",
+      "mechanism": "After SDK stream acquisition emit start; inspect only candidates[0] per chunk and keep the first truthy responseId. Every part with text!==undefined is classified thinking only when thought===true, not by signature alone. Contiguous parts/chunks of the same kind merge into one current block; changing kind or seeing functionCall closes that block. Nonempty incoming thoughtSignature replaces the current retained signature, while omitted/empty leaves it unchanged; text stores textSignature and thinking stores thinkingSignature. The implementation has no distinct part index boundary, so adjacent same-kind signature-bearing parts merge despite a helper comment cautioning against moving signatures across parts. Signature-only parts with neither text nor functionCall are ignored.\n\nEach functionCall is treated as a complete call, not incremental JSON: keep provided unique nonempty ID, else generate name_Date.now_counter with module-local counter; args defaults{}, attach truthy thoughtSignature, append then emit start/delta(JSON.stringify args)/end. A part with text and functionCall may perform both branches. finishReason is retained raw and mapped STOP→stop,MAX_TOKENS→length; listed safety/recitation/malformed/unexpected/unspecified/other/language/image reasons→error, unknown enum values throw. After a recognized mapping, presence of any toolCall overrides it to toolUse, including a mapped error or length. That error precedence is a source limitation to address explicitly; raw-stop tests cover error-only responses without tool calls.\n\nEvery usageMetadata replaces usage: input=prompt-cached (not clamped), output=candidates+thoughts,cacheRead=cached,cacheWrite0,reasoning=thoughts,total=reported-or0,then cost recalculates. Normal iterator end closes a current block, checks signal, rejects pending or mapped error, else done. Catch retains partial blocks and usage, removes incidental index fields, sets aborted if signal else error, and normalizes provider error. No retry occurs after iteration begins; continue reading after finishReason so later errors still fail the turn. If iteration throws, the open block is not first ended. Both APIs duplicate this mechanism with their own counter/api identity.",
+      "interfaces": "AssistantMessageEvent stream; responseId/rawStopReason; textSignature/thinkingSignature/thoughtSignature; FinishReason enum mapping; usage.reasoning subset of output; retryGoogleRequest acquisition boundary.",
+      "dependencies": [
+        "AI-004",
+        "AI-009",
+        "AI-010",
+        "AI-034",
+        "AI-035",
+        "AI-037"
+      ],
+      "rust": "Independent full reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and the full26-file ice-ai/src inventory establish that no Google Generative AI or Vertex concrete producer is present. Native common provider/event/schema infrastructure is usable but Anthropic/OpenAI wire adapters do not implement Google Content/Part and generateContentStream. AUTH-011/012 cover catalog/auth metadata only; external package factories are an extension seam, not evidence of an installed Google wire implementation. Native SSE streaming/cancellation and event types can be reused, but neither Google candidate/Part mapper nor Google usage/finish semantics is implemented. Independently read rust:crates/ice-cli/src/provider/factories.rs:16-145 confirms production default factories only register the three native HTTP protocols; configure first tries a matching provider-specific extension factory, then protocol factory, otherwise returns None. A native external provider seam exists and its private execution binding and API-matching checks should be retained; no matching installed package implementation is inferred.",
+      "port": "Build one shared native Google mapper parameterized by API identity, with explicit block/signature boundaries, complete function-call emission and provider usage accounting. Retain raw reasons and make error-vs-tool precedence an intentional reviewed policy. Reject truncated EOF and clean partial state on every error, preserving native prompt cancellation while not replaying emitted content.",
+      "size_min": 270,
+      "size_max": 450,
+      "priority": "P1",
+      "priority_reason": "Tool loops require trustworthy completion reasons and lossless replay signatures across both Google endpoints."
+    },
+    {
+      "id": "AI-040",
+      "title": "Mistral chat-stream transport, reasoning controls and cache affinity",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/mistral-conversations.ts:32-143; ice:packages/ai/src/api/mistral-conversations.ts:225-289; ice:packages/ai/src/api/mistral-conversations.ts:646-672; ice:packages/ai/src/api/mistral-conversations.lazy.ts:1-5; ice:packages/ai/test/mistral-reasoning-mode.test.ts:1-99",
+      "what": "Implement the API named mistral-conversations using Mistral chat.stream, including per-request clients, explicit reasoning mode, prompt-cache affinity and direct options.",
+      "mechanism": "The source API name is mistral-conversations but implementation calls Mistral.chat.stream, not a stateful Conversations endpoint. Direct stream requires truthy options.apiKey inside async error boundary; streamSimple throws synchronously if absent. Client is new per request with apiKey,serverURL=model.baseUrl and optional HTTPClient(fetcher) for custom fetch, isolating mutable SDK state. Shared history projection runs with a fresh request-local Mistral ID normalizer. Payload has model,stream:true,messages; tools when nonempty, temperature/maxTokens when defined, truthy toolChoice/promptMode/reasoningEffort, and truthy system prompt prepended after sanitation. onPayload can replace payload, then hardMaxOutputTokens is enforced on maxTokens. Initial assignment expression at269 was transport-redacted. Request options always set retries{strategy:'none'}, pass signal and merged model/request headers directly. maxRetries/maxRetryDelayMs/timeout/onResponse are not otherwise applied.\n\nPrompt cache key is undefined when cacheRetention='none', else promptCacheKey ?? sessionId; an explicit empty key suppresses session fallback. Truthy key is sent in payload and auto-added as lowercase x-affinity only if that exact existing header is falsy. Uppercase affinity is not checked, null/undefined header values are not normalized through providerHeadersToRecord, and none does not remove explicit caller affinity headers. This is prefix caching, with no conversation continuation object.\n\nSimple reasoning is clamped; off becomes absent, and model.reasoning must be true. Exact IDs mistral-small-2603,mistral-small-latest,mistral-medium-3.5 use reasoningEffort=model.thinkingLevelMap[level]??'high' cast to none/high without runtime validation. Other reasoning models use promptMode='reasoning'. When simple reasoning is absent, both controls are omitted rather than explicitly set none. Direct options can supply either/both independently. Lazy wrapper delegates to lazyApi. Payload tests point at local port9 and were inspected without making those requests.",
+      "interfaces": "MistralOptions.toolChoice auto/none/any/required/named-function,promptMode,reasoningEffort; HTTPClient fetcher; payload.promptCacheKey/maxTokens; x-affinity; request retries{strategy:none}; stream/streamSimple API mistral-conversations.",
+      "dependencies": [
+        "AI-003",
+        "AI-005",
+        "AI-006",
+        "AUTH-009"
+      ],
+      "rust": "Independent full native reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and rust:crates/ice-cli/src/provider/factories.rs:1-623 show no Mistral-conversations/chat.stream producer. RuntimeFactories registers only AnthropicMessages/OpenaiCompletions/OpenaiResponses; an extension factory may supply a matching provider/API, but no concrete Mistral external package implementation was established. A configured OpenAI-compatible Mistral endpoint can use a different existing wire protocol; that is not implementation of this source API. Common native options already carry session/cache hints, headers and reasoning but lack explicit promptCacheKey and Mistral promptMode/effort/named tool choice, owned envelope additions under AI-006.",
+      "port": "Add a Mistral producer and typed direct option carrier around chat-completion streaming. Reuse credential/header binding and hard allowance infrastructure. Preserve explicit source no-retry policy or document an intentional common retry upgrade; do not infer continuation state from affinity. Normalize header semantics deliberately and keep per-request client isolation.",
+      "size_min": 210,
+      "size_max": 350,
+      "priority": "P1",
+      "priority_reason": "Mistral requests require distinct SDK fields and reasoning/cache controls beyond a generic OpenAI-style endpoint."
+    },
+    {
+      "id": "AI-041",
+      "title": "Mistral nine-character tool identity, history and symbol-free schemas",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/mistral-conversations.ts:165-195; ice:packages/ai/src/api/mistral-conversations.ts:507-644; ice:packages/ai/src/utils/hash.ts:1-14; ice:packages/ai/test/mistral-tool-schema.test.ts:1-64",
+      "what": "Normalize tool identities consistently within each request and serialize Mistral history, tool images/errors and schemas accepted by the SDK.",
+      "mechanism": "A request-local forward/reverse map guarantees repeated original IDs reuse the chosen ID and collisions with distinct originals retry. Derivation strips nonalphanumeric characters; attempt0 keeps that sanitized value only if length9, otherwise hashes sanitized-or-original seed, or seed:attempt on collisions. shortHash is the exact two32-bit UTF16-code-unit algorithm in utils/hash.ts using wrapping Math.imul, final mixing and concatenated unsigned base36 halves; the first9 alphanumerics are taken. No padding is added, so the code truncates to at most9 rather than proving fixed length for every possible hash. Preserve deterministic same-request mapping through transformMessages for calls and results.\n\nUser text is sanitized; array images become data-URL image_url chunks only when model supports images. Image-only unsupported content gets an explicit omission placeholder; an empty array without images is skipped. Assistant nonblank text and thinking become their respective content chunk kinds, tool calls are a separate toolCalls array with JSON arguments, and empty assistant messages are omitted. Thinking chunk output has no signature carrier. Tool results are individual role=tool messages with toolCallId/name and a text chunk first, then supported images. Text trims surrounding whitespace; errors prefix '[tool error] '. Unsupported accompanying images add an omission suffix; no text yields '(see attached image)', '(image omitted: model does not support images)' or '(no tool output)' as appropriate, with the same error prefix variants.\n\nEach tool emits type:function,name,description,parameters and strict. Strict resolution assumes provider supports strict unconditionally; resulting true/false defaults false. parameters recursively clone arrays and Object.entries of objects, removing symbol keys at every visited level while retaining enumerable string-key schema structure. This avoids TypeBox metadata tripping SDK validation without JSON roundtrip semantics. The test verifies symbol removal and expects a request error at a local unreachable endpoint, not successful service execution.",
+      "interfaces": "createMistralToolCallIdNormalizer/deriveMistralToolCallId; chat message content/toolCalls/toolCallId; ContentChunk text/thinking/image_url; FunctionTool.function.parameters/strict; exact shortHash protocol helper.",
+      "dependencies": [
+        "AI-011",
+        "AI-013",
+        "AI-014",
+        "AI-040"
+      ],
+      "rust": "Independent full native reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and rust:crates/ice-cli/src/provider/factories.rs:1-623 show no Mistral-conversations/chat.stream producer. RuntimeFactories registers only AnthropicMessages/OpenaiCompletions/OpenaiResponses; an extension factory may supply a matching provider/API, but no concrete Mistral external package implementation was established. A configured OpenAI-compatible Mistral endpoint can use a different existing wire protocol; that is not implementation of this source API. Existing Rust serde JSON values are naturally symbol-free, so do not add a needless TypeBox compatibility layer; the exact schema, ID, image and error-message contracts still need native serialization.",
+      "port": "Implement a collision-aware request-local tool-ID normalizer with compatible UTF16/wrapping hash semantics where identity parity matters, and a Mistral history encoder preserving role/result ordering. Use native JSON directly while honoring full schema and strict flag. Keep omission/error placeholders as intentional wire text and avoid forwarding unsupported images.",
+      "size_min": 210,
+      "size_max": 350,
+      "priority": "P1",
+      "priority_reason": "Tool results must address the same normalized IDs and preserve enough image/error context for reliable follow-up turns."
+    },
+    {
+      "id": "AI-042",
+      "title": "Mistral streamed tool reconstruction, cache usage and error completion",
+      "status": "missing",
+      "source": "ice:packages/ai/src/api/mistral-conversations.ts:87-113; ice:packages/ai/src/api/mistral-conversations.ts:197-223; ice:packages/ai/src/api/mistral-conversations.ts:291-505; ice:packages/ai/src/api/mistral-conversations.ts:674-689; ice:packages/ai/test/mistral-raw-stop-reason.test.ts:1-78",
+      "what": "Map Mistral SDK completion events into assistant deltas with stable response identity, cumulative tool arguments, cache-aware usage and bounded error text.",
+      "mechanism": "Emit start after chat.stream acquisition. Each event.data keeps the first truthy chunk.id as responseId and updates usage before selecting choices[0]. Cached prompt tokens probe, in nullish order: promptTokensDetails.cachedTokens,prompt_tokens_details.cached_tokens,promptTokenDetails.cachedTokens,prompt_token_details.cached_tokens,numCachedTokens,num_cached_tokens; accept only finite numeric value and clamp to0..promptTokens. Input is max(0,prompt-cached),output=completionTokens||0,cacheRead=cached,cacheWrite0,total=reported truthy total else sum of these; cost recalculates each usage event. Two local token assignment expressions at351–352 were redacted by transport; their names/operands were not recovered beyond visible helper/caller behavior.\n\nOnly first choice is used. Truthy finishReason is recorded before delta processing: stop→stop,length/model_length→length,tool_calls→toolUse,error/unknown→error with raw explanation. The helper maps null→stop but caller's truthy guard makes that branch unreachable here. String content and text chunks emit sanitized text, including empty sanitized deltas; thinking chunks concatenate nested text parts, sanitize and skip empty. Same-kind contiguous content merges; changes and tool deltas close current text/thinking.\n\nTool map key is callId:index-or0. Nonempty ID except literal 'null' is used; otherwise derive from 'toolcall:index-or0'. New block captures initial name and scratch partialArgs. Each arguments string is appended; nonstring args JSON.stringify(value||{}), then tolerant JSON parsing updates arguments and emits delta. Later missing/different ID for the same index selects a different key and can split a logical call; names are not concatenated/updated. These are source limitations, not an established correct provider invariant. At normal EOF finish text/thinking then finalize every mapped tool in insertion order, strip partialArgs and emit toolcall_end. Outer completion then checks abort/pending/error and emits done or error. Catch strips scratch on all tools but does not emit missing end events; partial content remains.\n\nError formatting uses Error.statusCode if numeric and a trimmed string body truncated at4000 UTF16 characters with omitted-count suffix. Status without body uses message; Error without status uses message. Non-Error values use safe JSON.stringify then String fallback. No generic structured provider diagnostic or retry wrapper is applied. Unknown stop tests confirm raw preservation and error mapping only, without live requests.",
+      "interfaces": "CompletionEvent.data id/usage/choices[0].delta; toolCalls id/index/function.arguments; AssistantMessageEvent text/thinking/toolcall/done/error; rawStopReason,responseId; Mistral SDK statusCode/body error.",
+      "dependencies": [
+        "AI-010",
+        "AI-011",
+        "AI-040",
+        "AI-041"
+      ],
+      "rust": "Independent full native reads rust:crates/ice-ai/src/providers/mod.rs:1-47, rust:crates/ice-ai/src/provider.rs:1-392, rust:crates/ice-ai/src/lib.rs:1-47 and rust:crates/ice-cli/src/provider/factories.rs:1-623 show no Mistral-conversations/chat.stream producer. RuntimeFactories registers only AnthropicMessages/OpenaiCompletions/OpenaiResponses; an extension factory may supply a matching provider/API, but no concrete Mistral external package implementation was established. A configured OpenAI-compatible Mistral endpoint can use a different existing wire protocol; that is not implementation of this source API. Existing OpenAI completion mapper is a potential shared base but its delta keying, content chunk types, Mistral usage aliases and error envelope differ; reuse needs explicit protocol configuration rather than labeling it implemented.",
+      "port": "Implement a Mistral completion mapper with explicit tool correlation, streamed content variants and alias-aware cache accounting. Preserve raw reasons and reject missing finish at EOF. Correctly handle IDs arriving once or changing after index allocation, define name delta behavior and clean partial buffers on every terminal path. Keep cancellation responsive and avoid replaying emitted deltas under request retry.",
+      "size_min": 260,
+      "size_max": 430,
+      "priority": "P1",
+      "priority_reason": "Tool correlation, cached usage and terminal integrity determine whether the native harness can safely consume Mistral streams."
+    }
+  ],
+  "read_records": [
+    {
+      "path": "rust:crates/ice-ai/src/providers/mod.rs",
+      "sha256": "a8adc4d1d109ba95db09d41233691bcb6665e34bef3a08ae0ecb3f3a90dd4a32",
+      "total_lines": 47,
+      "range": [
+        1,
+        47
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "total_lines": 392,
+      "range": [
+        1,
+        392
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "rust:crates/ice-ai/src/lib.rs",
+      "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110",
+      "total_lines": 47,
+      "range": [
+        1,
+        47
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+      "sha256": "3ee8a1b2a2cd58927bee18ab5b4150401da810e9d5f4595822b3b10ded35de86",
+      "total_lines": 31,
+      "range": [
+        1,
+        31
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-generative-ai.lazy.ts",
+      "sha256": "ba7700f2e44838fb19da46f866f47f35f4e10f5068800be1ea698e9e95e1e1ce",
+      "total_lines": 5,
+      "range": [
+        1,
+        5
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-vertex.lazy.ts",
+      "sha256": "891f0e07eaaa1bb1df97f0a2d8f067df6acbab50078242108d93b96a710c4712",
+      "total_lines": 5,
+      "range": [
+        1,
+        5
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.lazy.ts",
+      "sha256": "74267bc430c0c2562d166e4ae9d05966634e91b226bc564010b2b199db52dd86",
+      "total_lines": 5,
+      "range": [
+        1,
+        5
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "total_lines": 7,
+      "range": [
+        1,
+        7
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/bedrock-provider.js",
+      "sha256": "8971c230fb2d216f2f94b590906a8a4e948bd72edae6ce131377daff5b4c4c3b",
+      "total_lines": 2,
+      "range": [
+        1,
+        2
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/bedrock-provider.d.ts",
+      "sha256": "8971c230fb2d216f2f94b590906a8a4e948bd72edae6ce131377daff5b4c4c3b",
+      "total_lines": 2,
+      "range": [
+        1,
+        2
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.ts",
+      "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+      "total_lines": 1196,
+      "range": [
+        1,
+        590
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.ts",
+      "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+      "total_lines": 1196,
+      "range": [
+        591,
+        1196
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-convert-messages.test.ts",
+      "sha256": "c4d5b4509d5032985ef45d86768919591862c0b05c8b3c12e676cf56ca121409",
+      "total_lines": 275,
+      "range": [
+        1,
+        275
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-custom-headers.test.ts",
+      "sha256": "5d18105b46f4bfb730dfa83c781fa1dd49e5aae67101458c3895c29f95620e59",
+      "total_lines": 203,
+      "range": [
+        1,
+        203
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-endpoint-resolution.test.ts",
+      "sha256": "256644a52f42da4000520be9bb97f72bb996c2805650118e020d2d065d9c99aa",
+      "total_lines": 209,
+      "range": [
+        1,
+        209
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-error-metadata.test.ts",
+      "sha256": "65619481f91cd1289fb20813342cf047c9583cb6552e0e15df176f5df5912552",
+      "total_lines": 213,
+      "range": [
+        1,
+        213
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-raw-stop-reason.test.ts",
+      "sha256": "76eb85e0a94d50d91776a04bc976292db7d605b34a1f347df1abe6bed39d16f8",
+      "total_lines": 83,
+      "range": [
+        1,
+        83
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-thinking-payload.test.ts",
+      "sha256": "fb2fa7cce248e6bbdd6f0f2e02542309bfa7ffad99d6ca90c76a4541d15e553b",
+      "total_lines": 267,
+      "range": [
+        1,
+        267
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-utils.ts",
+      "sha256": "6c14c5ae40d9feb82da7ede426b6daac7cd69e841738378f930affa4d4544ead",
+      "total_lines": 19,
+      "range": [
+        1,
+        19
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-shared.ts",
+      "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+      "total_lines": 415,
+      "range": [
+        1,
+        415
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-generative-ai.ts",
+      "sha256": "8e6b6bbc1b34213e9c0d1f251352a94da9746cd3b948974df777e35ae1ef0798",
+      "total_lines": 536,
+      "range": [
+        1,
+        536
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-vertex.ts",
+      "sha256": "f59e58d8c6c4301dd24810f98ac09b960587723de71ce154a6885e2bb4fe97b7",
+      "total_lines": 611,
+      "range": [
+        1,
+        611
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-convert-tools.test.ts",
+      "sha256": "238bf9aa3985bcec2cd6463fe84026144e687779700f4ddbb19310bb538baa64",
+      "total_lines": 204,
+      "range": [
+        1,
+        204
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-gemini3-unsigned-tool-call.test.ts",
+      "sha256": "755b941ad446a3373e623162f93be59c2d339cd069c5673f0ee5fbde4867f9f7",
+      "total_lines": 168,
+      "range": [
+        1,
+        168
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-image-tool-result-routing.test.ts",
+      "sha256": "2a4d8af59d52f5420a505e0826514908655180661272375426c1344dacebf37d",
+      "total_lines": 103,
+      "range": [
+        1,
+        103
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-retry.test.ts",
+      "sha256": "de24f8ea13e0a83f7913a2741902550f53bbbe5200dc9494af52c0a1fbb49a78",
+      "total_lines": 41,
+      "range": [
+        1,
+        41
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-signature.test.ts",
+      "sha256": "81d47d5851bb3b9fa8cfc879df0a26747dd2ffd7c7093d22ce8bac74fb241dc1",
+      "total_lines": 39,
+      "range": [
+        1,
+        39
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-raw-stop-reason.test.ts",
+      "sha256": "33f3469a72892c62fcabcefa1b0f9ecea28510005794f6aa66d028aa20239a88",
+      "total_lines": 107,
+      "range": [
+        1,
+        107
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-signed-empty-blocks.test.ts",
+      "sha256": "3c9abb748f52d37d2e4674bc86ec0abf8ead48443a982592e03ce187cc6086e1",
+      "total_lines": 118,
+      "range": [
+        1,
+        118
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-disable.test.ts",
+      "sha256": "dc899136ae7d5c367b846aa68fc693cbe20fe12a85dfd8b41ff97fb8e6f22b10",
+      "total_lines": 161,
+      "range": [
+        1,
+        161
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/google-vertex-api-key-resolution.test.ts",
+      "sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+      "total_lines": 224,
+      "range": [
+        1,
+        224
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.ts",
+      "sha256": "0c2fbfd65bb82a8561c74d20093bf1febda14a4912bc59e7b0d10ddbb0d2355a",
+      "total_lines": 690,
+      "range": [
+        1,
+        460
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.ts",
+      "sha256": "0c2fbfd65bb82a8561c74d20093bf1febda14a4912bc59e7b0d10ddbb0d2355a",
+      "total_lines": 690,
+      "range": [
+        461,
+        690
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-raw-stop-reason.test.ts",
+      "sha256": "c77dc819018bd6fd2d5f4ea37aa0c8fc59584400e28cd26329c3f65ad2b65728",
+      "total_lines": 78,
+      "range": [
+        1,
+        78
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-reasoning-mode.test.ts",
+      "sha256": "f48cc8f80be9329c536f56811830069741213f9d3f3be9b57012a72b0be87da1",
+      "total_lines": 99,
+      "range": [
+        1,
+        99
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-tool-schema.test.ts",
+      "sha256": "9e913e9c49c2a9a2d1cfd4dc8d137a154e005b9291d06489e52136b92e5db24e",
+      "total_lines": 64,
+      "range": [
+        1,
+        64
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/factories.rs",
+      "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "total_lines": 623,
+      "range": [
+        1,
+        623
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    },
+    {
+      "path": "ice:packages/ai/src/utils/hash.ts",
+      "sha256": "2cdfce4af41810d1a92c7f0a55c78637a3173041038aafd85b378be345761ed8",
+      "total_lines": 14,
+      "range": [
+        1,
+        14
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": false
+    }
+  ],
+  "metadata_inventory": [
+    {
+      "path": "ice:packages/ai/bedrock-provider.d.ts",
+      "sha256": "8971c230fb2d216f2f94b590906a8a4e948bd72edae6ce131377daff5b4c4c3b",
+      "total_lines": 2,
+      "range": [
+        1,
+        2
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/bedrock-provider.js",
+      "sha256": "8971c230fb2d216f2f94b590906a8a4e948bd72edae6ce131377daff5b4c4c3b",
+      "total_lines": 2,
+      "range": [
+        1,
+        2
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+      "sha256": "3ee8a1b2a2cd58927bee18ab5b4150401da810e9d5f4595822b3b10ded35de86",
+      "total_lines": 31,
+      "range": [
+        1,
+        31
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.ts",
+      "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+      "total_lines": 1196,
+      "range": [
+        1,
+        1196
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-generative-ai.lazy.ts",
+      "sha256": "ba7700f2e44838fb19da46f866f47f35f4e10f5068800be1ea698e9e95e1e1ce",
+      "total_lines": 5,
+      "range": [
+        1,
+        5
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-generative-ai.ts",
+      "sha256": "8e6b6bbc1b34213e9c0d1f251352a94da9746cd3b948974df777e35ae1ef0798",
+      "total_lines": 536,
+      "range": [
+        1,
+        536
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-shared.ts",
+      "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+      "total_lines": 415,
+      "range": [
+        1,
+        415
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-vertex.lazy.ts",
+      "sha256": "891f0e07eaaa1bb1df97f0a2d8f067df6acbab50078242108d93b96a710c4712",
+      "total_lines": 5,
+      "range": [
+        1,
+        5
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-vertex.ts",
+      "sha256": "f59e58d8c6c4301dd24810f98ac09b960587723de71ce154a6885e2bb4fe97b7",
+      "total_lines": 611,
+      "range": [
+        1,
+        611
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.lazy.ts",
+      "sha256": "74267bc430c0c2562d166e4ae9d05966634e91b226bc564010b2b199db52dd86",
+      "total_lines": 5,
+      "range": [
+        1,
+        5
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.ts",
+      "sha256": "0c2fbfd65bb82a8561c74d20093bf1febda14a4912bc59e7b0d10ddbb0d2355a",
+      "total_lines": 690,
+      "range": [
+        1,
+        690
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "total_lines": 7,
+      "range": [
+        1,
+        7
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-convert-messages.test.ts",
+      "sha256": "c4d5b4509d5032985ef45d86768919591862c0b05c8b3c12e676cf56ca121409",
+      "total_lines": 275,
+      "range": [
+        1,
+        275
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-credentials.test.ts",
+      "sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+      "total_lines": 116,
+      "range": [
+        1,
+        116
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-custom-headers.test.ts",
+      "sha256": "5d18105b46f4bfb730dfa83c781fa1dd49e5aae67101458c3895c29f95620e59",
+      "total_lines": 203,
+      "range": [
+        1,
+        203
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-endpoint-resolution.test.ts",
+      "sha256": "256644a52f42da4000520be9bb97f72bb996c2805650118e020d2d065d9c99aa",
+      "total_lines": 209,
+      "range": [
+        1,
+        209
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-error-metadata.test.ts",
+      "sha256": "65619481f91cd1289fb20813342cf047c9583cb6552e0e15df176f5df5912552",
+      "total_lines": 213,
+      "range": [
+        1,
+        213
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-models.test.ts",
+      "sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+      "total_lines": 71,
+      "range": [
+        1,
+        71
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-raw-stop-reason.test.ts",
+      "sha256": "76eb85e0a94d50d91776a04bc976292db7d605b34a1f347df1abe6bed39d16f8",
+      "total_lines": 83,
+      "range": [
+        1,
+        83
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-thinking-payload.test.ts",
+      "sha256": "fb2fa7cce248e6bbdd6f0f2e02542309bfa7ffad99d6ca90c76a4541d15e553b",
+      "total_lines": 267,
+      "range": [
+        1,
+        267
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-utils.ts",
+      "sha256": "6c14c5ae40d9feb82da7ede426b6daac7cd69e841738378f930affa4d4544ead",
+      "total_lines": 19,
+      "range": [
+        1,
+        19
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-raw-stop-reason.test.ts",
+      "sha256": "33f3469a72892c62fcabcefa1b0f9ecea28510005794f6aa66d028aa20239a88",
+      "total_lines": 107,
+      "range": [
+        1,
+        107
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-convert-tools.test.ts",
+      "sha256": "238bf9aa3985bcec2cd6463fe84026144e687779700f4ddbb19310bb538baa64",
+      "total_lines": 204,
+      "range": [
+        1,
+        204
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-gemini3-unsigned-tool-call.test.ts",
+      "sha256": "755b941ad446a3373e623162f93be59c2d339cd069c5673f0ee5fbde4867f9f7",
+      "total_lines": 168,
+      "range": [
+        1,
+        168
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-image-tool-result-routing.test.ts",
+      "sha256": "2a4d8af59d52f5420a505e0826514908655180661272375426c1344dacebf37d",
+      "total_lines": 103,
+      "range": [
+        1,
+        103
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-retry.test.ts",
+      "sha256": "de24f8ea13e0a83f7913a2741902550f53bbbe5200dc9494af52c0a1fbb49a78",
+      "total_lines": 41,
+      "range": [
+        1,
+        41
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-signed-empty-blocks.test.ts",
+      "sha256": "3c9abb748f52d37d2e4674bc86ec0abf8ead48443a982592e03ce187cc6086e1",
+      "total_lines": 118,
+      "range": [
+        1,
+        118
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-disable.test.ts",
+      "sha256": "dc899136ae7d5c367b846aa68fc693cbe20fe12a85dfd8b41ff97fb8e6f22b10",
+      "total_lines": 161,
+      "range": [
+        1,
+        161
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-signature.test.ts",
+      "sha256": "81d47d5851bb3b9fa8cfc879df0a26747dd2ffd7c7093d22ce8bac74fb241dc1",
+      "total_lines": 39,
+      "range": [
+        1,
+        39
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-vertex-api-key-resolution.test.ts",
+      "sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+      "total_lines": 224,
+      "range": [
+        1,
+        224
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-raw-stop-reason.test.ts",
+      "sha256": "c77dc819018bd6fd2d5f4ea37aa0c8fc59584400e28cd26329c3f65ad2b65728",
+      "total_lines": 78,
+      "range": [
+        1,
+        78
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-reasoning-mode.test.ts",
+      "sha256": "f48cc8f80be9329c536f56811830069741213f9d3f3be9b57012a72b0be87da1",
+      "total_lines": 99,
+      "range": [
+        1,
+        99
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-tool-schema.test.ts",
+      "sha256": "9e913e9c49c2a9a2d1cfd4dc8d137a154e005b9291d06489e52136b92e5db24e",
+      "total_lines": 64,
+      "range": [
+        1,
+        64
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "rust:crates/ice-ai/src/providers/mod.rs",
+      "sha256": "a8adc4d1d109ba95db09d41233691bcb6665e34bef3a08ae0ecb3f3a90dd4a32",
+      "total_lines": 47,
+      "range": [
+        1,
+        47
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "total_lines": 392,
+      "range": [
+        1,
+        392
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    },
+    {
+      "path": "rust:crates/ice-ai/src/lib.rs",
+      "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110",
+      "total_lines": 47,
+      "range": [
+        1,
+        47
+      ],
+      "notes": "coordinator source manifest",
+      "metadata_only": true
+    }
+  ],
+  "source_manifest": "evidence/resume-source-identities-2026-10-19T222055Z.json",
+  "test_policy": "Source-only. No test or application execution. Test hashes are current supplemental clean tracked files compared with frozen TS HEAD, not original source-manifest entries.",
+  "native_inventory": [
+    "crates/ice-ai/src/constrained.rs",
+    "crates/ice-ai/src/error.rs",
+    "crates/ice-ai/src/event_stream.rs",
+    "crates/ice-ai/src/frames.rs",
+    "crates/ice-ai/src/http.rs",
+    "crates/ice-ai/src/images.rs",
+    "crates/ice-ai/src/json_parse.rs",
+    "crates/ice-ai/src/lib.rs",
+    "crates/ice-ai/src/model.rs",
+    "crates/ice-ai/src/provider.rs",
+    "crates/ice-ai/src/providers/anthropic/build_params.rs",
+    "crates/ice-ai/src/providers/anthropic/cache_control.rs",
+    "crates/ice-ai/src/providers/anthropic/cost.rs",
+    "crates/ice-ai/src/providers/anthropic/json_parse.rs",
+    "crates/ice-ai/src/providers/anthropic/mapper.rs",
+    "crates/ice-ai/src/providers/anthropic/mod.rs",
+    "crates/ice-ai/src/providers/anthropic/models.rs",
+    "crates/ice-ai/src/providers/anthropic/retry.rs",
+    "crates/ice-ai/src/providers/anthropic/sse.rs",
+    "crates/ice-ai/src/providers/faux.rs",
+    "crates/ice-ai/src/providers/mod.rs",
+    "crates/ice-ai/src/providers/openai_completions.rs",
+    "crates/ice-ai/src/providers/openai_responses.rs",
+    "crates/ice-ai/src/schema.rs",
+    "crates/ice-ai/src/strict_schema.rs",
+    "crates/ice-ai/src/types.rs"
+  ],
+  "dependency_requests": [],
+  "source_limitations": [
+    "Transport redacted assignment expressions at bedrock-converse-stream.ts503 and617; identifiers not reconstructed. Surrounding controls inspected and recorded.",
+    "Bedrock transport configuration precedes try/catch, so a synchronous throwing proxy/config helper can reject its unobserved async producer without ending the returned stream. This is a source limitation, not a requested native regression.",
+    "Transport redacted initial output-token assignment expression at google-generative-ai.ts377 and google-vertex.ts476 and environment assignment values in google-vertex-api-key-resolution.test.ts68/112. No recovery attempted.",
+    "Transport redacted Mistral initial maxTokens assignment269 and local token assignment expressions351–352. No hidden operand recovery attempted."
+  ],
+  "reused_worker_evidence": {
+    "worker": "audit_session/AUTH",
+    "source": "evidence/providers-auth-source-review.json",
+    "sha256": "4a80fcd688ecd290c71e8269bbc44e81a36d497da89ea6dd940edf804c3b5a49",
+    "full_read_manifest": [
+      {
+        "repo": "rust",
+        "path": "crates/ice-cli/src/config.rs",
+        "total_lines": 1761,
+        "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+        "ranges": [
+          [
+            1,
+            1761
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "rust",
+        "path": "crates/ice-cli/src/provider.rs",
+        "total_lines": 3458,
+        "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+        "ranges": [
+          [
+            1,
+            3458
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "rust",
+        "path": "crates/ice-cli/src/provider/binding.rs",
+        "total_lines": 104,
+        "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+        "ranges": [
+          [
+            1,
+            104
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "rust",
+        "path": "crates/ice-cli/src/provider/factories.rs",
+        "total_lines": 623,
+        "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+        "ranges": [
+          [
+            1,
+            623
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/bedrock-provider.ts",
+        "total_lines": 7,
+        "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+        "ranges": [
+          [
+            1,
+            7
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/providers/amazon-bedrock.models.ts",
+        "total_lines": 9,
+        "sha256": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+        "ranges": [
+          [
+            1,
+            9
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/providers/google-vertex.models.ts",
+        "total_lines": 9,
+        "sha256": "964109cc69cadf77329846f4fb4baf6c86b00995f33a813230c5a9e54573e93e",
+        "ranges": [
+          [
+            1,
+            9
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/providers/google.models.ts",
+        "total_lines": 9,
+        "sha256": "cdb63f50fae431dc67c6627ae7a5b9580039b9807f014f838ebe568b11831d27",
+        "ranges": [
+          [
+            1,
+            9
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/providers/google.ts",
+        "total_lines": 16,
+        "sha256": "2d807d5f9273ede8c23970fe0414883ab362c677df80e4603d30b621232a2036",
+        "ranges": [
+          [
+            1,
+            16
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/providers/amazon-bedrock.ts",
+        "total_lines": 91,
+        "sha256": "e93502504dac28b4a44863111376f435bc765116b88fea3bca40740c4c10ad30",
+        "ranges": [
+          [
+            1,
+            91
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/src/providers/google-vertex.ts",
+        "total_lines": 101,
+        "sha256": "5e321e6d5b80824752ca96e7c9aba8a3fccce722a1793a40d5341a0406ef4878",
+        "ranges": [
+          [
+            1,
+            101
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/test/bedrock-credentials.test.ts",
+        "total_lines": 116,
+        "sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+        "ranges": [
+          [
+            1,
+            116
+          ]
+        ],
+        "fully_read": true
+      },
+      {
+        "repo": "ice",
+        "path": "packages/ai/test/bedrock-models.test.ts",
+        "total_lines": 71,
+        "sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+        "ranges": [
+          [
+            1,
+            71
+          ]
+        ],
+        "fully_read": true
+      }
+    ],
+    "notes": "These are explicitly attributed independent worker reads, not claimed as new direct reads by this worker. Frozen/current SHA metadata for reused Bedrock tests independently checked in this supplement."
+  },
+  "full_read_manifest": [
+    {
+      "path": "rust:crates/ice-ai/src/providers/mod.rs",
+      "sha256": "a8adc4d1d109ba95db09d41233691bcb6665e34bef3a08ae0ecb3f3a90dd4a32",
+      "total_lines": 47,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/src/provider.rs",
+      "sha256": "784a4fc1cc46d45b464c518e8e67a9dbc20b0c931e332074c2ce6c554669a2b6",
+      "total_lines": 392,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          392
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/src/lib.rs",
+      "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110",
+      "total_lines": 47,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+      "sha256": "3ee8a1b2a2cd58927bee18ab5b4150401da810e9d5f4595822b3b10ded35de86",
+      "total_lines": 31,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-generative-ai.lazy.ts",
+      "sha256": "ba7700f2e44838fb19da46f866f47f35f4e10f5068800be1ea698e9e95e1e1ce",
+      "total_lines": 5,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-vertex.lazy.ts",
+      "sha256": "891f0e07eaaa1bb1df97f0a2d8f067df6acbab50078242108d93b96a710c4712",
+      "total_lines": 5,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.lazy.ts",
+      "sha256": "74267bc430c0c2562d166e4ae9d05966634e91b226bc564010b2b199db52dd86",
+      "total_lines": 5,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "total_lines": 7,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/bedrock-provider.js",
+      "sha256": "8971c230fb2d216f2f94b590906a8a4e948bd72edae6ce131377daff5b4c4c3b",
+      "total_lines": 2,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/bedrock-provider.d.ts",
+      "sha256": "8971c230fb2d216f2f94b590906a8a4e948bd72edae6ce131377daff5b4c4c3b",
+      "total_lines": 2,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/bedrock-converse-stream.ts",
+      "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+      "total_lines": 1196,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          1196
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-convert-messages.test.ts",
+      "sha256": "c4d5b4509d5032985ef45d86768919591862c0b05c8b3c12e676cf56ca121409",
+      "total_lines": 275,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          275
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-custom-headers.test.ts",
+      "sha256": "5d18105b46f4bfb730dfa83c781fa1dd49e5aae67101458c3895c29f95620e59",
+      "total_lines": 203,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          203
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-endpoint-resolution.test.ts",
+      "sha256": "256644a52f42da4000520be9bb97f72bb996c2805650118e020d2d065d9c99aa",
+      "total_lines": 209,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          209
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-error-metadata.test.ts",
+      "sha256": "65619481f91cd1289fb20813342cf047c9583cb6552e0e15df176f5df5912552",
+      "total_lines": 213,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-raw-stop-reason.test.ts",
+      "sha256": "76eb85e0a94d50d91776a04bc976292db7d605b34a1f347df1abe6bed39d16f8",
+      "total_lines": 83,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-thinking-payload.test.ts",
+      "sha256": "fb2fa7cce248e6bbdd6f0f2e02542309bfa7ffad99d6ca90c76a4541d15e553b",
+      "total_lines": 267,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          267
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-utils.ts",
+      "sha256": "6c14c5ae40d9feb82da7ede426b6daac7cd69e841738378f930affa4d4544ead",
+      "total_lines": 19,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-shared.ts",
+      "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+      "total_lines": 415,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          415
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-generative-ai.ts",
+      "sha256": "8e6b6bbc1b34213e9c0d1f251352a94da9746cd3b948974df777e35ae1ef0798",
+      "total_lines": 536,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          536
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/google-vertex.ts",
+      "sha256": "f59e58d8c6c4301dd24810f98ac09b960587723de71ce154a6885e2bb4fe97b7",
+      "total_lines": 611,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          611
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-convert-tools.test.ts",
+      "sha256": "238bf9aa3985bcec2cd6463fe84026144e687779700f4ddbb19310bb538baa64",
+      "total_lines": 204,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          204
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-gemini3-unsigned-tool-call.test.ts",
+      "sha256": "755b941ad446a3373e623162f93be59c2d339cd069c5673f0ee5fbde4867f9f7",
+      "total_lines": 168,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-image-tool-result-routing.test.ts",
+      "sha256": "2a4d8af59d52f5420a505e0826514908655180661272375426c1344dacebf37d",
+      "total_lines": 103,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          103
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-retry.test.ts",
+      "sha256": "de24f8ea13e0a83f7913a2741902550f53bbbe5200dc9494af52c0a1fbb49a78",
+      "total_lines": 41,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-signature.test.ts",
+      "sha256": "81d47d5851bb3b9fa8cfc879df0a26747dd2ffd7c7093d22ce8bac74fb241dc1",
+      "total_lines": 39,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-raw-stop-reason.test.ts",
+      "sha256": "33f3469a72892c62fcabcefa1b0f9ecea28510005794f6aa66d028aa20239a88",
+      "total_lines": 107,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-signed-empty-blocks.test.ts",
+      "sha256": "3c9abb748f52d37d2e4674bc86ec0abf8ead48443a982592e03ce187cc6086e1",
+      "total_lines": 118,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-disable.test.ts",
+      "sha256": "dc899136ae7d5c367b846aa68fc693cbe20fe12a85dfd8b41ff97fb8e6f22b10",
+      "total_lines": 161,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          161
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-vertex-api-key-resolution.test.ts",
+      "sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+      "total_lines": 224,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          224
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/api/mistral-conversations.ts",
+      "sha256": "0c2fbfd65bb82a8561c74d20093bf1febda14a4912bc59e7b0d10ddbb0d2355a",
+      "total_lines": 690,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          690
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-raw-stop-reason.test.ts",
+      "sha256": "c77dc819018bd6fd2d5f4ea37aa0c8fc59584400e28cd26329c3f65ad2b65728",
+      "total_lines": 78,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-reasoning-mode.test.ts",
+      "sha256": "f48cc8f80be9329c536f56811830069741213f9d3f3be9b57012a72b0be87da1",
+      "total_lines": 99,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-tool-schema.test.ts",
+      "sha256": "9e913e9c49c2a9a2d1cfd4dc8d137a154e005b9291d06489e52136b92e5db24e",
+      "total_lines": 64,
+      "baseline": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/factories.rs",
+      "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "total_lines": 623,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          623
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/src/utils/hash.ts",
+      "sha256": "2cdfce4af41810d1a92c7f0a55c78637a3173041038aafd85b378be345761ed8",
+      "total_lines": 14,
+      "baseline": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "fully_read": true
+    }
+  ],
+  "qa": {
+    "schema_errors": [],
+    "entry_count": 13,
+    "validated_source_reference_count": 117,
+    "assigned_paths": 33,
+    "matching_test_helper_count": 21,
+    "matching_test_helper_lines": 2862,
+    "independent_fully_read_files": 36,
+    "auth_reused_tests": [
+      "ice:packages/ai/test/bedrock-credentials.test.ts",
+      "ice:packages/ai/test/bedrock-models.test.ts"
+    ],
+    "test_or_application_execution": false,
+    "read_many_batch_cap": "No source read_many call in this supplement requested over20 items; actual adapter/tests were read by read-only helper with META range accounting.",
+    "notes": "Complete assigned adapter/test filename closure, nine-field schema, reference bounds/actual-read coverage and internal dependency cycle checks performed in-memory against persisted evidence data. Root publication and global candidate/dependency reconciliation remain coordinator-owned.",
+    "passed": true
+  },
+  "source_to_entry_map": [
+    {
+      "paths": [
+        "packages/ai/src/api/bedrock-converse-stream.ts"
+      ],
+      "entry_ids": [
+        "AI-030",
+        "AI-031",
+        "AI-032",
+        "AI-033"
+      ]
+    },
+    {
+      "paths": [
+        "packages/ai/src/api/google-generative-ai.ts"
+      ],
+      "entry_ids": [
+        "AI-034",
+        "AI-036",
+        "AI-037",
+        "AI-038",
+        "AI-039"
+      ]
+    },
+    {
+      "paths": [
+        "packages/ai/src/api/google-vertex.ts"
+      ],
+      "entry_ids": [
+        "AI-035",
+        "AI-036",
+        "AI-037",
+        "AI-038",
+        "AI-039"
+      ]
+    },
+    {
+      "paths": [
+        "packages/ai/src/api/google-shared.ts"
+      ],
+      "entry_ids": [
+        "AI-034",
+        "AI-037",
+        "AI-038",
+        "AI-039"
+      ]
+    },
+    {
+      "paths": [
+        "packages/ai/src/api/mistral-conversations.ts",
+        "packages/ai/src/utils/hash.ts"
+      ],
+      "entry_ids": [
+        "AI-040",
+        "AI-041",
+        "AI-042"
+      ]
+    },
+    {
+      "paths": [
+        "packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+        "packages/ai/src/api/google-generative-ai.lazy.ts",
+        "packages/ai/src/api/google-vertex.lazy.ts",
+        "packages/ai/src/api/mistral-conversations.lazy.ts",
+        "packages/ai/src/bedrock-provider.ts",
+        "packages/ai/bedrock-provider.js",
+        "packages/ai/bedrock-provider.d.ts"
+      ],
+      "entry_ids": [
+        "AI-003",
+        "AI-030",
+        "AI-034",
+        "AI-035",
+        "AI-040"
+      ],
+      "notes": "Shared lazy behavior prerequisite remains AI-003; Bedrock override/compiled import detail inAI-030."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-10-20T03:04:46.746Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/utils/typebox-helpers.ts",
+      "sha256": "caf756258ce20c793dc8002cb8130a8efce18a7b5262ba0c54832b96f5a76e9f",
+      "emitted_ranges": [
+        [
+          13,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "StringEnum",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/typebox-helpers.ts:14",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/validation.ts",
+      "sha256": "5a008e4649f269794b8070ad7d035738d6ab6ac7ba91a4beda6a98eae0e81de2",
+      "emitted_ranges": [
+        [
+          269,
+          288
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "validateToolCall",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/validation.ts:270",
+          "covering_entries": [
+            "AI-012"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

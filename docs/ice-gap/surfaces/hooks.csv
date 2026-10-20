@@ -1,0 +1,183 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+onPayload,packages/ai/src/types.ts:139,,partial,AI-006
+onResponse,packages/ai/src/types.ts:143,,partial,AI-006
+cleanupSessionResources(sessionId?),packages/ai/src/session-resources.ts:12,,missing,AI-055
+registerSessionResourceCleanup(cleanup),packages/ai/src/session-resources.ts:5,,missing,AI-055
+AssistantMessageEvent.start,packages/ai/src/types.ts:531,crates/ice-ai/src/types.rs:894,partial,AI-019
+AssistantMessageEvent.text_start,packages/ai/src/types.ts:532,crates/ice-ai/src/types.rs:897,partial,AI-019
+AssistantMessageEvent.text_delta,packages/ai/src/types.ts:533,crates/ice-ai/src/types.rs:901,partial,AI-019
+AssistantMessageEvent.text_end,packages/ai/src/types.ts:534,crates/ice-ai/src/types.rs:906,partial,AI-019
+AssistantMessageEvent.thinking_start,packages/ai/src/types.ts:535,crates/ice-ai/src/types.rs:911,partial,AI-019
+AssistantMessageEvent.thinking_delta,packages/ai/src/types.ts:536,crates/ice-ai/src/types.rs:915,partial,AI-019
+AssistantMessageEvent.thinking_end,packages/ai/src/types.ts:537,crates/ice-ai/src/types.rs:920,partial,AI-019
+AssistantMessageEvent.toolcall_start,packages/ai/src/types.ts:538,crates/ice-ai/src/types.rs:925,partial,AI-019
+AssistantMessageEvent.toolcall_delta,packages/ai/src/types.ts:539,crates/ice-ai/src/types.rs:929,partial,AI-019
+AssistantMessageEvent.toolcall_end,packages/ai/src/types.ts:540,crates/ice-ai/src/types.rs:934,partial,AI-019
+AssistantMessageEvent.done,packages/ai/src/types.ts:541,crates/ice-ai/src/types.rs:939,partial,AI-019
+AssistantMessageEvent.error,packages/ai/src/types.ts:546,crates/ice-ai/src/types.rs:943,partial,AI-019
+AgentEvent.agent_start,packages/agent/src/types.ts:424,crates/ice-agent/src/events.rs:18,partial,AGENT-001
+AgentEvent.agent_end,packages/agent/src/types.ts:425,crates/ice-agent/src/events.rs:18,partial,AGENT-021
+AgentEvent.turn_start,packages/agent/src/types.ts:427,crates/ice-agent/src/events.rs:18,partial,AGENT-005
+AgentEvent.turn_end,packages/agent/src/types.ts:428,crates/ice-agent/src/events.rs:18,partial,AGENT-005
+AgentEvent.message_start,packages/agent/src/types.ts:430,crates/ice-agent/src/events.rs:18,partial,AGENT-001
+AgentEvent.message_update,packages/agent/src/types.ts:432,crates/ice-agent/src/events.rs:18,partial,AGENT-008
+AgentEvent.message_end,packages/agent/src/types.ts:433,crates/ice-agent/src/events.rs:18,partial,AGENT-001
+AgentEvent.tool_execution_start,packages/agent/src/types.ts:435,crates/ice-agent/src/events.rs:18,partial,AGENT-012
+AgentEvent.tool_execution_update,packages/agent/src/types.ts:436,crates/ice-agent/src/events.rs:18,partial,AGENT-014
+AgentEvent.tool_execution_end,packages/agent/src/types.ts:437,crates/ice-agent/src/events.rs:18,partial,AGENT-011
+AgentLoopConfig.transformContext,packages/agent/src/types.ts:195,crates/ice-agent/src/hooks.rs:162,partial,AGENT-006
+AgentLoopConfig.convertToLlm,packages/agent/src/types.ts:159,crates/ice-agent/src/hooks.rs:162,partial,AGENT-006
+AgentLoopConfig.getApiKey,packages/agent/src/types.ts:205,crates/ice-agent/src/hooks.rs:162,partial,AGENT-007
+AgentLoopConfig.beforeToolCall,packages/agent/src/types.ts:271,crates/ice-agent/src/hooks.rs:162,partial,AGENT-012
+AgentLoopConfig.afterToolCall,packages/agent/src/types.ts:286,crates/ice-agent/src/hooks.rs:162,partial,AGENT-015
+AgentLoopConfig.prepareNextTurn,packages/agent/src/types.ts:224,crates/ice-agent/src/hooks.rs:162,partial,AGENT-018
+AgentLoopConfig.shouldStopAfterTurn,packages/agent/src/types.ts:217,crates/ice-agent/src/hooks.rs:162,partial,AGENT-019
+AgentHarness.hooks.before_run (declared; no-op),packages/agent/src/harness/agent-harness.ts:198,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_resume (declared; no-op),packages/agent/src/harness/agent-harness.ts:199,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_run_end (declared; no-op),packages/agent/src/harness/agent-harness.ts:200,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.transform_context (declared; no-op),packages/agent/src/harness/agent-harness.ts:201,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_request (declared; no-op),packages/agent/src/harness/agent-harness.ts:202,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_payload (declared; no-op),packages/agent/src/harness/agent-harness.ts:203,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.after_response (declared; no-op),packages/agent/src/harness/agent-harness.ts:204,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_tool (declared; no-op),packages/agent/src/harness/agent-harness.ts:205,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.after_tool (declared; no-op),packages/agent/src/harness/agent-harness.ts:206,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_compaction (declared; no-op),packages/agent/src/harness/agent-harness.ts:207,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+AgentHarness.hooks.before_navigation (declared; no-op),packages/agent/src/harness/agent-harness.ts:208,crates/ice-harness/src/types.rs:1,different-by-design,AGENT-033
+BashSpawnHook,packages/coding-agent/src/core/tools/bash.ts:200,crates/ice-tools/src/tools/bash.rs:57,partial,TOOLS-002
+project_trust,packages/coding-agent/src/core/extensions/types.ts:574,crates/ice-plugin-sdk/src/lib.rs:590,missing,EXT-034
+resources_discover,packages/coding-agent/src/core/extensions/types.ts:599,crates/ice-extensions/src/resources.rs:1,partial,EXT-031
+session_start,packages/coding-agent/src/core/extensions/types.ts:617,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+session_info_changed,packages/coding-agent/src/core/extensions/types.ts:626,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+session_before_switch,packages/coding-agent/src/core/extensions/types.ts:633,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+session_before_fork,packages/coding-agent/src/core/extensions/types.ts:640,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+session_before_compact,packages/coding-agent/src/core/extensions/types.ts:647,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+session_compact,packages/coding-agent/src/core/extensions/types.ts:660,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+session_shutdown,packages/coding-agent/src/core/extensions/types.ts:671,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+session_before_tree,packages/coding-agent/src/core/extensions/types.ts:694,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+session_tree,packages/coding-agent/src/core/extensions/types.ts:701,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+context,packages/coding-agent/src/core/extensions/types.ts:725,crates/ice-extensions/src/provider_hooks.rs:98,partial,EXT-027
+before_provider_request,packages/coding-agent/src/core/extensions/types.ts:731,crates/ice-extensions/src/provider_hooks.rs:132,partial,EXT-028
+before_provider_headers,packages/coding-agent/src/core/extensions/types.ts:741,crates/ice-extensions/src/provider_hooks.rs:187,partial,EXT-029
+after_provider_response,packages/coding-agent/src/core/extensions/types.ts:747,crates/ice-extensions/src/provider_hooks.rs:198,partial,EXT-022
+before_agent_start,packages/coding-agent/src/core/extensions/types.ts:754,crates/ice-extensions/src/prompt_transform.rs:1,partial,EXT-030
+agent_start,packages/coding-agent/src/core/extensions/types.ts:767,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+agent_end,packages/coding-agent/src/core/extensions/types.ts:772,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+agent_settled,packages/coding-agent/src/core/extensions/types.ts:778,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+turn_start,packages/coding-agent/src/core/extensions/types.ts:783,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+turn_end,packages/coding-agent/src/core/extensions/types.ts:790,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+message_start,packages/coding-agent/src/core/extensions/types.ts:798,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+message_update,packages/coding-agent/src/core/extensions/types.ts:804,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+message_end,packages/coding-agent/src/core/extensions/types.ts:811,crates/ice-extensions/src/translate.rs:59,partial,EXT-023
+tool_execution_start,packages/coding-agent/src/core/extensions/types.ts:817,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+tool_execution_update,packages/coding-agent/src/core/extensions/types.ts:825,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+tool_execution_end,packages/coding-agent/src/core/extensions/types.ts:834,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+model_select,packages/coding-agent/src/core/extensions/types.ts:849,crates/ice-cli/src/extensions_actions.rs:534,partial,EXT-055
+thinking_level_select,packages/coding-agent/src/core/extensions/types.ts:857,crates/ice-cli/src/extensions_actions.rs:546,partial,EXT-055
+user_bash,packages/coding-agent/src/core/extensions/types.ts:868,crates/ice-extensions/src/translate.rs:342,partial,EXT-026
+input,packages/coding-agent/src/core/extensions/types.ts:886,crates/ice-extensions/src/translate.rs:342,partial,EXT-032
+tool_call,packages/coding-agent/src/core/extensions/types.ts:908,crates/ice-extensions/src/translate.rs:606,partial,EXT-024
+tool_result,packages/coding-agent/src/core/extensions/types.ts:969,crates/ice-extensions/src/translate.rs:1,partial,EXT-025
+press,packages/tui/src/keys.ts:505,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+repeat,packages/tui/src/keys.ts:505,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+release,packages/tui/src/keys.ts:505,crates/ice-tui/src/keys.rs:1,partial,TUI-206
+Darwin modifier-state native helper,packages/tui/native/darwin/src/darwin-modifiers.c:1,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+Win32 console-mode native helper,packages/tui/native/win32/src/win32-console-mode.c:1,crates/ice-tui/src/terminal.rs:16,partial,TUI-208
+session_start,packages/coding-agent/src/subagents/v2/extension.ts:466,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+before_agent_start,packages/coding-agent/src/subagents/v2/extension.ts:504,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+message_end,packages/coding-agent/src/subagents/v2/extension.ts:539,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+session_compact,packages/coding-agent/src/subagents/v2/extension.ts:542,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+agent_settled,packages/coding-agent/src/subagents/v2/extension.ts:549,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+session_shutdown,packages/coding-agent/src/subagents/v2/extension.ts:558,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+subagent.beforeLaunch,packages/coding-agent/src/subagents/settings.ts:84,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.started,packages/coding-agent/src/subagents/settings.ts:85,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.beforeTool,packages/coding-agent/src/subagents/settings.ts:86,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.afterTool,packages/coding-agent/src/subagents/settings.ts:87,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.checkpoint,packages/coding-agent/src/subagents/settings.ts:88,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.attention,packages/coding-agent/src/subagents/settings.ts:89,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.beforeAccept,packages/coding-agent/src/subagents/settings.ts:90,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.completed,packages/coding-agent/src/subagents/settings.ts:91,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.failed,packages/coding-agent/src/subagents/settings.ts:92,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+subagent.cancelled,packages/coding-agent/src/subagents/settings.ts:93,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+ice:subagent/subagent_start,packages/coding-agent/src/subagents/v2/events.ts:13,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_turn_start,packages/coding-agent/src/subagents/v2/events.ts:14,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_turn_end,packages/coding-agent/src/subagents/v2/events.ts:15,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_parked,packages/coding-agent/src/subagents/v2/events.ts:16,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_revived,packages/coding-agent/src/subagents/v2/events.ts:17,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_blocked,packages/coding-agent/src/subagents/v2/events.ts:18,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_interrupted,packages/coding-agent/src/subagents/v2/events.ts:19,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_end,packages/coding-agent/src/subagents/v2/events.ts:20,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_patch,packages/coding-agent/src/subagents/v2/events.ts:21,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_completion_queued,packages/coding-agent/src/subagents/v2/events.ts:22,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+ice:subagent/subagent_permission_request,packages/coding-agent/src/subagents/v2/events.ts:23,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+before_agent_start,packages/coding-agent/src/ice-safe-verify.ts:983,,missing,SAFE-008
+tool_call,packages/coding-agent/src/ice-safe-verify.ts:1626,,missing,SAFE-004
+tool_result,packages/coding-agent/src/ice-safe-verify.ts:1659,,missing,SAFE-017
+agent_start,packages/coding-agent/src/ice-safe-verify.ts:1726,,missing,SAFE-016
+agent_end,packages/coding-agent/src/ice-safe-verify.ts:1732,,missing,SAFE-016
+turn_end,packages/coding-agent/src/ice-safe-verify.ts:1736,,missing,SAFE-016
+agent_settled,packages/coding-agent/src/ice-safe-verify.ts:1744,,missing,SAFE-016
+context,packages/coding-agent/src/ice-safe-verify.ts:1773,,missing,SAFE-014
+session_compact,packages/coding-agent/src/ice-safe-verify.ts:1807,,missing,SAFE-013
+user_bash,packages/coding-agent/src/ice-safe-verify.ts:1813,,missing,SAFE-004
+session_start,packages/coding-agent/src/ice-safe-verify.ts:1880,,missing,SAFE-003
+session_tree,packages/coding-agent/src/ice-safe-verify.ts:1881,,missing,SAFE-003
+session_shutdown,packages/coding-agent/src/ice-safe-verify.ts:1882,,missing,SAFE-021
+resources_discover,packages/coding-agent/src/ice-cognee.ts:2038,,missing,COG-058
+session_start,packages/coding-agent/src/ice-cognee.ts:2043,,missing,COG-062
+before_agent_start,packages/coding-agent/src/ice-cognee.ts:2106,,missing,COG-046
+tool_result,packages/coding-agent/src/ice-cognee.ts:2194,,missing,COG-047
+agent_end,packages/coding-agent/src/ice-cognee.ts:2244,,missing,COG-048
+agent_settled,packages/coding-agent/src/ice-cognee.ts:2276,,missing,COG-049
+session_before_compact,packages/coding-agent/src/ice-cognee.ts:2376,,missing,COG-052
+session_compact,packages/coding-agent/src/ice-cognee.ts:2441,,missing,COG-053
+session_shutdown,packages/coding-agent/src/ice-cognee.ts:2506,,missing,COG-054
+session_before_compact,packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:25,,missing,BLACK-039
+context,packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts:75,,missing,BLACK-040
+agent_start,packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:49,,missing,BLACK-041
+session_compact,packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:54,,missing,BLACK-041
+turn_end,packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:58,,missing,BLACK-041
+session_start,packages/coding-agent/src/ice-provider-settings.ts:201,crates/ice-cli/src/interactive_tui/settings.rs:1854,missing,AUTH-028
+provider request attribution,packages/coding-agent/src/core/provider-attribution.ts:5,crates/ice-cli/src/provider.rs:190,partial,AUTH-023
+session_shutdown,packages/coding-agent/src/ice.ts:117,crates/ice-cli/src/app.rs:138,partial,CLI-002
+PackageManager progress.start,packages/coding-agent/src/core/package-manager.ts:877,,partial,CLI-023
+PackageManager progress.complete,packages/coding-agent/src/core/package-manager.ts:880,,partial,CLI-023
+PackageManager progress.error,packages/coding-agent/src/core/package-manager.ts:883,,partial,CLI-023
+ProgressEvent type=progress,packages/coding-agent/src/core/package-manager.ts:82,,partial,CLI-023
+MissingSourceAction,packages/coding-agent/src/core/package-manager.ts:79,,missing,CLI-033
+ProgressEvent action,packages/coding-agent/src/core/package-manager.ts:83,,partial,CLI-023
+session_shutdown: ClaudeSdkClient.close,packages/coding-agent/src/claude-sdk/extension.ts:33,,missing,MISC-037
+claude-sdk onPayload,packages/coding-agent/src/claude-sdk/adapter.ts:308,,missing,MISC-033
+claude-sdk onResponse,packages/coding-agent/src/claude-sdk/adapter.ts:339,,missing,MISC-033
+resolveModelSelection,packages/evals/src/ice-harness.ts:46,,missing,MISC-040
+createIceCodingAgentHarness,packages/evals/src/ice-harness.ts:246,,partial,MISC-041
+IceCodingAgentInput prompt/reload sequence,packages/evals/src/ice-harness.ts:28,,partial,MISC-041
+transformSystemPrompt,packages/evals/src/ice-harness.ts:39,,partial,MISC-041
+"output({response,session})",packages/evals/src/ice-harness.ts:43,,partial,MISC-041
+noTools (eval harness option),packages/evals/src/ice-harness.ts:38,,partial,MISC-041
+runId eval artifact,packages/evals/src/ice-harness.ts:142,,partial,MISC-041
+HarnessContext AbortSignal,packages/evals/src/ice-harness.ts:163,,partial,MISC-042
+snapshot/dispose/remove cleanup,packages/evals/src/ice-harness.ts:212,,partial,MISC-042
+normalized eval events and usage,packages/evals/src/ice-harness.ts:188,,partial,MISC-043
+strict Stop response contract,packages/evals/src/ice-harness.ts:99,crates/ice-harness/src/agent_harness.rs:3455,partial,MISC-043
+iceSessionJsonl,packages/evals/src/vitest-evals/artifacts.ts:13,,missing,MISC-044
+@zykairotis/ice-evals:session,packages/evals/src/vitest-evals/artifacts.ts:33,,missing,MISC-044
+@zykairotis/ice-evals:source,packages/evals/src/vitest-evals/artifacts.ts:39,,missing,MISC-044
+recordEvalSessionArtifact,packages/evals/src/vitest-evals/artifacts.ts:51,,missing,MISC-044
+recordEvalSourceArtifact,packages/evals/src/vitest-evals/artifacts.ts:75,,missing,MISC-044
+persistEvalArtifactReferences,packages/evals/src/vitest-evals/artifacts.ts:87,,missing,MISC-044
+eval afterEach task-artifact hook,packages/evals/src/vitest-evals/setup.ts:5,,missing,MISC-044
+evalHarnessTable,packages/evals/src/vitest-evals/harness-table.ts:157,,missing,MISC-045
+deriveEvalGroupKey,packages/evals/src/vitest-evals/harness-table.ts:110,,missing,MISC-045
+vitestEvalsHarnessIteration,packages/evals/src/vitest-evals/harness-table.ts:10,,missing,MISC-045
+parseEvalHarnessIterationArtifact,packages/evals/src/vitest-evals/harness-table.ts:46,,missing,MISC-045
+EvalHarnessReporter.onInit,packages/evals/src/vitest-evals/reporter.ts:92,,missing,MISC-046
+EvalHarnessReporter.onTestCaseResult,packages/evals/src/vitest-evals/reporter.ts:96,,missing,MISC-046
+EvalHarnessReporter.onTestRunEnd,packages/evals/src/vitest-evals/reporter.ts:100,,missing,MISC-046
+test.meta().eval.avgScore,packages/evals/src/vitest-evals/reporter.ts:62,,missing,MISC-046
+HarnessObservation,packages/evals/src/vitest-evals/summary.ts:19,,missing,MISC-047
+HarnessComparisonReport schemaVersion1,packages/evals/src/vitest-evals/summary.ts:65,,missing,MISC-047
+summarizeHarnessComparisons,packages/evals/src/vitest-evals/summary.ts:300,,missing,MISC-047
+formatHarnessComparisonReport,packages/evals/src/vitest-evals/summary.ts:374,,missing,MISC-047
+ExtensionAuthoringJudge,packages/evals/src/extensions.eval.ts:53,,missing,MISC-048
+system-prompt-without-docs / default-system-prompt,packages/evals/src/extensions.eval.ts:100,,missing,MISC-048
+Ice Coding Agent smoke,packages/evals/src/smoke.eval.ts:7,,missing,MISC-048

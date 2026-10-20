@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+const auditRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const [name,offsetText='0',lengthText='24000']=process.argv.slice(2);
+if(!name||!/^[-a-zA-Z0-9_.]+\.json$/.test(name))throw new Error('Expected an audit evidence JSON basename');
+const offset=Number(offsetText),length=Number(lengthText);
+if(!Number.isInteger(offset)||offset<0||!Number.isInteger(length)||length<1||length>40000)throw new Error('Invalid bounded slice');
+const file=path.join(auditRoot,'evidence',name);
+const raw=fs.readFileSync(file,'utf8');
+const compact=JSON.stringify(JSON.parse(raw));
+process.stdout.write(JSON.stringify({name,sha256:crypto.createHash('sha256').update(raw).digest('hex'),fileBytes:Buffer.byteLength(raw),totalChars:compact.length,offset,text:compact.slice(offset,offset+length)}));

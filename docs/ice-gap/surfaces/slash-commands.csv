@@ -1,0 +1,68 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+/changelog,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7842,crates/ice-cli/src/interactive_tui/run.rs:1,partial,TUI-072
+/reload,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7445,crates/ice-cli/src/interactive_tui.rs:1499,partial,TUI-075
+/share,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7630,crates/ice-cli/src/interactive_tui/sessions.rs:8,partial,TUI-078
+/copy,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7724,crates/ice-cli/src/interactive_tui.rs:2425,partial,TUI-080
+/export,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7541,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/import,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7586,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/clone,packages/coding-agent/src/modes/interactive/interactive-mode.ts:6691,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/new,packages/coding-agent/src/modes/interactive/interactive-mode.ts:8062,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/name,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7743,crates/ice-cli/src/interactive_tui/commands.rs:634,partial,TUI-082
+/session,packages/coding-agent/src/modes/interactive/interactive-mode.ts:7767,crates/ice-cli/src/interactive_tui/commands.rs:634,partial,TUI-082
+/fast,packages/coding-agent/src/modes/interactive/interactive-mode.ts:6666,crates/ice-cli/src/interactive_tui/commands.rs:799,missing,TUI-083
+/debug,packages/coding-agent/src/modes/interactive/interactive-mode.ts:8077,crates/ice-cli/src/interactive_tui/commands.rs:799,missing,TUI-084
+/agents,packages/coding-agent/src/subagents/v2/extension.ts:996,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+/agents new <name> [--project],packages/coding-agent/src/subagents/v2/extension.ts:1007,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+/agents list,packages/coding-agent/src/subagents/v2/extension.ts:1002,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+/plan,packages/coding-agent/src/ice-safe-verify.ts:1530,,missing,SAFE-006
+/build,packages/coding-agent/src/ice-safe-verify.ts:1549,,missing,SAFE-006
+/ice-plan-review,packages/coding-agent/src/ice-safe-verify.ts:1564,,missing,SAFE-006
+/ice-verify,packages/coding-agent/src/ice-safe-verify.ts:1584,,missing,SAFE-021
+/ice-status,packages/coding-agent/src/ice-safe-verify.ts:1590,,missing,SAFE-026
+/cognee,packages/coding-agent/src/ice-cognee.ts:1825,,missing,COG-056
+/cognee status,packages/coding-agent/src/ice-cognee.ts:1841,,missing,COG-067
+/cognee doctor,packages/coding-agent/src/ice-cognee.ts:1851,,missing,COG-067
+/cognee watch,packages/coding-agent/src/ice-cognee.ts:1831,,missing,COG-067
+/cognee compact auto|defer|own,packages/coding-agent/src/ice-cognee.ts:1877,,missing,COG-066
+/cognee on|off,packages/coding-agent/src/ice-cognee.ts:1886,,missing,COG-066
+/cognee recall on|off,packages/coding-agent/src/ice-cognee.ts:1890,,missing,COG-066
+/cognee capture on|off,packages/coding-agent/src/ice-cognee.ts:1894,,missing,COG-066
+/cognee tools on|off,packages/coding-agent/src/ice-cognee.ts:1899,,missing,COG-066
+/cognee improve on|off,packages/coding-agent/src/ice-cognee.ts:1904,,missing,COG-066
+/cognee improve [now],packages/coding-agent/src/ice-cognee.ts:1909,,missing,COG-065
+/cognee remember on|off,packages/coding-agent/src/ice-cognee.ts:1930,,missing,COG-066
+/cognee search <query>,packages/coding-agent/src/ice-cognee.ts:1934,,missing,COG-063
+/cognee remember [node_set] <text>,packages/coding-agent/src/ice-cognee.ts:1938,,missing,COG-064
+/cognee flush [pending|uncertain],packages/coding-agent/src/ice-cognee.ts:1945,,missing,COG-068
+/blackhole,packages/coding-agent/examples/extensions/ice-blackhole/index.ts:109,,missing,BLACK-006
+/claude-sdk-status,packages/coding-agent/src/claude-sdk/extension.ts:27,,missing,MISC-031
+/llama,packages/coding-agent/src/extensions/llama/index.ts:181,crates/ice-cli/src/model_registry.rs:113,missing,MISC-024
+/fast,packages/coding-agent/src/core/slash-commands.ts:20,crates/ice-cli/src/interactive_tui/commands.rs:799,missing,TUI-083
+/settings,packages/coding-agent/src/core/slash-commands.ts:21,crates/ice-cli/src/interactive_tui/settings.rs:51,partial,TUI-025
+/customize,packages/coding-agent/src/core/slash-commands.ts:22,crates/ice-cli/src/interactive_tui/commands.rs:311,missing,TUI-016
+/model,packages/coding-agent/src/core/slash-commands.ts:23,crates/ice-cli/src/interactive_tui/settings.rs:530,partial,TUI-044
+/scoped-models,packages/coding-agent/src/core/slash-commands.ts:24,crates/ice-cli/src/interactive_tui/settings.rs:1858,partial,TUI-045
+/export,packages/coding-agent/src/core/slash-commands.ts:25,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/import,packages/coding-agent/src/core/slash-commands.ts:26,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/share,packages/coding-agent/src/core/slash-commands.ts:27,crates/ice-cli/src/interactive_tui/sessions.rs:8,partial,TUI-078
+/copy,packages/coding-agent/src/core/slash-commands.ts:28,crates/ice-cli/src/interactive_tui.rs:2425,partial,TUI-080
+/name,packages/coding-agent/src/core/slash-commands.ts:29,crates/ice-cli/src/interactive_tui/commands.rs:634,partial,TUI-082
+/session,packages/coding-agent/src/core/slash-commands.ts:30,crates/ice-cli/src/interactive_tui/commands.rs:634,partial,TUI-082
+/context,packages/coding-agent/src/core/slash-commands.ts:31,crates/ice-cli/src/interactive_tui/commands.rs:738,partial,TUI-058
+/changelog,packages/coding-agent/src/core/slash-commands.ts:32,crates/ice-cli/src/interactive_tui/run.rs:1,partial,TUI-072
+/hotkeys,packages/coding-agent/src/core/slash-commands.ts:33,crates/ice-cli/src/interactive_tui/commands.rs:104,partial,TUI-051
+/notices,packages/coding-agent/src/core/slash-commands.ts:35,crates/ice-cli/src/interactive_tui/rendering.rs:416,missing,TUI-053
+/tasks,packages/coding-agent/src/core/slash-commands.ts:39,crates/ice-cli/src/interactive_tui.rs:559,missing,TUI-055
+/shells,packages/coding-agent/src/core/slash-commands.ts:42,crates/ice-cli/src/interactive_tui.rs:559,missing,TUI-055
+/resources,packages/coding-agent/src/core/slash-commands.ts:43,crates/ice-cli/src/interactive_tui/settings.rs:59,missing,TUI-068
+/fork,packages/coding-agent/src/core/slash-commands.ts:44,crates/ice-cli/src/interactive_tui/sessions.rs:198,partial,TUI-061
+/clone,packages/coding-agent/src/core/slash-commands.ts:45,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/tree,packages/coding-agent/src/core/slash-commands.ts:46,crates/ice-cli/src/interactive_tui/selectors.rs:420,partial,TUI-067
+/trust,packages/coding-agent/src/core/slash-commands.ts:47,crates/ice-cli/src/interactive_tui/commands.rs:590,partial,TUI-059
+/login,packages/coding-agent/src/core/slash-commands.ts:48,crates/ice-cli/src/interactive_tui/settings.rs:698,partial,TUI-046
+/logout,packages/coding-agent/src/core/slash-commands.ts:49,crates/ice-cli/src/interactive_tui/settings.rs:698,partial,TUI-046
+/new,packages/coding-agent/src/core/slash-commands.ts:50,crates/ice-cli/src/interactive_tui/commands.rs:384,partial,TUI-081
+/compact,packages/coding-agent/src/core/slash-commands.ts:51,crates/ice-harness/src/agent_harness.rs:2239,partial,SESSION-016
+/resume,packages/coding-agent/src/core/slash-commands.ts:52,crates/ice-cli/src/interactive_tui/selectors.rs:265,partial,TUI-064
+/reload,packages/coding-agent/src/core/slash-commands.ts:53,crates/ice-cli/src/interactive_tui.rs:1499,partial,TUI-075
+/quit,packages/coding-agent/src/core/slash-commands.ts:54,crates/ice-cli/src/interactive_tui.rs:2077,partial,TUI-076

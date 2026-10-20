@@ -1,0 +1,1195 @@
+{
+  "schema_version": 1,
+  "source": "qa-semantic-dependency-suggestions.json",
+  "source_sha256": "b2bc5ad3b02546d65aa9efbefa2d952e87f3cdfe183156f871a2245cbcd31761",
+  "resolutions": [
+    {
+      "review_id": "DEPQA-001",
+      "area": "safe-verify",
+      "request_index": 0,
+      "entry_id": "SAFE-001",
+      "original_request": {
+        "entry_id": "SAFE-001",
+        "area": "extensions",
+        "capability": "mandatory hidden before-user extension factories unaffected by --no-extensions"
+      },
+      "original_dependencies": [
+        "SAFE-003",
+        "SAFE-004",
+        "SAFE-019",
+        "SAFE-025"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-057",
+        "SET-021"
+      ],
+      "related_entry_ids": [
+        "CLI-002"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The guard needs ordered hidden inline factories and the resource-loader rule that --no-extensions does not remove supplied inline factories. CLI-002 is the launcher consuming this policy, not a prerequisite of the guard service."
+    },
+    {
+      "review_id": "DEPQA-002",
+      "area": "safe-verify",
+      "request_index": 1,
+      "entry_id": "SAFE-003",
+      "original_request": {
+        "entry_id": "SAFE-003",
+        "area": "session",
+        "capability": "branch custom-entry persistence and ordered append"
+      },
+      "original_dependencies": [
+        "SAFE-002",
+        "SAFE-019"
+      ],
+      "add_prerequisite_ids": [
+        "SESSION-034",
+        "SESSION-031",
+        "EXT-053"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Branch reads must expose custom entries in the selected root-to-leaf branch, while append/flush preserves ordered custom state. SAFE uses ordinary appendEntry here; do not silently promise durable=true/fsync on every guard state write."
+    },
+    {
+      "review_id": "DEPQA-003",
+      "area": "safe-verify",
+      "request_index": 2,
+      "entry_id": "SAFE-004",
+      "original_request": {
+        "entry_id": "SAFE-004",
+        "area": "extensions",
+        "capability": "tool metadata access/origin and dispatch-time blocking hooks"
+      },
+      "original_dependencies": [
+        "SAFE-001",
+        "SAFE-003",
+        "SAFE-005",
+        "SAFE-013"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-035",
+        "EXT-024",
+        "EXT-054",
+        "EXT-026"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Tool access/sourceInfo metadata, active selection, dispatch-time blocking and the separate user_bash replacement seam are real host prerequisites. Metadata is not authority; the guard owns the mode/trust decisions."
+    },
+    {
+      "review_id": "DEPQA-004",
+      "area": "safe-verify",
+      "request_index": 3,
+      "entry_id": "SAFE-012",
+      "original_request": {
+        "entry_id": "SAFE-012",
+        "area": "agent",
+        "capability": "stopAfterTurn and agent_settled boundary"
+      },
+      "original_dependencies": [
+        "SAFE-003",
+        "SAFE-006",
+        "SAFE-007",
+        "SAFE-008",
+        "SAFE-013",
+        "SAFE-014",
+        "SAFE-015"
+      ],
+      "add_prerequisite_ids": [
+        "AGENT-019",
+        "SESSION-022",
+        "EXT-019"
+      ],
+      "related_entry_ids": [
+        "SESSION-035"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The core stop-after-turn gate precedes queue consumption; the session publishes agent_settled only after its post-run work. EXT-019 exposes the control, while SESSION-035 binds it. agent_end alone is insufficient."
+    },
+    {
+      "review_id": "DEPQA-005",
+      "area": "safe-verify",
+      "request_index": 4,
+      "entry_id": "SAFE-015",
+      "original_request": {
+        "entry_id": "SAFE-015",
+        "area": "session",
+        "capability": "extension compaction callback completion and failure"
+      },
+      "original_dependencies": [
+        "SAFE-006",
+        "SAFE-008",
+        "SAFE-012",
+        "SAFE-013",
+        "SAFE-014"
+      ],
+      "add_prerequisite_ids": [
+        "SESSION-016",
+        "SESSION-035"
+      ],
+      "related_entry_ids": [
+        "EXT-019"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "SESSION-016 owns actual manual compaction settlement; SESSION-035 specifically binds ctx.compact to asynchronous onComplete/onError callbacks. The approved-plan callback dispatch and error fallback remain SAFE-owned."
+    },
+    {
+      "review_id": "DEPQA-006",
+      "area": "safe-verify",
+      "request_index": 5,
+      "entry_id": "SAFE-018",
+      "original_request": {
+        "entry_id": "SAFE-018",
+        "area": "subagents",
+        "capability": "agent_patch apply receipt and verifier transaction"
+      },
+      "original_dependencies": [
+        "SAFE-003",
+        "SAFE-013",
+        "SAFE-017",
+        "SAFE-021"
+      ],
+      "add_prerequisite_ids": [
+        "SUB-032"
+      ],
+      "related_entry_ids": [
+        "SUB-031"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The parent imports the typed applied/rollback-conflict/verification receipt from child patch integration. This is a receipt/transaction prerequisite, not permission to trust human-readable child output. SAFE-018 separately decides mutation and checked-generation accounting."
+    },
+    {
+      "review_id": "DEPQA-007",
+      "area": "safe-verify",
+      "request_index": 6,
+      "entry_id": "SAFE-025",
+      "original_request": {
+        "entry_id": "SAFE-025",
+        "area": "subagents",
+        "capability": "parent capability snapshot caps child admission"
+      },
+      "original_dependencies": [
+        "SAFE-003",
+        "SAFE-004"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SUB-007",
+        "SUB-014",
+        "SUB-019",
+        "SUB-035"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "SAFE publishes the frozen parent snapshot. Child ceiling composition, adapter filtering, live revalidation and extension binding consume it. Reversing that direction would make the authority producer depend on its consumers."
+    },
+    {
+      "review_id": "DEPQA-008",
+      "area": "cognee",
+      "request_index": 0,
+      "entry_id": "COG-001",
+      "original_request": {
+        "entry_id": "COG-001",
+        "area": "settings",
+        "capability": "canonical agent directory and no-op legacy environment normalization"
+      },
+      "original_dependencies": [
+        "COG-002",
+        "COG-004",
+        "COG-006"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SET-001",
+        "CLI-018"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The pure configuration resolver already specifies the shallow-copy environment normalizer. Canonical agent-directory lookup is performed by connection/storage callers, not by resolveIceCogneeConfig itself. Keep these exact identity helpers as shared references; do not require the whole settings subsystem to implement the pure validator."
+    },
+    {
+      "review_id": "DEPQA-009",
+      "area": "cognee",
+      "request_index": 1,
+      "entry_id": "COG-003",
+      "original_request": {
+        "entry_id": "COG-003",
+        "area": "settings",
+        "capability": "credential directory location and source-safe diagnostic handling"
+      },
+      "original_dependencies": [
+        "COG-001",
+        "COG-002",
+        "COG-006"
+      ],
+      "add_prerequisite_ids": [
+        "SET-001"
+      ],
+      "related_entry_ids": [
+        "CLI-018"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Connection lookup calls canonical getAgentDir and the exact ice-cognee path helper. keySource labels and omission of secret text are already COG-003 behavior; they do not require provider OAuth or an observability database."
+    },
+    {
+      "review_id": "DEPQA-010",
+      "area": "cognee",
+      "request_index": 2,
+      "entry_id": "COG-007",
+      "original_request": {
+        "entry_id": "COG-007",
+        "area": "misc",
+        "capability": "shared credential redaction regexes and UTF-16 compatibility"
+      },
+      "original_dependencies": [
+        "COG-001"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "OBS-012"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "Both entries use utils/redact.ts. COG-007 already includes the exact credential-text regexes and UTF-16 cap; OBS-012 adds store-specific key redaction and SQLite retention. Treat OBS-012 as the shared-helper owner/reference, not a prerequisite to initialize SQLite before formatting Cognee memory."
+    },
+    {
+      "review_id": "DEPQA-011",
+      "area": "cognee",
+      "request_index": 3,
+      "entry_id": "COG-043",
+      "original_request": {
+        "entry_id": "COG-043",
+        "area": "extensions",
+        "capability": "hidden before-user extension initialization, session identity and lifecycle delivery"
+      },
+      "original_dependencies": [
+        "COG-001",
+        "COG-003",
+        "COG-004",
+        "COG-009"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-057",
+        "EXT-019",
+        "EXT-022"
+      ],
+      "related_entry_ids": [
+        "SESSION-035"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The supplied factory requires inline ordering, live guarded session identity/context and awaited lifecycle dispatch. The session binding/reload consumer is SESSION-035. Loading and background-drain state remain COG-owned."
+    },
+    {
+      "review_id": "DEPQA-012",
+      "area": "cognee",
+      "request_index": 4,
+      "entry_id": "COG-044",
+      "original_request": {
+        "entry_id": "COG-044",
+        "area": "extensions",
+        "capability": "tool-result argument/result payload and session-safe lifecycle contexts"
+      },
+      "original_dependencies": [
+        "COG-016",
+        "COG-036",
+        "COG-038",
+        "COG-043",
+        "COG-059"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "COG-047",
+        "EXT-025",
+        "EXT-019"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The requested tool-result event belongs at COG-047, whose handler constructs the payload consumed by COG-044.storeEntry. storeEntry itself consumes an ordinary record and can also be called for QA captures. Relocate the tool-result/context prerequisites to COG-047; do not force a result-hook dependency onto the generic sender.",
+      "relocate_prerequisites": {
+        "entry_id": "COG-047",
+        "add_prerequisite_ids": [
+          "EXT-025",
+          "EXT-019"
+        ],
+        "reason": "tool_result is consumed by COG-047; its asynchronous record sender is COG-044."
+      }
+    },
+    {
+      "review_id": "DEPQA-013",
+      "area": "cognee",
+      "request_index": 5,
+      "entry_id": "COG-046",
+      "original_request": {
+        "entry_id": "COG-046",
+        "area": "extensions",
+        "capability": "before_agent_start system-prompt replacement and cancellation"
+      },
+      "original_dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-008",
+        "COG-014",
+        "COG-031",
+        "COG-043",
+        "COG-059",
+        "COG-061"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-030",
+        "EXT-019"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The before_agent_start reducer supplies the chained transient system prompt and the live signal. Cognee owns passing that signal into recall. The host does not guarantee cancellation races, timeout, or a late-result session fence beyond the stated source behavior."
+    },
+    {
+      "review_id": "DEPQA-014",
+      "area": "cognee",
+      "request_index": 6,
+      "entry_id": "COG-051",
+      "original_request": {
+        "entry_id": "COG-051",
+        "area": "session",
+        "capability": "compaction preparation/reason/signal and host session identity"
+      },
+      "original_dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-014",
+        "COG-031",
+        "COG-042",
+        "BLACK-037"
+      ],
+      "add_prerequisite_ids": [
+        "SESSION-013",
+        "SESSION-016",
+        "SESSION-017",
+        "EXT-019"
+      ],
+      "related_entry_ids": [
+        "BLACK-037"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The producer needs actual compaction preparation, manual/automatic reason and signal, and current host session identity. BLACK-037 consumes the optional file; it is not required to create the producer or to perform ordinary Cognee recall."
+    },
+    {
+      "review_id": "DEPQA-015",
+      "area": "cognee",
+      "request_index": 7,
+      "entry_id": "COG-052",
+      "original_request": {
+        "entry_id": "COG-052",
+        "area": "extensions",
+        "capability": "session_before_compact override protocol"
+      },
+      "original_dependencies": [
+        "COG-007",
+        "COG-008",
+        "COG-043",
+        "COG-051"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-022"
+      ],
+      "related_entry_ids": [
+        "SESSION-016",
+        "SESSION-017"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The generic session_before_compact reducer owns ordered whole-result replacement and cancel handling. Session owners apply/save the result; COG-052's deterministic own-summary compiler does not append its own checkpoint."
+    },
+    {
+      "review_id": "DEPQA-016",
+      "area": "cognee",
+      "request_index": 8,
+      "entry_id": "COG-053",
+      "original_request": {
+        "entry_id": "COG-053",
+        "area": "session",
+        "capability": "post-compaction event details and ordered custom-entry persistence"
+      },
+      "original_dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-032",
+        "COG-033",
+        "COG-035",
+        "COG-044"
+      ],
+      "add_prerequisite_ids": [
+        "SESSION-016",
+        "SESSION-017",
+        "SESSION-031",
+        "EXT-053"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Manual and automatic session_compact events follow the committed checkpoint and expose entry/details/fromExtension. Cognee then appends its separate queue-state custom entry through EXT-053 using session persistence. Do not create or persist a second compaction entry."
+    },
+    {
+      "review_id": "DEPQA-017",
+      "area": "cognee",
+      "request_index": 9,
+      "entry_id": "COG-055",
+      "original_request": {
+        "entry_id": "COG-055",
+        "area": "extensions",
+        "capability": "tool registration with schema/cancellation/details and active-tool state"
+      },
+      "original_dependencies": [
+        "COG-007",
+        "COG-014",
+        "COG-031",
+        "COG-043"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-011",
+        "EXT-012",
+        "EXT-054"
+      ],
+      "related_entry_ids": [
+        "AI-012"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Registration, fresh-context execution with signal/details, and active-tool mutation are required. The shared execution validator remains AI-012; provider sampling or successful registration does not validate an invocation."
+    },
+    {
+      "review_id": "DEPQA-018",
+      "area": "cognee",
+      "request_index": 10,
+      "entry_id": "COG-057",
+      "original_request": {
+        "entry_id": "COG-057",
+        "area": "extensions",
+        "capability": "namespaced settings descriptors and change callbacks"
+      },
+      "original_dependencies": [
+        "COG-001",
+        "COG-006",
+        "COG-043",
+        "COG-055"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-016"
+      ],
+      "related_entry_ids": [
+        "TUI-025"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The named settings descriptor/onChange host API is EXT-016. TUI-025 displays and dispatches those descriptors. Cognee owns its separate JSON persistence and its nonawaited save behavior; these are not core settings.json keys."
+    },
+    {
+      "review_id": "DEPQA-019",
+      "area": "cognee",
+      "request_index": 11,
+      "entry_id": "COG-058",
+      "original_request": {
+        "entry_id": "COG-058",
+        "area": "settings",
+        "capability": "bundled skill discovery through the resource loader"
+      },
+      "original_dependencies": [
+        "COG-055",
+        "COG-056"
+      ],
+      "add_prerequisite_ids": [
+        "SET-001",
+        "SET-021",
+        "SET-030",
+        "EXT-031"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Bundled path derivation, resource reload/admission, skill discovery and attributed resources_discover results are actual integration prerequisites. Cognee advertises the directory even while disabled; the resource loader owns use and trust of the returned Markdown."
+    },
+    {
+      "review_id": "DEPQA-020",
+      "area": "cognee",
+      "request_index": 12,
+      "entry_id": "COG-059",
+      "original_request": {
+        "entry_id": "COG-059",
+        "area": "observability",
+        "capability": "live Cognee observation projection into the run recorder"
+      },
+      "original_dependencies": [
+        "COG-007",
+        "COG-043"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "OBS-008"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "Cognee emits observations before its own serialized file append. OBS-008 subscribes and projects them; it already depends on COG-059. The producer must not acquire a reverse dependency on the recorder."
+    },
+    {
+      "review_id": "DEPQA-021",
+      "area": "cognee",
+      "request_index": 13,
+      "entry_id": "COG-061",
+      "original_request": {
+        "entry_id": "COG-061",
+        "area": "tui",
+        "capability": "status slots and safe lifecycle of retired UI contexts"
+      },
+      "original_dependencies": [
+        "COG-043",
+        "COG-045"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-042",
+        "EXT-010"
+      ],
+      "related_entry_ids": [
+        "TUI-037"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The required public capability is keyed setStatus plus stale-context invalidation. TUI-037 owns the footer map/display consumer; it is not a prerequisite for headless or RPC-capable Cognee execution. Cognee owns its 180 ms timer and stale-access catch."
+    },
+    {
+      "review_id": "DEPQA-022",
+      "area": "blackhole",
+      "request_index": 0,
+      "entry_id": "BLACK-005",
+      "original_request": {
+        "entry_id": "BLACK-005",
+        "area": "extensions",
+        "capability": "namespaced registerSettings descriptors/change callbacks"
+      },
+      "original_dependencies": [
+        "BLACK-002",
+        "BLACK-004"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-016"
+      ],
+      "related_entry_ids": [
+        "TUI-025"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Blackhole registers ordered named settings and callbacks through EXT-016. TUI-025 is the presentation consumer. Blackhole retains responsibility for file values and writes."
+    },
+    {
+      "review_id": "DEPQA-023",
+      "area": "blackhole",
+      "request_index": 1,
+      "entry_id": "BLACK-026",
+      "original_request": {
+        "entry_id": "BLACK-026",
+        "area": "tui",
+        "capability": "wrapTextWithAnsi display-width and continuation behavior"
+      },
+      "original_dependencies": [
+        "BLACK-016",
+        "BLACK-018",
+        "BLACK-019",
+        "BLACK-020",
+        "BLACK-021",
+        "BLACK-022",
+        "BLACK-023",
+        "BLACK-024",
+        "BLACK-025"
+      ],
+      "add_prerequisite_ids": [
+        "TUI-202"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The pure compiler calls wrapTextWithAnsi and requires its display-width, word/grapheme and ANSI continuation semantics. TUI-202 depends on the underlying width primitive TUI-201; no interactive controller is required."
+    },
+    {
+      "review_id": "DEPQA-024",
+      "area": "blackhole",
+      "request_index": 2,
+      "entry_id": "BLACK-031",
+      "original_request": {
+        "entry_id": "BLACK-031",
+        "area": "session",
+        "capability": "compaction cut-ID/retained-tail override and durable context projection"
+      },
+      "original_dependencies": [
+        "BLACK-002",
+        "BLACK-007"
+      ],
+      "add_prerequisite_ids": [
+        "SESSION-013",
+        "SESSION-034"
+      ],
+      "related_entry_ids": [
+        "SESSION-029"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The cut-ID/retained-context contract and branch entry projection are prerequisites. An absent sentinel intentionally drops the old context tail while preserving durable history. Native retained_tail is an explicit adapter choice, not evidence of byte-compatible v3 storage."
+    },
+    {
+      "review_id": "DEPQA-025",
+      "area": "blackhole",
+      "request_index": 3,
+      "entry_id": "BLACK-034",
+      "original_request": {
+        "entry_id": "BLACK-034",
+        "area": "subagents",
+        "capability": "ice-subagent-v2-child durable records and artifact schemas"
+      },
+      "original_dependencies": [],
+      "add_prerequisite_ids": [
+        "SUB-016"
+      ],
+      "related_entry_ids": [
+        "SUB-028"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The formatter needs the durable ice-subagent-v2-child record schema and latest-state/tombstone interpretation from SUB-016. Artifact identifiers are references described by SUB-028; formatting does not require the artifact store to read files, launch children or validate live ownership."
+    },
+    {
+      "review_id": "DEPQA-026",
+      "area": "blackhole",
+      "request_index": 4,
+      "entry_id": "BLACK-035",
+      "original_request": {
+        "entry_id": "BLACK-035",
+        "area": "tools",
+        "capability": "background Bash IDs, polling result shapes, completion custom messages"
+      },
+      "original_dependencies": [],
+      "add_prerequisite_ids": [
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008",
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The consumer reconstructs state from producer task IDs, polling/status details, kill results and completion custom-message fields. It must preserve the restart warning: these branch records do not establish surviving processes or a persisted registry."
+    },
+    {
+      "review_id": "DEPQA-027",
+      "area": "blackhole",
+      "request_index": 5,
+      "entry_id": "BLACK-037",
+      "original_request": {
+        "entry_id": "BLACK-037",
+        "area": "cognee",
+        "capability": "session-scoped compaction-recall.json producer"
+      },
+      "original_dependencies": [
+        "BLACK-030",
+        "BLACK-039"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "COG-051"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "This optional file consumer can operate on its explicit documented JSON contract without requiring Cognee to be installed. Link COG-051 as the producer/shared handoff contract; do not add a hard reverse edge to an already mutually referenced optional integration."
+    },
+    {
+      "review_id": "DEPQA-028",
+      "area": "blackhole",
+      "request_index": 6,
+      "entry_id": "BLACK-038",
+      "original_request": {
+        "entry_id": "BLACK-038",
+        "area": "ai",
+        "capability": "complete/model registry/cancellation/no-cache session isolation"
+      },
+      "original_dependencies": [
+        "BLACK-002",
+        "BLACK-027",
+        "BLACK-030",
+        "BLACK-039"
+      ],
+      "add_prerequisite_ids": [
+        "AI-002",
+        "AI-003",
+        "AI-006"
+      ],
+      "related_entry_ids": [
+        "AI-024"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Model lookup and shared complete dispatch/options supply signal, fresh sessionId and cacheRetention=none. Per-provider cache-marker behavior is separate; a caller option is not a guarantee of external cache isolation. Deterministic fallback remains Blackhole-owned."
+    },
+    {
+      "review_id": "DEPQA-029",
+      "area": "blackhole",
+      "request_index": 7,
+      "entry_id": "BLACK-039",
+      "original_request": {
+        "entry_id": "BLACK-039",
+        "area": "extensions",
+        "capability": "session_before_compact preparation and override result"
+      },
+      "original_dependencies": [
+        "BLACK-001",
+        "BLACK-002",
+        "BLACK-018",
+        "BLACK-026",
+        "BLACK-027",
+        "BLACK-031",
+        "BLACK-032",
+        "BLACK-033",
+        "BLACK-034",
+        "BLACK-035",
+        "BLACK-036",
+        "BLACK-037",
+        "BLACK-038"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-022",
+        "SESSION-013",
+        "SESSION-016",
+        "SESSION-017"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The hook needs full preparation and ordered override/cancel reduction, followed by manual or automatic session-owned persistence/context replacement. The deterministic compiler does not need a second agent loop."
+    },
+    {
+      "review_id": "DEPQA-030",
+      "area": "blackhole",
+      "request_index": 8,
+      "entry_id": "BLACK-041",
+      "original_request": {
+        "entry_id": "BLACK-041",
+        "area": "session",
+        "capability": "compactAfterTurn pause/resume scheduling and session_compact acknowledgement"
+      },
+      "original_dependencies": [
+        "BLACK-002",
+        "BLACK-003",
+        "BLACK-039"
+      ],
+      "add_prerequisite_ids": [
+        "EXT-019",
+        "SESSION-015",
+        "SESSION-017"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The context exposes compactAfterTurn; SESSION-015 owns boundary request consumption/pause-resume scheduling and SESSION-017 owns accepted automatic compaction and acknowledgement. Blackhole retains its missed-request suppression state."
+    },
+    {
+      "review_id": "DEPQA-031",
+      "area": "agent",
+      "request_index": 0,
+      "entry_id": "AGENT-001",
+      "original_request": {
+        "entry_id": "AGENT-001",
+        "area": "ai",
+        "capability": "exact provider Message/Usage/Content schemas and serialization"
+      },
+      "original_dependencies": [],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "AI-006",
+        "RPC-004"
+      ],
+      "disposition": "targeted_schema_followup",
+      "rationale": "AGENT-001 expands AgentMessage/AgentEvent/AgentToolResult but only imports the nested Message/Usage/TextContent/ImageContent provider types. AI-006 expands request options, and RPC-004 deliberately omits fields. Preserve the original request pending the root-authorized, source-verified AI schema supplement; neither existing target is a valid substitute.",
+      "followup": {
+        "reserved_id": "AI-019",
+        "status": "reserved_not_yet_authored",
+        "instruction": "No unresolved ID is placed in dependencies. Root requested a source-verified supplement only if nested provider fields are actually absent."
+      }
+    },
+    {
+      "review_id": "DEPQA-032",
+      "area": "agent",
+      "request_index": 1,
+      "entry_id": "AGENT-007",
+      "original_request": {
+        "entry_id": "AGENT-007",
+        "area": "ai",
+        "capability": "SimpleStreamOptions and dynamic credential/provider routing"
+      },
+      "original_dependencies": [
+        "AGENT-002",
+        "AGENT-006"
+      ],
+      "add_prerequisite_ids": [
+        "AI-006"
+      ],
+      "related_entry_ids": [
+        "AI-003"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "The raw loop forwards the complete shared request option envelope, which AI-006 owns. Dynamic key resolution is the supplied getApiKey callback; default provider dispatch is AI-003. Do not make the callback seam depend on the coding-agent auth store or UI."
+    },
+    {
+      "review_id": "DEPQA-033",
+      "area": "agent",
+      "request_index": 2,
+      "entry_id": "AGENT-012",
+      "original_request": {
+        "entry_id": "AGENT-012",
+        "area": "ai",
+        "capability": "validateToolArguments schema/coercion and error contract"
+      },
+      "original_dependencies": [
+        "AGENT-001",
+        "AGENT-016"
+      ],
+      "add_prerequisite_ids": [
+        "AI-012"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Argument preparation then validateToolArguments requires the exact shared validator/coercion/error contract. The trusted beforeToolCall hook and no-revalidation behavior remain AGENT-012."
+    },
+    {
+      "review_id": "DEPQA-034",
+      "area": "agent",
+      "request_index": 3,
+      "entry_id": "AGENT-025",
+      "original_request": {
+        "entry_id": "AGENT-025",
+        "area": "extensions",
+        "capability": "native host exposure of critical awaited loop callbacks"
+      },
+      "original_dependencies": [
+        "AGENT-002",
+        "AGENT-006",
+        "AGENT-007",
+        "AGENT-012",
+        "AGENT-015",
+        "AGENT-018",
+        "AGENT-019",
+        "AGENT-020"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "EXT-009",
+        "EXT-024",
+        "EXT-025",
+        "EXT-030",
+        "EXT-033"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper."
+    },
+    {
+      "review_id": "DEPQA-035",
+      "area": "agent",
+      "request_index": 4,
+      "entry_id": "AGENT-030",
+      "original_request": {
+        "entry_id": "AGENT-030",
+        "area": "ai",
+        "capability": "parseStreamingJson partial JSON repair contract"
+      },
+      "original_dependencies": [
+        "AGENT-001"
+      ],
+      "add_prerequisite_ids": [
+        "AI-011"
+      ],
+      "related_entry_ids": [],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Proxy partial tool JSON calls parseStreamingJson. AI-011 specifies repair order, permissive runtime root types and failure fallback; execution-time validation is separate."
+    },
+    {
+      "review_id": "DEPQA-036",
+      "area": "agent",
+      "request_index": 5,
+      "entry_id": "AGENT-032",
+      "original_request": {
+        "entry_id": "AGENT-032",
+        "area": "session",
+        "capability": "working Rust AgentHarness, durable Session storage, lanes and operation recovery"
+      },
+      "original_dependencies": [
+        "AGENT-036"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SESSION-001",
+        "SESSION-003",
+        "SESSION-030"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "This TS export is a scaffold that rejects operations, while Rust already has a working AgentHarness. Session branch/lane/log recovery entries document preserved native behavior. No new harness implementation dependency should be inferred from the scaffold."
+    },
+    {
+      "review_id": "DEPQA-037",
+      "area": "agent",
+      "request_index": 6,
+      "entry_id": "AGENT-050",
+      "original_request": {
+        "entry_id": "AGENT-050",
+        "area": "tools",
+        "capability": "foreground tool wrapper output capture/truncation and durable background-shell ownership"
+      },
+      "original_dependencies": [
+        "AGENT-037",
+        "AGENT-048",
+        "AGENT-049",
+        "AGENT-051",
+        "AGENT-052",
+        "AGENT-053"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "TOOLS-010",
+        "TOOLS-015",
+        "TOOLS-005",
+        "TOOLS-008"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The execution environment drains pipes and emits chunks. The capture wrappers and background registry consume it, and TOOLS-010/015 already depend on AGENT-050. The original phrase 'durable background-shell ownership' is inaccurate: the registry is in memory; only logs/branch notifications are persisted."
+    },
+    {
+      "review_id": "DEPQA-038",
+      "area": "agent",
+      "request_index": 7,
+      "entry_id": "AGENT-055",
+      "original_request": {
+        "entry_id": "AGENT-055",
+        "area": "settings",
+        "capability": "higher-level prompt discovery/trust/collision policy"
+      },
+      "original_dependencies": [
+        "AGENT-038",
+        "AGENT-039",
+        "AGENT-043",
+        "AGENT-044",
+        "AGENT-045",
+        "AGENT-056"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SET-028",
+        "SET-003"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The agent-package loader is a separate lower-level implementation with no trust or collision policy. Coding-agent prompt discovery and trust belong to SET-028/003. Keep parallel-layer references; do not silently apply coding-agent behavior to the low-level helper."
+    },
+    {
+      "review_id": "DEPQA-039",
+      "area": "agent",
+      "request_index": 8,
+      "entry_id": "AGENT-059",
+      "original_request": {
+        "entry_id": "AGENT-059",
+        "area": "settings",
+        "capability": "coding-agent skill path discovery/hot reload and trust"
+      },
+      "original_dependencies": [
+        "AGENT-038",
+        "AGENT-039",
+        "AGENT-043",
+        "AGENT-044",
+        "AGENT-045",
+        "AGENT-060",
+        "AGENT-061"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SET-030",
+        "SET-032",
+        "SET-003"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The coding-agent skill loader, refresh signature and trust path are separate from the agent-package helper. They are related integration/parallel-layer contracts, not imports required to implement this helper's exact discovery behavior."
+    },
+    {
+      "review_id": "DEPQA-040",
+      "area": "agent",
+      "request_index": 9,
+      "entry_id": "AGENT-061",
+      "original_request": {
+        "entry_id": "AGENT-061",
+        "area": "tui",
+        "capability": "skill invocation/list presentation"
+      },
+      "original_dependencies": [
+        "AGENT-039",
+        "AGENT-056"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SET-031",
+        "TUI-030"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "AGENT-061 already owns model-visible invocation/list formatting. SET-031 specifies a distinct coding-agent metadata/listing path, while TUI-030 displays a parsed skill card. Rendering is a downstream concern, not a prerequisite of pure formatting."
+    },
+    {
+      "review_id": "DEPQA-041",
+      "area": "agent",
+      "request_index": 10,
+      "entry_id": "AGENT-063",
+      "original_request": {
+        "entry_id": "AGENT-063",
+        "area": "session",
+        "capability": "flat custom-role JSONL codec/import/export compatibility"
+      },
+      "original_dependencies": [
+        "AGENT-001"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SESSION-029",
+        "SESSION-038"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "The flat custom Bash message shape is input to the session codec/export. SESSION-029 already depends on AGENT-063. Preserve the type-to-codec direction and retain explicit wire adaptation rather than assuming native tagged serialization is identical."
+    },
+    {
+      "review_id": "DEPQA-042",
+      "area": "agent",
+      "request_index": 11,
+      "entry_id": "AGENT-065",
+      "original_request": {
+        "entry_id": "AGENT-065",
+        "area": "ai",
+        "capability": "provider-layer tool-result repair beyond this helper"
+      },
+      "original_dependencies": [
+        "AGENT-001",
+        "AGENT-063",
+        "AGENT-064"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "AI-014"
+      ],
+      "disposition": "resolved_cross_reference_only",
+      "rationale": "AI-014 is a later provider projection/repair with different orphan and timestamp semantics. AGENT-065 does not invoke it and must retain the separate native no-reexecution recovery stage. This is a related pipeline contract, not a prerequisite of the pure custom-role converter."
+    },
+    {
+      "review_id": "DEPQA-043",
+      "area": "observability",
+      "request_index": 0,
+      "entry_id": "OBS-001",
+      "original_request": {
+        "entry_id": "OBS-001",
+        "area": "cli-packaging",
+        "capability": "Version/changelog first-install detection and runtime User-Agent."
+      },
+      "original_dependencies": [
+        "SET-018"
+      ],
+      "add_prerequisite_ids": [
+        "SET-001",
+        "MISC-013"
+      ],
+      "related_entry_ids": [
+        "CLI-018"
+      ],
+      "disposition": "resolved_prerequisite_contracts",
+      "rationale": "Version/assets come from SET-001 and changelog parsing/filtering from MISC-013. Startup notice presentation is TUI-072, which consumes OBS-001 and must not be added as a prerequisite. The exact User-Agent helper is independently read and recorded below; install reporting remains OBS-001, not the version-check service."
+    },
+    {
+      "review_id": "DEPQA-044",
+      "area": "observability",
+      "request_index": 1,
+      "entry_id": "OBS-009",
+      "original_request": {
+        "entry_id": "OBS-009",
+        "area": "misc",
+        "capability": "Full Goals task tree/state schema and producer, if owned outside safe-verify host."
+      },
+      "original_dependencies": [
+        "OBS-004",
+        "SAFE-003",
+        "SAFE-021",
+        "SAFE-022"
+      ],
+      "add_prerequisite_ids": [],
+      "related_entry_ids": [
+        "SAFE-022",
+        "SAFE-023",
+        "SAFE-024"
+      ],
+      "disposition": "external_producer_unverified",
+      "rationale": "The existing SAFE-003/021/022 prerequisites correctly cover guard/verifier data and the Goals authority host. SAFE does not implement the external optional goal scheduler's full ice-goals-state tree producer. Keep that producer explicitly unverified, not assigned to MISC or inferred from a host snapshot."
+    },
+    {
+      "review_id": "DEPQA-045",
+      "entry_id": "CLI-002",
+      "original_request": "safe-verify built-in factory plus current mode/capability callbacks",
+      "original_dependencies": [
+        "CLI-001",
+        "CLI-005",
+        "AUTH-028",
+        "AUTH-032",
+        "SUB-005",
+        "SUB-007",
+        "SUB-019",
+        "SUB-035",
+        "SUB-036",
+        "EXT-002"
+      ],
+      "add_prerequisite_ids": [
+        "SAFE-001",
+        "SAFE-025"
+      ],
+      "related_entry_ids": [
+        "EXT-057"
+      ],
+      "rationale": "SAFE-001 owns validation and mandatory guard creation; SAFE-025 owns frozen capability publication and awaited callbacks. CLI consumes both. The common hidden/before-user mechanism is EXT-057."
+    },
+    {
+      "review_id": "DEPQA-046",
+      "entry_id": "CLI-002",
+      "original_request": "builtin Cognee integration factory installation",
+      "original_dependencies": [
+        "CLI-001",
+        "CLI-005",
+        "AUTH-028",
+        "AUTH-032",
+        "SUB-005",
+        "SUB-007",
+        "SUB-019",
+        "SUB-035",
+        "SUB-036",
+        "EXT-002"
+      ],
+      "add_prerequisite_ids": [
+        "COG-043"
+      ],
+      "related_entry_ids": [
+        "EXT-057"
+      ],
+      "rationale": "COG-043 owns factory initialization/lifecycle; EXT-057 owns common inline order. No dependency on the Cognee server being reachable is introduced at construction."
+    },
+    {
+      "review_id": "DEPQA-047",
+      "entry_id": "SUB-032",
+      "original_request": "safe verification/goal command classifier plus execution runner/current build-trust authority",
+      "original_dependencies": [
+        "SUB-007",
+        "SUB-016",
+        "SUB-030",
+        "SUB-031",
+        "TOOLS-021",
+        "SET-003"
+      ],
+      "add_prerequisite_ids": [
+        "SAFE-019",
+        "SAFE-020",
+        "SAFE-004",
+        "SAFE-025"
+      ],
+      "related_entry_ids": [
+        "SAFE-018",
+        "SAFE-024"
+      ],
+      "rationale": "Direct V2 binding at subagents/v2/extension.ts:280-282 calls parseVerifierArgv on the current ice-verify flag and invokes runVerifier(argv,root,{signal}). It does not call Goals.verify. SAFE-019/020 are the concrete parser/executor; SAFE-004/025 supply live parent tool/mode capabilities. SUB owns transaction reauthorization and SET-003 is already its trust prerequisite. SAFE-018 consumes the receipt; SAFE-024 is a separate Goals verification path."
+    }
+  ],
+  "existing_reverse_edges_for_coordinator_review": [
+    {
+      "entry_id": "COG-051",
+      "target_id": "BLACK-037",
+      "suggested_relation": "optional_consumer_cross_reference",
+      "reason": "The producer writes a documented optional handoff. BLACK-037 consumes it; requiring the consumer to build the producer is unnecessary. No shared change applied."
+    },
+    {
+      "entry_id": "MISC-013",
+      "target_id": "TUI-072",
+      "suggested_relation": "consumer_cross_reference",
+      "reason": "Changelog parsing precedes UI presentation. TUI-072 already depends on MISC-013 and OBS-001. Avoid the existing reverse edge when adding OBS-001's real parser prerequisite. Outside the assigned original five areas; coordinator owns the edit."
+    }
+  ]
+}

@@ -1,0 +1,935 @@
+{
+  "generated_at": "2026-10-20T03:13:05.455Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/providers/radius-config.ts",
+      "sha256": "fa9f58744c2d8a9ddd2d68e28b891eaf2bbd615af615e1044af5dee285dc2f2d",
+      "emitted_ranges": [
+        [
+          4,
+          41
+        ],
+        [
+          52,
+          98
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "DEFAULT_RADIUS_GATEWAY",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:5",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RadiusGatewayModel",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:7",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RadiusOAuthCredential",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:23",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "normalizeRadiusGatewayUrl",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:53",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getRadiusCredentialConfig",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:58",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getRadiusModelsFromConfig",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:62",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getRadiusModels",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:71",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadRadiusGatewayConfig",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/radius-config.ts:81",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/together.models.ts",
+      "sha256": "09e3a5b9a2afbced7314acb8bfd7f2d77a17283dab78a49ca786a04b466f9d15",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "TOGETHER_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/together.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/together.ts",
+      "sha256": "cbf232b1bfe5753bba855f0a95e2c4d180db8155121effcbdffc955fe090738c",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "togetherProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/together.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/vercel-ai-gateway.models.ts",
+      "sha256": "3c4227acdc66f716f4a0af4f84d1ba1e8582384763f6850ed9dcc2fdadee10c5",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "VERCEL_AI_GATEWAY_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/vercel-ai-gateway.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/vercel-ai-gateway.ts",
+      "sha256": "57b77111d50a2238128f56b7f4cc0680415b58c7d3d2eb51cc9f88e508b40343",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "vercelAIGatewayProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/vercel-ai-gateway.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xai.models.ts",
+      "sha256": "8d0a7bf9fd4fc8a0030d9cf93dab88421625bf250030a6d3b2397eea48ea2298",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "XAI_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xai.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xai.ts",
+      "sha256": "f4e3369e26fca433eefbc456a302bb1941f2ee9e21de0cfbc0989c9d7badbe3d",
+      "emitted_ranges": [
+        [
+          7,
+          26
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "xaiProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xai.ts:8",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.models.ts",
+      "sha256": "26bc2100a4471d0605e768b8aff2e82aedce9c880622b5c7046ac6e32c14fb8b",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "XIAOMI_TOKEN_PLAN_AMS_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi-token-plan-ams.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.ts",
+      "sha256": "59d03fc70eca720f8ca9a9f676aedaf241524dac26c179a78e2e30aabe116e0f",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "xiaomiTokenPlanAmsProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi-token-plan-ams.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.models.ts",
+      "sha256": "bcd190721ecfe6233f2d66e86e68f68e2a9d14a8d6afe27132131e5721793093",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "XIAOMI_TOKEN_PLAN_CN_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi-token-plan-cn.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.ts",
+      "sha256": "255528bca12e929f0f683bcbf5a6b8ef0de779bb484b128bdda23bf2fb80caa8",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "xiaomiTokenPlanCnProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi-token-plan-cn.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.models.ts",
+      "sha256": "26f56144eac6a3e7d6c86d558a348dc96cea1bb7ec655beea04dc6088e67d761",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "XIAOMI_TOKEN_PLAN_SGP_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi-token-plan-sgp.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.ts",
+      "sha256": "536da73a1588741c6a70809b5e94ab5a1ba2b8e81f24116e3ed734d6bc60b5e8",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "xiaomiTokenPlanSgpProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi-token-plan-sgp.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi.models.ts",
+      "sha256": "326ec2a587d3f83a92aea6dd9548b317ba91ce9dd8dccdfd83ea14035897dcef",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "XIAOMI_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/xiaomi.ts",
+      "sha256": "d0d20dbcbcecca8b02948df1506ffa474461565546f7c24dfce44aebebef2344",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "xiaomiProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/xiaomi.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/zai-coding-cn.models.ts",
+      "sha256": "b96ff0b9ebb1792993256178de1b6c89741a651dfd07a7735c38dd05bfc25708",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ZAI_CODING_CN_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/zai-coding-cn.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/zai-coding-cn.ts",
+      "sha256": "89ff82b1f7b1a7e3427498598ce03574d76217f1c38b0d1731be82b6d8ff87a7",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "zaiCodingCnProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/zai-coding-cn.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/zai.models.ts",
+      "sha256": "9ff2f0e33f4299651cd265543d6387ee3d9ef2715ab7315dfaf5e67130c14125",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ZAI_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/zai.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/zai.ts",
+      "sha256": "489a48539c3abc291315dad6f8b7c5554f5f3f9bf8b2a11a60d4ab2cbd3c2f74",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "zaiProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/zai.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/auth-guidance.ts",
+      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "emitted_ranges": [
+        [
+          5,
+          26
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "getProviderLoginHelp",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/auth-guidance.ts:6",
+          "covering_entries": [
+            "AUTH-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "formatNoModelsAvailableMessage",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/auth-guidance.ts:14",
+          "covering_entries": [
+            "AUTH-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "formatNoModelSelectedMessage",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/auth-guidance.ts:18",
+          "covering_entries": [
+            "AUTH-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "formatNoApiKeyFoundMessage",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/auth-guidance.ts:22",
+          "covering_entries": [
+            "AUTH-006"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/auth-storage.ts",
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "emitted_ranges": [
+        [
+          232,
+          251
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "InMemoryAuthStorageBackend",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/auth-storage.ts:233",
+          "covering_entries": [
+            "AUTH-002"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/model-config.ts",
+      "sha256": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "emitted_ranges": [
+        [
+          200,
+          221
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ModelsJsonModel",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-config.ts:201",
+          "covering_entries": [
+            "AUTH-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsJsonModelOverride",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-config.ts:202",
+          "covering_entries": [
+            "AUTH-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsJsonProvider",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-config.ts:203",
+          "covering_entries": [
+            "AUTH-007"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/model-registry.ts",
+      "sha256": "f577e5be7382a90397b3957ecca1cb1af38d7bef1543990ae92572a00b937476",
+      "emitted_ranges": [
+        [
+          16,
+          65
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ResolvedRequestAuth",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-registry.ts:17",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/model-resolver.ts",
+      "sha256": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "emitted_ranges": [
+        [
+          19,
+          38
+        ],
+        [
+          165,
+          214
+        ],
+        [
+          267,
+          293
+        ],
+        [
+          361,
+          400
+        ],
+        [
+          605,
+          624
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "defaultModelPerProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:20",
+          "covering_entries": [
+            "AUTH-026"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ParsedModelResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:166",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ModelScopeDiagnostic",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:268",
+          "covering_entries": [
+            "AUTH-024"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ResolveModelScopeResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:275",
+          "covering_entries": [
+            "AUTH-024"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resolveModelScopeWithDiagnostics",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:362",
+          "covering_entries": [
+            "AUTH-024"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ResolveCliModelResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:382",
+          "covering_entries": [
+            "AUTH-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "InitialModelResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-resolver.ts:606",
+          "covering_entries": [
+            "AUTH-026"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/model-runtime.ts",
+      "sha256": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "emitted_ranges": [
+        [
+          65,
+          130
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "CreateModelRuntimeOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-runtime.ts:66",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ModelRuntimeAuthOverrides",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/model-runtime.ts:82",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/models-store.ts",
+      "sha256": "7ca6f46720b942976cfbb41b018c52ec8c9a8b8c9ae11d2676004ab552a2b917",
+      "emitted_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "InMemoryCodingAgentModelsStore",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/models-store.ts:9",
+          "covering_entries": [
+            "AUTH-010"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "emitted_ranges": [
+        [
+          72,
+          97
+        ],
+        [
+          416,
+          448
+        ],
+        [
+          543,
+          592
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "AuthStatus",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:73",
+          "covering_entries": [
+            "AUTH-008"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "clearApiKeyCache",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:79",
+          "covering_entries": [
+            "AUTH-008"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "validateExtensionProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:417",
+          "covering_entries": [
+            "AUTH-008"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "composeModelProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:430",
+          "covering_entries": [
+            "AUTH-008"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resolveConfiguredModelHeaders",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:544",
+          "covering_entries": [
+            "AUTH-009"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CompatibilityRequestConfig",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:557",
+          "covering_entries": [
+            "AUTH-009"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resolveCompatibilityRequestConfig",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:562",
+          "covering_entries": [
+            "AUTH-009"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "configuredRequestAuthStatus",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/provider-composer.ts:577",
+          "covering_entries": [
+            "AUTH-009"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/radius.ts",
+      "sha256": "a60f33d04eda5d4d4df88df14dbe27c6670f29975bc3a774e6c49f487a568342",
+      "emitted_ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RADIUS_PROVIDER_ID",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/radius.ts:1",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/remote-catalog-provider.ts",
+      "sha256": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "emitted_ranges": [
+        [
+          6,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "REMOTE_CATALOG_REFRESH_INTERVAL_MS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/remote-catalog-provider.ts:7",
+          "covering_entries": [
+            "AUTH-010"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/ice-provider-settings.ts",
+      "sha256": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "emitted_ranges": [
+        [
+          33,
+          59
+        ],
+        [
+          198,
+          217
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ProvidersSubmenuOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/ice-provider-settings.ts:34",
+          "covering_entries": [
+            "AUTH-028"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "formatProviderDescription",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/ice-provider-settings.ts:41",
+          "covering_entries": [
+            "AUTH-028"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "iceProviderSettings",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/ice-provider-settings.ts:199",
+          "covering_entries": [
+            "AUTH-028"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/ice-provider.ts",
+      "sha256": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+      "emitted_ranges": [
+        [
+          10,
+          32
+        ],
+        [
+          55,
+          74
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "DEFAULT_BASE_URL",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/ice-provider.ts:11",
+          "covering_entries": [
+            "AUTH-032"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resolveBaseUrl",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/ice-provider.ts:14",
+          "covering_entries": [
+            "AUTH-032"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderCatalogSummary",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/ice-provider.ts:56",
+          "covering_entries": [
+            "AUTH-032"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

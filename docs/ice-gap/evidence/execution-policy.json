@@ -1,0 +1,7 @@
+{
+  "delegation": false,
+  "reason": "Explicit user override: do not use any agents please",
+  "source_writes_allowed": false,
+  "network_allowed": false,
+  "output_root": "/home/mewtwo/Zks/ice-rust/docs/ice-gap"
+}

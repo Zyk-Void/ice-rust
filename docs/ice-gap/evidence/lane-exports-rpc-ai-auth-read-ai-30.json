@@ -1,0 +1,668 @@
+{
+  "generated_at": "2026-10-20T03:04:07.091Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/session-resources.ts",
+      "sha256": "3e6d76f038d6b7fe515ede0b6650d41a7df16eb4b3a9f1aa91c9de329ff092e2",
+      "emitted_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "SessionResourceCleanup",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/session-resources.ts:1",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/types.ts",
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "emitted_ranges": [
+        [
+          15,
+          138
+        ],
+        [
+          232,
+          286
+        ],
+        [
+          296,
+          331
+        ],
+        [
+          333,
+          388
+        ],
+        [
+          463,
+          538
+        ],
+        [
+          624,
+          691
+        ],
+        [
+          698,
+          758
+        ],
+        [
+          783,
+          848
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "KnownApi",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:16",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "KnownImagesApi",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:30",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ImagesApi",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:32",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "KnownProvider",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:34",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "KnownImagesProvider",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:76",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ImagesProviderId",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:78",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ChatTemplateKwargValue",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:83",
+          "covering_entries": [
+            "AI-005",
+            "AUTH-007"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServiceTier",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:106",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "FetchFunction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:111",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionAffinityFormat",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:112",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderResponse",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:114",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderRequestOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:120",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderStreamOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:233",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DeferredFetchOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:235",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "DeferredCancelOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:244",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ApiOptionsMap",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:251",
+          "covering_entries": [
+            "AI-013"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ApiStreamOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:268",
+          "covering_entries": [
+            "AI-013"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderImages",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:297",
+          "covering_entries": [
+            "AI-013"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderImagesOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:313",
+          "covering_entries": [
+            "AI-013"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "StreamFunction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:334",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ImagesFunction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:340",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ImagesInputContent",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:464",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ImagesOutputContent",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:465",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ImagesStopReason",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:471",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "GrammarFormat",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:488",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "GrammarVariants",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:490",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "OpenAIResponsesCompat",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:625",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "AnthropicMessagesCompat",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:643",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "BedrockCompat",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:699",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "OpenRouterRouting",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:710",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "VercelGatewayRouting",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:784",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ModelCostRates",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:791",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ModelCostTier",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:798",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ModelCost",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/types.ts:803",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/abort-signals.ts",
+      "sha256": "320d17e2354c4e66afccf48337d79d1cdb78bc3c42a6f5be993702175711f4ab",
+      "emitted_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "CombinedAbortSignal",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/utils/abort-signals.ts:1",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "combineAbortSignals",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/abort-signals.ts:6",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/abort.ts",
+      "sha256": "e81dc16de331e82d7f15759b27e38c7d0a3d28955693e0cf157dd52dadea7035",
+      "emitted_ranges": [
+        [
+          16,
+          51
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "raceWithAbortSignal",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/abort.ts:17",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/event-stream.ts",
+      "sha256": "55ddd6e6e4299f377fc3f8876ea9d8073f0051d569f1629f8817ec78e28d64e6",
+      "emitted_ranges": [
+        [
+          85,
+          89
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "createAssistantMessageEventStream",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/event-stream.ts:86",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/headers.ts",
+      "sha256": "db52ff4621bef3e5a6b6ace56fd0ff09063ae840517c16b1690c60f89f85e106",
+      "emitted_ranges": [
+        [
+          2,
+          19
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "headersToRecord",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/headers.ts:3",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/legacy-protocol.ts",
+      "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+      "emitted_ranges": [
+        [
+          1,
+          4
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RADIUS_GATEWAY_ORIGIN",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/legacy-protocol.ts:2",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RADIUS_OAUTH_CLIENT_ID",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/legacy-protocol.ts:3",
+          "covering_entries": [
+            "AUTH-014"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+      "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+      "emitted_ranges": [
+        [
+          4,
+          25
+        ],
+        [
+          30,
+          63
+        ],
+        [
+          95,
+          165
+        ],
+        [
+          191,
+          218
+        ],
+        [
+          235,
+          246
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ContinuationRequestContextMode",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:5",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ContinuationRequestDiag",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:7",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ContinuationResponseDiag",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:31",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ContinuationErrorDiag",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:45",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "isContinuationDiagEnabled",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:96",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "hashOpaqueId",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:104",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "nextContinuationRequestSequence",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:113",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "rememberSuccessfulResponseId",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:118",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "forgetSuccessfulResponseId",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:123",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "isStalePreviousResponseError",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:128",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "lastSuccessfulResponseIdHash",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:142",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "classifyRequestContextMode",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:147",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "logContinuationResponse",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:192",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "logContinuationError",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:196",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "extractProviderErrorFields",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:200",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "inputItemCount",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:236",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resetContinuationDiagForTests",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/provider-continuation-diag.ts:242",
+          "covering_entries": [
+            "AI-018"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/sanitize-unicode.ts",
+      "sha256": "f8ef2c957f9f13a77df45ebf344f1b852dfe8f2e3d164d815127ea7290c12e22",
+      "emitted_ranges": [
+        [
+          20,
+          26
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "sanitizeSurrogates",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/sanitize-unicode.ts:21",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/utils/text.ts",
+      "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+      "emitted_ranges": [
+        [
+          5,
+          13
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "contentText",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/utils/text.ts:6",
+          "covering_entries": [
+            "MISC-043"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

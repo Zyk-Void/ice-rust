@@ -1,0 +1,1590 @@
+{
+  "area": "extensions",
+  "stage": "ready-for-coordinator-review",
+  "spec_sha256": "546017278ccbc07430f1d8e7f0d5674d52c1d10ec7e9d808707505d9f7d6f6b4",
+  "proposal_sha256": "9022be764eeebe23f8f66ebd7e22db2321b9a74db9cb420a11f357e3af4d9af4",
+  "structural_and_range_check": {
+    "area": "extensions",
+    "entries": 57,
+    "unique_line_references": 423,
+    "problems": []
+  },
+  "exact_quote_check": {
+    "entries": 57,
+    "title": "Extension loader, host API, lifecycle and native ABI gaps",
+    "introduction": "This area covers all eight original extensions ledger files, their public contracts and behavior-specifying tests, with independent native SDK, loader, registry, event, action and UI counterpart comparison. Status describes behavioral parity at the frozen source identities, not the presence of an enum or method name. TypeScript source behavior, test expectations, native design differences and source-only defect findings are kept explicit; no application tests were run.",
+    "mismatches": []
+  },
+  "cited_read_coverage": {
+    "missing_paths": [],
+    "unread_cited_ranges": [],
+    "cited_test_ranges": 66
+  },
+  "source_identity_and_full_read_coverage": {
+    "files": 65,
+    "errors": [],
+    "full": 52,
+    "partial": [
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "total_lines": 8282,
+        "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            880,
+            940
+          ],
+          [
+            2770,
+            3820
+          ],
+          [
+            4580,
+            4740
+          ],
+          [
+            5570,
+            5658
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            879
+          ],
+          [
+            941,
+            2769
+          ],
+          [
+            3821,
+            4579
+          ],
+          [
+            4741,
+            5569
+          ],
+          [
+            5659,
+            8282
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+        "total_lines": 2253,
+        "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            280,
+            605
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            279
+          ],
+          [
+            606,
+            2253
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+        "total_lines": 3398,
+        "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            95,
+            255
+          ],
+          [
+            270,
+            525
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            94
+          ],
+          [
+            256,
+            269
+          ],
+          [
+            526,
+            3398
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+        "total_lines": 679,
+        "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            425,
+            610
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            424
+          ],
+          [
+            611,
+            679
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+        "total_lines": 4036,
+        "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1080,
+            1310
+          ],
+          [
+            1630,
+            1830
+          ],
+          [
+            1920,
+            1960
+          ],
+          [
+            2020,
+            2088
+          ],
+          [
+            2855,
+            3135
+          ],
+          [
+            3485,
+            3525
+          ],
+          [
+            4000,
+            4030
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            1079
+          ],
+          [
+            1311,
+            1629
+          ],
+          [
+            1831,
+            1919
+          ],
+          [
+            1961,
+            2019
+          ],
+          [
+            2089,
+            2854
+          ],
+          [
+            3136,
+            3484
+          ],
+          [
+            3526,
+            3999
+          ],
+          [
+            4031,
+            4036
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/test/assistant-message.test.ts",
+        "total_lines": 257,
+        "sha256": "86971777603aeeda0e77cb0a1ab61d0ef0ab25262f35df3d4b23ebecd05d45e5",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            120,
+            257
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            119
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/session.rs",
+        "total_lines": 4016,
+        "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            440,
+            539
+          ],
+          [
+            1395,
+            1443
+          ],
+          [
+            1840,
+            1940
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            439
+          ],
+          [
+            540,
+            1394
+          ],
+          [
+            1444,
+            1839
+          ],
+          [
+            1941,
+            4016
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/config.rs",
+        "total_lines": 1761,
+        "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            470,
+            515
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            469
+          ],
+          [
+            516,
+            1761
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-harness/src/agent_harness/child.rs",
+        "total_lines": 300,
+        "sha256": "da74ebd086f9b56bd261448443fe4f6e03705179a0b9a31082b146cd7d312c9c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            160
+          ]
+        ],
+        "unread_ranges": [
+          [
+            161,
+            300
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/args.rs",
+        "total_lines": 1121,
+        "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            470,
+            482
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            469
+          ],
+          [
+            483,
+            1121
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/rpc-contract.test.ts",
+        "total_lines": 1131,
+        "sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            630,
+            704
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            629
+          ],
+          [
+            705,
+            1131
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/resource-loader.ts",
+        "total_lines": 1177,
+        "sha256": "c21751d673e5237a77b9282093354b1bd99d09f3866606e7e67c27f488d0d50c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            660,
+            700
+          ],
+          [
+            1020,
+            1065
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            659
+          ],
+          [
+            701,
+            1019
+          ],
+          [
+            1066,
+            1177
+          ]
+        ]
+      },
+      {
+        "path": "rust:ICE_PORTING.md",
+        "total_lines": 678,
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            48
+          ],
+          [
+            431,
+            464
+          ],
+          [
+            648,
+            678
+          ]
+        ],
+        "unread_ranges": [
+          [
+            49,
+            430
+          ],
+          [
+            465,
+            647
+          ]
+        ]
+      }
+    ],
+    "all": [
+      {
+        "path": "ice:packages/coding-agent/src/core/extensions/loader.ts",
+        "total_lines": 930,
+        "sha256": "52331e4820d08630e135a2c2fde5e84caf9fa018766e0931424f0062cf96c919",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            930
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/ice-manifest.ts",
+        "total_lines": 62,
+        "sha256": "9fba42ba374aad89ba1693738c013b0983ba32dd55db6d1c96327815134d486b",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            62
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/event-bus.ts",
+        "total_lines": 34,
+        "sha256": "fe5c39a57081fb9674c5bdc8c4bc6779bb8524c8895afc337af5ea517bdc71a2",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            34
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/extensions/wrapper.ts",
+        "total_lines": 46,
+        "sha256": "3e5c8d8d56cfdb4bae97b7fa969c672df2f04957a6bfbd4b09bfe845b8caba5b",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            46
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/extensions/runner.ts",
+        "total_lines": 1355,
+        "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            1355
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/extensions/index.ts",
+        "total_lines": 191,
+        "sha256": "45f7d68b521269eaa29a87e320a94e0843ee05a04bed25b669bbb50352ccb6d4",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            191
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/extensions/types.ts",
+        "total_lines": 1811,
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            1811
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/docs/extensions.md",
+        "total_lines": 3010,
+        "sha256": "52d0594e29f01eb6758709a5116715e415206f8c0617dc6329d85c56f4933f76",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            3010
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-plugin-sdk/src/lib.rs",
+        "total_lines": 2169,
+        "sha256": "3a61438fbc4f495e820942da7f7662377027a95cf49b6bba81c5ecf01e5c5f31",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            2169
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/loader.rs",
+        "total_lines": 761,
+        "sha256": "947a5076741e402eaa12dd52e0eb8644327e335ca7dcd9d97214ea238112169c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            761
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/registry.rs",
+        "total_lines": 1330,
+        "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            1330
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/extensions-input-event.test.ts",
+        "total_lines": 183,
+        "sha256": "15edb0808ae6a88477886d0c79bb21a65a94a31bae8bbe45dedd73b7d3175ede",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            183
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/regressions/8423-extension-factory-transaction.test.ts",
+        "total_lines": 120,
+        "sha256": "65facb3d9e30395b1adca92f7c09ead15d22d9175ef402c6af4f310695edca18",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            120
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/extension-console-capture.test.ts",
+        "total_lines": 66,
+        "sha256": "73dff059f098f6ec21c8816d96be1172c38266c13154274a3fb25a9487ed536b",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            66
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/lib.rs",
+        "total_lines": 938,
+        "sha256": "f2f2b341aae5aa7fb56aa281f51e316dde01c2efbe39c690a2df41c55a52c2f3",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            938
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/translate.rs",
+        "total_lines": 1820,
+        "sha256": "e93fc58116a4bfc7c7b65b92815ff4536b6a6a1b74f67c3596e1d4dc51c82091",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            1820
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/provider_hooks.rs",
+        "total_lines": 758,
+        "sha256": "f600895048f02f76fd81f6123f7ddba75005c0e67cfc0f5a588bad07cbcfed36",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            758
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "total_lines": 8282,
+        "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            880,
+            940
+          ],
+          [
+            2770,
+            3820
+          ],
+          [
+            4580,
+            4740
+          ],
+          [
+            5570,
+            5658
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            879
+          ],
+          [
+            941,
+            2769
+          ],
+          [
+            3821,
+            4579
+          ],
+          [
+            4741,
+            5569
+          ],
+          [
+            5659,
+            8282
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+        "total_lines": 2253,
+        "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            280,
+            605
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            279
+          ],
+          [
+            606,
+            2253
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+        "total_lines": 3398,
+        "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            95,
+            255
+          ],
+          [
+            270,
+            525
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            94
+          ],
+          [
+            256,
+            269
+          ],
+          [
+            526,
+            3398
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+        "total_lines": 679,
+        "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            425,
+            610
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            424
+          ],
+          [
+            611,
+            679
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/extensions_actions.rs",
+        "total_lines": 751,
+        "sha256": "5d50118810906f0f7ebefa84952218609178c22bc5d46cfd07a7851c8acc0a8f",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            751
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/actions.rs",
+        "total_lines": 2090,
+        "sha256": "a9919daba475e24c3ee0297b569f74398d3a756ab995d528d048a6d3e19ffef4",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            2090
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+        "total_lines": 4036,
+        "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1080,
+            1310
+          ],
+          [
+            1630,
+            1830
+          ],
+          [
+            1920,
+            1960
+          ],
+          [
+            2020,
+            2088
+          ],
+          [
+            2855,
+            3135
+          ],
+          [
+            3485,
+            3525
+          ],
+          [
+            4000,
+            4030
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            1079
+          ],
+          [
+            1311,
+            1629
+          ],
+          [
+            1831,
+            1919
+          ],
+          [
+            1961,
+            2019
+          ],
+          [
+            2089,
+            2854
+          ],
+          [
+            3136,
+            3484
+          ],
+          [
+            3526,
+            3999
+          ],
+          [
+            4031,
+            4036
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/test/extensions-runner.test.ts",
+        "total_lines": 1034,
+        "sha256": "4abefa28f1a22a6ce0bfef95a759d332fde868e69f4bcd1ab20ac99a3f379980",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            1034
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/utils/readdir-order.ts",
+        "total_lines": 21,
+        "sha256": "b21f3c677fd9262e24ef80a5796d6fc3c6eed95531c4fe7d78d609ee9c4f1b17",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            21
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+        "total_lines": 48,
+        "sha256": "93376195502b3f626a6a2885923e842efcbb83bc7d6d86dbceabd90c79eb8605",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            48
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/extensions-discovery.test.ts",
+        "total_lines": 531,
+        "sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            531
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/user-bash-routing.test.ts",
+        "total_lines": 97,
+        "sha256": "479fc9ae09cc336106db252842a55530cca652ed237247649128f6e09530db9b",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            97
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/regressions/extension-factory-cache.test.ts",
+        "total_lines": 132,
+        "sha256": "8a5083899159418fac2d7f186fc4f7092e0a02c00ad7caf0f621c40801fd5bb9",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            132
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/regressions/6260-inline-extension-naming.test.ts",
+        "total_lines": 161,
+        "sha256": "d6915ea20c00e1f7433e3eeafc5d868b6b688d1c9dbd50247d35580fc5529a54",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            161
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/custom-entry.ts",
+        "total_lines": 63,
+        "sha256": "7f1f225157be829e724341e672baf3b9e0dee3397adbc1d1095d0eade4943b44",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            63
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+        "total_lines": 239,
+        "sha256": "8389dff472d7791a4849126046fb219637461a94d6c6dd6a5b9e196503ad67f1",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            239
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/markdown-transform.ts",
+        "total_lines": 30,
+        "sha256": "657edd0453dab59d362e0d18c330486b86a47fe7a33b8c32204db8ce23a142a9",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            30
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-plugin-sdk/src/dialogs.rs",
+        "total_lines": 106,
+        "sha256": "4b0342295c0c5ddd0433a73405c8c02d8b64acd5fa66c44efaa25d822a3b1b43",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            106
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/status.rs",
+        "total_lines": 416,
+        "sha256": "3148fb6220deeaa81cd8837e0332b6bde05976de41d04a9e2a73f4c7823dd396",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            416
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/editor_text.rs",
+        "total_lines": 184,
+        "sha256": "98c5bdf2d879248b249347f0904b1eb7b8256831cc4662ef7b46497ddacff9b6",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            184
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/panel.rs",
+        "total_lines": 117,
+        "sha256": "29e7a95b1a32013bc962471e3c3448b8f03ec1168018ad57bd112adb8a7ee9cb",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            117
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts",
+        "total_lines": 129,
+        "sha256": "c67a4d68512424886271408b3f9681c6091d07016aad3c0678108887a60a36a3",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            129
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts",
+        "total_lines": 90,
+        "sha256": "b13738ed38d26634a3e011fad97bb70fbfb6c3e4fd896720269b9ae71164c684",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            90
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts",
+        "total_lines": 133,
+        "sha256": "82c5ea3c36613bd1289a4f2b810295f1b11470b45f2f9e72e7cf5dfe3c0b983c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            133
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui/extensions.rs",
+        "total_lines": 939,
+        "sha256": "7ec0412e13c845e1560ece3a83be8578ea6b848ba123b228e6009a79ea8738ac",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            939
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/prompt_transform.rs",
+        "total_lines": 212,
+        "sha256": "23ea887ed1d6720996c833014b7ba69b5db10b54bd0584703dcca8d0a5645aef",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            212
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/resources.rs",
+        "total_lines": 317,
+        "sha256": "7f0dc047938a2294c019a34a9573d27ceaec62d21f06cf2370951085e3a67c82",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            317
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/exec.ts",
+        "total_lines": 108,
+        "sha256": "1a55e7416847ea0c548775b28596bb817c8cd4aa97bc36b8da7403959fcd350f",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            108
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/agent-session-runtime.ts",
+        "total_lines": 476,
+        "sha256": "4d0afdbd3280bffeb6224b906ee66ec3af0854ad9eb7b98aeb6855a59df948c7",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            476
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/utils/child-process.ts",
+        "total_lines": 138,
+        "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            138
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-plugin-sdk/src/process.rs",
+        "total_lines": 165,
+        "sha256": "13d6531d20b41fa5b9bf666b1e5bc229604121da331cb6236496af940fa3cc99",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            165
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/tool-execution.ts",
+        "total_lines": 631,
+        "sha256": "3c161a1c0270783f874276cc242daed25eb8172d41dbd25475e624eb7f99aab0",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            631
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/custom-message.test.ts",
+        "total_lines": 114,
+        "sha256": "fd65096cfeef46b597e58cd642d034e7b2628d8970e10b84e7177f58f91ced54",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            114
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/assistant-message.test.ts",
+        "total_lines": 257,
+        "sha256": "86971777603aeeda0e77cb0a1ab61d0ef0ab25262f35df3d4b23ebecd05d45e5",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            120,
+            257
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            119
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/test/user-message.test.ts",
+        "total_lines": 67,
+        "sha256": "1495e98b92eefe6820e58a4c5d39322a28d03432c0534a9e4590559fc845c123",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            67
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/interactive-mode-status.test.ts",
+        "total_lines": 1545,
+        "sha256": "32c6e2c95318efba7e335176fc7118d2ed9339930cb4adec132f0b9726c12612",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            1545
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-plugin-sdk/src/events.rs",
+        "total_lines": 224,
+        "sha256": "83f3c98ac8debb6da391e85258532e291fe55dc6bb0bc0d689be133c4be0a88a",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            224
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:crates/ice-cli/src/session.rs",
+        "total_lines": 4016,
+        "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            440,
+            539
+          ],
+          [
+            1395,
+            1443
+          ],
+          [
+            1840,
+            1940
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            439
+          ],
+          [
+            540,
+            1394
+          ],
+          [
+            1444,
+            1839
+          ],
+          [
+            1941,
+            4016
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/config.rs",
+        "total_lines": 1761,
+        "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            470,
+            515
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            469
+          ],
+          [
+            516,
+            1761
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-harness/src/agent_harness/child.rs",
+        "total_lines": 300,
+        "sha256": "da74ebd086f9b56bd261448443fe4f6e03705179a0b9a31082b146cd7d312c9c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            160
+          ]
+        ],
+        "unread_ranges": [
+          [
+            161,
+            300
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-cli/src/args.rs",
+        "total_lines": 1121,
+        "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            470,
+            482
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            469
+          ],
+          [
+            483,
+            1121
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/rpc-contract.test.ts",
+        "total_lines": 1131,
+        "sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            630,
+            704
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            629
+          ],
+          [
+            705,
+            1131
+          ]
+        ]
+      },
+      {
+        "path": "rust:crates/ice-extensions/src/tool.rs",
+        "total_lines": 1027,
+        "sha256": "5546b02a8f89eac484e48447170655354f7a2f009eeb349778b0e0d7ce90bbff",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            1027
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/resource-loader.ts",
+        "total_lines": 1177,
+        "sha256": "c21751d673e5237a77b9282093354b1bd99d09f3866606e7e67c27f488d0d50c",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            660,
+            700
+          ],
+          [
+            1020,
+            1065
+          ]
+        ],
+        "unread_ranges": [
+          [
+            1,
+            659
+          ],
+          [
+            701,
+            1019
+          ],
+          [
+            1066,
+            1177
+          ]
+        ]
+      },
+      {
+        "path": "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+        "total_lines": 37,
+        "sha256": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            37
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/legacy-compat/extension-alias-parity.test.ts",
+        "total_lines": 66,
+        "sha256": "1b77993ca2a76709bf821d39758b1f64f5950ce8be4f8fcc3760ceb6aa18e0f6",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            66
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/tool-execution-component.test.ts",
+        "total_lines": 530,
+        "sha256": "b097fc4023b8ef4d917fb35f66ecca0fdb785f24f2b34dce9706d620fc023f98",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": null,
+        "read_ranges": [
+          [
+            1,
+            530
+          ]
+        ],
+        "unread_ranges": []
+      },
+      {
+        "path": "rust:ICE_PORTING.md",
+        "total_lines": 678,
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+        "recorded_sha_matches": true,
+        "frozen_sha_matches": true,
+        "read_ranges": [
+          [
+            1,
+            48
+          ],
+          [
+            431,
+            464
+          ],
+          [
+            648,
+            678
+          ]
+        ],
+        "unread_ranges": [
+          [
+            49,
+            430
+          ],
+          [
+            465,
+            647
+          ]
+        ]
+      }
+    ]
+  },
+  "candidate_validation": {
+    "original_count": 258,
+    "mapped": 251,
+    "excluded": 7,
+    "manual_surfaces": 20,
+    "surfaces": 271,
+    "one_disposition_per_original_candidate": true,
+    "errors": [],
+    "all_original_34_ids_retained": true
+  },
+  "test_identity_summary": {
+    "inspected_files": 15,
+    "matching_frozen_head": 14,
+    "dirty_current_only": 1,
+    "application_tests_executed": 0,
+    "evidence": "extensions-test-identities.json"
+  },
+  "review_needs": [
+    "Independent coordinator review of source-derived defect candidates in extensions-defect-candidates.json.",
+    "Resolve cross-area dependency_requests, including inherited AGENT references; existing conceptual cross-references are not claimed to be a strict topological implementation order.",
+    "Choose deliberate native UI/ABI differences versus compatibility semantics; retain exact candidate exclusions and original denominator.",
+    "Coordinator alone accepts complete=true, publishes area Markdown/ledgers/surfaces, runs final global QA and relocates artifacts."
+  ],
+  "limitations": "These authoring checks validate schema presence, paths/ranges, quote equality, hash identity and documented coverage. They do not execute the application or establish behavioral parity by themselves."
+}

@@ -1,0 +1,2782 @@
+{
+  "area": "cli-packaging",
+  "source_only": true,
+  "read_records": [
+    {
+      "path": "ice:packages/coding-agent/src/bun/cli.ts",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "sha256": "d4e2f847548edf90e151792327a7bbe0c63579ac8d73201ce463a2796efa963b",
+      "total_lines": 16,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              16
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/bun/register-bedrock.ts",
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "sha256": "cf6e24e4cc32a8d485af113e7cb7c693056283ba181ebce90b658b8bf49b974b",
+      "total_lines": 5,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              5
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/bun/restore-sandbox-env.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "sha256": "4dbbbc01b6e701457651c1c116d37a0a4f3f0143bc52047fc49c0891464c6194",
+      "total_lines": 37,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              37
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli.ts",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "sha256": "8248c666b01d3c8f167f600ce6550fca18a6f75cb89d7cb2119379e7d647fabc",
+      "total_lines": 22,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/bootstrap.ts",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "sha256": "b0d8a088813c1efbb7b05873b6f04009bf3f74ee11232ebe91841c7e13c167a6",
+      "total_lines": 6,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              6
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "sha256": "10b11ba53257cc7245f5fb6d30c1011649a360446c7e34823c572aeb14a269af",
+      "total_lines": 10,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              10
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/env.ts",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "sha256": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103",
+      "total_lines": 32,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              32
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/identity.ts",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "sha256": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71",
+      "total_lines": 11,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              11
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "sha256": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81",
+      "total_lines": 37,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              37
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/paths.ts",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "sha256": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c",
+      "total_lines": 7,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              7
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/initial-message.ts",
+      "ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "total_lines": 44,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              44
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/piped-stdin.ts",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "sha256": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613",
+      "total_lines": 56,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              56
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              1,
+              56
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/config-selector.ts",
+      "ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "sha256": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+      "total_lines": 57,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              57
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/session-picker.ts",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "sha256": "fde66d460850f578ee3926cee9f0f443e3b9013576cc75149becaf6cc5cafc97",
+      "total_lines": 56,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              56
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice.ts",
+      "ranges": [
+        [
+          1,
+          131
+        ]
+      ],
+      "sha256": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+      "total_lines": 131,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              131
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/args.ts",
+      "ranges": [
+        [
+          1,
+          444
+        ]
+      ],
+      "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "total_lines": 444,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              444
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "total_lines": 152,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              152
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              18,
+              76
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/list-models.ts",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "sha256": "89ca421d0b27f8f2f70d42f31f183fa215ffdf43970fecd83fe2e0519b486151",
+      "total_lines": 116,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              116
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/startup-ui.ts",
+      "ranges": [
+        [
+          1,
+          240
+        ]
+      ],
+      "sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "total_lines": 240,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              240
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              134,
+              239
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/migrations.ts",
+      "ranges": [
+        [
+          1,
+          315
+        ]
+      ],
+      "sha256": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+      "total_lines": 315,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              315
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "ranges": [
+        [
+          1,
+          1008
+        ]
+      ],
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "total_lines": 1008,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              1008
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/args.rs",
+      "ranges": [
+        [
+          1,
+          1121
+        ]
+      ],
+      "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "total_lines": 1121,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              1121
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "ranges": [
+        [
+          1,
+          95
+        ],
+        [
+          97,
+          1015
+        ]
+      ],
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "total_lines": 1015,
+      "excluded_redacted_lines": [
+        96
+      ],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              95
+            ],
+            [
+              97,
+              1015
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              95
+            ],
+            [
+              97,
+              175
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              770,
+              886
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/lib.rs",
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "sha256": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478",
+      "total_lines": 90,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              90
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/bin/ice.rs",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "total_lines": 22,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/development.md",
+      "ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "sha256": "6b5c261120d71c3f21cc3fdee2390c41216989bb0f198d7f2dacb19e377c9f9b",
+      "total_lines": 72,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              72
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/quickstart.md",
+      "ranges": [
+        [
+          1,
+          166
+        ]
+      ],
+      "sha256": "26e42dd657e3126f7cca243f315f87ad9d550c3ea9ef4d87f01f7a511e0088a5",
+      "total_lines": 166,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              166
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/shell-aliases.md",
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "sha256": "52bfdc758316c8506919ca8e438da63f3e97caa51156ec60c86e425eea4ff604",
+      "total_lines": 14,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              14
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/windows.md",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "sha256": "d5186e93218c89923525215b808394a834c6f4f0d3cea2ce55afffc8b2d9e478",
+      "total_lines": 18,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              18
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/termux.md",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "sha256": "3ec1ab10e1687b9f38e383a81429f249214eae0e42e58becb9ac497abfe091dd",
+      "total_lines": 128,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              128
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/usage.md",
+      "ranges": [
+        [
+          1,
+          324
+        ]
+      ],
+      "sha256": "dfa824ebbf9756824d50a25542a0c303ba25197ada24c4c492e98d37999e1456",
+      "total_lines": 324,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              324
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/file-processor.ts",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "total_lines": 101,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              101
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "ranges": [
+        [
+          60,
+          250
+        ],
+        [
+          260,
+          275
+        ],
+        [
+          402,
+          428
+        ],
+        [
+          1560,
+          1612
+        ]
+      ],
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total_lines": 1761,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              60,
+              250
+            ],
+            [
+              260,
+              275
+            ],
+            [
+              402,
+              428
+            ],
+            [
+              1560,
+              1612
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              169,
+              225
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/credential-print.test.ts",
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "total_lines": 105,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              105
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/initial-message.test.ts",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "sha256": "8b95eb212ced64c20423f7dd5ffa9a972652f6d5ab1abb205a424cff2e17b356",
+      "total_lines": 49,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              49
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/piped-stdin.test.ts",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "sha256": "8d7ec91cd814d9cf580f0bd599418a017ab8cfc319f663ccd47e32abccbbc33a",
+      "total_lines": 54,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              54
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/first-time-setup.test.ts",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "sha256": "c66796eaa8e4ec21000169fc1f6671d68a16acb707c10686f5121173e021480e",
+      "total_lines": 96,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              96
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "sha256": "84442c2875ec70c0536b984a3a192faeabb4976012fd535f9934087483f56a2d",
+      "total_lines": 40,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              40
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/startup-session-name.test.ts",
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "sha256": "671c91057777d97bfa4f06ac6efc9afdefa71c70e36b26401dd5e7bb3b5eb806",
+      "total_lines": 136,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              136
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/args.test.ts",
+      "ranges": [
+        [
+          1,
+          467
+        ]
+      ],
+      "sha256": "258fac826243fe9696f75f781ece605f6303649e03d339f973a8c8aabea5910d",
+      "total_lines": 467,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              467
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/paths-and-cli.test.ts",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "sha256": "1e2d67f18efe1784abaa16110cdb2b92a58a566d3193fb211d23e8ae59496c55",
+      "total_lines": 41,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              41
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/restore-sandbox-env.test.ts",
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "sha256": "14485f0f5f478475206f15ebd48191090c437f40b79ebfdf2d652d4681e71d02",
+      "total_lines": 78,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              78
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/identity-inputs.test.ts",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "sha256": "21d7d4b216ea53f9cf6229ac1ec34ddf20d19cd92f8b2ada473648cdd1419eed",
+      "total_lines": 35,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              35
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/config-references.test.ts",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "sha256": "76fa0181c59191bec4bdc1698981837c615ca18162338a476239f099636739ff",
+      "total_lines": 47,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              47
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "sha256": "d3eca3a0f570ad39503615a18d765ec9d97c6d9a6ebcaf2901a81d61f522ca71",
+      "total_lines": 213,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              213
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "sha256": "9d0837d33c091fba4164442168e630cebe30f32aa6da7c0d29c6191ac3e374cc",
+      "total_lines": 118,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              118
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/max-thinking.test.ts",
+      "ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "sha256": "be1cc17b81c7f1c3268d4f978c73654a4142880a7e0a2f26aea67bcf14bc528d",
+      "total_lines": 65,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              65
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-resize-callers.test.ts",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "sha256": "f77a92109158e558cc26430a80f82351bd1ef4884d494ab643c29652c00bc25c",
+      "total_lines": 54,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              54
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/block-images.test.ts",
+      "ranges": [
+        [
+          1,
+          149
+        ]
+      ],
+      "sha256": "739ffc6dc4c9cc9de971e8bac12cd73e3e6e5b9f266a56228238f66ccb4673b8",
+      "total_lines": 149,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              149
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/extras.rs",
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "sha256": "61e83e2da92a4751cb60d0bf70ea624f6907604cb7eeed9679c70cf187f749f5",
+      "total_lines": 95,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              95
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/session.rs",
+      "ranges": [
+        [
+          100,
+          240
+        ],
+        [
+          328,
+          466
+        ],
+        [
+          2050,
+          2340
+        ],
+        [
+          2480,
+          2544
+        ],
+        [
+          2676,
+          2735
+        ],
+        [
+          3670,
+          3915
+        ]
+      ],
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "total_lines": 4016,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              100,
+              240
+            ],
+            [
+              328,
+              466
+            ],
+            [
+              2050,
+              2340
+            ],
+            [
+              2480,
+              2544
+            ],
+            [
+              2676,
+              2735
+            ],
+            [
+              3670,
+              3915
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              130,
+              192
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "ranges": [
+        [
+          992,
+          1030
+        ]
+      ],
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              992,
+              1030
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/resume_picker.rs",
+      "ranges": [
+        [
+          1,
+          247
+        ]
+      ],
+      "sha256": "ea7e40fd60897a161c3550c403ff10f01891ff0ba8dab6cc9a307cc932eae97d",
+      "total_lines": 247,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              247
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/auth.rs",
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "total_lines": 739,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              150
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/config-value-migration.test.ts",
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "sha256": "9ac59f1e2fd11d0e7ef1bdd980727e4b8c5a73c22ba7ca3baa515e9ad90648f5",
+      "total_lines": 179,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              179
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5661-uppercase-header-values.test.ts",
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "sha256": "0ffc9a48b0f980339bd8748d7064ea2e832e7a817441de29f68ad94695ac7149",
+      "total_lines": 92,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              92
+            ]
+          ],
+          "notes": "Direct visible-body source inspection, no execution. Exact unread intervals are in cli-source-review.json."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/keybindings-migration.test.ts",
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "sha256": "c4a60d6014e09c645855ae377b8a63459d97ed2dfde34462f8e0cf2480c39d31",
+      "total_lines": 89,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              89
+            ]
+          ],
+          "notes": "TUI-048 owns pure transformation; CLI owns on-disk caller."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/extensions-discovery.test.ts",
+      "ranges": [
+        [
+          1,
+          531
+        ]
+      ],
+      "sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+      "total_lines": 531,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              531
+            ]
+          ],
+          "notes": "Coordinator confirmed full frozen source read; extension discovery implementation remains EXT ownership."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-subagent-task-contract.test.ts",
+      "ranges": [
+        [
+          1,
+          500
+        ]
+      ],
+      "sha256": "d1d91048cfe0d24015e6764c79d6f81c5f7e870b2f66110f35fc077a32e62367",
+      "total_lines": 500,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              500
+            ]
+          ],
+          "notes": "Coordinator confirmed full clean tracked frozen Git revision body, absent initial manifest; SUB owns task contract."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-test-utils.ts",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "total_lines": 26,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              26
+            ]
+          ],
+          "notes": "Reused complete helper source read from RPC pass; no execution."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/harness.ts",
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "sha256": "c8cd19cf5f20fe394f404f128b793fc5b3bb3f79bd7f74d9a88ee6e1c1fcc347",
+      "total_lines": 225,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              1,
+              225
+            ]
+          ],
+          "notes": "Reused complete source-only helper read from RPC pass."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "ranges": [
+        [
+          3080,
+          3110
+        ],
+        [
+          4452,
+          4505
+        ]
+      ],
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "total_lines": 5844,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_session",
+          "artifact": "evidence/cli-source-review.json",
+          "ranges": [
+            [
+              3080,
+              3110
+            ],
+            [
+              4452,
+              4505
+            ]
+          ],
+          "notes": "Bounded complete visible-body read by this worker through read-evidence.mjs during MISC tracing. Adds later image normalization credit; no application or tests executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed. Full-file line metadata comes from the already reviewed SESSION manifest; this does not add body-read credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/package-manager.ts",
+      "ranges": [
+        [
+          1,
+          2697
+        ]
+      ],
+      "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+      "total_lines": 2697,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              2697
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/package-manager-cli.ts",
+      "ranges": [
+        [
+          1,
+          906
+        ]
+      ],
+      "sha256": "7d789b8cb6cef448396725801f5f21c08d7eb33289b85b9b153883882be87e66",
+      "total_lines": 906,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              906
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/packages.md",
+      "ranges": [
+        [
+          1,
+          231
+        ]
+      ],
+      "sha256": "3c41599e7f566fb3d2e60109726f5bb57b4cfb84cb7afcf954ec77a5a772cfad",
+      "total_lines": 231,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              231
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/packages.rs",
+      "ranges": [
+        [
+          1,
+          819
+        ]
+      ],
+      "sha256": "fae4872621bea7dd14e580faf2f4a72cf6341d399d857daf70d805cb90a0a4ac",
+      "total_lines": 819,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              819
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              109,
+              190
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              388,
+              431
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              573,
+              626
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/install.rs",
+      "ranges": [
+        [
+          1,
+          1928
+        ]
+      ],
+      "sha256": "36a298aaac7c606da2a1d6d74019f9c5c70db37c7c872ccc3741131f639f878c",
+      "total_lines": 1928,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              1928
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "ranges": [
+        [
+          1,
+          3527
+        ]
+      ],
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "total_lines": 3527,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              3527
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              715,
+              750
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              1781,
+              1836
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              99,
+              119
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              1310,
+              1330
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              2119,
+              2155
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/prebuilt_extensions.rs",
+      "ranges": [
+        [
+          1,
+          1403
+        ]
+      ],
+      "sha256": "ca30b4e1be3c36eb898957b2fca93e8b06c8c4b9c519ff3d58db1f5fe94a9d7e",
+      "total_lines": 1403,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              1403
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              158,
+              195
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/prebuilt_release.rs",
+      "ranges": [
+        [
+          1,
+          373
+        ]
+      ],
+      "sha256": "97ab5b041b5eacb663fb37369b5cfef9497b991062f9460fb6a9d75f74e4ef64",
+      "total_lines": 373,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              373
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              1,
+              100
+            ]
+          ],
+          "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/git.ts",
+      "ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "sha256": "bff4590aefa988ba625026769ac5ad02f02558d59bd7d566f4728e1ee4da1da9",
+      "total_lines": 227,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              227
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/paths.ts",
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+      "total_lines": 119,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              119
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/ice-manifest.ts",
+      "ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "sha256": "9fba42ba374aad89ba1693738c013b0983ba32dd55db6d1c96327815134d486b",
+      "total_lines": 62,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              62
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/readdir-order.ts",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "sha256": "b21f3c677fd9262e24ef80a5796d6fc3c6eed95531c4fe7d78d609ee9c4f1b17",
+      "total_lines": 21,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              21
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-manager-ssh.test.ts",
+      "ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "sha256": "963d17222f4b23acdf67598de2aea4126ef1eebb488b8ceac276aa552fdf7a3a",
+      "total_lines": 98,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              98
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7187-malformed-package-manifest.test.ts",
+      "ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "sha256": "fbe046480274f44e5a9677f549c0387a1de9ab2a1076859ce613cd33330b1658",
+      "total_lines": 48,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              48
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/pi-real-package.test.ts",
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "sha256": "623898555f3a0202b979129abc0de8f48c98de1d57a8e1669305c01392a6e71f",
+      "total_lines": 51,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              51
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/pi-manifest-aliases.test.ts",
+      "ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "sha256": "6dd0556e33834da95760814483c1550ed7555f898821fa989cffaf9b001cb5a0",
+      "total_lines": 102,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              102
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-resource-precedence.test.ts",
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "sha256": "e7ac8d2bcf97cbb30beceaa57f6fedc3f0a63a8973dfe2560f7c4e9006b6e2d6",
+      "total_lines": 129,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              129
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-manager.test.ts",
+      "ranges": [
+        [
+          1,
+          2658
+        ]
+      ],
+      "sha256": "28fa5f1e937787bd92c4d59b662b40f92cc989c84273bfff60fc5793e807e2c0",
+      "total_lines": 2658,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              2658
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/git-update.test.ts",
+      "ranges": [
+        [
+          1,
+          487
+        ]
+      ],
+      "sha256": "111157a715f75445628eb3bdedd0f95776b4858e815b94c8b152c0ef605b3a07",
+      "total_lines": 487,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              487
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/tests/btw_package.rs",
+      "ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "sha256": "fb8656cc05a15c9bc1b79dea1ae3eb27b7d5ef8d7a2313cfbeb280d37aa1fa92",
+      "total_lines": 197,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              197
+            ]
+          ],
+          "notes": "coordinator source manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-command-paths.test.ts",
+      "ranges": [
+        [
+          1,
+          796
+        ]
+      ],
+      "sha256": "979a5ef435ed370a8a4c0e960e12a59f73169c27734e78664869a9cba5bf2451",
+      "total_lines": 796,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              796
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/git-ssh-url.test.ts",
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "sha256": "2f502b173e2bf6c6e4d52b4f0bf3da74ebf63f6d9a2b1155ad9b8677ce058d5b",
+      "total_lines": 92,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              92
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/paths.test.ts",
+      "ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "sha256": "b745e71348e573fb72adbcfd379445d9eaee7ae849bcc37a4ea5610946ee1112",
+      "total_lines": 151,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              151
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/readdir-order.test.ts",
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "sha256": "4070f7760d3100d0ce7024cdfc798469e41de40b115e6801b53d0cf275f0f401",
+      "total_lines": 33,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              33
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts",
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "sha256": "2fc0abe5189494a8c95804ef890e74a8f8536f3cb8bb4be0c1cbb5ed658acd2f",
+      "total_lines": 171,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "audit_tools",
+          "artifact": "evidence/cli-packaging-supplement-source-review.json",
+          "ranges": [
+            [
+              1,
+              171
+            ]
+          ],
+          "notes": "clean tracked frozen Git revision; not original manifest"
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": true,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "ranges": [
+        [
+          730,
+          860
+        ]
+      ],
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "total_lines": 1612,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              768,
+              860
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        },
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              730,
+              768
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/agent_session.rs",
+      "ranges": [
+        [
+          228,
+          235
+        ]
+      ],
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "total_lines": 613,
+      "excluded_redacted_lines": [],
+      "attribution": [
+        {
+          "owner": "coordinator",
+          "artifact": "evidence/qa-cli-coordinator.json",
+          "ranges": [
+            [
+              228,
+              235
+            ]
+          ],
+          "notes": "Numbered source body read independently; no tests or application executed."
+        }
+      ],
+      "owner": "combined CLI source review",
+      "fully_read": false,
+      "notes": "Actual source body ranges combined from attributed manifests, with connector-redacted lines excluded. No code executed."
+    }
+  ]
+}

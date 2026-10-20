@@ -1,0 +1,77 @@
+{
+  "area": "cli-packaging",
+  "fragment": "package-management",
+  "schema_checked": true,
+  "source_reference_occurrences": 262,
+  "surface_reference_occurrences": 85,
+  "candidate_inventory": 26,
+  "candidate_dispositions": 26,
+  "distinct_source_files": 26,
+  "fully_read_files": 25,
+  "partial_files": [
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "ranges": [
+        [
+          1,
+          175
+        ]
+      ],
+      "redacted_lines": [
+        96
+      ]
+    }
+  ],
+  "entry_count": 27,
+  "status_counts": {
+    "missing": 14,
+    "partial": 10,
+    "different-by-design": 3
+  },
+  "size_sum": {
+    "min": 3740,
+    "max": 6285
+  },
+  "priority_counts": {
+    "P1": 21,
+    "P2": 1,
+    "P0": 2,
+    "P3": 3
+  },
+  "internal_dependency_cycles": false,
+  "external_dependencies": [
+    "AI-002",
+    "CLI-016",
+    "CLI-018",
+    "EXT-005",
+    "MISC-001",
+    "MISC-002",
+    "SET-001",
+    "SET-002",
+    "SET-003",
+    "SET-007",
+    "SET-008",
+    "SET-009"
+  ],
+  "errors": [],
+  "source_only": true,
+  "tests_executed": false,
+  "method": "In-memory validation over authored JSON and exact recorded frozen-source read ranges; not application execution. Both source prefixes and single-anchor surface formats checked. Coordinator performs cross-area dependency/publication review.",
+  "blank_surface_anchors": false,
+  "source_anchor_revalidation": {
+    "paths": [
+      "packages/coding-agent/src/core/package-manager.ts",
+      "packages/coding-agent/src/package-manager-cli.ts",
+      "packages/coding-agent/docs/packages.md"
+    ],
+    "note": "Three already fully reviewed TS files reread only to tighten exact declaration/branch anchors; all SHA-256 equal the recorded frozen identities. This adds no new full-body credit."
+  },
+  "semantic_corrections": [
+    "Installed npm version is raw/truthiness checked without universal semver/type validation; exact/range behavior is separately delegated.",
+    "npm-view JSON strings/arrays and Git upstream versus HEAD output matching described precisely.",
+    "Plain Error for missing source, no invented error class.",
+    "Removed unsupported cloud-sync sentence; no unverified platform attribute behavior claimed.",
+    "24 local-expression candidates excluded mechanically with exact IDs; 2 real candidates and 73 authored surfaces retained."
+  ],
+  "status": "passed-worker-checks-awaiting-coordinator"
+}

@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-19T21:41:48.785Z",
+  "outputs": [
+    {
+      "path": "ice:packages/agent/src/agent-loop.ts",
+      "sha256": "eeeba27050498a41a5708bd33d03a307e65936aa974c3ff9a16d9f38dfc36881",
+      "bytes": 22954,
+      "total_lines": 806,
+      "returned": [
+        224,
+        247
+      ]
+    },
+    {
+      "path": "ice:packages/agent/src/harness/env/nodejs.ts",
+      "sha256": "7741bd570a25291415ff38ddca2abd3e2adcfa15ea9a38217097b70591bceb35",
+      "bytes": 20618,
+      "total_lines": 676,
+      "returned": [
+        237,
+        250
+      ]
+    },
+    {
+      "path": "ice:packages/agent/src/harness/env/nodejs.ts",
+      "sha256": "7741bd570a25291415ff38ddca2abd3e2adcfa15ea9a38217097b70591bceb35",
+      "bytes": 20618,
+      "total_lines": 676,
+      "returned": [
+        406,
+        427
+      ]
+    },
+    {
+      "path": "ice:packages/agent/src/harness/prompt-templates.ts",
+      "sha256": "0e2f911bcc3b2771364316fb5ff5aeaf4a93be41aeabcd3c2df5cede924935d2",
+      "bytes": 9122,
+      "total_lines": 263,
+      "returned": [
+        232,
+        263
+      ]
+    }
+  ],
+  "note": "Range returned, not an assertion of semantic verification."
+}

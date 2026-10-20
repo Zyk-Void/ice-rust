@@ -1,0 +1,9 @@
+# RPC/remote handoff checkpoint
+
+Draft complete: RPC-001–036 (36 entries), 63 assigned TypeScript source/documentation files mapped, 573 reviewed surfaces, 370 mechanical candidates reconciled (353 mapped; 17 internal Context/Definition members excluded as non-surface names), and eight actual first-pass claim ranges reconciled. spec-rpc-remote.json and proposal-rpc-remote.json are ready for coordinator QA. Source-reference, candidate uniqueness, entry-link and raw path:singleline surface checks found zero problems; no tests or application code were executed.
+
+Read closure: 134 unique source/test/documentation files, 129 fully visible, 32715 unique visible lines. All 63 assigned source/docs are fully read. All 51 related TS tests/helpers are inspected: 50 fully visible; rpc-subagents.test.ts:230 is connector-redacted. Native app.rs:96 is the other exact redaction; app/types/agent-session/approval are bounded adjacent reads with exact remaining ranges and owners in rpc-source-review.json. No whole-file credit is inferred for bounded reads.
+
+Key source-derived corrections: native built-in JSONL RPC exists behind conditional extension-I/O dispatch; native TCP, TS JSONL and TS framed CBOR are distinct contracts; live native ToolUse serializes as tooluse (RPC-017); TS get_last_assistant_text can omit text despite strict nullable validator (RPC-024/034); native CBOR tags bypass depth advancement (RPC-002); native TCP pump can end on ordinary content equal to session_end, reaching DriverEvent::Ended (RPC-036). External ice-server package behavior/deployment is unverified.
+
+Root owns publication and cross-area reconciliation. Next assigned work: CLI/packaging, then MISC. Do not overwrite root-normalized SESSION or AUTH artifacts. No source edits, test/app execution, installs, network commands, forbidden user credential directory reads, scratch writes or publication occurred.

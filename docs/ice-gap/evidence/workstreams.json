@@ -1,0 +1,66 @@
+{
+  "created_at": "2026-10-19T22:22:00Z",
+  "coordinator": "/root",
+  "source_manifest": "evidence/resume-source-identities-2026-10-19T222055Z.json",
+  "publication_owner": "/root",
+  "workstreams": [
+    {
+      "agent": "/root/audit_extensions",
+      "area": "extensions",
+      "state": "investigation",
+      "write_scope": [
+        "evidence/spec-extensions.json",
+        "evidence/proposal-extensions.json",
+        "evidence/checkpoint-extensions.md",
+        "area-specific extensions evidence"
+      ]
+    },
+    {
+      "agent": "/root/audit_tools",
+      "area": "tools",
+      "state": "investigation",
+      "write_scope": [
+        "evidence/spec-tools.json",
+        "evidence/proposal-tools.json",
+        "evidence/checkpoint-tools.md",
+        "area-specific tools evidence"
+      ]
+    },
+    {
+      "agent": "/root/audit_session",
+      "area": "session",
+      "state": "investigation",
+      "write_scope": [
+        "evidence/spec-session.json",
+        "evidence/proposal-session.json",
+        "evidence/checkpoint-session.md",
+        "area-specific session evidence"
+      ]
+    },
+    {
+      "agent": "/root",
+      "area": "observability and coordinator QA",
+      "state": "investigation"
+    }
+  ],
+  "published": [
+    "safe-verify",
+    "cognee",
+    "blackhole",
+    "agent"
+  ],
+  "publication_order": [
+    "extensions",
+    "tools",
+    "session",
+    "subagents",
+    "observability",
+    "settings",
+    "ai",
+    "providers-auth",
+    "rpc-remote",
+    "cli-packaging",
+    "misc",
+    "tui"
+  ]
+}

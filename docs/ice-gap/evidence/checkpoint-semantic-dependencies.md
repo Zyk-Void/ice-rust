@@ -1,0 +1,9 @@
+# Semantic dependency review checkpoint
+
+The worker has reviewed all 44 original dependency requests for SAFE (7), COG (14), BLACK (9), AGENT (12), and OBS (2), plus detailed source-entry narratives and selected current target entries across all relevant catalogs. This is a dependency-only review of authored source-backed evidence; it does not grant new original-source read coverage or modify shared specs.
+
+The resolution draft distinguishes prerequisite contracts, downstream consumers, sibling implementations, shared helpers, and external/unverified producers. Key corrections: COG-059 emits observations consumed by OBS-008; SAFE-025 publishes authority consumed by SUB; AGENT-050 precedes TOOLS capture/registry wrappers; background shell records are not durable across restarts; AGENT-063 is consumed by the SESSION codec; COG-007 shares the redactor with OBS-012 and does not require the SQLite store; COG-044's tool-result-hook request belongs at COG-047; external Goals task-tree production is not implemented by SAFE-022's authority host.
+
+Root added three resolutions: CLI-002 guard factory/current authority callbacks, CLI-002 Cognee factory, and SUB-032 guard/verifier contracts. Root reserved AI-019 (AI-020 only if a separate behavior requires it) for an actual missing explicit provider Message/Usage/Content contract. AGENT-001's interfaces were inspected: they import Message/Usage/TextContent/ImageContent and define agent events/tool wrappers, but do not expand those provider types. AI-006 defines request options and hard token authority. A source-verified supplement follows the saved dependency resolutions if needed.
+
+No shared evidence/spec/ledger/publication edits, app/test/model/network execution, source edits or user-state reads occurred. Complete suggestions are being saved to qa-semantic-dependency-suggestions.json.

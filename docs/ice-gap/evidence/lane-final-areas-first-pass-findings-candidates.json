@@ -1,0 +1,168 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "status": "review-pending",
+  "records": [
+    {
+      "index": 25,
+      "id": "FPC-026",
+      "finding": "The current TS loader imports/caches factories while native loader accepts shared libraries through ice_plugin_register. Inline name/hidden/before-user semantics require a separate native application registration phase; launcher-specific feature implementations remain their area owners.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/extensions/loader.ts:564-675",
+        "ice:packages/coding-agent/src/core/extensions/types.ts:1589-1602",
+        "rust:crates/ice-extensions/src/loader.rs:1-761"
+      ]
+    },
+    {
+      "index": 31,
+      "id": "FPC-032",
+      "finding": "The frozen loader/SDK require the ice_plugin_register symbol. No claim about availability of historical upstream binaries or releases is made from local source alone.",
+      "evidence": [
+        "rust:crates/ice-extensions/src/loader.rs:1-761",
+        "rust:crates/ice-plugin-sdk/src/lib.rs:1-2169"
+      ]
+    },
+    {
+      "index": 47,
+      "id": "FPC-048",
+      "finding": "The frozen refreshLocalModelsForStartup body only loads the raw Omni/local credential and sets ICE_LOCAL_API_KEY. It neither fetches models nor consults the declared skip/refresh/onFailure options. Explicit refreshLocalModels performs /models fetch, validation, provider replacement and atomic-name rename; it returns updated:false on failure. AUTH-027 owns catalog row conversion.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-provider.ts:252-303",
+        "ice:packages/coding-agent/src/ice-provider.ts:73-250"
+      ]
+    },
+    {
+      "index": 49,
+      "id": "FPC-050",
+      "finding": "Base URL uses Omni then legacy-local nullish precedence then configured URL/default. ICE_LOCAL_API_KEY is assigned by credential startup and explicit refresh; the cited source does not read it there. ICE_AGENT_VIEW_COLORS is outside AUTH scope.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-provider.ts:10-17",
+        "ice:packages/coding-agent/src/ice-provider.ts:252-303"
+      ]
+    },
+    {
+      "index": 50,
+      "id": "FPC-051",
+      "finding": "TS declares off plus seven non-off levels through ultra, including the model-config schema. Native enum/map keys stop at max, so unknown ultra deserialization fails whole config. AI-005 owns runtime thinking/clamping. Actual user-directory imports and the stated three remappings cannot be checked under the explicit ban on real ~/.ice and ~/.icers reads.",
+      "evidence": [
+        "ice:packages/ai/src/types.ts:80-82",
+        "ice:packages/coding-agent/src/core/model-config.ts:54-64",
+        "rust:crates/ice-ai/src/types.rs:481-523",
+        "rust:crates/ice-cli/src/config.rs:343-405"
+      ]
+    },
+    {
+      "index": 96,
+      "id": "FPC-097",
+      "finding": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICE_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "evidence": [
+        "rust:ICE_PORTING.md:54-59",
+        "rust:crates/ice-cli/src/child_agents.rs:1-418",
+        "rust:crates/ice-harness/src/agent_harness/child.rs:1-172",
+        "rust:crates/ice-cli/tests/subagent_packages.rs:23-375"
+      ]
+    },
+    {
+      "index": 105,
+      "id": "FPC-106",
+      "finding": "ICE_SUBAGENT_DECISION_EVENTS, ICE_SUBAGENT_HOOK_EVENTS, ICE_SUBAGENT_OBSERVATION_EVENTS, ICE_SUBAGENT_SETTINGS_LIMITS, ICE_BUILTIN_CHILD_TOOLS, ICE_CAPABILITY_LIMITS, ICE_HOOK_CONTEXT_ADDITION_LIMITS and ICE_HOOK_JOURNAL_ENTRY_TYPE are code constants, not process environment keys. checkpoint/attention are accepted event names without an established active V2 dispatch site.",
+      "evidence": [
+        "rust:ICE_PORTING.md:182-189",
+        "ice:packages/coding-agent/src/subagents/settings.ts:45-112",
+        "ice:packages/coding-agent/src/subagents/settings.ts:408-443",
+        "ice:packages/coding-agent/src/subagents/tools/adapters.ts:1-83"
+      ]
+    },
+    {
+      "index": 140,
+      "id": "FPC-141",
+      "finding": "The ten Cognee overrides and base URL inputs are genuine environment reads. Eight subagent names are exported code constants; Goals host is a Symbol key and agent colors a code alias. ICE_LOCAL_API_KEY at the cited startup/refetch paths is written into the process environment. See individual named-surface dispositions.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-agent-view-bridge.ts:22",
+        "ice:packages/coding-agent/src/ice-goals-host.ts:4"
+      ]
+    },
+    {
+      "index": 141,
+      "id": "FPC-142",
+      "finding": "Core/CLI references export current session/model state into child-shell environment and remove those names during cleanup; they do not establish CLI startup defaults. Separately, the evals harness does read ICE_PROVIDER plus ICE_MODEL as its default model at ice-harness.ts:48–53, so the claim needs scope correction rather than global exclusion. That harness is assigned to MISC-040–049. No analogous general startup ICE_REASONING_LEVEL read was found in the scoped src search. MISC-040 confirms the eval runner is an actual ICE_MODEL/ICE_PROVIDER consumer with explicit defaults.",
+      "evidence": [
+        "ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-31",
+        "ice:packages/coding-agent/src/core/legacy-compat/identity.ts:1-10",
+        "ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-6",
+        "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts:17-36",
+        "ice:packages/coding-agent/src/migrations.ts:304-314",
+        "ice:packages/coding-agent/src/ice.ts:24-31",
+        "ice:packages/coding-agent/src/core/legacy-compat/extension-aliases.ts:14-36",
+        "rust:crates/ice-cli/src/app.rs:82-172",
+        "ice:packages/coding-agent/src/cli/args.ts:159-162",
+        "ice:packages/coding-agent/src/main.ts:471-477",
+        "rust:crates/ice-cli/src/args.rs:271-555",
+        "ice:packages/evals/src/ice-harness.ts:48-53",
+        "ice:packages/evals/scripts/run-evals.mjs:1-98",
+        "ice:packages/evals/src/ice-harness.ts:28-56",
+        "ice:packages/evals/package.json:1-21",
+        "ice:packages/evals/vitest.config.ts:1-21",
+        "ice:packages/evals/vitest.test.config.ts:1-15",
+        "ice:vitest.base.ts:1-29",
+        "ice:package.json:37",
+        "ice:packages/evals/test/ice-harness.test.ts:1-35",
+        "rust:Cargo.toml:1-24",
+        "rust:crates/ice-harness/Cargo.toml:1-43"
+      ]
+    },
+    {
+      "index": 142,
+      "id": "FPC-143",
+      "finding": "ICE_SESSION_FILE is conditional shell-session propagation/cleanup. ICE_LABEL is a local footer label function, not an environment setting.",
+      "evidence": [
+        "ice:packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:124"
+      ]
+    },
+    {
+      "index": 149,
+      "id": "FPC-150",
+      "finding": "Startup benchmarking is an application integration; CLI-019 owns its exact caller/output gate and OBS-002 owns timing namespaces. Do not conflate it with ICE_TIMING.",
+      "evidence": [
+        "ice:packages/coding-agent/src/cli/args.ts:91-100",
+        "ice:packages/coding-agent/src/main.ts:906-946",
+        "rust:crates/ice-cli/src/args.rs:271-555",
+        "ice:packages/coding-agent/src/utils/version-check.ts:1-85",
+        "ice:packages/coding-agent/src/utils/ice-user-agent.ts:1-5",
+        "ice:packages/coding-agent/test/version-check.test.ts:1-129",
+        "ice:packages/coding-agent/test/ice-user-agent.test.ts:1-13",
+        "rust:crates/ice-cli/src/updates.rs:17-21",
+        "rust:crates/ice-cli/src/updates.rs:119-158",
+        "rust:crates/ice-cli/src/updates.rs:445-480",
+        "ice:packages/coding-agent/src/core/package-manager.ts:1120-1200",
+        "ice:packages/coding-agent/src/core/package-manager.ts:2138-2510",
+        "rust:crates/ice-cli/src/updates.rs:1-521",
+        "rust:crates/ice-cli/src/updates.rs:2404-3527"
+      ]
+    },
+    {
+      "index": 156,
+      "id": "FPC-157",
+      "finding": "The repository target is source-defined. The old mixed-case URL has a source-proven canonicalization mismatch captured in CLI-045, while the active source intentionally uses lowercase. Actual release availability was not queried, so 'none exist yet' cannot be certified. Prebuilt errors do not trigger an automatic unverified Cargo fallback.",
+      "evidence": [
+        "ice:packages/coding-agent/src/package-manager-cli.ts:493-562",
+        "rust:crates/ice-cli/src/updates.rs:522-1090",
+        "rust:crates/ice-cli/src/updates.rs:2404-3527",
+        "ice:packages/coding-agent/src/package-manager-cli.ts:493-543",
+        "rust:crates/ice-cli/src/prebuilt_release.rs:1-373",
+        "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+        "rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803"
+      ]
+    },
+    {
+      "index": 157,
+      "id": "FPC-158",
+      "finding": "The active Cargo target is icers, config uses .icers and ICERS_CODING_AGENT_DIR, and its default getter returns home/.icers/agent. Active FORK.md documents project .icers and the deliberate split: crate/plugin ABI names remain ice-* / ice_plugin_register. This does not mean every purported TS ICE_* item has a Rust environment reader—several listed items are constants or unsupported features.",
+      "evidence": [
+        "rust-active:FORK.md:47-59",
+        "rust-active:crates/ice-cli/Cargo.toml:105-107",
+        "rust-active:crates/ice-cli/src/config.rs:42-47",
+        "rust-active:crates/ice-cli/src/config.rs:93-107"
+      ]
+    }
+  ]
+}

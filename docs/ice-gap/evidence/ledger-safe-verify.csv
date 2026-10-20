@@ -1,0 +1,4 @@
+path,lines,area,entry_ids,status,notes
+packages/coding-agent/docs/ice-goals-host.md,45,safe-verify,,pending,
+packages/coding-agent/src/ice-goals-host.ts,65,safe-verify,,pending,
+packages/coding-agent/src/ice-safe-verify.ts,1895,safe-verify,,pending,

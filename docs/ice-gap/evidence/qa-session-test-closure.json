@@ -1,0 +1,492 @@
+{
+  "area": "session",
+  "reviewer": "coordinator",
+  "verification": "All listed test sources were read in full. No application, build or test execution.",
+  "files": [
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-bash-persistence.test.ts",
+      "sha256": "223eae2a1b45fb42fe6b4f4a3efbaff6cb048d0ec7beea0b72f9100c22b6fe36",
+      "ranges": [
+        [
+          1,
+          338
+        ]
+      ],
+      "notes": "Source-only reading of the complete test file. Confirms idle persistence; stream-time deferral; active execution identity tracking and abort-all; execution update IDs and callback deltas. No tests executed.",
+      "repo": "ice",
+      "total_lines": 338,
+      "baseline_sha256": "223eae2a1b45fb42fe6b4f4a3efbaff6cb048d0ec7beea0b72f9100c22b6fe36",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-compaction-lock.test.ts",
+      "sha256": "52d92e5dcf2eaac57cb07adf78b1bf37745512b40f83da3c1861d6713af0ba51",
+      "ranges": [
+        [
+          1,
+          386
+        ]
+      ],
+      "notes": "Full source-only test reading. Manual compaction preempts auto, lock blocks concurrent auto, cancelled auto retains queued input, compactAfterTurn bypasses automatic-disable, and extension compaction completes before queued background custom input. No tests executed.",
+      "repo": "ice",
+      "total_lines": 386,
+      "baseline_sha256": "52d92e5dcf2eaac57cb07adf78b1bf37745512b40f83da3c1861d6713af0ba51",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-compaction.test.ts",
+      "sha256": "dce9a66fcb82bcc9953ceb235e154ede07b19e03e30a0e45a218c50bad37d03d",
+      "ranges": [
+        [
+          1,
+          705
+        ]
+      ],
+      "notes": "Full test source read across 1–350 and 351–705; compaction usage included in stats, custom stream bypasses absent registry auth, bearer-only auth supported, one overflow retry, output-limit distinction and stale-usage guards. Tool redacted formula expressions at lines 136 and 216; conclusions use visible assertions and implementation evidence. No tests executed.",
+      "repo": "ice",
+      "total_lines": 705,
+      "baseline_sha256": "dce9a66fcb82bcc9953ceb235e154ede07b19e03e30a0e45a218c50bad37d03d",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-configuration-events.test.ts",
+      "sha256": "c24db91c32eb8ce71d61e49278311cc9ab0b67ef9d9acde6562ae68b3fd587a5",
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "notes": "Full test source read; manager entry events forward once and detach on disposal; model changes notify after clamping and omit credential headers; effective configuration changes suppress duplicate notifications and reload signals resources_changed.",
+      "repo": "ice",
+      "total_lines": 145,
+      "baseline_sha256": "c24db91c32eb8ce71d61e49278311cc9ab0b67ef9d9acde6562ae68b3fd587a5",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-model-extension.test.ts",
+      "sha256": "162fb68c1af8a994746fdd1a0c40db5f1fa3560037552125c9fccc9dc18432e2",
+      "ranges": [
+        [
+          1,
+          398
+        ]
+      ],
+      "notes": "Complete test source read: model persistence/clamping/scoped thinking, extension tool/result/context/input mutations; getSystemPromptOptions returns one mutable object across calls, and lifecycle reasons startup/reload.",
+      "repo": "ice",
+      "total_lines": 398,
+      "baseline_sha256": "162fb68c1af8a994746fdd1a0c40db5f1fa3560037552125c9fccc9dc18432e2",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-operation-cancellation.test.ts",
+      "sha256": "41526305c21ce0c6965c9bfb6b24d4eee47e9396112632be70668757fc6bb8e2",
+      "ranges": [
+        [
+          1,
+          231
+        ]
+      ],
+      "notes": "Complete test source read: pre-aborted operations are side-effect free, auth cancellation releases compaction lock, delayed hooks remain awaited, tree cancellation preserves leaf, targeted Bash cancellation preserves neighbor execution and partial evidence, listeners detach. Delayed manual-compaction test/implementation tension escalated for exact verification; no test execution.",
+      "repo": "ice",
+      "total_lines": 231,
+      "baseline_sha256": "41526305c21ce0c6965c9bfb6b24d4eee47e9396112632be70668757fc6bb8e2",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-prompt.test.ts",
+      "sha256": "c9afec10bb86a97c259ab8d590fa5239e120dd3318593d5905b66c246e88ab86",
+      "ranges": [
+        [
+          1,
+          444
+        ]
+      ],
+      "notes": "Complete source-only test reading: prompt/tool-loop completion, images, skill/template expansion, extension commands consume no provider response, idle/streaming input notification differences, required streamingBehavior, and compaction queues follow-ups.",
+      "repo": "ice",
+      "total_lines": 444,
+      "baseline_sha256": "c9afec10bb86a97c259ab8d590fa5239e120dd3318593d5905b66c246e88ab86",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-queue.test.ts",
+      "sha256": "a647208ab5f18d8d18243b15d11f6a044702b9b436e9c052e45c945242581a87",
+      "ranges": [
+        [
+          1,
+          479
+        ]
+      ],
+      "notes": "Full source-only test reading; ordered one-at-a-time/all queues, steering versus follow-up timing, custom nextTurn injection after user, queue count removed before message_start, parent settlement after consumed child check-in, extension command queue rejection and agent_end follow-up draining.",
+      "repo": "ice",
+      "total_lines": 479,
+      "baseline_sha256": "a647208ab5f18d8d18243b15d11f6a044702b9b436e9c052e45c945242581a87",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-tool-result-images.test.ts",
+      "sha256": "feb536c276222f98656c6b1fd9e77be438658b95a7ad8bec5296904b265a1942",
+      "ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "notes": "Full source-only test reading; arbitrary tool result images resize to <=2000 pixels before history unless images.autoResize=false; no test execution.",
+      "repo": "ice",
+      "total_lines": 110,
+      "baseline_sha256": "feb536c276222f98656c6b1fd9e77be438658b95a7ad8bec5296904b265a1942",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-retry-events.test.ts",
+      "sha256": "19bacaef935d4b15c6e3d6e216ec905547d0b3bf9d042c01d64fe380c2749e9a",
+      "ranges": [
+        [
+          1,
+          371
+        ]
+      ],
+      "notes": "Complete source-only test reading; retry attempts/end status/willRetry, disabled/auth failures, cancellable sleep, resumed tool loop settlement; extension callbacks precede public callbacks, then entry append; final agent_settled covers success/error/abort.",
+      "repo": "ice",
+      "total_lines": 371,
+      "baseline_sha256": "19bacaef935d4b15c6e3d6e216ec905547d0b3bf9d042c01d64fe380c2749e9a",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/1717-2113-agent-session-event-settlement.test.ts",
+      "sha256": "2eda63723612e2c1d64e69a688c47162a98c9e4fb81ed47fe829e7337c3175ec",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "notes": "Complete source-only regression test reading; delayed message_end preserves persisted assistant/toolResult ordering, and tool_call hooks see the settled tool-use assistant.",
+      "repo": "ice",
+      "total_lines": 96,
+      "baseline_sha256": "2eda63723612e2c1d64e69a688c47162a98c9e4fb81ed47fe829e7337c3175ec",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/3686-session-name-event.test.ts",
+      "sha256": "a994595450975f3216f0b73b7ea430aa818e90fdb3578f5f76d0843d05ec858d",
+      "ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "notes": "Full source-only regression reading; direct session and extension renames notify native and extension subscribers.",
+      "repo": "ice",
+      "total_lines": 62,
+      "baseline_sha256": "a994595450975f3216f0b73b7ea430aa818e90fdb3578f5f76d0843d05ec858d",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5217-compaction-reason.test.ts",
+      "sha256": "c787a7d9aec5000938aca9890dfc39fa6a8b70824fcab4658060d6b741f8fdc0",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "notes": "Full source-only regression reading; pre/post compaction hooks receive exact reason manual|threshold|overflow and willRetry.",
+      "repo": "ice",
+      "total_lines": 96,
+      "baseline_sha256": "c787a7d9aec5000938aca9890dfc39fa6a8b70824fcab4658060d6b741f8fdc0",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-runtime.test.ts",
+      "sha256": "804e4a9651277b35bba07523de5a34d84125247568b5ab678a4d68707acbb4fd",
+      "ranges": [
+        [
+          1,
+          664
+        ]
+      ],
+      "notes": "Complete source-only reading across two chunks; assistant replacements persist, outgoing interrupted tools settle before replacement, new/resume/fork reason/veto events, disk/in-memory at-fork behavior, cross-cwd services and destination model/thinking restore.",
+      "repo": "ice",
+      "total_lines": 664,
+      "baseline_sha256": "804e4a9651277b35bba07523de5a34d84125247568b5ab678a4d68707acbb4fd",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/2860-replaced-session-context.test.ts",
+      "sha256": "b716b622596b025e148bf7f022800159dfd64f32dd0fe72f88d194003a6e7018",
+      "ranges": [
+        [
+          1,
+          280
+        ]
+      ],
+      "notes": "Complete source-only regression reading; replacement rebind occurs before withSession; fresh awaited send methods target replacement and old contexts/APIs reject; fork/switch callbacks operate on selected branch/session.",
+      "repo": "ice",
+      "total_lines": 280,
+      "baseline_sha256": "b716b622596b025e148bf7f022800159dfd64f32dd0fe72f88d194003a6e7018",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5996-session-name-newlines.test.ts",
+      "sha256": "f3d7cb50c29bb3a5cc1580ac29564405c0698cff59c071b84dde5f56a5257928",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "notes": "Complete source-only regression reading; CR/LF session names normalize to spaces before storage and event publication.",
+      "repo": "ice",
+      "total_lines": 41,
+      "baseline_sha256": "f3d7cb50c29bb3a5cc1580ac29564405c0698cff59c071b84dde5f56a5257928",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/pre-prompt-compaction-no-continue.test.ts",
+      "sha256": "a91812c3d0a65689af52e6de3770ab219e1b8489f2ac43fb0dac899a474ca085",
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "notes": "Complete source-only regression reading; pre-prompt length-overflow compacts with willRetry=true metadata but invokes no continue and starts the new user prompt once.",
+      "repo": "ice",
+      "total_lines": 76,
+      "baseline_sha256": "a91812c3d0a65689af52e6de3770ab219e1b8489f2ac43fb0dac899a474ca085",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/blackhole-compaction.test.ts",
+      "sha256": "8e2a2f98e862d69a0983f90aa83a9885f575f8273dc1d1a6dc97134ff40d6903",
+      "ranges": [
+        [
+          1,
+          578
+        ]
+      ],
+      "notes": "Complete source-only test reading across two chunks: persisted Blackhole settings, tool-boundary resume/pause without synthetic resume messages, provider-usage threshold, kept-result trim only at model projection, minimal sentinel, subagent/action summary, Blackhole/Cognee co-loading, no repeated failed boundary compaction, escaped model-inferred refinement with deterministic fallback.",
+      "repo": "ice",
+      "total_lines": 578,
+      "baseline_sha256": "8e2a2f98e862d69a0983f90aa83a9885f575f8273dc1d1a6dc97134ff40d6903",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/6647-compaction-retries-transient-stream-drop.test.ts",
+      "sha256": "dbdb9d7c205db905956988de53bc98af2e297d97e7befbf9a9550c07cd9c2397",
+      "ranges": [
+        [
+          1,
+          193
+        ]
+      ],
+      "notes": "Complete source-only regression reading; summarization retries transient terminated but not quota/disabled, maxRetries counts extra requests, exactly one retry-finished callback, abort during backoff yields aborted compaction.",
+      "repo": "ice",
+      "total_lines": 193,
+      "baseline_sha256": "dbdb9d7c205db905956988de53bc98af2e297d97e7befbf9a9550c07cd9c2397",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts",
+      "sha256": "6b1b5807cf0886aa199de17452f2310f917d1c0f84e509a50ce078663ea22ef0",
+      "ranges": [
+        [
+          1,
+          523
+        ]
+      ],
+      "notes": "Full source-only test reading: resources stay above restored chat, replacement apply/render/subscribe precedes extension bind/start, reload hook renders before notifications, hideThinkingBlock applies before rebuild, blocker retains focus through async reload. Shared with TUI owner as coordinator-read evidence.",
+      "repo": "ice",
+      "total_lines": 523,
+      "baseline_sha256": "6b1b5807cf0886aa199de17452f2310f917d1c0f84e509a50ce078663ea22ef0",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/6768-copilot-compaction-base-url.test.ts",
+      "sha256": "045b5acb3845b13e58977e575651e0b62329b665ff2b3ffab19823ef5c7dec09",
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "notes": "Complete source-only regression: compaction through SDK stream wrapper uses credential-resolved enterprise baseUrl, not stale catalog individual URL.",
+      "repo": "ice",
+      "total_lines": 115,
+      "baseline_sha256": "045b5acb3845b13e58977e575651e0b62329b665ff2b3ffab19823ef5c7dec09",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+      "sha256": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "notes": "Complete source-only regression: RPC prompt during manual compaction acknowledges preflight, persists/executes once after compaction, and awaits later idle separately.",
+      "repo": "ice",
+      "total_lines": 92,
+      "baseline_sha256": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7497-session-discovery-symlink.test.ts",
+      "sha256": "e94fa649047b6ef68b3deadc21750107f90b2584f6489c929cd87a9c5deaf834",
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "notes": "Complete source-only regression: linked session directories are followed while alias paths persist; broken/file links do not hide valid sessions.",
+      "repo": "ice",
+      "total_lines": 76,
+      "baseline_sha256": "e94fa649047b6ef68b3deadc21750107f90b2584f6489c929cd87a9c5deaf834",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts",
+      "sha256": "d37e741d73ca8b532b3a48117330add00466965c5724a52bd1169f542bf41ee7",
+      "ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "notes": "Complete source-only regression: stale startup rebind cannot add a duplicate subscription or title update after a replacement rebind wins.",
+      "repo": "ice",
+      "total_lines": 82,
+      "baseline_sha256": "d37e741d73ca8b532b3a48117330add00466965c5724a52bd1169f542bf41ee7",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9178-tree-during-compaction.test.ts",
+      "sha256": "1be72788c7004a796cb7e5636236f07b9fb1b0e7bbf512ce1a37fa23fdf41d89",
+      "ranges": [
+        [
+          1,
+          188
+        ]
+      ],
+      "notes": "Full source-only regression; manual compaction/tree navigation are mutually exclusive, delayed tree/auth cancellation preserves leaf and prevents summary provider request, prompts during tree navigation are rejected with preflight=false.",
+      "repo": "ice",
+      "total_lines": 188,
+      "baseline_sha256": "1be72788c7004a796cb7e5636236f07b9fb1b0e7bbf512ce1a37fa23fdf41d89",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-compaction-auth-cancellation.test.ts",
+      "sha256": "27218f0be92c5d76a715c4aa3f1ad1d4e9290f44fdde2ac7cff1a07f4436977f",
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "notes": "Full source-only regression; manual/auto cancellation while waiting/authenticating bypasses hooks/provider requests, compaction_end cancellation suppresses retry after save, synchronous compaction_start abort yields aborted end.",
+      "repo": "ice",
+      "total_lines": 132,
+      "baseline_sha256": "27218f0be92c5d76a715c4aa3f1ad1d4e9290f44fdde2ac7cff1a07f4436977f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-message-queue-integrity.test.ts",
+      "sha256": "b4d37ee91d1fa290ee73fc67fb6776a95a3e45e30a08a5c3adb336e693a6eb6f",
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "notes": "Full source-only regression; context-only custom messages flush after toolResult before next assistant with no follow-up; cancelled compaction retains queued input; steer/followUp input hooks transform once.",
+      "repo": "ice",
+      "total_lines": 152,
+      "baseline_sha256": "b4d37ee91d1fa290ee73fc67fb6776a95a3e45e30a08a5c3adb336e693a6eb6f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-runtime-session-settlement.test.ts",
+      "sha256": "58d0766ba115d36d5d60a7f4af9f231d66e05c597c61f47e8953a12cc520c979",
+      "ranges": [
+        [
+          1,
+          205
+        ]
+      ],
+      "notes": "Complete source-only regression reading: new/dispose waits for aborted tree hook, shutdown waits for cancelled compaction hook, in-memory fork settles old tools before session ID/history change, JSONL import never overwrites an existing different session sharing its basename.",
+      "repo": "ice",
+      "total_lines": 205,
+      "baseline_sha256": "58d0766ba115d36d5d60a7f4af9f231d66e05c597c61f47e8953a12cc520c979",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true
+    }
+  ],
+  "summary": {
+    "files": 28,
+    "lines": 7258,
+    "unread_files": 0
+  },
+  "limitations": [
+    "Some connector-redacted literal expressions remain explicitly unverified; readable control flow and assertions support only the stated behavior.",
+    "Source-only review; tests were not executed."
+  ]
+}

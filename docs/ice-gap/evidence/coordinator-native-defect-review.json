@@ -1,0 +1,448 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "captured_at": "2026-10-20T01:52:39.738Z",
+  "purpose": "Independent source review of TUI native defects, print/JSON native lifecycle and models JSON parsing; supplements the area owners' full subsystem reads.",
+  "scope": "Frozen old Rust checkout ff9270f26e263ea9ce54349786bf2d93c4517476. Source only; no application execution, tests, shell input, terminal emission, clipboard action or network.",
+  "read_evidence": [
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total_lines": 1761,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          343,
+          493
+        ],
+        [
+          505,
+          584
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            343,
+            493
+          ],
+          "visible_line_count": 151,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:505-584 rust:crates/ice-tui/src/word_navigation.rs:1-81 rust:crates/ice-tui/src/word_navigation.rs:145-216 rust:crates/ice-tui/src/keys.rs:1-290 rust:crates/ice-tui/src/terminal.rs:401-415 rust:crates/ice-tui/src/keybindings.rs:686-703",
+          "range": [
+            505,
+            584
+          ],
+          "visible_line_count": 80,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal_image.rs",
+      "sha256": "af496a5584604ebf3f48cbd39bf13ff1517a907824d8e4fcbd9fbefed50d1d8f",
+      "total_lines": 559,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          178,
+          222
+        ],
+        [
+          429,
+          445
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            178,
+            222
+          ],
+          "visible_line_count": 45,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            429,
+            445
+          ],
+          "visible_line_count": 17,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/image.rs",
+      "sha256": "4435e92b152cb1fdcbf81fe936a1490fa0825c2f8f7db0a7ad06d00c96f41587",
+      "total_lines": 419,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          245,
+          269
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            245,
+            269
+          ],
+          "visible_line_count": 25,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/line_diff.rs",
+      "sha256": "3041ac0281b188d8e9bbd28694306e271d6f2e0af469ba26b0e06b1ab88b380f",
+      "total_lines": 358,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          111,
+          178
+        ],
+        [
+          223,
+          234
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            111,
+            178
+          ],
+          "visible_line_count": 68,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            223,
+            234
+          ],
+          "visible_line_count": 12,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/utils.rs",
+      "sha256": "8d490360a20744cc985d84e424bfd0bfc99294b474050d82878c3bfe9818764e",
+      "total_lines": 484,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          348,
+          350
+        ],
+        [
+          384,
+          440
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            348,
+            350
+          ],
+          "visible_line_count": 3,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:343-493 rust:crates/ice-tui/src/terminal_image.rs:178-222 rust:crates/ice-tui/src/terminal_image.rs:429-445 rust:crates/ice-tui/src/image.rs:245-269 rust:crates/ice-tui/src/line_diff.rs:111-178 rust:crates/ice-tui/src/line_diff.rs:223-234 rust:crates/ice-tui/src/utils.rs:348-350 rust:crates/ice-tui/src/utils.rs:384-440",
+          "range": [
+            384,
+            440
+          ],
+          "visible_line_count": 57,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "total_lines": 2420,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          415,
+          450
+        ],
+        [
+          859,
+          903
+        ],
+        [
+          1044,
+          1156
+        ],
+        [
+          1200,
+          1388
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/editor.rs:415-450 rust:crates/ice-tui/src/editor.rs:859-903 rust:crates/ice-tui/src/editor.rs:1044-1156 rust:crates/ice-tui/src/editor.rs:1200-1388 rust:crates/ice-tui/src/word_navigation.rs:72-128 rust:crates/ice-tui/src/stdin_buffer.rs:80-228",
+          "range": [
+            415,
+            450
+          ],
+          "visible_line_count": 36,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/editor.rs:415-450 rust:crates/ice-tui/src/editor.rs:859-903 rust:crates/ice-tui/src/editor.rs:1044-1156 rust:crates/ice-tui/src/editor.rs:1200-1388 rust:crates/ice-tui/src/word_navigation.rs:72-128 rust:crates/ice-tui/src/stdin_buffer.rs:80-228",
+          "range": [
+            859,
+            903
+          ],
+          "visible_line_count": 45,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/editor.rs:415-450 rust:crates/ice-tui/src/editor.rs:859-903 rust:crates/ice-tui/src/editor.rs:1044-1156 rust:crates/ice-tui/src/editor.rs:1200-1388 rust:crates/ice-tui/src/word_navigation.rs:72-128 rust:crates/ice-tui/src/stdin_buffer.rs:80-228",
+          "range": [
+            1044,
+            1156
+          ],
+          "visible_line_count": 113,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/editor.rs:415-450 rust:crates/ice-tui/src/editor.rs:859-903 rust:crates/ice-tui/src/editor.rs:1044-1156 rust:crates/ice-tui/src/editor.rs:1200-1388 rust:crates/ice-tui/src/word_navigation.rs:72-128 rust:crates/ice-tui/src/stdin_buffer.rs:80-228",
+          "range": [
+            1200,
+            1388
+          ],
+          "visible_line_count": 189,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/word_navigation.rs",
+      "sha256": "edaf5ca49ec158e34125767345279b57ffb88aace7940f47bf8c34e5f3ab6770",
+      "total_lines": 271,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          1,
+          128
+        ],
+        [
+          145,
+          216
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/editor.rs:415-450 rust:crates/ice-tui/src/editor.rs:859-903 rust:crates/ice-tui/src/editor.rs:1044-1156 rust:crates/ice-tui/src/editor.rs:1200-1388 rust:crates/ice-tui/src/word_navigation.rs:72-128 rust:crates/ice-tui/src/stdin_buffer.rs:80-228",
+          "range": [
+            72,
+            128
+          ],
+          "visible_line_count": 57,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:505-584 rust:crates/ice-tui/src/word_navigation.rs:1-81 rust:crates/ice-tui/src/word_navigation.rs:145-216 rust:crates/ice-tui/src/keys.rs:1-290 rust:crates/ice-tui/src/terminal.rs:401-415 rust:crates/ice-tui/src/keybindings.rs:686-703",
+          "range": [
+            1,
+            81
+          ],
+          "visible_line_count": 81,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:505-584 rust:crates/ice-tui/src/word_navigation.rs:1-81 rust:crates/ice-tui/src/word_navigation.rs:145-216 rust:crates/ice-tui/src/keys.rs:1-290 rust:crates/ice-tui/src/terminal.rs:401-415 rust:crates/ice-tui/src/keybindings.rs:686-703",
+          "range": [
+            145,
+            216
+          ],
+          "visible_line_count": 72,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/stdin_buffer.rs",
+      "sha256": "78c2500438233acbe5a216ef0eb3f389762f9ba46a1f3220577418ff1e6d86f7",
+      "total_lines": 312,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          80,
+          228
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/editor.rs:415-450 rust:crates/ice-tui/src/editor.rs:859-903 rust:crates/ice-tui/src/editor.rs:1044-1156 rust:crates/ice-tui/src/editor.rs:1200-1388 rust:crates/ice-tui/src/word_navigation.rs:72-128 rust:crates/ice-tui/src/stdin_buffer.rs:80-228",
+          "range": [
+            80,
+            228
+          ],
+          "visible_line_count": 149,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/keys.rs",
+      "sha256": "b253ce229e63eae6b348a7d979f0fd9e5a02257ff146fd31c17fbb5b1729648a",
+      "total_lines": 524,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          1,
+          524
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:505-584 rust:crates/ice-tui/src/word_navigation.rs:1-81 rust:crates/ice-tui/src/word_navigation.rs:145-216 rust:crates/ice-tui/src/keys.rs:1-290 rust:crates/ice-tui/src/terminal.rs:401-415 rust:crates/ice-tui/src/keybindings.rs:686-703",
+          "range": [
+            1,
+            290
+          ],
+          "visible_line_count": 290,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        },
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/keys.rs:291-524 rust:crates/ice-cli/src/modes.rs:29-266",
+          "range": [
+            291,
+            524
+          ],
+          "visible_line_count": 234,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal.rs",
+      "sha256": "5dc9e614eb1589611e87491eb5d1dab93cd8596534e0fab107f63c472ba427bc",
+      "total_lines": 672,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          401,
+          415
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:505-584 rust:crates/ice-tui/src/word_navigation.rs:1-81 rust:crates/ice-tui/src/word_navigation.rs:145-216 rust:crates/ice-tui/src/keys.rs:1-290 rust:crates/ice-tui/src/terminal.rs:401-415 rust:crates/ice-tui/src/keybindings.rs:686-703",
+          "range": [
+            401,
+            415
+          ],
+          "visible_line_count": 15,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/keybindings.rs",
+      "sha256": "e78c3932b990db2179b0bde8514b3d5299af4e125dfdb93a34064e010b3c3d67",
+      "total_lines": 936,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          686,
+          703
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-cli/src/config.rs:505-584 rust:crates/ice-tui/src/word_navigation.rs:1-81 rust:crates/ice-tui/src/word_navigation.rs:145-216 rust:crates/ice-tui/src/keys.rs:1-290 rust:crates/ice-tui/src/terminal.rs:401-415 rust:crates/ice-tui/src/keybindings.rs:686-703",
+          "range": [
+            686,
+            703
+          ],
+          "visible_line_count": 18,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total_lines": 1566,
+      "owners": [
+        "/root"
+      ],
+      "ranges": [
+        [
+          29,
+          266
+        ]
+      ],
+      "records": [
+        {
+          "command": "node docs/ice-gap/read-evidence.mjs rust:crates/ice-tui/src/keys.rs:291-524 rust:crates/ice-cli/src/modes.rs:29-266",
+          "range": [
+            29,
+            266
+          ],
+          "visible_line_count": 238,
+          "review": "Independent coordinator source read, completed before the closeout checkpoint."
+        }
+      ],
+      "fully_read": false
+    }
+  ],
+  "excluded_redacted_lines": [],
+  "notes": [
+    "Every recorded line was actually displayed and reviewed. Longer calls whose display was initially truncated were explicitly redisplayed in the earlier coordinator segment before recording.",
+    "Word navigation helpers are at word_navigation.rs:1-80; candidate defect reference 72-128 was corrected after independent inspection."
+  ]
+}

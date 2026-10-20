@@ -1,0 +1,637 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "phase": "source-displayed-awaiting-semantic-disposition",
+  "records": [
+    {
+      "symbol": "canonicalizePath",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/paths.ts:28",
+      "covering_entries": [
+        "CLI-020",
+        "SET-001",
+        "SET-004",
+        "TOOLS-020"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/paths.ts",
+        "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+        "range": [
+          25,
+          42
+        ],
+        "text": "25 |  * not exist yet), so that callers never crash on missing filesystem\n26 |  * entries.\n27 |  */\n28 | export function canonicalizePath(path: string): string {\n29 | \ttry {\n30 | \t\treturn realpathSync(path);\n31 | \t} catch {\n32 | \t\treturn path;\n33 | \t}\n34 | }\n35 | \n36 | /**\n37 |  * Returns true if the value is NOT a package source (npm:, git:, etc.)\n38 |  * or a remote URL protocol. Bare names, relative paths, and file: URLs\n39 |  * are considered local.\n40 |  */\n41 | export function isLocalPath(value: string): boolean {\n42 | \tconst trimmed = value.trim();"
+      },
+      "entries": [
+        {
+          "id": "CLI-020",
+          "title": "Package source grammar, canonical identity and scoped local-path resolution",
+          "what": "Users can identify extension/resource packages with npm specifications, Git repositories with optional refs, or local files/directories. The parser determines cache identity and pin behavior before any install or settings mutation.",
+          "source": "ice:packages/coding-agent/src/core/package-manager.ts:1352-1789; ice:packages/coding-agent/src/utils/git.ts:1-227; ice:packages/coding-agent/src/utils/paths.ts:1-119; ice:packages/coding-agent/test/git-ssh-url.test.ts:1-92; ice:packages/coding-agent/test/paths.test.ts:1-151; rust:crates/ice-cli/src/install.rs:1075-1300; rust:crates/ice-cli/src/packages.rs:48-136.; ice:packages/coding-agent/src/core/package-manager.ts:2008-2136.",
+          "interfaces": "Source strings include npm:name[@version], npm:@scope/name[@version], git:host/owner/repo[@ref], explicit git:git@host:owner/repo[@ref], protocol Git URLs, relative/absolute/home/file-URL local paths. GitSource carries repo, host, path, optional ref and pinned. Stable identity must be reused by add/remove/update and scoped dedup; it must not silently turn a bare local name into an npm or Git source."
+        },
+        {
+          "id": "SET-001",
+          "title": "Distribution identity, agent roots and bundled resource path resolution",
+          "what": "Every settings, resource and session consumer resolves a consistent distribution identity and directory tree, whether ICE runs from TypeScript, a package installation or a Bun binary. Environment overrides and resource assets have explicit path rules.",
+          "source": "ice:packages/coding-agent/src/config.ts:21-25,369-605 getPackageDir, asset/path helpers and identity constants; ice:packages/coding-agent/src/utils/paths.ts:1-119 normalizePath/resolvePath/canonicalPath; ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-7; ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-32; ice:packages/coding-agent/docs/environment-variables.md:1-89.",
+          "interfaces": "Exports include isBunBinary,isBunRuntime,getPackageDir,getThemesDir,getExportTemplateDir,getPackageJsonPath,getReadmePath,getDocsPath,getExamplesPath,getChangelogPath,getInteractiveAssetsDir,getCogneeSkillsDir,getObserveDashboardPath,getBundledInteractiveAssetPath,expandTildePath,getShareViewerUrl,getAgentDir,getProjectConfigDir,getCustomThemesDir,getModelsPath,getAuthPath,getSettingsPath,getToolsDir,getBinDir,getPromptsDir,getSessionsDir,getDebugLogPath. Identity fields are PACKAGE_NAME,APP_NAME,APP_TITLE,CONFIG_DIR_NAME,VERSION,ENV_AGENT_DIR,ENV_SESSION_DIR. No migration or directory creation is implied by a path getter."
+        },
+        {
+          "id": "SET-004",
+          "title": "Locked trust store with canonical ancestor inheritance and grouped updates",
+          "what": "Trust saved for a parent applies to descendants unless a closer folder overrides it. Saving a parent and clearing a child is one protected read-modify-write operation, and independent processes see current decisions.",
+          "source": "`ice:packages/coding-agent/src/core/trust-manager.ts:8-27`, `:40-175`, `:209-244` (`ProjectTrustStore`, nearest lookup and locking); `ice:packages/coding-agent/src/utils/paths.ts:22-34`, `:57-85`; `ice:packages/coding-agent/test/trust-manager.test.ts:24-37`.",
+          "interfaces": "`ProjectTrustDecision = boolean | null`; `ProjectTrustStoreEntry {path:string; decision:boolean}`; `ProjectTrustUpdate {path:string; decision:boolean|null}`. Methods `get(cwd)`, `getEntry(cwd)`, `set(cwd,decision)`, `setMany(updates)` are synchronous. JSON example: `{\"/work\":true,\"/work/untrusted\":false}`. Explicit nulls can be read but API null updates remove the key. No environment aliases or alternate trust schema are read."
+        },
+        {
+          "id": "TOOLS-020",
+          "title": "Tool path normalization and ordered read-path fallback",
+          "what": "Tool calls accept user-style paths and locate common macOS screenshot spellings while keeping write/edit destinations literal after normalization.",
+          "source": "ice:packages/coding-agent/src/core/tools/path-utils.ts:1-118; ice:packages/coding-agent/src/utils/paths.ts:7-100; ice:packages/agent/src/harness/tools/path-utils.ts:1-30; ice:packages/coding-agent/test/path-utils.test.ts:1-175",
+          "interfaces": "expandPath,resolveToCwd,resolveReadPath,resolveReadPathAsync,pathExists; harness normalizeToolPath,resolveToolPath,resolveReadToolPath. Shared normalizePath options {trim?,expandTilde?,homeDir?,stripAtPrefix?,normalizeUnicodeSpaces?}; tool callers enable stripAtPrefix and normalizeUnicodeSpaces. Inputs remain strings, and errors from file URLs or harness filesystem operations can reject the tool."
+        }
+      ]
+    },
+    {
+      "symbol": "isLocalPath",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/paths.ts:41",
+      "covering_entries": [
+        "CLI-020",
+        "SET-001",
+        "TOOLS-020"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/paths.ts",
+        "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+        "range": [
+          38,
+          55
+        ],
+        "text": "38 |  * or a remote URL protocol. Bare names, relative paths, and file: URLs\n39 |  * are considered local.\n40 |  */\n41 | export function isLocalPath(value: string): boolean {\n42 | \tconst trimmed = value.trim();\n43 | \t// Known non-local prefixes. file: URLs are local paths and are intentionally resolved by resolvePath().\n44 | \tif (\n45 | \t\ttrimmed.startsWith(\"npm:\") ||\n46 | \t\ttrimmed.startsWith(\"git:\") ||\n47 | \t\ttrimmed.startsWith(\"github:\") ||\n48 | \t\ttrimmed.startsWith(\"http:\") ||\n49 | \t\ttrimmed.startsWith(\"https:\") ||\n50 | \t\ttrimmed.startsWith(\"ssh:\")\n51 | \t) {\n52 | \t\treturn false;\n53 | \t}\n54 | \treturn true;\n55 | }"
+      },
+      "entries": [
+        {
+          "id": "CLI-020",
+          "title": "Package source grammar, canonical identity and scoped local-path resolution",
+          "what": "Users can identify extension/resource packages with npm specifications, Git repositories with optional refs, or local files/directories. The parser determines cache identity and pin behavior before any install or settings mutation.",
+          "source": "ice:packages/coding-agent/src/core/package-manager.ts:1352-1789; ice:packages/coding-agent/src/utils/git.ts:1-227; ice:packages/coding-agent/src/utils/paths.ts:1-119; ice:packages/coding-agent/test/git-ssh-url.test.ts:1-92; ice:packages/coding-agent/test/paths.test.ts:1-151; rust:crates/ice-cli/src/install.rs:1075-1300; rust:crates/ice-cli/src/packages.rs:48-136.; ice:packages/coding-agent/src/core/package-manager.ts:2008-2136.",
+          "interfaces": "Source strings include npm:name[@version], npm:@scope/name[@version], git:host/owner/repo[@ref], explicit git:git@host:owner/repo[@ref], protocol Git URLs, relative/absolute/home/file-URL local paths. GitSource carries repo, host, path, optional ref and pinned. Stable identity must be reused by add/remove/update and scoped dedup; it must not silently turn a bare local name into an npm or Git source."
+        },
+        {
+          "id": "SET-001",
+          "title": "Distribution identity, agent roots and bundled resource path resolution",
+          "what": "Every settings, resource and session consumer resolves a consistent distribution identity and directory tree, whether ICE runs from TypeScript, a package installation or a Bun binary. Environment overrides and resource assets have explicit path rules.",
+          "source": "ice:packages/coding-agent/src/config.ts:21-25,369-605 getPackageDir, asset/path helpers and identity constants; ice:packages/coding-agent/src/utils/paths.ts:1-119 normalizePath/resolvePath/canonicalPath; ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-7; ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-32; ice:packages/coding-agent/docs/environment-variables.md:1-89.",
+          "interfaces": "Exports include isBunBinary,isBunRuntime,getPackageDir,getThemesDir,getExportTemplateDir,getPackageJsonPath,getReadmePath,getDocsPath,getExamplesPath,getChangelogPath,getInteractiveAssetsDir,getCogneeSkillsDir,getObserveDashboardPath,getBundledInteractiveAssetPath,expandTildePath,getShareViewerUrl,getAgentDir,getProjectConfigDir,getCustomThemesDir,getModelsPath,getAuthPath,getSettingsPath,getToolsDir,getBinDir,getPromptsDir,getSessionsDir,getDebugLogPath. Identity fields are PACKAGE_NAME,APP_NAME,APP_TITLE,CONFIG_DIR_NAME,VERSION,ENV_AGENT_DIR,ENV_SESSION_DIR. No migration or directory creation is implied by a path getter."
+        },
+        {
+          "id": "TOOLS-020",
+          "title": "Tool path normalization and ordered read-path fallback",
+          "what": "Tool calls accept user-style paths and locate common macOS screenshot spellings while keeping write/edit destinations literal after normalization.",
+          "source": "ice:packages/coding-agent/src/core/tools/path-utils.ts:1-118; ice:packages/coding-agent/src/utils/paths.ts:7-100; ice:packages/agent/src/harness/tools/path-utils.ts:1-30; ice:packages/coding-agent/test/path-utils.test.ts:1-175",
+          "interfaces": "expandPath,resolveToCwd,resolveReadPath,resolveReadPathAsync,pathExists; harness normalizeToolPath,resolveToolPath,resolveReadToolPath. Shared normalizePath options {trim?,expandTilde?,homeDir?,stripAtPrefix?,normalizeUnicodeSpaces?}; tool callers enable stripAtPrefix and normalizeUnicodeSpaces. Inputs remain strings, and errors from file URLs or harness filesystem operations can reject the tool."
+        }
+      ]
+    },
+    {
+      "symbol": "formatPathRelativeToCwdOrAbsolute",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/paths.ts:98",
+      "covering_entries": [
+        "CLI-020",
+        "SET-001",
+        "TOOLS-020"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/paths.ts",
+        "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+        "range": [
+          95,
+          112
+        ],
+        "text": "95 | \treturn isInsideCwd ? relativePath || \".\" : undefined;\n96 | }\n97 | \n98 | export function formatPathRelativeToCwdOrAbsolute(filePath: string, cwd: string): string {\n99 | \tconst absolutePath = resolvePath(filePath, cwd);\n100 | \treturn (getCwdRelativePath(absolutePath, cwd) ?? absolutePath).split(sep).join(\"/\");\n101 | }\n102 | \n103 | export function markPathIgnoredByCloudSync(path: string): void {\n104 | \tconst attrs =\n105 | \t\tprocess.platform === \"darwin\"\n106 | \t\t\t? [\"com.dropbox.ignored\", \"com.apple.fileprovider.ignore#P\"]\n107 | \t\t\t: process.platform === \"linux\"\n108 | \t\t\t\t? [\"user.com.dropbox.ignored\"]\n109 | \t\t\t\t: [];\n110 | \n111 | \tfor (const attr of attrs) {\n112 | \t\tif (process.platform === \"darwin\") {"
+      },
+      "entries": [
+        {
+          "id": "CLI-020",
+          "title": "Package source grammar, canonical identity and scoped local-path resolution",
+          "what": "Users can identify extension/resource packages with npm specifications, Git repositories with optional refs, or local files/directories. The parser determines cache identity and pin behavior before any install or settings mutation.",
+          "source": "ice:packages/coding-agent/src/core/package-manager.ts:1352-1789; ice:packages/coding-agent/src/utils/git.ts:1-227; ice:packages/coding-agent/src/utils/paths.ts:1-119; ice:packages/coding-agent/test/git-ssh-url.test.ts:1-92; ice:packages/coding-agent/test/paths.test.ts:1-151; rust:crates/ice-cli/src/install.rs:1075-1300; rust:crates/ice-cli/src/packages.rs:48-136.; ice:packages/coding-agent/src/core/package-manager.ts:2008-2136.",
+          "interfaces": "Source strings include npm:name[@version], npm:@scope/name[@version], git:host/owner/repo[@ref], explicit git:git@host:owner/repo[@ref], protocol Git URLs, relative/absolute/home/file-URL local paths. GitSource carries repo, host, path, optional ref and pinned. Stable identity must be reused by add/remove/update and scoped dedup; it must not silently turn a bare local name into an npm or Git source."
+        },
+        {
+          "id": "SET-001",
+          "title": "Distribution identity, agent roots and bundled resource path resolution",
+          "what": "Every settings, resource and session consumer resolves a consistent distribution identity and directory tree, whether ICE runs from TypeScript, a package installation or a Bun binary. Environment overrides and resource assets have explicit path rules.",
+          "source": "ice:packages/coding-agent/src/config.ts:21-25,369-605 getPackageDir, asset/path helpers and identity constants; ice:packages/coding-agent/src/utils/paths.ts:1-119 normalizePath/resolvePath/canonicalPath; ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-7; ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-32; ice:packages/coding-agent/docs/environment-variables.md:1-89.",
+          "interfaces": "Exports include isBunBinary,isBunRuntime,getPackageDir,getThemesDir,getExportTemplateDir,getPackageJsonPath,getReadmePath,getDocsPath,getExamplesPath,getChangelogPath,getInteractiveAssetsDir,getCogneeSkillsDir,getObserveDashboardPath,getBundledInteractiveAssetPath,expandTildePath,getShareViewerUrl,getAgentDir,getProjectConfigDir,getCustomThemesDir,getModelsPath,getAuthPath,getSettingsPath,getToolsDir,getBinDir,getPromptsDir,getSessionsDir,getDebugLogPath. Identity fields are PACKAGE_NAME,APP_NAME,APP_TITLE,CONFIG_DIR_NAME,VERSION,ENV_AGENT_DIR,ENV_SESSION_DIR. No migration or directory creation is implied by a path getter."
+        },
+        {
+          "id": "TOOLS-020",
+          "title": "Tool path normalization and ordered read-path fallback",
+          "what": "Tool calls accept user-style paths and locate common macOS screenshot spellings while keeping write/edit destinations literal after normalization.",
+          "source": "ice:packages/coding-agent/src/core/tools/path-utils.ts:1-118; ice:packages/coding-agent/src/utils/paths.ts:7-100; ice:packages/agent/src/harness/tools/path-utils.ts:1-30; ice:packages/coding-agent/test/path-utils.test.ts:1-175",
+          "interfaces": "expandPath,resolveToCwd,resolveReadPath,resolveReadPathAsync,pathExists; harness normalizeToolPath,resolveToolPath,resolveReadToolPath. Shared normalizePath options {trim?,expandTilde?,homeDir?,stripAtPrefix?,normalizeUnicodeSpaces?}; tool callers enable stripAtPrefix and normalizeUnicodeSpaces. Inputs remain strings, and errors from file URLs or harness filesystem operations can reject the tool."
+        }
+      ]
+    },
+    {
+      "symbol": "markPathIgnoredByCloudSync",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/paths.ts:103",
+      "covering_entries": [
+        "CLI-020",
+        "SET-001"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/paths.ts",
+        "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+        "range": [
+          100,
+          117
+        ],
+        "text": "100 | \treturn (getCwdRelativePath(absolutePath, cwd) ?? absolutePath).split(sep).join(\"/\");\n101 | }\n102 | \n103 | export function markPathIgnoredByCloudSync(path: string): void {\n104 | \tconst attrs =\n105 | \t\tprocess.platform === \"darwin\"\n106 | \t\t\t? [\"com.dropbox.ignored\", \"com.apple.fileprovider.ignore#P\"]\n107 | \t\t\t: process.platform === \"linux\"\n108 | \t\t\t\t? [\"user.com.dropbox.ignored\"]\n109 | \t\t\t\t: [];\n110 | \n111 | \tfor (const attr of attrs) {\n112 | \t\tif (process.platform === \"darwin\") {\n113 | \t\t\tspawnProcessSync(\"xattr\", [\"-w\", attr, \"1\", path], { encoding: \"utf-8\", stdio: \"ignore\" });\n114 | \t\t} else {\n115 | \t\t\tspawnProcessSync(\"setfattr\", [\"-n\", attr, \"-v\", \"1\", path], { encoding: \"utf-8\", stdio: \"ignore\" });\n116 | \t\t}\n117 | \t}"
+      },
+      "entries": [
+        {
+          "id": "CLI-020",
+          "title": "Package source grammar, canonical identity and scoped local-path resolution",
+          "what": "Users can identify extension/resource packages with npm specifications, Git repositories with optional refs, or local files/directories. The parser determines cache identity and pin behavior before any install or settings mutation.",
+          "source": "ice:packages/coding-agent/src/core/package-manager.ts:1352-1789; ice:packages/coding-agent/src/utils/git.ts:1-227; ice:packages/coding-agent/src/utils/paths.ts:1-119; ice:packages/coding-agent/test/git-ssh-url.test.ts:1-92; ice:packages/coding-agent/test/paths.test.ts:1-151; rust:crates/ice-cli/src/install.rs:1075-1300; rust:crates/ice-cli/src/packages.rs:48-136.; ice:packages/coding-agent/src/core/package-manager.ts:2008-2136.",
+          "interfaces": "Source strings include npm:name[@version], npm:@scope/name[@version], git:host/owner/repo[@ref], explicit git:git@host:owner/repo[@ref], protocol Git URLs, relative/absolute/home/file-URL local paths. GitSource carries repo, host, path, optional ref and pinned. Stable identity must be reused by add/remove/update and scoped dedup; it must not silently turn a bare local name into an npm or Git source."
+        },
+        {
+          "id": "SET-001",
+          "title": "Distribution identity, agent roots and bundled resource path resolution",
+          "what": "Every settings, resource and session consumer resolves a consistent distribution identity and directory tree, whether ICE runs from TypeScript, a package installation or a Bun binary. Environment overrides and resource assets have explicit path rules.",
+          "source": "ice:packages/coding-agent/src/config.ts:21-25,369-605 getPackageDir, asset/path helpers and identity constants; ice:packages/coding-agent/src/utils/paths.ts:1-119 normalizePath/resolvePath/canonicalPath; ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-7; ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-32; ice:packages/coding-agent/docs/environment-variables.md:1-89.",
+          "interfaces": "Exports include isBunBinary,isBunRuntime,getPackageDir,getThemesDir,getExportTemplateDir,getPackageJsonPath,getReadmePath,getDocsPath,getExamplesPath,getChangelogPath,getInteractiveAssetsDir,getCogneeSkillsDir,getObserveDashboardPath,getBundledInteractiveAssetPath,expandTildePath,getShareViewerUrl,getAgentDir,getProjectConfigDir,getCustomThemesDir,getModelsPath,getAuthPath,getSettingsPath,getToolsDir,getBinDir,getPromptsDir,getSessionsDir,getDebugLogPath. Identity fields are PACKAGE_NAME,APP_NAME,APP_TITLE,CONFIG_DIR_NAME,VERSION,ENV_AGENT_DIR,ENV_SESSION_DIR. No migration or directory creation is implied by a path getter."
+        }
+      ]
+    },
+    {
+      "symbol": "loadPhoton",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/photon.ts:116",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/photon.ts",
+        "sha256": "806c3941b96e09705e26cd2d449ee8971b3498bbde495f7512b20906120d96a9",
+        "range": [
+          113,
+          130
+        ],
+        "text": "113 |  * Load the photon module asynchronously.\n114 |  * Returns cached module on subsequent calls.\n115 |  */\n116 | export async function loadPhoton(): Promise<typeof import(\"@silvia-odwyer/photon-node\") | null> {\n117 | \tif (photonModule) {\n118 | \t\treturn photonModule;\n119 | \t}\n120 | \n121 | \tif (loadPromise) {\n122 | \t\treturn loadPromise;\n123 | \t}\n124 | \n125 | \tloadPromise = (async () => {\n126 | \t\tconst restoreReadFileSync = patchPhotonWasmRead();\n127 | \t\ttry {\n128 | \t\t\tphotonModule = await import(\"@silvia-odwyer/photon-node\");\n129 | \t\t\treturn photonModule;\n130 | \t\t} catch {"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "HighlightFormatter",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/syntax-highlight.ts:4",
+      "covering_entries": [
+        "TUI-005"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/syntax-highlight.ts",
+        "sha256": "14cc46cfbf5c0ef65bd1e9560a7d35fbb064ae3248f0a76ce99c1c8a12289814",
+        "range": [
+          1,
+          18
+        ],
+        "text": "1 | import hljs from \"highlight.js/lib/index.js\";\n2 | import { decodeHtmlEntityAt } from \"./html.ts\";\n3 | \n4 | export type HighlightFormatter = (text: string) => string;\n5 | export type HighlightTheme = Partial<Record<string, HighlightFormatter>>;\n6 | \n7 | export interface HighlightOptions {\n8 | \tlanguage?: string;\n9 | \tignoreIllegals?: boolean;\n10 | \tlanguageSubset?: string[];\n11 | \ttheme?: HighlightTheme;\n12 | }\n13 | \n14 | const SPAN_CLOSE = \"</span>\";\n15 | const HIGHLIGHT_CLASS_PREFIX = \"hljs-\";\n16 | \n17 | function getScopeFromSpanTag(tag: string): string | undefined {\n18 | \tconst match = /\\sclass\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')/.exec(tag);"
+      },
+      "entries": [
+        {
+          "id": "TUI-005",
+          "title": "Syntax highlighting, Markdown theme and interactive chrome adapters",
+          "what": "Applies the selected semantic palette to code, Markdown and reusable selection/editor/settings controls.",
+          "source": "Theme adapters and extension map: `ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:1275-1527`; full highlighting renderer: `ice:packages/coding-agent/src/utils/syntax-highlight.ts:1-147`; tests: `ice:packages/coding-agent/test/syntax-highlight.test.ts:6-75`.; ice:packages/coding-agent/src/modes/interactive/components/dynamic-border.ts:1-26.",
+          "interfaces": "HighlightTheme=Partial<Record<string,(text:string)=>string>>; HighlightOptions {language?:string;ignoreIllegals?:boolean;languageSubset?:string[];theme?:HighlightTheme}. Exports highlightCode(code,lang?)->string[],getLanguageFromPath,getMarkdownTheme,getSelectListTheme,getEditorTheme,getSettingsListTheme,getInteractiveScrollbarTrackStyle/getInteractiveScrollbarThumbStyle,getInteractiveChromeBorderStyle/getInteractiveChromeBorderColor,setInteractiveChromeThemeOverride."
+        }
+      ]
+    },
+    {
+      "symbol": "renderHighlightedHtml",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/syntax-highlight.ts:80",
+      "covering_entries": [
+        "TUI-005"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/syntax-highlight.ts",
+        "sha256": "14cc46cfbf5c0ef65bd1e9560a7d35fbb064ae3248f0a76ce99c1c8a12289814",
+        "range": [
+          77,
+          94
+        ],
+        "text": "77 | \treturn nextChar === \">\" || nextChar === \" \" || nextChar === \"\\t\" || nextChar === \"\\n\" || nextChar === \"\\r\";\n78 | }\n79 | \n80 | export function renderHighlightedHtml(html: string, theme: HighlightTheme = {}): string {\n81 | \tlet output = \"\";\n82 | \tlet textBuffer = \"\";\n83 | \tconst scopes: Array<string | undefined> = [];\n84 | \n85 | \tconst flushText = () => {\n86 | \t\tif (!textBuffer) {\n87 | \t\t\treturn;\n88 | \t\t}\n89 | \t\tconst formatter = getActiveFormatter(scopes, theme);\n90 | \t\toutput += formatter ? formatter(textBuffer) : textBuffer;\n91 | \t\ttextBuffer = \"\";\n92 | \t};\n93 | \n94 | \tlet index = 0;"
+      },
+      "entries": [
+        {
+          "id": "TUI-005",
+          "title": "Syntax highlighting, Markdown theme and interactive chrome adapters",
+          "what": "Applies the selected semantic palette to code, Markdown and reusable selection/editor/settings controls.",
+          "source": "Theme adapters and extension map: `ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:1275-1527`; full highlighting renderer: `ice:packages/coding-agent/src/utils/syntax-highlight.ts:1-147`; tests: `ice:packages/coding-agent/test/syntax-highlight.test.ts:6-75`.; ice:packages/coding-agent/src/modes/interactive/components/dynamic-border.ts:1-26.",
+          "interfaces": "HighlightTheme=Partial<Record<string,(text:string)=>string>>; HighlightOptions {language?:string;ignoreIllegals?:boolean;languageSubset?:string[];theme?:HighlightTheme}. Exports highlightCode(code,lang?)->string[],getLanguageFromPath,getMarkdownTheme,getSelectListTheme,getEditorTheme,getSettingsListTheme,getInteractiveScrollbarTrackStyle/getInteractiveScrollbarThumbStyle,getInteractiveChromeBorderStyle/getInteractiveChromeBorderColor,setInteractiveChromeThemeOverride."
+        }
+      ]
+    },
+    {
+      "symbol": "NormalizeToolResultImagesOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/tool-result-images.ts:6",
+      "covering_entries": [
+        "MISC-003"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/tool-result-images.ts",
+        "sha256": "fa013df57d97cd75b93ab8331f2803b37c35354a93c422186ddd0acb071914d7",
+        "range": [
+          3,
+          20
+        ],
+        "text": "3 | \n4 | export type ToolResultContent = TextContent | ImageContent;\n5 | \n6 | export interface NormalizeToolResultImagesOptions {\n7 | \t/** Whether oversized images are resized to inline provider limits. Default: true */\n8 | \tautoResizeImages?: boolean;\n9 | }\n10 | \n11 | /**\n12 |  * Normalize image blocks returned by tool results.\n13 |  *\n14 |  * The `read` tool and `@file` CLI attachments run their images through `processImage`, but tools\n15 |  * that produce images themselves (extensions, MCP bridges, screenshot tools) hand back arbitrary\n16 |  * base64 payloads that go straight into session history and every subsequent provider request.\n17 |  * Oversized images make the provider reject the whole conversation, not just the offending turn,\n18 |  * so normalize them once as they enter history.\n19 |  *\n20 |  * Returns the original array when nothing changed so callers can skip rewriting the result."
+      },
+      "entries": [
+        {
+          "id": "MISC-003",
+          "title": "Tool-result image identity, failure policy and post-hook normalization",
+          "what": "Normalize tool-produced images once before their final history result, including images replaced by extension hooks. Preserve a tool's output and object identity when processing fails or makes no change.",
+          "source": "ice:packages/coding-agent/src/utils/tool-result-images.ts:1-63; ice:packages/coding-agent/src/core/agent-session.ts:648-679; ice:packages/coding-agent/test/tool-result-images.test.ts:1-138; rust:crates/ice-harness/src/image_tool.rs:1-126; rust:crates/ice-tools/src/image_processing.rs:128-184; rust:crates/ice-harness/src/agent_harness.rs:3095-3108; rust:crates/ice-harness/src/agent_harness.rs:4478-4495; rust:crates/ice-agent/src/agent_loop.rs:1091-1139.",
+          "interfaces": "ToolResultContent=TextContent|ImageContent; normalizeToolResultImages(content,{autoResizeImages?})→Promise<ToolResultContent[]>; result-array identity is an observable optimization signal to afterToolCall. No new RPC command, persistent file or network service."
+        }
+      ]
+    },
+    {
+      "symbol": "LatestIceRelease",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/version-check.ts:11",
+      "covering_entries": [
+        "MISC-001"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/version-check.ts",
+        "sha256": "dff17c50f8779bce49a57eceaa4132825da16c4b22a6c16192f13aa4e8ed3e32",
+        "range": [
+          8,
+          25
+        ],
+        "text": "8 | const LATEST_VERSION_URL = `https://registry.npmjs.org/${encodeURIComponent(PACKAGE_NAME)}/latest`;\n9 | const DEFAULT_VERSION_CHECK_TIMEOUT_MS = 10000;\n10 | \n11 | export interface LatestIceRelease {\n12 | \tversion: string;\n13 | \tpackageName?: string;\n14 | \tnote?: string;\n15 | }\n16 | \n17 | export function comparePackageVersions(leftVersion: string, rightVersion: string): number | undefined {\n18 | \tconst left = valid(leftVersion.trim());\n19 | \tconst right = valid(rightVersion.trim());\n20 | \tif (!left || !right) return undefined;\n21 | \treturn compare(left, right);\n22 | }\n23 | \n24 | export function isNewerPackageVersion(candidateVersion: string, currentVersion: string): boolean {\n25 | \tconst comparison = comparePackageVersions(candidateVersion, currentVersion);"
+      },
+      "entries": [
+        {
+          "id": "MISC-001",
+          "title": "Validated release metadata and quiet automatic version checks",
+          "what": "Release lookup validates both the transport endpoint and returned package identity. Automatic checks quietly suppress failures while explicit lookup can return errors to the invoking command.",
+          "source": "ice:packages/coding-agent/src/utils/version-check.ts:1-85; ice:packages/coding-agent/src/utils/ice-user-agent.ts:1-5; ice:packages/coding-agent/test/version-check.test.ts:1-129; ice:packages/coding-agent/test/ice-user-agent.test.ts:1-13; rust:crates/ice-cli/src/updates.rs:17-21; rust:crates/ice-cli/src/updates.rs:119-158; rust:crates/ice-cli/src/updates.rs:445-480.",
+          "interfaces": "comparePackageVersions(a,b)→number|undefined; isNewerPackageVersion(candidate,current)→boolean; getLatestIceRelease(current,{timeoutMs?})→Promise<{version,packageName?,note?}|undefined>; getLatestIceVersion and checkForNewIceVersion; getIceUserAgent(version)→string. Environment: ICE_OFFLINE, ICE_UPDATE_URL, ICE_SKIP_VERSION_CHECK."
+        }
+      ]
+    },
+    {
+      "symbol": "cleanupWindowsSelfUpdateQuarantine",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/windows-self-update.ts:50",
+      "covering_entries": [
+        "MISC-002"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/windows-self-update.ts",
+        "sha256": "0ae6304be01951f6bbc522099aa6129aa28eb9e3d5f2fa2733df57af372c68c0",
+        "range": [
+          47,
+          64
+        ],
+        "text": "47 | \treturn loadedFiles;\n48 | }\n49 | \n50 | export function cleanupWindowsSelfUpdateQuarantine(packageDir: string): void {\n51 | \tconst quarantineRoot = getQuarantineRoot(packageDir);\n52 | \tif (!quarantineRoot) {\n53 | \t\treturn;\n54 | \t}\n55 | \ttry {\n56 | \t\trmSync(quarantineRoot, { recursive: true, force: true });\n57 | \t} catch {\n58 | \t\t// A previous ice process may still be exiting and holding a native addon.\n59 | \t}\n60 | }\n61 | \n62 | export function quarantineWindowsNativeDependencies(packageDir: string): void {\n63 | \tconst resolvedPackageDir = normalizePath(packageDir);\n64 | \tconst quarantineRoot = getQuarantineRoot(resolvedPackageDir);"
+      },
+      "entries": [
+        {
+          "id": "MISC-002",
+          "title": "Windows loaded dependency quarantine and deferred cleanup",
+          "what": "The TS npm self-update path moves loaded native dependencies aside so package replacement can proceed while the process is alive. Native executable activation has its own staged helper and does not require reproducing Node's module inventory.",
+          "source": "ice:packages/coding-agent/src/utils/windows-self-update.ts:1-85; ice:packages/coding-agent/src/main.ts:530-552; rust:crates/ice-cli/src/updates.rs:1295-1392.",
+          "interfaces": "cleanupWindowsNativeQuarantine(packageDir):void; quarantineWindowsNativeDependencies(packageDir):void. Persistent temporary path: nearest node_modules/.ice-native-quarantine/<timestamp>-<pid>-<uuid>/<package-relative-file>. Runtime inventory: process.report sharedObjects."
+        }
+      ]
+    },
+    {
+      "symbol": "resolveModelSelection",
+      "kind": "runtime",
+      "ts": "ice:packages/evals/src/ice-harness.ts:46",
+      "covering_entries": [
+        "MISC-040"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/ice-harness.ts",
+        "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+        "range": [
+          43,
+          60
+        ],
+        "text": "43 | \toutput: (args: { response: string; session: AgentSession }) => TOutput | Promise<TOutput>;\n44 | };\n45 | \n46 | export function resolveModelSelection(\n47 | \texplicitModel: IceCodingAgentModelSelection | undefined,\n48 | \tenvironment: { ICE_PROVIDER?: string; ICE_MODEL?: string } = process.env,\n49 | ): IceCodingAgentModelSelection {\n50 | \tconst provider = (explicitModel?.provider ?? environment.ICE_PROVIDER)?.trim();\n51 | \tconst id = (explicitModel?.id ?? environment.ICE_MODEL)?.trim();\n52 | \tif (!provider || !id) {\n53 | \t\tthrow new Error(\"Select a harness model explicitly or set both ICE_PROVIDER and ICE_MODEL as defaults.\");\n54 | \t}\n55 | \treturn { provider, id };\n56 | }\n57 | \n58 | function toTranscriptEvents(messages: AgentSession[\"messages\"]): TranscriptEvent[] {\n59 | \tconst events: TranscriptEvent[] = [];\n60 | \tfor (const message of messages) {"
+      },
+      "entries": [
+        {
+          "id": "MISC-040",
+          "title": "Evaluation runner, explicit model defaults and separate test configuration",
+          "what": "A separate eval command chooses a default provider/model, launches only model-backed eval files, and keeps local unit tests distinct from those potentially authenticated runs.",
+          "source": "ice:packages/evals/scripts/run-evals.mjs:1-98; ice:packages/evals/src/ice-harness.ts:28-56; ice:packages/evals/package.json:1-21; ice:packages/evals/vitest.config.ts:1-21; ice:packages/evals/vitest.test.config.ts:1-15; ice:vitest.base.ts:1-29; ice:package.json:37; ice:packages/evals/test/ice-harness.test.ts:1-35; rust:Cargo.toml:1-24; rust:crates/ice-harness/Cargo.toml:1-43.",
+          "interfaces": "Command: root npm run eval -- [--provider P --model M] [Vitest arguments]. Environment: ICE_PROVIDER, ICE_MODEL, ICE_EVAL_ARTIFACT_DIR. createIceCodingAgentHarness({name?,model?:{provider,id},noTools?,transformSystemPrompt?,output?}); default harness name ice-coding-agent. Paths: packages/evals/.eval/<timestamp>_<UUID>, runner override resolved relative to package root, src/**/*.eval.ts, test/**/*.test.ts."
+        }
+      ]
+    },
+    {
+      "symbol": "ICE_SESSION_SNAPSHOT_ARTIFACT",
+      "kind": "runtime",
+      "ts": "ice:packages/evals/src/vitest-evals/artifacts.ts:13",
+      "covering_entries": [
+        "MISC-044"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/artifacts.ts",
+        "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+        "range": [
+          10,
+          27
+        ],
+        "text": "10 | } from \"vitest\";\n11 | import type { HarnessRun } from \"vitest-evals/harness\";\n12 | \n13 | export const ICE_SESSION_SNAPSHOT_ARTIFACT = \"iceSessionJsonl\";\n14 | \n15 | const evalSessionArtifactKey = Symbol(\"ice-evals-session-artifact\");\n16 | const evalSourceArtifactKey = Symbol(\"ice-evals-source-artifact\");\n17 | \n18 | interface IceSessionAttachment extends TestAttachment {\n19 | \tname: \"session.jsonl\";\n20 | \tcontentType: \"application/jsonl\";\n21 | \tbody: string;\n22 | \tbodyEncoding: \"utf-8\";\n23 | }\n24 | \n25 | export interface SourceAttachment extends TestAttachment {\n26 | \tname: string;\n27 | \tcontentType: string;"
+      },
+      "entries": [
+        {
+          "id": "MISC-044",
+          "title": "Task-bound session/source artifacts and scoped attachment persistence",
+          "what": "Evaluation runs attach their native session JSONL and generated source to the explicit test task, then persist only attachments belonging to the reported run.",
+          "source": "ice:packages/evals/src/vitest-evals/artifacts.ts:1-113; ice:packages/evals/src/vitest-evals/setup.ts:1-9; ice:packages/evals/src/ice-harness.ts:212-232; ice:packages/evals/test/vitest-evals/artifacts.test.ts:1-104; rust:crates/ice-harness/src/session/jsonl/mod.rs:1-27; rust:crates/ice-harness/tests/harness_run_e2e.rs:263-373.",
+          "interfaces": "Artifact types '@zykairotis/ice-evals:session' and '@zykairotis/ice-evals:source'; runId:string; attachments:[{name,contentType,body,bodyEncoding:'utf-8'}]|[]. Snapshot key iceSessionJsonl. Paths sessions/<sha256(runId)>/session.jsonl and sources/<sha256(runId)>/<basename>. recordEvalSessionArtifact(task,run), recordEvalSourceArtifact(task,runId,attachment), persistEvalArtifactReferences(artifacts,runId,artifactDirectory)."
+        }
+      ]
+    },
+    {
+      "symbol": "EvalHarnessIterationArtifact",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:12",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/harness-table.ts",
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "range": [
+          9,
+          26
+        ],
+        "text": "9 | \n10 | export const EVAL_HARNESS_ITERATION_ARTIFACT = \"vitestEvalsHarnessIteration\";\n11 | \n12 | export type EvalHarnessIterationArtifact = {\n13 | \tschemaVersion: 1;\n14 | \tevalSet: string;\n15 | \tgroupKey: string;\n16 | \tharness: string;\n17 | \tbaseline: string;\n18 | \tcandidates: string[];\n19 | \trepetition: number;\n20 | };\n21 | \n22 | export type EvalHarnessTableRow<TInput, TOutput extends JsonValue | undefined> = {\n23 | \tharness: Harness<TInput, TOutput>;\n24 | \tname: string;\n25 | \trepetition: number;\n26 | };"
+      },
+      "entries": [
+        {
+          "id": "MISC-045",
+          "title": "Comparative harness tables, canonical input pairing and failure metadata",
+          "what": "A comparison declares one baseline and one or more candidates, repeats them in a stable order and attaches a deterministic input/repetition identity to every wrapped run, including recoverable partial failures.",
+          "source": "ice:packages/evals/src/vitest-evals/harness-table.ts:1-194; ice:packages/evals/test/vitest-evals/harness-table.test.ts:1-95; ice:packages/evals/README.md:104-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/tests/harness_run_e2e.rs:51-128.",
+          "interfaces": "evalHarnessTable(evalSet,{baseline,candidate|candidates,repetitions?}) -> [{harness,name,repetition}]. deriveEvalGroupKey(input,repetition):string. EVAL_HARNESS_ITERATION_ARTIFACT='vitestEvalsHarnessIteration'. parseEvalHarnessIterationArtifact(JsonValue|undefined) -> schemaVersion1 record|undefined. Error attachment helpers are consumed from external vitest-evals, not locally implemented."
+        }
+      ]
+    },
+    {
+      "symbol": "EvalHarnessTableRow",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:22",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/harness-table.ts",
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "range": [
+          19,
+          36
+        ],
+        "text": "19 | \trepetition: number;\n20 | };\n21 | \n22 | export type EvalHarnessTableRow<TInput, TOutput extends JsonValue | undefined> = {\n23 | \tharness: Harness<TInput, TOutput>;\n24 | \tname: string;\n25 | \trepetition: number;\n26 | };\n27 | \n28 | export type EvalHarnessTablePairOptions<TInput, TOutput extends JsonValue | undefined> = {\n29 | \tbaseline: Harness<TInput, TOutput>;\n30 | \tcandidate: Harness<TInput, TOutput>;\n31 | \trepetitions?: number;\n32 | };\n33 | \n34 | export type EvalHarnessTableCandidatesOptions<TInput, TOutput extends JsonValue | undefined> = {\n35 | \tbaseline: Harness<TInput, TOutput>;\n36 | \tcandidates: readonly Harness<TInput, TOutput>[];"
+      },
+      "entries": [
+        {
+          "id": "MISC-045",
+          "title": "Comparative harness tables, canonical input pairing and failure metadata",
+          "what": "A comparison declares one baseline and one or more candidates, repeats them in a stable order and attaches a deterministic input/repetition identity to every wrapped run, including recoverable partial failures.",
+          "source": "ice:packages/evals/src/vitest-evals/harness-table.ts:1-194; ice:packages/evals/test/vitest-evals/harness-table.test.ts:1-95; ice:packages/evals/README.md:104-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/tests/harness_run_e2e.rs:51-128.",
+          "interfaces": "evalHarnessTable(evalSet,{baseline,candidate|candidates,repetitions?}) -> [{harness,name,repetition}]. deriveEvalGroupKey(input,repetition):string. EVAL_HARNESS_ITERATION_ARTIFACT='vitestEvalsHarnessIteration'. parseEvalHarnessIterationArtifact(JsonValue|undefined) -> schemaVersion1 record|undefined. Error attachment helpers are consumed from external vitest-evals, not locally implemented."
+        }
+      ]
+    },
+    {
+      "symbol": "EvalHarnessTablePairOptions",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:28",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/harness-table.ts",
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "range": [
+          25,
+          42
+        ],
+        "text": "25 | \trepetition: number;\n26 | };\n27 | \n28 | export type EvalHarnessTablePairOptions<TInput, TOutput extends JsonValue | undefined> = {\n29 | \tbaseline: Harness<TInput, TOutput>;\n30 | \tcandidate: Harness<TInput, TOutput>;\n31 | \trepetitions?: number;\n32 | };\n33 | \n34 | export type EvalHarnessTableCandidatesOptions<TInput, TOutput extends JsonValue | undefined> = {\n35 | \tbaseline: Harness<TInput, TOutput>;\n36 | \tcandidates: readonly Harness<TInput, TOutput>[];\n37 | \trepetitions?: number;\n38 | };\n39 | \n40 | export type EvalHarnessTableOptions<TInput, TOutput extends JsonValue | undefined> =\n41 | \t| EvalHarnessTablePairOptions<TInput, TOutput>\n42 | \t| EvalHarnessTableCandidatesOptions<TInput, TOutput>;"
+      },
+      "entries": [
+        {
+          "id": "MISC-045",
+          "title": "Comparative harness tables, canonical input pairing and failure metadata",
+          "what": "A comparison declares one baseline and one or more candidates, repeats them in a stable order and attaches a deterministic input/repetition identity to every wrapped run, including recoverable partial failures.",
+          "source": "ice:packages/evals/src/vitest-evals/harness-table.ts:1-194; ice:packages/evals/test/vitest-evals/harness-table.test.ts:1-95; ice:packages/evals/README.md:104-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/tests/harness_run_e2e.rs:51-128.",
+          "interfaces": "evalHarnessTable(evalSet,{baseline,candidate|candidates,repetitions?}) -> [{harness,name,repetition}]. deriveEvalGroupKey(input,repetition):string. EVAL_HARNESS_ITERATION_ARTIFACT='vitestEvalsHarnessIteration'. parseEvalHarnessIterationArtifact(JsonValue|undefined) -> schemaVersion1 record|undefined. Error attachment helpers are consumed from external vitest-evals, not locally implemented."
+        }
+      ]
+    },
+    {
+      "symbol": "EvalHarnessTableCandidatesOptions",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:34",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/harness-table.ts",
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "range": [
+          31,
+          48
+        ],
+        "text": "31 | \trepetitions?: number;\n32 | };\n33 | \n34 | export type EvalHarnessTableCandidatesOptions<TInput, TOutput extends JsonValue | undefined> = {\n35 | \tbaseline: Harness<TInput, TOutput>;\n36 | \tcandidates: readonly Harness<TInput, TOutput>[];\n37 | \trepetitions?: number;\n38 | };\n39 | \n40 | export type EvalHarnessTableOptions<TInput, TOutput extends JsonValue | undefined> =\n41 | \t| EvalHarnessTablePairOptions<TInput, TOutput>\n42 | \t| EvalHarnessTableCandidatesOptions<TInput, TOutput>;\n43 | \n44 | type EvalHarnessIterationPlan = Omit<EvalHarnessIterationArtifact, \"groupKey\">;\n45 | \n46 | export function parseEvalHarnessIterationArtifact(\n47 | \tvalue: JsonValue | undefined,\n48 | ): EvalHarnessIterationArtifact | undefined {"
+      },
+      "entries": [
+        {
+          "id": "MISC-045",
+          "title": "Comparative harness tables, canonical input pairing and failure metadata",
+          "what": "A comparison declares one baseline and one or more candidates, repeats them in a stable order and attaches a deterministic input/repetition identity to every wrapped run, including recoverable partial failures.",
+          "source": "ice:packages/evals/src/vitest-evals/harness-table.ts:1-194; ice:packages/evals/test/vitest-evals/harness-table.test.ts:1-95; ice:packages/evals/README.md:104-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/tests/harness_run_e2e.rs:51-128.",
+          "interfaces": "evalHarnessTable(evalSet,{baseline,candidate|candidates,repetitions?}) -> [{harness,name,repetition}]. deriveEvalGroupKey(input,repetition):string. EVAL_HARNESS_ITERATION_ARTIFACT='vitestEvalsHarnessIteration'. parseEvalHarnessIterationArtifact(JsonValue|undefined) -> schemaVersion1 record|undefined. Error attachment helpers are consumed from external vitest-evals, not locally implemented."
+        }
+      ]
+    },
+    {
+      "symbol": "EvalHarnessTableOptions",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:40",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/harness-table.ts",
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "range": [
+          37,
+          54
+        ],
+        "text": "37 | \trepetitions?: number;\n38 | };\n39 | \n40 | export type EvalHarnessTableOptions<TInput, TOutput extends JsonValue | undefined> =\n41 | \t| EvalHarnessTablePairOptions<TInput, TOutput>\n42 | \t| EvalHarnessTableCandidatesOptions<TInput, TOutput>;\n43 | \n44 | type EvalHarnessIterationPlan = Omit<EvalHarnessIterationArtifact, \"groupKey\">;\n45 | \n46 | export function parseEvalHarnessIterationArtifact(\n47 | \tvalue: JsonValue | undefined,\n48 | ): EvalHarnessIterationArtifact | undefined {\n49 | \tif (value === null || value === undefined || typeof value !== \"object\" || Array.isArray(value)) return undefined;\n50 | \tconst { schemaVersion, evalSet, groupKey, harness, baseline, candidates, repetition } = value;\n51 | \tif (\n52 | \t\tschemaVersion !== 1 ||\n53 | \t\ttypeof evalSet !== \"string\" ||\n54 | \t\ttypeof groupKey !== \"string\" ||"
+      },
+      "entries": [
+        {
+          "id": "MISC-045",
+          "title": "Comparative harness tables, canonical input pairing and failure metadata",
+          "what": "A comparison declares one baseline and one or more candidates, repeats them in a stable order and attaches a deterministic input/repetition identity to every wrapped run, including recoverable partial failures.",
+          "source": "ice:packages/evals/src/vitest-evals/harness-table.ts:1-194; ice:packages/evals/test/vitest-evals/harness-table.test.ts:1-95; ice:packages/evals/README.md:104-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/tests/harness_run_e2e.rs:51-128.",
+          "interfaces": "evalHarnessTable(evalSet,{baseline,candidate|candidates,repetitions?}) -> [{harness,name,repetition}]. deriveEvalGroupKey(input,repetition):string. EVAL_HARNESS_ITERATION_ARTIFACT='vitestEvalsHarnessIteration'. parseEvalHarnessIterationArtifact(JsonValue|undefined) -> schemaVersion1 record|undefined. Error attachment helpers are consumed from external vitest-evals, not locally implemented."
+        }
+      ]
+    },
+    {
+      "symbol": "CorrectnessLiftSummary",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:30",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/summary.ts",
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "range": [
+          27,
+          44
+        ],
+        "text": "27 | \tmeanDelta: number | null;\n28 | };\n29 | \n30 | export type CorrectnessLiftSummary = {\n31 | \ttotalPairs: number;\n32 | \teligiblePairs: number;\n33 | \tbaselinePassRate: number | null;\n34 | \tcandidatePassRate: number | null;\n35 | \tlift: number | null;\n36 | \tbaselineWins: number;\n37 | \tcandidateWins: number;\n38 | \tties: number;\n39 | };\n40 | \n41 | export type HarnessPairComparison = {\n42 | \tbaseline: string;\n43 | \tcandidate: string;\n44 | \tcorrectness: CorrectnessLiftSummary;"
+      },
+      "entries": [
+        {
+          "id": "MISC-047",
+          "title": "Paired correctness lift, telemetry availability and diagnostic terminal summaries",
+          "what": "Comparison summaries pair each declared candidate only with its baseline, calculate correctness separately from efficiency, and expose missing/duplicate/error observations instead of filling them with zero.",
+          "source": "ice:packages/evals/src/vitest-evals/summary.ts:1-439; ice:packages/evals/test/vitest-evals/summary.test.ts:1-233; ice:packages/evals/README.md:136-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/src/agent_harness.rs:1583-1588.",
+          "interfaces": "HarnessObservation outcomes scored{score},unscored,skipped,pending,errored. HarnessComparisonReport{schemaVersion:1,evalSets:[{evalSet,comparisons}],diagnostics}. Each comparison has correctness{totalPairs,eligiblePairs,baselinePassRate,candidatePassRate,lift,baselineWins,candidateWins,ties} and three PairedMetricSummary records{totalPairs,eligiblePairs,baselineMean,candidateMean,meanDelta}. summarizeHarnessComparisons(observations); formatHarnessComparisonReport(report)."
+        }
+      ]
+    },
+    {
+      "symbol": "HarnessPairComparison",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:41",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/summary.ts",
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "range": [
+          38,
+          55
+        ],
+        "text": "38 | \tties: number;\n39 | };\n40 | \n41 | export type HarnessPairComparison = {\n42 | \tbaseline: string;\n43 | \tcandidate: string;\n44 | \tcorrectness: CorrectnessLiftSummary;\n45 | \ttotalTokens: PairedMetricSummary;\n46 | \ttotalMs: PairedMetricSummary;\n47 | \testimatedCostUsd: PairedMetricSummary;\n48 | };\n49 | \n50 | export type HarnessComparisonDiagnostic = {\n51 | \tevalSet: string;\n52 | \tgroupKey: string;\n53 | \ttestName: string;\n54 | \tfile: string;\n55 | \trepetition: number;"
+      },
+      "entries": [
+        {
+          "id": "MISC-047",
+          "title": "Paired correctness lift, telemetry availability and diagnostic terminal summaries",
+          "what": "Comparison summaries pair each declared candidate only with its baseline, calculate correctness separately from efficiency, and expose missing/duplicate/error observations instead of filling them with zero.",
+          "source": "ice:packages/evals/src/vitest-evals/summary.ts:1-439; ice:packages/evals/test/vitest-evals/summary.test.ts:1-233; ice:packages/evals/README.md:136-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/src/agent_harness.rs:1583-1588.",
+          "interfaces": "HarnessObservation outcomes scored{score},unscored,skipped,pending,errored. HarnessComparisonReport{schemaVersion:1,evalSets:[{evalSet,comparisons}],diagnostics}. Each comparison has correctness{totalPairs,eligiblePairs,baselinePassRate,candidatePassRate,lift,baselineWins,candidateWins,ties} and three PairedMetricSummary records{totalPairs,eligiblePairs,baselineMean,candidateMean,meanDelta}. summarizeHarnessComparisons(observations); formatHarnessComparisonReport(report)."
+        }
+      ]
+    },
+    {
+      "symbol": "HarnessComparisonDiagnostic",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:50",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/summary.ts",
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "range": [
+          47,
+          64
+        ],
+        "text": "47 | \testimatedCostUsd: PairedMetricSummary;\n48 | };\n49 | \n50 | export type HarnessComparisonDiagnostic = {\n51 | \tevalSet: string;\n52 | \tgroupKey: string;\n53 | \ttestName: string;\n54 | \tfile: string;\n55 | \trepetition: number;\n56 | \tharness: string;\n57 | \treason: \"missing-observation\" | \"duplicate-observation\" | \"harness-error\" | \"missing-score\" | \"unscorable-outcome\";\n58 | };\n59 | \n60 | export type HarnessEvalSetReport = {\n61 | \tevalSet: string;\n62 | \tcomparisons: HarnessPairComparison[];\n63 | };\n64 | "
+      },
+      "entries": [
+        {
+          "id": "MISC-047",
+          "title": "Paired correctness lift, telemetry availability and diagnostic terminal summaries",
+          "what": "Comparison summaries pair each declared candidate only with its baseline, calculate correctness separately from efficiency, and expose missing/duplicate/error observations instead of filling them with zero.",
+          "source": "ice:packages/evals/src/vitest-evals/summary.ts:1-439; ice:packages/evals/test/vitest-evals/summary.test.ts:1-233; ice:packages/evals/README.md:136-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/src/agent_harness.rs:1583-1588.",
+          "interfaces": "HarnessObservation outcomes scored{score},unscored,skipped,pending,errored. HarnessComparisonReport{schemaVersion:1,evalSets:[{evalSet,comparisons}],diagnostics}. Each comparison has correctness{totalPairs,eligiblePairs,baselinePassRate,candidatePassRate,lift,baselineWins,candidateWins,ties} and three PairedMetricSummary records{totalPairs,eligiblePairs,baselineMean,candidateMean,meanDelta}. summarizeHarnessComparisons(observations); formatHarnessComparisonReport(report)."
+        }
+      ]
+    },
+    {
+      "symbol": "HarnessEvalSetReport",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:60",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/evals/src/vitest-evals/summary.ts",
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "range": [
+          57,
+          74
+        ],
+        "text": "57 | \treason: \"missing-observation\" | \"duplicate-observation\" | \"harness-error\" | \"missing-score\" | \"unscorable-outcome\";\n58 | };\n59 | \n60 | export type HarnessEvalSetReport = {\n61 | \tevalSet: string;\n62 | \tcomparisons: HarnessPairComparison[];\n63 | };\n64 | \n65 | export type HarnessComparisonReport = {\n66 | \tschemaVersion: 1;\n67 | \tevalSets: HarnessEvalSetReport[];\n68 | \tdiagnostics: HarnessComparisonDiagnostic[];\n69 | };\n70 | \n71 | type HarnessDescriptor = {\n72 | \tname: string;\n73 | \tindex: number;\n74 | };"
+      },
+      "entries": [
+        {
+          "id": "MISC-047",
+          "title": "Paired correctness lift, telemetry availability and diagnostic terminal summaries",
+          "what": "Comparison summaries pair each declared candidate only with its baseline, calculate correctness separately from efficiency, and expose missing/duplicate/error observations instead of filling them with zero.",
+          "source": "ice:packages/evals/src/vitest-evals/summary.ts:1-439; ice:packages/evals/test/vitest-evals/summary.test.ts:1-233; ice:packages/evals/README.md:136-150; rust:crates/ice-harness/src/lib.rs:11-32; rust:crates/ice-harness/src/agent_harness.rs:1583-1588.",
+          "interfaces": "HarnessObservation outcomes scored{score},unscored,skipped,pending,errored. HarnessComparisonReport{schemaVersion:1,evalSets:[{evalSet,comparisons}],diagnostics}. Each comparison has correctness{totalPairs,eligiblePairs,baselinePassRate,candidatePassRate,lift,baselineWins,candidateWins,ties} and three PairedMetricSummary records{totalPairs,eligiblePairs,baselineMean,candidateMean,meanDelta}. summarizeHarnessComparisons(observations); formatHarnessComparisonReport(report)."
+        }
+      ]
+    }
+  ]
+}

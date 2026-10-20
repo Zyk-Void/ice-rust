@@ -1,0 +1,994 @@
+{
+  "captured_at": "2026-10-20T03:10:09.989Z",
+  "cause": "Saved TUI rust_only records mixed {capability,evidence,notes} and {description,entry_ids}; prior publisher expected evidence/ts_comparison for each. Area rendering and ledger merge had succeeded, README refresh failed. Exact source anchors derived from each already-certified entry; none invented.",
+  "changes": [
+    {
+      "name": "tui.json",
+      "index": 0,
+      "before": {
+        "capability": "Native minimal line patches, cached scroll layout and readerless/suspended renderer ownership",
+        "entry_ids": [
+          "TUI-202",
+          "TUI-212",
+          "TUI-216",
+          "TUI-221",
+          "TUI-222"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/line_diff.rs:1-358",
+          "rust:crates/ice-tui/src/tui_alt_screen.rs:1-2133"
+        ],
+        "notes": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps."
+      },
+      "after": {
+        "capability": "Native minimal line patches, cached scroll layout and readerless/suspended renderer ownership",
+        "entry_ids": [
+          "TUI-202",
+          "TUI-212",
+          "TUI-216",
+          "TUI-221",
+          "TUI-222"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/line_diff.rs:1-358",
+          "rust:crates/ice-tui/src/tui_alt_screen.rs:1-2133"
+        ],
+        "notes": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps.",
+        "ts_comparison": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps."
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 1,
+      "before": {
+        "capability": "Native editor selection/redo, component mutable APIs and searchable selector extensions",
+        "entry_ids": [
+          "TUI-229",
+          "TUI-234",
+          "TUI-242",
+          "TUI-245",
+          "TUI-256",
+          "TUI-258"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/editor.rs:1-2420",
+          "rust:crates/ice-tui/src/select_list.rs:1-679",
+          "rust:crates/ice-tui/src/settings_list.rs:1-608"
+        ],
+        "notes": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry."
+      },
+      "after": {
+        "capability": "Native editor selection/redo, component mutable APIs and searchable selector extensions",
+        "entry_ids": [
+          "TUI-229",
+          "TUI-234",
+          "TUI-242",
+          "TUI-245",
+          "TUI-256",
+          "TUI-258"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/editor.rs:1-2420",
+          "rust:crates/ice-tui/src/select_list.rs:1-679",
+          "rust:crates/ice-tui/src/settings_list.rs:1-608"
+        ],
+        "notes": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry.",
+        "ts_comparison": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry."
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 2,
+      "before": {
+        "capability": "Passive-overlay collision avoidance",
+        "entry_ids": [
+          "TUI-219"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/overlay.rs:178-248"
+        ],
+        "notes": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior."
+      },
+      "after": {
+        "capability": "Passive-overlay collision avoidance",
+        "entry_ids": [
+          "TUI-219"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/overlay.rs:178-248"
+        ],
+        "notes": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior.",
+        "ts_comparison": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior."
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 3,
+      "before": {
+        "capability": "Native jump-to-end primitive",
+        "entry_ids": [
+          "TUI-223"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership."
+      },
+      "after": {
+        "capability": "Native jump-to-end primitive",
+        "entry_ids": [
+          "TUI-223"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership.",
+        "ts_comparison": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership."
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 4,
+      "before": {
+        "capability": "Native standalone LaTeX helper",
+        "evidence": [
+          "rust:crates/ice-tui/src/latex.rs:1-369"
+        ],
+        "notes": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option."
+      },
+      "after": {
+        "capability": "Native standalone LaTeX helper",
+        "evidence": [
+          "rust:crates/ice-tui/src/latex.rs:1-369"
+        ],
+        "notes": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option.",
+        "ts_comparison": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option."
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 5,
+      "before": {
+        "capability": "Native preservation TUI-223",
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior."
+      },
+      "after": {
+        "capability": "Native preservation TUI-223",
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior.",
+        "ts_comparison": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior."
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 6,
+      "before": {
+        "entry_ids": [
+          "TUI-003",
+          "TUI-024"
+        ],
+        "description": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-003",
+          "TUI-024"
+        ],
+        "description": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only.",
+        "capability": "Native behavior preserved by TUI-003, TUI-024",
+        "ts_comparison": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only.",
+        "evidence": [
+          "rust:crates/ice-tui/src/theme.rs:343-386",
+          "rust:crates/ice-tui/src/theme.rs:507-526",
+          "rust:crates/ice-cli/src/interactive_tui.rs:972-984",
+          "rust:crates/ice-cli/src/interactive_tui/selectors.rs:449-506",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:390-433",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:320-349",
+          "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:622-828",
+          "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:983-1066",
+          "ice:packages/coding-agent/src/modes/interactive/theme/theme-controller.ts:18-140",
+          "ice:packages/coding-agent/src/modes/interactive/components/theme-selector.ts:1-68",
+          "ice:packages/coding-agent/test/theme-picker.test.ts:25-75",
+          "ice:packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts:149-157",
+          "ice:packages/coding-agent/test/interactive-mode-status.test.ts:313-372",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:120-153",
+          "rust:crates/ice-tui/src/user_message.rs:58-119",
+          "rust:crates/ice-tui/src/assistant_message.rs:41-84",
+          "rust:crates/ice-tui/src/assistant_message.rs:257-283",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5225-5469",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6020-6048",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6098",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6159-6203",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6309-6319"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 7,
+      "before": {
+        "entry_ids": [
+          "TUI-025"
+        ],
+        "description": "Preserve native copy-on-select setting and working immediate/live settings controls."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-025"
+        ],
+        "description": "Preserve native copy-on-select setting and working immediate/live settings controls.",
+        "capability": "Native behavior preserved by TUI-025",
+        "ts_comparison": "Preserve native copy-on-select setting and working immediate/live settings controls.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:51-300",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:301-383",
+          "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:1-194",
+          "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:506-1028",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6325",
+          "ice:packages/coding-agent/test/settings-selector.test.ts:1-75",
+          "ice:packages/coding-agent/test/ui-style-settings.test.ts:1-31"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 8,
+      "before": {
+        "entry_ids": [
+          "TUI-046",
+          "TUI-047",
+          "TUI-073"
+        ],
+        "description": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-046",
+          "TUI-047",
+          "TUI-073"
+        ],
+        "description": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders.",
+        "capability": "Native behavior preserved by TUI-046, TUI-047, TUI-073",
+        "ts_comparison": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:698-785",
+          "rust:crates/ice-cli/src/interactive_tui/selectors.rs:518-613",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:802-819",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:1187-1204",
+          "rust:crates/ice-cli/src/interactive_tui/selectors.rs:615-694",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3223-3290",
+          "rust:crates/ice-cli/src/interactive_tui/tests.rs:2312-2356",
+          "ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:1-215",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6933-7026",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7028-7181",
+          "ice:packages/coding-agent/test/oauth-selector.test.ts:1-53",
+          "ice:packages/coding-agent/test/oauth-selector.test.ts:55-148",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:821-895",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:897-1186",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:788-797",
+          "rust:crates/ice-cli/src/interactive_tui/tests.rs:1958-2061",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1863-1885",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2011-2037",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3148-3221",
+          "ice:packages/coding-agent/src/modes/interactive/components/login-dialog.ts:1-234",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7183-7439",
+          "rust:crates/ice-cli/src/interactive_tui/extensions.rs:77-495",
+          "rust:crates/ice-cli/src/interactive_tui/extensions.rs:529-939",
+          "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:1-129",
+          "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90",
+          "ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:1-133"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 9,
+      "before": {
+        "entry_ids": [
+          "TUI-074"
+        ],
+        "description": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-074"
+        ],
+        "description": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences.",
+        "capability": "Native behavior preserved by TUI-074",
+        "ts_comparison": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui.rs:1398-1497",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2617-2695",
+          "rust:crates/ice-tui/src/editor.rs:1186-1204",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1425-1460",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2655-2692",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2661-2672",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1487-1495",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2600-2613",
+          "rust:crates/ice-cli/src/interactive_tui/state.rs:833-864",
+          "rust:crates/ice-cli/src/interactive_tui/events.rs:15-148",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3784-4063",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5160-5219",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5796-5952",
+          "ice:packages/coding-agent/test/interactive-mode-send-now.test.ts:1-72",
+          "ice:packages/coding-agent/test/interactive-mode-compaction.test.ts:1-88",
+          "ice:packages/coding-agent/test/interactive-mode-bash-routing.test.ts:1-26"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 10,
+      "before": {
+        "entry_ids": [
+          "TUI-072"
+        ],
+        "description": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-072"
+        ],
+        "description": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all.",
+        "capability": "Native behavior preserved by TUI-072",
+        "ts_comparison": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/run.rs:1-121",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:82-100",
+          "rust:crates/ice-cli/src/interactive_tui/rendering.rs:252-310",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:923-951",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1021-1027",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1386-1430",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7842-7861"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 11,
+      "before": {
+        "entry_ids": [
+          "TUI-078",
+          "TUI-080"
+        ],
+        "description": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-078",
+          "TUI-080"
+        ],
+        "description": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview.",
+        "capability": "Native behavior preserved by TUI-078, TUI-080",
+        "ts_comparison": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/sessions.rs:8-86",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3038-3040",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7630-7722",
+          "ice:packages/coding-agent/src/config.ts:538-541",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2425-2615",
+          "rust:crates/ice-cli/src/interactive_tui/run.rs:313-337",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2133-2133",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3004-3006",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3731-3732",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3748-3782",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7724-7741",
+          "ice:packages/coding-agent/test/interactive-tui.test.ts:132-243"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "index": 12,
+      "before": {
+        "entry_ids": [
+          "TUI-079",
+          "TUI-082"
+        ],
+        "description": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-079",
+          "TUI-082"
+        ],
+        "description": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details.",
+        "capability": "Native behavior preserved by TUI-079, TUI-082",
+        "ts_comparison": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui.rs:990-1000",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1300-1350",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1571-1571",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:424-462",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:953-1019",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1049-1115",
+          "ice:packages/coding-agent/test/interactive-tui.test.ts:1-243",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:634-654",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3042-3054",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:297-317",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3086-3135",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:738-772",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7743-7828",
+          "ice:packages/coding-agent/test/interactive-mode-status.test.ts:1-1545"
+        ]
+      }
+    },
+    {
+      "name": "tui.json",
+      "surface": "/changelog",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/reload",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/share",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/copy",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/export",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/import",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/clone",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/new",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/name",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/session",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/fast",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "/debug",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "tui.json",
+      "surface": "ICE_SHARE_VIEWER_URL",
+      "category_before": "env",
+      "category_after": "environment"
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 0,
+      "before": {
+        "capability": "Native minimal line patches, cached scroll layout and readerless/suspended renderer ownership",
+        "entry_ids": [
+          "TUI-202",
+          "TUI-212",
+          "TUI-216",
+          "TUI-221",
+          "TUI-222"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/line_diff.rs:1-358",
+          "rust:crates/ice-tui/src/tui_alt_screen.rs:1-2133"
+        ],
+        "notes": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps."
+      },
+      "after": {
+        "capability": "Native minimal line patches, cached scroll layout and readerless/suspended renderer ownership",
+        "entry_ids": [
+          "TUI-202",
+          "TUI-212",
+          "TUI-216",
+          "TUI-221",
+          "TUI-222"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/line_diff.rs:1-358",
+          "rust:crates/ice-tui/src/tui_alt_screen.rs:1-2133"
+        ],
+        "notes": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps.",
+        "ts_comparison": "Preserve scheduler merging, render locks, resize watchdog and history rebuild regression behavior while repairing source parity gaps."
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 1,
+      "before": {
+        "capability": "Native editor selection/redo, component mutable APIs and searchable selector extensions",
+        "entry_ids": [
+          "TUI-229",
+          "TUI-234",
+          "TUI-242",
+          "TUI-245",
+          "TUI-256",
+          "TUI-258"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/editor.rs:1-2420",
+          "rust:crates/ice-tui/src/select_list.rs:1-679",
+          "rust:crates/ice-tui/src/settings_list.rs:1-608"
+        ],
+        "notes": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry."
+      },
+      "after": {
+        "capability": "Native editor selection/redo, component mutable APIs and searchable selector extensions",
+        "entry_ids": [
+          "TUI-229",
+          "TUI-234",
+          "TUI-242",
+          "TUI-245",
+          "TUI-256",
+          "TUI-258"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/editor.rs:1-2420",
+          "rust:crates/ice-tui/src/select_list.rs:1-679",
+          "rust:crates/ice-tui/src/settings_list.rs:1-608"
+        ],
+        "notes": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry.",
+        "ts_comparison": "Native capabilities are not removed merely because TS contracts differ; their state safety limits are documented entry by entry."
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 2,
+      "before": {
+        "capability": "Passive-overlay collision avoidance",
+        "entry_ids": [
+          "TUI-219"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/overlay.rs:178-248"
+        ],
+        "notes": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior."
+      },
+      "after": {
+        "capability": "Passive-overlay collision avoidance",
+        "entry_ids": [
+          "TUI-219"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/overlay.rs:178-248"
+        ],
+        "notes": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior.",
+        "ts_comparison": "Retain as explicit policy; it is not equivalent to TS nonCapturing focus behavior."
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 3,
+      "before": {
+        "capability": "Native jump-to-end primitive",
+        "entry_ids": [
+          "TUI-223"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership."
+      },
+      "after": {
+        "capability": "Native jump-to-end primitive",
+        "entry_ids": [
+          "TUI-223"
+        ],
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership.",
+        "ts_comparison": "Geometry and hit testing fully read; application label/message counts remain main-TUI ownership."
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 4,
+      "before": {
+        "capability": "Native standalone LaTeX helper",
+        "evidence": [
+          "rust:crates/ice-tui/src/latex.rs:1-369"
+        ],
+        "notes": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option."
+      },
+      "after": {
+        "capability": "Native standalone LaTeX helper",
+        "evidence": [
+          "rust:crates/ice-tui/src/latex.rs:1-369"
+        ],
+        "notes": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option.",
+        "ts_comparison": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option."
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 5,
+      "before": {
+        "capability": "Native preservation TUI-223",
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior."
+      },
+      "after": {
+        "capability": "Native preservation TUI-223",
+        "evidence": [
+          "rust:crates/ice-tui/src/jump_to_end.rs:1-239"
+        ],
+        "notes": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior.",
+        "ts_comparison": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior."
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 6,
+      "before": {
+        "entry_ids": [
+          "TUI-003",
+          "TUI-024"
+        ],
+        "description": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-003",
+          "TUI-024"
+        ],
+        "description": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only.",
+        "capability": "Native behavior preserved by TUI-003, TUI-024",
+        "ts_comparison": "Preserve native live ThemeManager switching/revision invalidation and existing three presets; missing JSON/customizer contracts do not make native themes static-only.",
+        "evidence": [
+          "rust:crates/ice-tui/src/theme.rs:343-386",
+          "rust:crates/ice-tui/src/theme.rs:507-526",
+          "rust:crates/ice-cli/src/interactive_tui.rs:972-984",
+          "rust:crates/ice-cli/src/interactive_tui/selectors.rs:449-506",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:390-433",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:320-349",
+          "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:622-828",
+          "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:983-1066",
+          "ice:packages/coding-agent/src/modes/interactive/theme/theme-controller.ts:18-140",
+          "ice:packages/coding-agent/src/modes/interactive/components/theme-selector.ts:1-68",
+          "ice:packages/coding-agent/test/theme-picker.test.ts:25-75",
+          "ice:packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts:149-157",
+          "ice:packages/coding-agent/test/interactive-mode-status.test.ts:313-372",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:120-153",
+          "rust:crates/ice-tui/src/user_message.rs:58-119",
+          "rust:crates/ice-tui/src/assistant_message.rs:41-84",
+          "rust:crates/ice-tui/src/assistant_message.rs:257-283",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5225-5469",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6020-6048",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6098",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6159-6203",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6309-6319"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 7,
+      "before": {
+        "entry_ids": [
+          "TUI-025"
+        ],
+        "description": "Preserve native copy-on-select setting and working immediate/live settings controls."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-025"
+        ],
+        "description": "Preserve native copy-on-select setting and working immediate/live settings controls.",
+        "capability": "Native behavior preserved by TUI-025",
+        "ts_comparison": "Preserve native copy-on-select setting and working immediate/live settings controls.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:51-300",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:301-383",
+          "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:1-194",
+          "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:506-1028",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6325",
+          "ice:packages/coding-agent/test/settings-selector.test.ts:1-75",
+          "ice:packages/coding-agent/test/ui-style-settings.test.ts:1-31"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 8,
+      "before": {
+        "entry_ids": [
+          "TUI-046",
+          "TUI-047",
+          "TUI-073"
+        ],
+        "description": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-046",
+          "TUI-047",
+          "TUI-073"
+        ],
+        "description": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders.",
+        "capability": "Native behavior preserved by TUI-046, TUI-047, TUI-073",
+        "ts_comparison": "Preserve native masked API-key input, stale OAuth-result rejection, structured dialog values/permission metadata and real input placeholders.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:698-785",
+          "rust:crates/ice-cli/src/interactive_tui/selectors.rs:518-613",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:802-819",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:1187-1204",
+          "rust:crates/ice-cli/src/interactive_tui/selectors.rs:615-694",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3223-3290",
+          "rust:crates/ice-cli/src/interactive_tui/tests.rs:2312-2356",
+          "ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:1-215",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6933-7026",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7028-7181",
+          "ice:packages/coding-agent/test/oauth-selector.test.ts:1-53",
+          "ice:packages/coding-agent/test/oauth-selector.test.ts:55-148",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:821-895",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:897-1186",
+          "rust:crates/ice-cli/src/interactive_tui/settings.rs:788-797",
+          "rust:crates/ice-cli/src/interactive_tui/tests.rs:1958-2061",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1863-1885",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2011-2037",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3148-3221",
+          "ice:packages/coding-agent/src/modes/interactive/components/login-dialog.ts:1-234",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7183-7439",
+          "rust:crates/ice-cli/src/interactive_tui/extensions.rs:77-495",
+          "rust:crates/ice-cli/src/interactive_tui/extensions.rs:529-939",
+          "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:1-129",
+          "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90",
+          "ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:1-133"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 9,
+      "before": {
+        "entry_ids": [
+          "TUI-074"
+        ],
+        "description": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-074"
+        ],
+        "description": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences.",
+        "capability": "Native behavior preserved by TUI-074",
+        "ts_comparison": "Preserve native dequeue's expanded-text materialization and pending-image restoration; separate from the source-verified submit/follow-up failure differences.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui.rs:1398-1497",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2617-2695",
+          "rust:crates/ice-tui/src/editor.rs:1186-1204",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1425-1460",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2655-2692",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2661-2672",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1487-1495",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2600-2613",
+          "rust:crates/ice-cli/src/interactive_tui/state.rs:833-864",
+          "rust:crates/ice-cli/src/interactive_tui/events.rs:15-148",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3784-4063",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5160-5219",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:5796-5952",
+          "ice:packages/coding-agent/test/interactive-mode-send-now.test.ts:1-72",
+          "ice:packages/coding-agent/test/interactive-mode-compaction.test.ts:1-88",
+          "ice:packages/coding-agent/test/interactive-mode-bash-routing.test.ts:1-26"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 10,
+      "before": {
+        "entry_ids": [
+          "TUI-072"
+        ],
+        "description": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-072"
+        ],
+        "description": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all.",
+        "capability": "Native behavior preserved by TUI-072",
+        "ts_comparison": "Preserve dedicated native changelog baseline, fresh-settings monotonic writes and explicit /changelog all.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/run.rs:1-121",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:82-100",
+          "rust:crates/ice-cli/src/interactive_tui/rendering.rs:252-310",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:923-951",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1021-1027",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1386-1430",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7842-7861"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 11,
+      "before": {
+        "entry_ids": [
+          "TUI-078",
+          "TUI-080"
+        ],
+        "description": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-078",
+          "TUI-080"
+        ],
+        "description": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview.",
+        "capability": "Native behavior preserved by TUI-078, TUI-080",
+        "ts_comparison": "Preserve native share-to-clipboard fallback, direct clipboard image attachments and bounded failed-copy preview.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui/sessions.rs:8-86",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3038-3040",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7630-7722",
+          "ice:packages/coding-agent/src/config.ts:538-541",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2425-2615",
+          "rust:crates/ice-cli/src/interactive_tui/run.rs:313-337",
+          "rust:crates/ice-cli/src/interactive_tui.rs:2133-2133",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3004-3006",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3731-3732",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3748-3782",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7724-7741",
+          "ice:packages/coding-agent/test/interactive-tui.test.ts:132-243"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "index": 12,
+      "before": {
+        "entry_ids": [
+          "TUI-079",
+          "TUI-082"
+        ],
+        "description": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details."
+      },
+      "after": {
+        "entry_ids": [
+          "TUI-079",
+          "TUI-082"
+        ],
+        "description": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details.",
+        "capability": "Native behavior preserved by TUI-079, TUI-082",
+        "ts_comparison": "Preserve native regular/fullscreen modes and useful lane/leaf/active-operation usage details.",
+        "evidence": [
+          "rust:crates/ice-cli/src/interactive_tui.rs:990-1000",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1300-1350",
+          "rust:crates/ice-cli/src/interactive_tui.rs:1571-1571",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:424-462",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:953-1019",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:1049-1115",
+          "ice:packages/coding-agent/test/interactive-tui.test.ts:1-243",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:634-654",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3042-3054",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:297-317",
+          "rust:crates/ice-cli/src/interactive_tui.rs:3086-3135",
+          "rust:crates/ice-cli/src/interactive_tui/commands.rs:738-772",
+          "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7743-7828",
+          "ice:packages/coding-agent/test/interactive-mode-status.test.ts:1-1545"
+        ]
+      }
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/changelog",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/reload",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/share",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/copy",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/export",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/import",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/clone",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/new",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/name",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/session",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/fast",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "/debug",
+      "category_before": "commands",
+      "category_after": "slash-commands"
+    },
+    {
+      "name": "proposal-tui.json",
+      "surface": "ICE_SHARE_VIEWER_URL",
+      "category_before": "env",
+      "category_after": "environment"
+    }
+  ]
+}

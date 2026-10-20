@@ -1,0 +1,357 @@
+{
+  "area": "extensions",
+  "method": "Read-only behavior-oriented native SDK/registration/action searches, followed by the complete source reads recorded in extensions-source-review.json. Zero search results alone are not treated as proof of absence.",
+  "searches": [
+    {
+      "scope": "crates/ice-plugin-sdk",
+      "query": "autocomplete|completions|CompletionProvider|Notify|notification|set_theme|Theme|expanded|exec_command|spawn_command|set_title",
+      "regex": true,
+      "max_matches": 70,
+      "matches": [],
+      "truncated": false,
+      "partial": false,
+      "timedOut": false
+    },
+    {
+      "scope": "crates/ice-extensions",
+      "query": "autocomplete|CompletionProvider|Notify|notification|set_theme|set_title|render_call|render_result|prepare_arguments|execution_mode|register_settings",
+      "regex": true,
+      "max_matches": 70,
+      "matches": [
+        {
+          "path": "crates/ice-extensions/src/translate/lifetime_tests.rs",
+          "line": 7,
+          "text": "    entered: tokio::sync::Notify,"
+        },
+        {
+          "path": "crates/ice-extensions/src/translate.rs",
+          "line": 1436,
+          "text": "        entered: tokio::sync::Notify,"
+        },
+        {
+          "path": "crates/ice-extensions/src/translate.rs",
+          "line": 1437,
+          "text": "        finished: tokio::sync::Notify,"
+        },
+        {
+          "path": "crates/ice-extensions/src/translate.rs",
+          "line": 1485,
+          "text": "            entered: tokio::sync::Notify::new(),"
+        },
+        {
+          "path": "crates/ice-extensions/src/translate.rs",
+          "line": 1486,
+          "text": "            finished: tokio::sync::Notify::new(),"
+        },
+        {
+          "path": "crates/ice-extensions/src/translate.rs",
+          "line": 1775,
+          "text": "    /// The `EditorChange` notification reaches subscribers with its payload"
+        },
+        {
+          "path": "crates/ice-extensions/src/tool.rs",
+          "line": 260,
+          "text": "/// or in `AgentTool::prepare_arguments`, so the field reaches the plugin and"
+        },
+        {
+          "path": "crates/ice-extensions/src/tool.rs",
+          "line": 391,
+          "text": "    fn execution_mode(&self) -> ToolExecutionMode {"
+        },
+        {
+          "path": "crates/ice-extensions/src/stdio.rs",
+          "line": 5,
+          "text": "use tokio::sync::Notify;"
+        },
+        {
+          "path": "crates/ice-extensions/src/stdio.rs",
+          "line": 17,
+          "text": "    changed: Arc<Notify>,"
+        }
+      ],
+      "truncated": false,
+      "partial": false,
+      "timedOut": false
+    },
+    {
+      "scope": "crates/ice-extensions",
+      "query": "register_settings|settings.*items|on_change|capture.*console|factory.*console|dispatch_event|EventBus|Autocomplete|GetAllTools|GetCommands|GetSessionName|SetLabel|ContextUsage|PendingSteering|CompactAfterTurn",
+      "regex": true,
+      "max_matches": 60,
+      "matches": [
+        {
+          "path": "crates/ice-extensions/src/lib.rs",
+          "line": 293,
+          "text": "            dispatch_event: Some(trampoline_dispatch_event),"
+        },
+        {
+          "path": "crates/ice-extensions/src/lib.rs",
+          "line": 769,
+          "text": "extern \"C\" fn trampoline_dispatch_event(_event: StablePluginEvent, _user_data: *mut c_void) -> i32 {"
+        }
+      ],
+      "truncated": false,
+      "partial": false,
+      "timedOut": false
+    }
+  ],
+  "earlier_bounded_searches": [
+    {
+      "i": 0,
+      "queryPurpose": "trust-call-sites",
+      "rows": [
+        {
+          "path": "crates/ice-plugin-sdk/src/lib.rs",
+          "line": 592,
+          "text": "    ProjectTrust = 0,"
+        },
+        {
+          "path": "crates/ice-plugin-sdk/src/lib.rs",
+          "line": 1801,
+          "text": "            EventTag::ProjectTrust,"
+        },
+        {
+          "path": "crates/ice-extensions/src/translate.rs",
+          "line": 930,
+          "text": "        T::ProjectTrust"
+        },
+        {
+          "path": "crates/ice-cli/src/args.rs",
+          "line": 139,
+          "text": "    pub trust_override: Option<bool>,"
+        },
+        {
+          "path": "crates/ice-cli/src/args.rs",
+          "line": 477,
+          "text": "            \"--approve\" | \"-a\" => result.trust_override = Some(true),"
+        },
+        {
+          "path": "crates/ice-cli/src/args.rs",
+          "line": 478,
+          "text": "            \"--no-approve\" | \"-na\" => result.trust_override = Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/args.rs",
+          "line": 927,
+          "text": "        assert_eq!(approved.trust_override, Some(true));"
+        },
+        {
+          "path": "crates/ice-cli/src/args.rs",
+          "line": 930,
+          "text": "        assert_eq!(denied.trust_override, Some(false));"
+        },
+        {
+          "path": "crates/ice-cli/src/trust.rs",
+          "line": 43,
+          "text": "pub struct ProjectTrust {"
+        },
+        {
+          "path": "crates/ice-cli/src/trust.rs",
+          "line": 58,
+          "text": "    decisions: Arc<RwLock<HashMap<String, ProjectTrust>>>,"
+        },
+        {
+          "path": "crates/ice-cli/src/trust.rs",
+          "line": 81,
+          "text": "        let decisions: HashMap<String, ProjectTrust> ="
+        },
+        {
+          "path": "crates/ice-cli/src/trust.rs",
+          "line": 131,
+          "text": "        let trust = ProjectTrust {"
+        },
+        {
+          "path": "crates/ice-cli/src/trust.rs",
+          "line": 158,
+          "text": "    pub fn all_decisions(&self) -> Vec<ProjectTrust> {"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 479,
+          "text": "    // `isProjectTrusted()` (global resources are unconditional). ice v1 has no"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 1850,
+          "text": "    if let Some(override_value) = args.trust_override {"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 2920,
+          "text": "                    trust_override: Some(true),"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 2997,
+          "text": "                context.args.trust_override = Some(false);"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 3464,
+          "text": "            trust_override: Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 3547,
+          "text": "            trust_override: Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 3610,
+          "text": "            trust_override: Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 3732,
+          "text": "            trust_override: Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 3772,
+          "text": "            trust_override: Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/session.rs",
+          "line": 3820,
+          "text": "            trust_override: Some(false),"
+        },
+        {
+          "path": "crates/ice-cli/src/resource_dirs.rs",
+          "line": 20,
+          "text": "//! `settingsManager.isProjectTrusted()`. ice v1 has **no trust prompt**"
+        }
+      ],
+      "coverage": false
+    },
+    {
+      "i": 1,
+      "queryPurpose": "shortcut-routing",
+      "rows": [
+        {
+          "path": "crates/ice-cli/src/tui_shell/dialogs.rs",
+          "line": 250,
+          "text": "            DialogInput::Text(input) => input.handle_key(key),"
+        },
+        {
+          "path": "crates/ice-cli/src/tui_shell/dialogs.rs",
+          "line": 251,
+          "text": "            DialogInput::Options(list) => list.handle_key(key),"
+        },
+        {
+          "path": "crates/ice-cli/src/transcript_navigation.rs",
+          "line": 68,
+          "text": "    fn indicator_hint_uses_the_actual_binding_and_hides_disabled_shortcuts() {"
+        },
+        {
+          "path": "crates/ice-cli/src/interactive_tui/settings.rs",
+          "line": 830,
+          "text": "    let input = Arc::new(Input::with_placeholder(\"Paste API key, then press Enter\"));"
+        },
+        {
+          "path": "crates/ice-cli/src/interactive_tui.rs",
+          "line": 424,
+          "text": "/// Route one key event to extension `Input` handlers when the key is claimed as"
+        }
+      ],
+      "coverage": false
+    },
+    {
+      "i": 2,
+      "queryPurpose": "autocomplete-expansion",
+      "rows": [
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 482,
+          "text": "\tprivate autocompleteProviderWrappers: AutocompleteProviderFactory[] = [];"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 900,
+          "text": "\t\t\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 905,
+          "text": "\tprivate setupAutocompleteProvider(): void {"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 908,
+          "text": "\t\tfor (const wrapProvider of this.autocompleteProviderWrappers) {"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 2271,
+          "text": "\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 2344,
+          "text": "\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 3026,
+          "text": "\t\tthis.autocompleteProviderWrappers = [];"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 3028,
+          "text": "\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 3215,
+          "text": "\t\t\t\tthis.autocompleteProviderWrappers.push(factory);"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 3216,
+          "text": "\t\t\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 3279,
+          "text": "\t\t\t\t\tonToggleToolsExpanded: () => this.toggleToolOutputExpansion(),"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 3684,
+          "text": "\t\tthis.defaultEditor.onAction(\"app.tools.expand\", () => this.toggleToolOutputExpansion());"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 5565,
+          "text": "\t\t\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 5579,
+          "text": "\tprivate toggleToolOutputExpansion(): void {"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 6134,
+          "text": "\t\t\t\t\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 6332,
+          "text": "\t\t\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 6483,
+          "text": "\t\t\t\t\t\tthis.setupAutocompleteProvider();"
+        },
+        {
+          "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+          "line": 7513,
+          "text": "\t\t\tthis.setupAutocompleteProvider();"
+        }
+      ],
+      "coverage": false
+    }
+  ],
+  "interpretation": "Only tokio Notify synchronization, EditorChange notification, execution-mode implementation and dispatch_event trampoline matched the grouped absent API searches. Full SDK/lib/registry/actions reads establish actual action/registration boundaries. UI panels/dialogs/status/editor and provider/tool implementations were independently read, so related functionality is classified partial rather than absent."
+}

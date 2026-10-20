@@ -1,0 +1,3260 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:00:06.779Z",
+  "owner": "/root/helper_migration",
+  "status": "ready-for-active-copy",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "old_audit_root": "/home/mewtwo/Zks/ice-rust/docs/ice-gap",
+  "active_audit_root": "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap",
+  "reviewed_rules": {
+    "path": "evidence/lane-exports-rpc-ai-auth-migration-rules.json",
+    "sha256": "f0430572a31fd027c06fde17190ab6df491e360c1da0ad04099c4aa5e1473e9d"
+  },
+  "summary": {
+    "existing_scripts": 135,
+    "support_files": 7,
+    "total_helpers": 142,
+    "moves": 58,
+    "root_moves": 36,
+    "evidence_moves": 22,
+    "changed_bodies": 93,
+    "exact_line_patches": 73,
+    "scripts_with_exact_line_patches": 64,
+    "new_completion_guards": 61,
+    "roles": {
+      "mixed historical writer and inspector": 9,
+      "historical audit writer": 67,
+      "read-only inspector": 46,
+      "safe validation/report writer": 7,
+      "current gated closeout helper": 6
+    }
+  },
+  "scripts": [
+    {
+      "source": "audit-util.mjs",
+      "destination": "tools/audit-util.mjs",
+      "move": true,
+      "before_sha256": "34eb8d965fccab40f17594750b64351cc4e7241333777348a7c083ac1030e0fd",
+      "before_bytes": 3228,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "record-reads"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "new_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:auditHelperNative};",
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        }
+      ],
+      "prepend": "import { auditHelperBase, auditHelperNative } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"record-reads\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "e6fda33bd0c1de276c836e7338a2345fedbd6935b0af30d652c47b36834b4168",
+      "after_bytes": 3438
+    },
+    {
+      "source": "author-agent-common.mjs",
+      "destination": "tools/author-agent-common.mjs",
+      "move": true,
+      "before_sha256": "217389591ec5c99ade1f00f289f3df9a7c213af4cb0e68344d8eea44932e0028",
+      "before_bytes": 4227,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "export const out='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "export const out=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "6d5c28eab759c98c298b49e3317a3902392e70ecb5f591f496b837c043076c4b",
+      "after_bytes": 4382
+    },
+    {
+      "source": "author-agent-env.mjs",
+      "destination": "tools/author-agent-env.mjs",
+      "move": true,
+      "before_sha256": "36f0f53a774d7ca29e0bc55f7e84193929da1508bbe6939e0b62da29efd06514",
+      "before_bytes": 31282,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "2aee4d0098e2130a391dbf6583247f64a5f75f2ab976de5b3e24c5d6dde688c6",
+      "after_bytes": 31384
+    },
+    {
+      "source": "author-agent-loop.mjs",
+      "destination": "tools/author-agent-loop.mjs",
+      "move": true,
+      "before_sha256": "69f481a56203e9e21ac387bef1f9300f69a05c48355e88a09bfe47b30e1f533f",
+      "before_bytes": 50626,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "8ba418ddd6a2c0200152171a5e5713808bfe60fc1408c80cc6646e919507e870",
+      "after_bytes": 50728
+    },
+    {
+      "source": "author-agent-resources.mjs",
+      "destination": "tools/author-agent-resources.mjs",
+      "move": true,
+      "before_sha256": "9b029912d24a596ef1d901898794ff2bdbee509bec315a6c774cede05f1d88d7",
+      "before_bytes": 29500,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "e56916728f69a2680d99a41f65e7f8a2e9b8bc669fb4b4e5d22e819d0b4a8db7",
+      "after_bytes": 29602
+    },
+    {
+      "source": "author-agent-runtime.mjs",
+      "destination": "tools/author-agent-runtime.mjs",
+      "move": true,
+      "before_sha256": "5c88acd97949b60b009e9705f228ad5e08c9a045f3e125874ad8779943a084cf",
+      "before_bytes": 24032,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "9f99c656c7e1259346a88c47154081cf1960759f358d0baa4e5e1ec4b381e281",
+      "after_bytes": 24134
+    },
+    {
+      "source": "author-blackhole-rest.mjs",
+      "destination": "tools/author-blackhole-rest.mjs",
+      "move": true,
+      "before_sha256": "f2298e886c16cd3aafba260bae262e55776111e2e704ddb3ff16bbb4875f502e",
+      "before_bytes": 45382,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const out='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "f357940f86312190e3a1dc6c413bc2ce96e814e3473d255e759a5627380722c5",
+      "after_bytes": 45537
+    },
+    {
+      "source": "author-blackhole.mjs",
+      "destination": "tools/author-blackhole.mjs",
+      "move": true,
+      "before_sha256": "f8c329a054e87ed40cf4b4d16578e289f09968c6b6d650b3025012371d02fb11",
+      "before_bytes": 36249,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const out='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "878c719301c2800d2d59cbe9b22220fd165138acdf6b5e818dfad767d88022fc",
+      "after_bytes": 36404
+    },
+    {
+      "source": "author-cognee-client.mjs",
+      "destination": "tools/author-cognee-client.mjs",
+      "move": true,
+      "before_sha256": "41545b22880d39cbf67558d69cc21db193da9ab1dc7e3c0bba36c8623e2ff8a1",
+      "before_bytes": 39381,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const out='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "6a3dc8cbb20d117c0a984cdc6922e0f5b71746e7a46a5e3cb1083c5c8e0631e3",
+      "after_bytes": 39536
+    },
+    {
+      "source": "author-cognee-runtime.mjs",
+      "destination": "tools/author-cognee-runtime.mjs",
+      "move": true,
+      "before_sha256": "2e54fc409328fdfab599480c14547c700f92446581df74eaef20c3f5e09665ac",
+      "before_bytes": 62388,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const out='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "0af4f32b8bdec06997a1f7a4477c54a1d50ead19b839d45066bff9263745034f",
+      "after_bytes": 62543
+    },
+    {
+      "source": "author-extensions-common.mjs",
+      "destination": "tools/author-extensions-common.mjs",
+      "move": true,
+      "before_sha256": "838af073ad9efdbbce2ea418007daa6790f42466700306814f0fe35421ff373e",
+      "before_bytes": 4727,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "export const root='/home/mewtwo/Zks/ice',out='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "export const root='/home/mewtwo/Zks/ice',out=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "08d2d38a10e9c8fd4b2a3aa7b46f02d72dda189bbae37646f355d2feaca911c1",
+      "after_bytes": 4882
+    },
+    {
+      "source": "author-extensions-dispatch.mjs",
+      "destination": "tools/author-extensions-dispatch.mjs",
+      "move": true,
+      "before_sha256": "d5288de36a749cf62f9d87b2265f68713bcbc1c76b38c28e162e652e1e404fbf",
+      "before_bytes": 36603,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "3edbb027286a54b7df89c78b9503b51985c4ba8789cd299b04b913a9a5b113d1",
+      "after_bytes": 36705
+    },
+    {
+      "source": "author-extensions-loader.mjs",
+      "destination": "tools/author-extensions-loader.mjs",
+      "move": true,
+      "before_sha256": "503f7fca86ff3908d863bf18ca5a15eff61b79c14b1f5a321b9aefc56d260a2a",
+      "before_bytes": 33682,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "1abc01c3c537aee9eeaabd174da1d315f144f38127cbe237ffeb815cbf5a022c",
+      "after_bytes": 33784
+    },
+    {
+      "source": "author-safe-verify.mjs",
+      "destination": "tools/author-safe-verify.mjs",
+      "move": true,
+      "before_sha256": "ad72c73f68e641b083d203d1f0be79df782e5b236b58b0517a56cb170342f900",
+      "before_bytes": 74394,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "e98f27454469cadddb92dca2bd921075885dc9d70db3aa079e8a5d5e6a1d144e",
+      "after_bytes": 74549
+    },
+    {
+      "source": "compare-blackhole-copies.mjs",
+      "destination": "tools/compare-blackhole-copies.mjs",
+      "move": true,
+      "before_sha256": "c4e831545158a56ce3db0dee8c81bd1c8e587d2885e6115970b2198b14d81ef5",
+      "before_bytes": 1266,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 7,
+          "expected_occurrences": 1,
+          "old_text": "const output='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence/blackhole-copies.json';",
+          "new_text": "const output=auditHelperEvidence+'/blackhole-copies.json';",
+          "reason": "Write only beside the current audit evidence."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "f7180069cb0b48a22e528bbf0f2e0d13bcefb7da19d5ac5fd21cdf92e4859469",
+      "after_bytes": 1423
+    },
+    {
+      "source": "direct-source.mjs",
+      "destination": "tools/direct-source.mjs",
+      "move": true,
+      "before_sha256": "7a0800d0d95163584176b82e0671c09c6803d03492bf6527b72642a8bdb84ef7",
+      "before_bytes": 3587,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "read",
+          "integrity"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [
+        {
+          "source_line": 7,
+          "expected_occurrences": 1,
+          "old_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "new_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:auditHelperNative};",
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        },
+        {
+          "source_line": 8,
+          "expected_occurrences": 1,
+          "old_text": "const out=path.join(roots.rust,'docs/ice-gap');",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Separate output directory from source identity."
+        }
+      ],
+      "prepend": "import { auditHelperBase, auditHelperNative } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"read\",\"integrity\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c86815824ee7ead424442d980dd6b49fea28ce1e830550d68f0261241a176453",
+      "after_bytes": 3805
+    },
+    {
+      "source": "evidence/active-checkout-compare.mjs",
+      "destination": "tools/active-checkout-compare.mjs",
+      "move": true,
+      "before_sha256": "3f14d781869727046929dcf70ea86fb894a60a0f3dad0b2c2441a62fcc9e511a",
+      "before_bytes": 11338,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 7,
+          "expected_occurrences": 1,
+          "old_text": "const evidence=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const evidence=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 9,
+          "text": "const roots={old:'/home/mewtwo/Zks/ice-rust',active:'/home/mewtwo/Zykairotis/ice-rust'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "ff3d89cd5dff0f0c41fa5452b98d073c479147fc363f9f6d10fb67ef56317633",
+      "after_bytes": 11395
+    },
+    {
+      "source": "evidence/ai-schema-read.mjs",
+      "destination": "tools/ai-schema-read.mjs",
+      "move": true,
+      "before_sha256": "5c450bbc53edf569cac3f97f325d0f0ac698b08322cc1f3526bea82430c20524",
+      "before_bytes": 1793,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "b06b779c556fb9dc3a56082a063696a7fdd48fc73d02941ec6c8e19465e78ee2",
+      "after_bytes": 1850
+    },
+    {
+      "source": "evidence/cli-packaging-supplement-read.mjs",
+      "destination": "tools/cli-packaging-supplement-read.mjs",
+      "move": true,
+      "before_sha256": "6bcf6c1d56d4d54fa58049cb6de3e72a1826345029f05939c6af4868fe5f832d",
+      "before_bytes": 2214,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "258e29779b1fdce43da393cd5cad57a1d8bc306549354dbba280d63265dd0b2f",
+      "after_bytes": 2266
+    },
+    {
+      "source": "evidence/extensions-coverage-gaps.mjs",
+      "destination": "tools/extensions-coverage-gaps.mjs",
+      "move": true,
+      "before_sha256": "80a2d531e8aa19f750f0a354f780076f31391cddcbaa08dc77b1cc08af38d267",
+      "before_bytes": 1461,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base=\"/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence\";",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 5,
+          "text": "const roots={ice:\"/home/mewtwo/Zks/ice\",rust:\"/home/mewtwo/Zks/ice-rust\"};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "10773b379e9ba4dfbcb7490e7fd4068bd3f0bde783f8317c1180687f9d5080ec",
+      "after_bytes": 1513
+    },
+    {
+      "source": "evidence/extensions-final-review.mjs",
+      "destination": "tools/extensions-final-review.mjs",
+      "move": true,
+      "before_sha256": "5e5632191947d50326c95f4a75c0c79ef6e0ab162555666f97e8ef04cd19b8b3",
+      "before_bytes": 3254,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=\"/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence\";",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 6,
+          "text": "const roots={ice:\"/home/mewtwo/Zks/ice\",rust:\"/home/mewtwo/Zks/ice-rust\"};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "e836a30e7e3e5fcfe244961971a5f2814b9fd5e631ddd774ad85bf8c4435c6a8",
+      "after_bytes": 3306
+    },
+    {
+      "source": "evidence/extensions-review-apply.mjs",
+      "destination": "tools/extensions-review-apply.mjs",
+      "move": true,
+      "before_sha256": "d05f4d9c2e3795c2096b4b6ae6b962a036da7820ccd74620227d0cff9b36e80e",
+      "before_bytes": 2498,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "apply"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base=\"/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence\";",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"apply\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 5,
+          "text": "const roots={ice:\"/home/mewtwo/Zks/ice\",rust:\"/home/mewtwo/Zks/ice-rust\"};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "df6b4014e05536ca36cecfbbe1b8cd30156f210cfcb340af48655cd49c019bcb",
+      "after_bytes": 2691
+    },
+    {
+      "source": "evidence/extensions-review-read.mjs",
+      "destination": "tools/extensions-review-read.mjs",
+      "move": true,
+      "before_sha256": "f5a7bdbb56b44c613e6557fccb8a7b7c54624614d5cf447bcc2f15e583b59879",
+      "before_bytes": 1961,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 6,
+          "text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "75f1f0f297b773a584d8cabce2ad3940f46c674caf0f5d4f7f579de15a54d967",
+      "after_bytes": 2013
+    },
+    {
+      "source": "evidence/qa-observability-independent-helper.mjs",
+      "destination": "tools/qa-observability-independent-helper.mjs",
+      "move": true,
+      "before_sha256": "f813b86feb067d4ea808d52a19d032e84d4056013ee1485243fc9adf32fb77e6",
+      "before_bytes": 1260,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "f813b86feb067d4ea808d52a19d032e84d4056013ee1485243fc9adf32fb77e6",
+      "after_bytes": 1260
+    },
+    {
+      "source": "evidence/semantic-dependency-read.mjs",
+      "destination": "tools/semantic-dependency-read.mjs",
+      "move": true,
+      "before_sha256": "773103acb7943b5bf672ac4e0b580a09feb35eeb3b792226377adc9a65e552cb",
+      "before_bytes": 1747,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "60648f6af11f220f18028d6c07720b04c004e717bb1e65148ca1fe56fc840d88",
+      "after_bytes": 1804
+    },
+    {
+      "source": "evidence/subagents-read.mjs",
+      "destination": "tools/subagents-read.mjs",
+      "move": true,
+      "before_sha256": "979991eeafa5b8359d4e37b613e2355cc81de2b10489f3cedabcb35d5a56f3a7",
+      "before_bytes": 2706,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "25566b7d7343116368a1aceb499898d06785a235b7b530718daf1df0ecc73d72",
+      "after_bytes": 2758
+    },
+    {
+      "source": "evidence/tools-read-metadata.mjs",
+      "destination": "tools/tools-read-metadata.mjs",
+      "move": true,
+      "before_sha256": "b98c3cba72b56f00987b264713c0dea2fae463efa3630c4c5090c04134e821a3",
+      "before_bytes": 2009,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 2,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence',manifest=JSON.parse(fs.readFileSync(path.join(base,'resume-source-identities-2026-10-19T222055Z.json'),'utf8')),supplemental=JSON.parse(fs.readFileSync(path.join(base,'tools-supplemental-source-hashes.json'),'utf8')),refs=JSON.parse(fs.readFileSync(path.join(base,'tools-read-requests.json'),'utf8')),byPath=new Map();",
+          "new_text": "const base=auditHelperEvidence,manifest=JSON.parse(fs.readFileSync(path.join(base,'resume-source-identities-2026-10-19T222055Z.json'),'utf8')),supplemental=JSON.parse(fs.readFileSync(path.join(base,'tools-supplemental-source-hashes.json'),'utf8')),refs=JSON.parse(fs.readFileSync(path.join(base,'tools-read-requests.json'),'utf8')),byPath=new Map();",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "a9d6afd86d1438e54c67e2d0c5e8a6a71321341ddd36243a284ba81c9ad1494d",
+      "after_bytes": 2061
+    },
+    {
+      "source": "evidence/tools-read.mjs",
+      "destination": "tools/tools-read.mjs",
+      "move": true,
+      "before_sha256": "5501e34fa197eb5f07bf229f32b1719f579fdee7e2882afd837fd6c15069f827",
+      "before_bytes": 1818,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "2ada7b6388a6b9588f839a66917ebd25759c53209b7e044af37349062fdf6557",
+      "after_bytes": 1871
+    },
+    {
+      "source": "evidence/tui-candidates-read.mjs",
+      "destination": "tools/tui-candidates-read.mjs",
+      "move": true,
+      "before_sha256": "2ffb25eed1addf94f8031d810afa1b22f7736f519d11169de4bd6007d790a625",
+      "before_bytes": 806,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "03873a356a1599bbed9489439fbd33dc136fd24f7914c67a906cd0bc1ea4e13d",
+      "after_bytes": 858
+    },
+    {
+      "source": "evidence/tui-closeout-build-proposal.mjs",
+      "destination": "tools/tui-closeout-build-proposal.mjs",
+      "move": true,
+      "before_sha256": "a3030f9d4aa2678ef7a7b294ef8f122b0e78601dbe80a62a873f38d0c89c649c",
+      "before_bytes": 18234,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "a287438326df2e71ee6b368d68abefd621f63bf514a3c7b47d027aa9ab967688",
+      "after_bytes": 18393
+    },
+    {
+      "source": "evidence/tui-closeout-inspect.mjs",
+      "destination": "tools/tui-closeout-inspect.mjs",
+      "move": true,
+      "before_sha256": "518b498fbc4c91c9ad46cd7f114c2acd7cd81c382593b345a24e11dcd19f0bde",
+      "before_bytes": 2004,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c9ef52708477e127a8b85eb4975e50f3597f97c4e4d673901851c860a0786768",
+      "after_bytes": 2061
+    },
+    {
+      "source": "evidence/tui-closeout-merge-spec.mjs",
+      "destination": "tools/tui-closeout-merge-spec.mjs",
+      "move": true,
+      "before_sha256": "bfd24b6d4aa56e6b026bc75cad93db9411bd59ba9bb161cff70c6bae7e13f1ee",
+      "before_bytes": 5862,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "0015de75aa2cc43a30234480e04724fb5a0b122bd8898a9785dd0ce9161613b1",
+      "after_bytes": 6021
+    },
+    {
+      "source": "evidence/tui-closeout-normalize.mjs",
+      "destination": "tools/tui-closeout-normalize.mjs",
+      "move": true,
+      "before_sha256": "dda8729a5b6dd6ce5bcd0883d95b6fd3d785d18fdb2e84c2159b970d718b2447",
+      "before_bytes": 2308,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "62a3dd57f764189e2956f16b552a648d7b618c29b0b1850142ad5dc57270ee89",
+      "after_bytes": 2365
+    },
+    {
+      "source": "evidence/tui-closeout-read.mjs",
+      "destination": "tools/tui-closeout-read.mjs",
+      "move": true,
+      "before_sha256": "f4ce84ba4ff135b0d4b5ab5d2d29030b2baa592bd57acdd47a0e98635b310eb9",
+      "before_bytes": 2536,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "89b8f7cb1ce6bc2f49bf9d4d755484c9576cbe14eb0696b2a93ff7c7f01293f3",
+      "after_bytes": 2593
+    },
+    {
+      "source": "evidence/tui-owned-evidence-read.mjs",
+      "destination": "tools/tui-owned-evidence-read.mjs",
+      "move": true,
+      "before_sha256": "0bb1c847eea0aee03d31c397efbfa938331eda18f8a50679ddd71aff6ab74d9b",
+      "before_bytes": 1741,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 7,
+          "expected_occurrences": 1,
+          "old_text": "const root=path.resolve(\"docs/ice-gap/evidence\");",
+          "new_text": "const root=auditHelperEvidence;",
+          "reason": "Read saved evidence independently of the process working directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "ad6c40e76b8ae59098b931951e75f94abe12a6e679460ea499f584ac9a7cb1d7",
+      "after_bytes": 1805
+    },
+    {
+      "source": "evidence/tui-publication-readonly-review.mjs",
+      "destination": "tools/tui-publication-readonly-review.mjs",
+      "move": true,
+      "before_sha256": "ea65cd0dd81160e26085a67bc4e42987c427de6db097092fe2406a7b2336b662",
+      "before_bytes": 5574,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.dirname(fileURLToPath(import.meta.url));",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Moving this helper out of evidence must not move its data root."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "da5c3fc177e37c6e819db85f1ec884f8d70fc38c1f7c83629575aed90151ce6a",
+      "after_bytes": 5631
+    },
+    {
+      "source": "evidence/tui-review-read.mjs",
+      "destination": "tools/tui-review-read.mjs",
+      "move": true,
+      "before_sha256": "2b11a756f459f923bc1c82f11e3ff03b9ad0efbe7e4fd1852abae2e1d402ffbc",
+      "before_bytes": 2885,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 7,
+          "text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "6b301c3679825ebee25b3180900398197f1a694f39f0cda7bffa4863c1b6ae7d",
+      "after_bytes": 2937
+    },
+    {
+      "source": "evidence/tui-terminal-read.mjs",
+      "destination": "tools/tui-terminal-read.mjs",
+      "move": true,
+      "before_sha256": "8996c2c2c23068099b10dcec0e14d571f92c7bf292e20da26a7ce5423d200ec8",
+      "before_bytes": 2505,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const base=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "55b2b9ccc124a1df00b660cc69d021f81c1c61fa33ec6ffb0924f93caa2426c7",
+      "after_bytes": 2557
+    },
+    {
+      "source": "extract-surfaces.mjs",
+      "destination": "tools/extract-surfaces.mjs",
+      "move": true,
+      "before_sha256": "8b774b52e4bf973e3f737e7cbc5b3571e3a73095086a5e2fdc6882a69a9fa0b4",
+      "before_bytes": 12479,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 8,
+          "expected_occurrences": 1,
+          "old_text": "const out=path.join(rustRoot,'docs/ice-gap');",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Retain frozen historical source root while confining output to relocated audit."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 7,
+          "text": "const rustRoot='/home/mewtwo/Zks/ice-rust';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "869fe85be87f9996469f7023aec3904cb3e9cb1ca4fbfec0161b2c76caadfc58",
+      "after_bytes": 12640
+    },
+    {
+      "source": "finalize-agent.mjs",
+      "destination": "tools/finalize-agent.mjs",
+      "move": true,
+      "before_sha256": "8d8418695e149c18c940b4a3f774e1d7f41bf5c69f354f88a2199c3bf0f47232",
+      "before_bytes": 15289,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 35,
+          "text": "function line(file,needle,side='ice'){const full=path.join(side==='ice'?root:'/home/mewtwo/Zks/ice-rust',file);const ls=fs.readFileSync(full,'utf8').split('\\n');const i=ls.findIndex(x=>x.includes(needle));if(i<0)throw Error('Surface anchor missing '+file+' '+needle);return i+1;}",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        },
+        {
+          "source_line": 54,
+          "text": "const read_evidence=[...fullReadsIce.map(file=>({path:'ice:'+file,ranges:[[1,fs.readFileSync(path.join(root,file),'utf8').split('\\n').length]],notes:'Full content read in this direct audit; tests were not executed.'})),...fullReadsRust.map(file=>({path:'rust:'+file,ranges:[[1,fs.readFileSync(path.join('/home/mewtwo/Zks/ice-rust',file),'utf8').split('\\n').length]],notes:'Full source and embedded tests read, not executed.'})),{path:'rust:crates/ice-harness/src/agent_harness.rs',ranges:[[649,810],[2005,2190]],notes:'Only these contiguous slices were read; the rest belongs to the session audit.'}];",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "bebb7f6fe8be2af8beba7057274ab8e3dcbcf68d9f87edc4d48e0e10dd5b4b2e",
+      "after_bytes": 15391
+    },
+    {
+      "source": "finalize-blackhole.mjs",
+      "destination": "tools/finalize-blackhole.mjs",
+      "move": true,
+      "before_sha256": "da323fe579586a89208890773aa11113be33d28badaddb2e1952d6781fdc1583",
+      "before_bytes": 14566,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "582a94038733e15b39b3779f9eb64fea93adf8a57bdcd970ebac39867c1b302e",
+      "after_bytes": 14721
+    },
+    {
+      "source": "finalize-cognee.mjs",
+      "destination": "tools/finalize-cognee.mjs",
+      "move": true,
+      "before_sha256": "138e4af023ac49ea92b6d1db5e883e1b32d69cc9f8a1767ffb3604783db1fa18",
+      "before_bytes": 21061,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "41c251f74c8a2442b1ade61de2c1496578f5fd8403f5e7f36957be83be68be7f",
+      "after_bytes": 21216
+    },
+    {
+      "source": "finalize-extension-core-text.mjs",
+      "destination": "tools/finalize-extension-core-text.mjs",
+      "move": true,
+      "before_sha256": "b2e49d800fa62d7d84cf4d3cb37ad87696c4ac8fa15cb7a504d7c809178731dd",
+      "before_bytes": 11546,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "00d397fe8ed9cf95376b19c858b4f162d700ff7550baf9e9f986202e2d835cc4",
+      "after_bytes": 11648
+    },
+    {
+      "source": "finalize-safe-verify.mjs",
+      "destination": "tools/finalize-safe-verify.mjs",
+      "move": true,
+      "before_sha256": "7044ccca05b99febbfbeb7f311a6613c218224fda2b6492d6fba538e9dcd709c",
+      "before_bytes": 13271,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "de8badb238b91ac47a772f7f40c0cc37cbc88d7e939484fc468f417c9906fba4",
+      "after_bytes": 13426
+    },
+    {
+      "source": "inspect-blackhole.mjs",
+      "destination": "tools/inspect-blackhole.mjs",
+      "move": true,
+      "before_sha256": "c27bc980d2f391acad4c0a60a1ffb5b19ea8c2cb97f2408de79e63e3b140295c",
+      "before_bytes": 1254,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "dc873e2ff6287bcc5ba3158f97230c1c89114866b1806193216b8f62a591fa6b",
+      "after_bytes": 1409
+    },
+    {
+      "source": "inspect-evidence.mjs",
+      "destination": "tools/inspect-evidence.mjs",
+      "move": true,
+      "before_sha256": "681b0000262784fdc8dd529c4145a1c980bb5705613a116f4c1233c6d07318aa",
+      "before_bytes": 888,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "b147fb8306641a0d88913a0cc2fc41a60161e86500874ab520931628c2982563",
+      "after_bytes": 941
+    },
+    {
+      "source": "inspect-spec.mjs",
+      "destination": "tools/inspect-spec.mjs",
+      "move": true,
+      "before_sha256": "971a5bb3bdf3da5c6e6e952f2ef2ed6fe242c810960cfdc915a98b8d6aca1010",
+      "before_bytes": 1089,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';const area=process.argv[2];",
+          "new_text": "const base=auditHelperBase;const area=process.argv[2];",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};const seen=new Set();const problems=[];",
+          "new_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:auditHelperNative};const seen=new Set();const problems=[];",
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        }
+      ],
+      "prepend": "import { auditHelperBase, auditHelperNative } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "after_bytes": 1151
+    },
+    {
+      "source": "inventory.mjs",
+      "destination": "tools/inventory.mjs",
+      "move": true,
+      "before_sha256": "22e7e021d7828bdcd83c7fe8d78c15918111ad5235ca1db47cab94325f0c99b3",
+      "before_bytes": 7442,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 9,
+          "expected_occurrences": 1,
+          "old_text": "const out = path.join(rustRoot, 'docs/ice-gap');",
+          "new_text": "const out = auditHelperBase;",
+          "reason": "Retain frozen historical source root while confining output to relocated audit."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 8,
+          "text": "const rustRoot = '/home/mewtwo/Zks/ice-rust';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "5bf09bceee5cae68517fca78880b6714053efd420ab15faec8549df4baf7bb11",
+      "after_bytes": 7602
+    },
+    {
+      "source": "merge-progress.mjs",
+      "destination": "tools/merge-progress.mjs",
+      "move": true,
+      "before_sha256": "45c4ad23ac09e1aa3016043f87afb8a8a8cc8d625c26bb5ce983d8ffeb336c14",
+      "before_bytes": 3076,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "baee92068be66ad20de8bbc58a939573ff8b412345b491e9d313041511858dae",
+      "after_bytes": 3231
+    },
+    {
+      "source": "prepare-workers.mjs",
+      "destination": "tools/prepare-workers.mjs",
+      "move": true,
+      "before_sha256": "72b4045943f100430de83f7dd26773e880c060af11a45daf3b8bb910cf4ed8c7",
+      "before_bytes": 13235,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 27,
+          "text": "Read-only boundary: read source/tests/docs from /home/mewtwo/Zks/ice and /home/mewtwo/Zks/ice-rust. Write ONLY your AREA.md, evidence/AREA.json, and scratch artifacts under workers/AREA/ inside /home/mewtwo/Zks/ice-rust/docs/ice-gap/. Do not write elsewhere, including /tmp, source directories, ~/.ice, .git or .ai-bridge outside this audit directory. No test creation, test runs, builds, package installs, commits, git fetch/push or network requests. Do not launch more agents. Do not run source executables that may contact providers. Do not read or reproduce user credential values. Preserve all pre-existing changes. No permission questions; record unresolved intent as open questions.",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "1cbfccb573b667b94f6fc2d55a5672f5cb0302ae6fefeb8880d23e745653a279",
+      "after_bytes": 13390
+    },
+    {
+      "source": "publish-area.mjs",
+      "destination": "tools/publish-area.mjs",
+      "move": true,
+      "before_sha256": "8dda47cc6a7d060fba2d5af06ea5c7fdb6b08e8e25a9e950a1a83e94313fef32",
+      "before_bytes": 7247,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const root='/home/mewtwo/Zks/ice-rust';",
+          "new_text": "const root=auditHelperNative;",
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        },
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const base=path.join(root,'docs/ice-gap');",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Current audit root is derived from tools."
+        },
+        {
+          "source_line": 10,
+          "expected_occurrences": 1,
+          "old_text": "const run=(script,args=[])=>process.stdout.write(execFileSync(process.execPath,[path.join(base,script),...args],{cwd:root,encoding:'utf8',maxBuffer:16*1024*1024}));",
+          "new_text": "const run=(script,args=[])=>process.stdout.write(execFileSync(process.execPath,[path.join(auditHelperTools,script),...args],{cwd:root,encoding:'utf8',maxBuffer:16*1024*1024}));",
+          "reason": "Run the helpers from tools after relocation."
+        }
+      ],
+      "prepend": "import { auditHelperBase, auditHelperNative, auditHelperTools } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "82b8ab42ed70f9701261d3184bcb9fa657f494df39a019cd723d99efa7da6872",
+      "after_bytes": 7451
+    },
+    {
+      "source": "read-evidence.mjs",
+      "destination": "tools/read-evidence.mjs",
+      "move": true,
+      "before_sha256": "cd873d454e29c450c5f6a2fa1e765a9eb2108baf26e1729dbca56a87ee58e7d3",
+      "before_bytes": 1055,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 6,
+          "expected_occurrences": 1,
+          "old_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:'/home/mewtwo/Zks/ice-rust'};",
+          "new_text": "const roots={ice:'/home/mewtwo/Zks/ice',rust:auditHelperNative};",
+          "reason": "Generic current native reads and publication cwd use the audit's containing native checkout."
+        }
+      ],
+      "prepend": "import { auditHelperNative } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "93635a781d8f1f4e0168c23d468d75298ef9aa8e9e9fa9ea0bf4e7e4f76eab7a",
+      "after_bytes": 1125
+    },
+    {
+      "source": "refine-blackhole-evidence.mjs",
+      "destination": "tools/refine-blackhole-evidence.mjs",
+      "move": true,
+      "before_sha256": "0f5b44b1577b7d96b1bc6d40472412af791314550bfedd90f5a2539437602012",
+      "before_bytes": 4317,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "source_line": 10,
+          "expected_occurrences": 1,
+          "old_text": "let text=fs.readFileSync(path.join(base,'finalize-blackhole.mjs'),'utf8');",
+          "new_text": "let text=fs.readFileSync(path.join(auditHelperTools,'finalize-blackhole.mjs'),'utf8');",
+          "reason": "Historical helper rewrites target the relocated helper in tools."
+        },
+        {
+          "source_line": 26,
+          "expected_occurrences": 1,
+          "old_text": "fs.writeFileSync(path.join(base,'finalize-blackhole.mjs'),text);",
+          "new_text": "fs.writeFileSync(path.join(auditHelperTools,'finalize-blackhole.mjs'),text);",
+          "reason": "Historical helper rewrites target the relocated helper in tools."
+        }
+      ],
+      "prepend": "import { auditHelperBase, auditHelperTools } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "1f4f3d33515f4da61225ff24578aa31eb9dd6637c2884eed1ea1bc90cb78818c",
+      "after_bytes": 4514
+    },
+    {
+      "source": "render-area.mjs",
+      "destination": "tools/render-area.mjs",
+      "move": true,
+      "before_sha256": "7cc36d4a75017db5fd9b0fafb94e5aa9128c8323851263a21caab7e5f93d4cff",
+      "before_bytes": 1738,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "0e724fadfabd882e4e67cd8cd58e31ed0b709434ea4db2eb37833f2baad91924",
+      "after_bytes": 1893
+    },
+    {
+      "source": "repair-extensions-dispatch.mjs",
+      "destination": "tools/repair-extensions-dispatch.mjs",
+      "move": true,
+      "before_sha256": "a09f409770d0d7abbeb78601724790ec205ef124ef2d26b1dcb9ecbe189b05f2",
+      "before_bytes": 1073,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "86b76d23e8e21fc3e3b0decfb866d972b53264cad6d01721d55e0c71333673bd",
+      "after_bytes": 1228
+    },
+    {
+      "source": "resolve-extension-test-refs.mjs",
+      "destination": "tools/resolve-extension-test-refs.mjs",
+      "move": true,
+      "before_sha256": "da39dbc42882193cc59362ec0ec421072f9a34b0f9ef7413217302eac1f65771",
+      "before_bytes": 1271,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base='/home/mewtwo/Zks/ice-rust/docs/ice-gap';",
+          "new_text": "const base=auditHelperBase;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        },
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const helper=base+'/author-extensions-common.mjs';let h=fs.readFileSync(helper,'utf8');",
+          "new_text": "const helper=auditHelperTools+'/author-extensions-common.mjs';let h=fs.readFileSync(helper,'utf8');",
+          "reason": "Historical helper rewrites target tools."
+        },
+        {
+          "source_line": 8,
+          "expected_occurrences": 1,
+          "old_text": "const file=base+'/author-extensions-dispatch.mjs';let s=fs.readFileSync(file,'utf8');",
+          "new_text": "const file=auditHelperTools+'/author-extensions-dispatch.mjs';let s=fs.readFileSync(file,'utf8');",
+          "reason": "Historical helper rewrites target tools."
+        }
+      ],
+      "prepend": "import { auditHelperBase, auditHelperTools } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "4a29117f3632459f615d5602506876c5344135361fd2b0f611d3a6b5b037ba3c",
+      "after_bytes": 1468
+    },
+    {
+      "source": "resume-integrity.py",
+      "destination": "tools/resume-integrity.py",
+      "move": true,
+      "before_sha256": "70fc6ceea777d372e0f0398919d4500b6a4a3b145cc0d997d0d11d89f4a89cbd",
+      "before_bytes": 10276,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "70fc6ceea777d372e0f0398919d4500b6a4a3b145cc0d997d0d11d89f4a89cbd",
+      "after_bytes": 10276
+    },
+    {
+      "source": "supplement-surfaces.mjs",
+      "destination": "tools/supplement-surfaces.mjs",
+      "move": true,
+      "before_sha256": "0e51849c2c9138a38f0ab63f29b32d562d2c836d1f127dd99e1fc214ba09c2cf",
+      "before_bytes": 5105,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 7,
+          "expected_occurrences": 1,
+          "old_text": "const out=path.join(root,'docs/ice-gap');",
+          "new_text": "const out=auditHelperBase;",
+          "reason": "Retain historical source root while confining output to relocated audit."
+        }
+      ],
+      "prepend": "import { auditHelperBase } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 6,
+          "text": "const root='/home/mewtwo/Zks/ice-rust';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "db0527924c2cd9faee1494cff9b9be8fb60c1b54f2b291d461ddd8f8b49fc8d2",
+      "after_bytes": 5270
+    },
+    {
+      "source": "tools/accept-canonical-read-coverage.mjs",
+      "destination": "tools/accept-canonical-read-coverage.mjs",
+      "move": false,
+      "before_sha256": "99ad64595a419363a900949e2235bc446c5dbc2af9ce0d4b0ed8549321f19158",
+      "before_bytes": 2358,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "99ad64595a419363a900949e2235bc446c5dbc2af9ce0d4b0ed8549321f19158",
+      "after_bytes": 2358
+    },
+    {
+      "source": "tools/accept-final-area.mjs",
+      "destination": "tools/accept-final-area.mjs",
+      "move": false,
+      "before_sha256": "7bec04792c12cd9e91813e0c9b0a64febaacc813d72ed9a453794f5f1ed24ed1",
+      "before_bytes": 3508,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [
+        {
+          "source_line": 26,
+          "expected_occurrences": 1,
+          "old_text": "process.stdout.write(execFileSync(process.execPath,[path.join(base,'publish-area.mjs'),area],{cwd:path.resolve(base,'../..'),encoding:'utf8',maxBuffer:16*1024*1024}));",
+          "new_text": "process.stdout.write(execFileSync(process.execPath,[path.join(base,'tools/publish-area.mjs'),area],{cwd:path.resolve(base,'../..'),encoding:'utf8',maxBuffer:16*1024*1024}));",
+          "reason": "Publication helper relocated to tools."
+        }
+      ],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "649649a50ef5fc6fdc625193ead0eb3d959aad47b9038def160a48bd0d2b4524",
+      "after_bytes": 3514
+    },
+    {
+      "source": "tools/append-native-queue-defect.mjs",
+      "destination": "tools/append-native-queue-defect.mjs",
+      "move": false,
+      "before_sha256": "20ed8866f5ef55d0c20add993ee4a7f23e760c6eec97c4c76a6df022592a1bea",
+      "before_bytes": 987,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "06371fadffe548987a3b43907672bc75a104341d20c4af6b570a0c955a2d4660",
+      "after_bytes": 1089
+    },
+    {
+      "source": "tools/apply-auth-json-precision.mjs",
+      "destination": "tools/apply-auth-json-precision.mjs",
+      "move": false,
+      "before_sha256": "86ab41481daca67e90e3d8994eb21aa173bc18a27a6cb3bf898849c856d66e4a",
+      "before_bytes": 2330,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "a573d984ca3277cf72e57bc4a92c3fd36fff633341a3c80a0688c93e55d89d58",
+      "after_bytes": 2432
+    },
+    {
+      "source": "tools/apply-native-command-provenance.mjs",
+      "destination": "tools/apply-native-command-provenance.mjs",
+      "move": false,
+      "before_sha256": "1c375b4c05d8de4300a58c0fefee1f74552422c486eed42fb34fbada325587b8",
+      "before_bytes": 4626,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "fa58c7c117ab7529866406e9867996089fad1b6ea0225305fd82c4a104e4c316",
+      "after_bytes": 4728
+    },
+    {
+      "source": "tools/build-final-index.py",
+      "destination": "tools/build-final-index.py",
+      "move": false,
+      "before_sha256": "ad67ecbb592a1135e4c84edf07fa3ffa77574df8944aedb63efbc02bab089c36",
+      "before_bytes": 23333,
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "ad67ecbb592a1135e4c84edf07fa3ffa77574df8944aedb63efbc02bab089c36",
+      "after_bytes": 23333
+    },
+    {
+      "source": "tools/clean-session-audit-aliases.mjs",
+      "destination": "tools/clean-session-audit-aliases.mjs",
+      "move": false,
+      "before_sha256": "4ade3b8f92867ef2fd7c120fc79f1ec651a7bb954672dbbe72d95f48310f4b4e",
+      "before_bytes": 580,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "1e91fc7525b00f95b17ba2c6510131ff86a4235233658935c6d7af8794d75c50",
+      "after_bytes": 682
+    },
+    {
+      "source": "tools/coordinator-active-closeout.mjs",
+      "destination": "tools/coordinator-active-closeout.mjs",
+      "move": false,
+      "before_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+      "before_bytes": 27233,
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 3,
+          "text": "const B=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),E=path.join(B,'evidence'),oldBase='/home/mewtwo/Zks/ice-rust/docs/ice-gap',activeBase='/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+      "after_bytes": 27233
+    },
+    {
+      "source": "tools/coordinator-build-root-export-proposal.mjs",
+      "destination": "tools/coordinator-build-root-export-proposal.mjs",
+      "move": false,
+      "before_sha256": "eb32c1ed88aa11a1498e75c5aca5422fb11e0bb1a8aab0a9b23ac4ea36ed1283",
+      "before_bytes": 11103,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c64ab6c8603272f73267de193162c0e80438965ef015dd7c716036d14bc85408",
+      "after_bytes": 11205
+    },
+    {
+      "source": "tools/coordinator-checkpoint.mjs",
+      "destination": "tools/coordinator-checkpoint.mjs",
+      "move": false,
+      "before_sha256": "8e36be058fbeabaaa38e3b30270ae3f7e168bdc797dee8e539a0d6f6ab489649",
+      "before_bytes": 5571,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "aba9507725cf0c240cf24ca4880493142f8f31ed3d437cb253fa9a76be7ebcfc",
+      "after_bytes": 5673
+    },
+    {
+      "source": "tools/coordinator-closeout-inspect.mjs",
+      "destination": "tools/coordinator-closeout-inspect.mjs",
+      "move": false,
+      "before_sha256": "df9feee7a61af58a97694ea3a2a75697532218b9c963048296a5de5ab14496e5",
+      "before_bytes": 4167,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "declarations",
+          "source"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"declarations\",\"source\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "7dc8373ad821908964ce307797474b951761f4531da87a1b777377a574264109",
+      "after_bytes": 4324
+    },
+    {
+      "source": "tools/coordinator-complete-original-publication.mjs",
+      "destination": "tools/coordinator-complete-original-publication.mjs",
+      "move": false,
+      "before_sha256": "c5b2723c1cc716b75709cfedd5836777fc5b36c49bd0f82373dc1cda719d8017",
+      "before_bytes": 2271,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c5b2723c1cc716b75709cfedd5836777fc5b36c49bd0f82373dc1cda719d8017",
+      "after_bytes": 2271
+    },
+    {
+      "source": "tools/coordinator-fast-preflight.py",
+      "destination": "tools/coordinator-fast-preflight.py",
+      "move": false,
+      "before_sha256": "dcb42edc14e23d849488c5cf3ad1d3ebae7570d8230787f6bed529a8e6d046f2",
+      "before_bytes": 6604,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "dcb42edc14e23d849488c5cf3ad1d3ebae7570d8230787f6bed529a8e6d046f2",
+      "after_bytes": 6604
+    },
+    {
+      "source": "tools/coordinator-inspect-relocation.mjs",
+      "destination": "tools/coordinator-inspect-relocation.mjs",
+      "move": false,
+      "before_sha256": "8c75fb3040ca2126619d51a25c996a9597f9c41f278095005d5ce9fd1a6510bd",
+      "before_bytes": 1422,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "8c75fb3040ca2126619d51a25c996a9597f9c41f278095005d5ce9fd1a6510bd",
+      "after_bytes": 1422
+    },
+    {
+      "source": "tools/coordinator-merge-exports.mjs",
+      "destination": "tools/coordinator-merge-exports.mjs",
+      "move": false,
+      "before_sha256": "b882e287d245b7bbf7e2ebecca4be65e6be7e91deab68acf6df1b73d39a0cec0",
+      "before_bytes": 7756,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "b882e287d245b7bbf7e2ebecca4be65e6be7e91deab68acf6df1b73d39a0cec0",
+      "after_bytes": 7756
+    },
+    {
+      "source": "tools/coordinator-normalize-tui-metadata.mjs",
+      "destination": "tools/coordinator-normalize-tui-metadata.mjs",
+      "move": false,
+      "before_sha256": "81fade0e19d40990b7add83ddfc90dc60cc40cdba932fd24b24aeca5a07ee009",
+      "before_bytes": 3458,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [
+        {
+          "source_line": 22,
+          "expected_occurrences": 1,
+          "old_text": "const output=execFileSync(process.execPath,[path.join(B,'publish-area.mjs'),'tui'],{cwd:path.resolve(B,'../..'),encoding:'utf8',maxBuffer:20*1024*1024});",
+          "new_text": "const output=execFileSync(process.execPath,[path.join(B,'tools/publish-area.mjs'),'tui'],{cwd:path.resolve(B,'../..'),encoding:'utf8',maxBuffer:20*1024*1024});",
+          "reason": "Publication helper relocated to tools."
+        }
+      ],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "e08ac1511f0b1615bc1313c97a7f018ac4443b4ac2ad624ad4a80aa9b13a394f",
+      "after_bytes": 3464
+    },
+    {
+      "source": "tools/coordinator-prepare-native-prose.mjs",
+      "destination": "tools/coordinator-prepare-native-prose.mjs",
+      "move": false,
+      "before_sha256": "c0f2e2d41f5ccf954f9a2fd526b3c4eab25dcccdeb640345bc3eab4620f9eed2",
+      "before_bytes": 10491,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "15e79b647e407a9b98c58f0d8659876f5cfd65889b0aa6b31a6adeca06e047f8",
+      "after_bytes": 10593
+    },
+    {
+      "source": "tools/coordinator-publish-closeout.mjs",
+      "destination": "tools/coordinator-publish-closeout.mjs",
+      "move": false,
+      "before_sha256": "c0d40063eaf028a0eaffee3093412838ef65fbc80a81dd22a9cae4b5147e2c29",
+      "before_bytes": 3367,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [
+        {
+          "source_line": 28,
+          "expected_occurrences": 1,
+          "old_text": " console.log(run('publish-area.mjs',['ai']));",
+          "new_text": " console.log(run('tools/publish-area.mjs',['ai']));",
+          "reason": "Publication helper relocated to tools."
+        }
+      ],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "73c5a05e490f06548fcf776a5b0edbaa7bd9b611f639ddac10e665840e37282b",
+      "after_bytes": 3373
+    },
+    {
+      "source": "tools/coordinator-record-native-hunks.mjs",
+      "destination": "tools/coordinator-record-native-hunks.mjs",
+      "move": false,
+      "before_sha256": "be81c2851fb4db990c501f522273d947aec955ddc365c0577f241f5eaead0bc7",
+      "before_bytes": 5664,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c307e9081dced5ea38a17799db1a1a38be4f81064ed564bfad09ed8f609cd6da",
+      "after_bytes": 5766
+    },
+    {
+      "source": "tools/coordinator-relocate-audit.mjs",
+      "destination": "tools/coordinator-relocate-audit.mjs",
+      "move": false,
+      "before_sha256": "9cd00b53e87cd675cafc4a776b78729a1b1c0532f91e751383a4504589d67e44",
+      "before_bytes": 3280,
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 3,
+          "text": "const source='/home/mewtwo/Zks/ice-rust/docs/ice-gap',destination='/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap';",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "9cd00b53e87cd675cafc4a776b78729a1b1c0532f91e751383a4504589d67e44",
+      "after_bytes": 3280
+    },
+    {
+      "source": "tools/extend-relocation-map.mjs",
+      "destination": "tools/extend-relocation-map.mjs",
+      "move": false,
+      "before_sha256": "d513d385a5ccd3dff9e799f23548396d1da5b00395fa7d843cddbe6ba65e8247",
+      "before_bytes": 3617,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "d513d385a5ccd3dff9e799f23548396d1da5b00395fa7d843cddbe6ba65e8247",
+      "after_bytes": 3617
+    },
+    {
+      "source": "tools/finalize-audit-metadata.mjs",
+      "destination": "tools/finalize-audit-metadata.mjs",
+      "move": false,
+      "before_sha256": "d485a46bf3d6a27d6edb022df25b5b319646f04e38c333d95971f15db5b0f408",
+      "before_bytes": 3222,
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "d485a46bf3d6a27d6edb022df25b5b319646f04e38c333d95971f15db5b0f408",
+      "after_bytes": 3222
+    },
+    {
+      "source": "tools/fix-spacing.mjs",
+      "destination": "tools/fix-spacing.mjs",
+      "move": false,
+      "before_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+      "before_bytes": 33416,
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+      "after_bytes": 33416
+    },
+    {
+      "source": "tools/inspect-authored.mjs",
+      "destination": "tools/inspect-authored.mjs",
+      "move": false,
+      "before_sha256": "0880098b5dad9364f4d8a02d3210d473c384ec9165e6038008ddc2ffd9be45d3",
+      "before_bytes": 1234,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "0880098b5dad9364f4d8a02d3210d473c384ec9165e6038008ddc2ffd9be45d3",
+      "after_bytes": 1234
+    },
+    {
+      "source": "tools/inspect-closeout.mjs",
+      "destination": "tools/inspect-closeout.mjs",
+      "move": false,
+      "before_sha256": "144cf74e7c8928def5bbb510c735cf92f4e545f6a1c06cbd8eb42ce045d1d003",
+      "before_bytes": 4216,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "144cf74e7c8928def5bbb510c735cf92f4e545f6a1c06cbd8eb42ce045d1d003",
+      "after_bytes": 4216
+    },
+    {
+      "source": "tools/inspect-final-structure.mjs",
+      "destination": "tools/inspect-final-structure.mjs",
+      "move": false,
+      "before_sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "before_bytes": 3331,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "after_bytes": 3331
+    },
+    {
+      "source": "tools/inspect-global-audit.mjs",
+      "destination": "tools/inspect-global-audit.mjs",
+      "move": false,
+      "before_sha256": "b8ff0f3af9f11a55d1f1a7748b3787446b5fefa271ff184d5f31eab13267c194",
+      "before_bytes": 4736,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "b8ff0f3af9f11a55d1f1a7748b3787446b5fefa271ff184d5f31eab13267c194",
+      "after_bytes": 4736
+    },
+    {
+      "source": "tools/inspect-prose-queues.mjs",
+      "destination": "tools/inspect-prose-queues.mjs",
+      "move": false,
+      "before_sha256": "8777ba84391bc54d8594d7922ce90c783610fb9fc5f322445c69f982a8fc8d17",
+      "before_bytes": 1562,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "8777ba84391bc54d8594d7922ce90c783610fb9fc5f322445c69f982a8fc8d17",
+      "after_bytes": 1562
+    },
+    {
+      "source": "tools/integrate-ai-schema-supplement.mjs",
+      "destination": "tools/integrate-ai-schema-supplement.mjs",
+      "move": false,
+      "before_sha256": "c00d58ec15ea1353787dbd31859e1038f82a22816873ff929d074ac844bc0542",
+      "before_bytes": 4345,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c00d58ec15ea1353787dbd31859e1038f82a22816873ff929d074ac844bc0542",
+      "after_bytes": 4345
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "move": false,
+      "before_sha256": "8ef17a346b9571fc9ba938684db0da236e2804e4e44db95f58c45caa1d6acadf",
+      "before_bytes": 9667,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const base=\"docs/ice-gap/evidence/\";",
+          "new_text": "const base=auditHelperEvidence+'/';",
+          "reason": "Read evidence independently of cwd."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "af3cd146d4fa054f9176691d822f5445cdb6de91b656abf2c58a847c503c34d8",
+      "after_bytes": 9748
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "move": false,
+      "before_sha256": "2e9c59648848a0cf68375008db9a4fc74ceb26e79a3e073eb789bf63202835fa",
+      "before_bytes": 3803,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "batch"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"batch\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "71ad7b90701e55d06d084db5d5373781f8bc78cb6a8a562788da3e25a7c7f704",
+      "after_bytes": 3944
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "move": false,
+      "before_sha256": "d24fa9cf784c48115c757ffcc158035477e49195015e39e81b00451f05fd54fa",
+      "before_bytes": 1953,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "d24fa9cf784c48115c757ffcc158035477e49195015e39e81b00451f05fd54fa",
+      "after_bytes": 1953
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "move": false,
+      "before_sha256": "c4638dea4ad6bc323e9cac33b716865a1f3b5a09b75ab2236eeebee664353fab",
+      "before_bytes": 1798,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const dir=\"docs/ice-gap/evidence/\";",
+          "new_text": "const dir=auditHelperEvidence+'/';",
+          "reason": "Read evidence independently of cwd."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "724aac8ff25210dc00a640203c0b5deebd9dc4004d43c45f4b5ac9cc848371e2",
+      "after_bytes": 1879
+    },
+    {
+      "source": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "destination": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "move": false,
+      "before_sha256": "32b40d969807cdadd8fd181b64c5f8042b14b6bd06480146e879ebb604ceab35",
+      "before_bytes": 2405,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const dir=\"docs/ice-gap/evidence/\";",
+          "new_text": "const dir=auditHelperEvidence+'/';",
+          "reason": "Read evidence independently of cwd."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "b7282b77014258abad114b43bf73cba03030f99666d4faca60e109fd7ec89eb5",
+      "after_bytes": 2486
+    },
+    {
+      "source": "tools/lane-exports-sub-session-batch.mjs",
+      "destination": "tools/lane-exports-sub-session-batch.mjs",
+      "move": false,
+      "before_sha256": "bc00b692579aa90bea91cb5de7678e923e4d99b1f71b5e2d4616f0eb40ab3ff4",
+      "before_bytes": 373,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const result=requests.split(',').map(r=>JSON.parse(execFileSync(process.execPath,['/home/mewtwo/Zks/ice-rust/docs/ice-gap/tools/lane-exports-sub-session-inspect.mjs','source',area,...r.split(':')],{encoding:'utf8',maxBuffer:32*1024*1024})));",
+          "new_text": "const result=requests.split(',').map(r=>JSON.parse(execFileSync(process.execPath,[auditHelperTools+'/lane-exports-sub-session-inspect.mjs','source',area,...r.split(':')],{encoding:'utf8',maxBuffer:32*1024*1024})));",
+          "reason": "Invoke the relocated, guarded lane inspector."
+        }
+      ],
+      "prepend": "import { auditHelperTools } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "1e4f53cc4ae3b5dace9d4b33c8b12ad18bbfd3c2e12caee38a3c920005ea89ea",
+      "after_bytes": 527
+    },
+    {
+      "source": "tools/lane-exports-sub-session-decls.mjs",
+      "destination": "tools/lane-exports-sub-session-decls.mjs",
+      "move": false,
+      "before_sha256": "fec5fe125e874910ef0ebae43fe54081cf9a260dd4b7263f0d6cd84d897ad65f",
+      "before_bytes": 1632,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 2,
+          "expected_occurrences": 1,
+          "old_text": "const E='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence',T='/home/mewtwo/Zks/ice';const q=JSON.parse(fs.readFileSync(E+'/qa-unnamed-exports-2026-10-20.json','utf8'));const rows=q.symbols.subagents;const files=[...new Set(rows.map(r=>r.ts.slice(4).replace(/:\\d+$/,'')))];",
+          "new_text": "const E=auditHelperEvidence,T='/home/mewtwo/Zks/ice';const q=JSON.parse(fs.readFileSync(E+'/qa-unnamed-exports-2026-10-20.json','utf8'));const rows=q.symbols.subagents;const files=[...new Set(rows.map(r=>r.ts.slice(4).replace(/:\\d+$/,'')))];",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "a597c6a2d842de7d79aa342cbf50accac98d8b6537b8a85f17b4e9acea87833c",
+      "after_bytes": 1684
+    },
+    {
+      "source": "tools/lane-exports-sub-session-inspect.mjs",
+      "destination": "tools/lane-exports-sub-session-inspect.mjs",
+      "move": false,
+      "before_sha256": "66777c3d3fdfd26b36d48f984bfbbf341278755df1262448706c8294a910713e",
+      "before_bytes": 2324,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "source"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [
+        {
+          "source_line": 4,
+          "expected_occurrences": 1,
+          "old_text": "const E='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const E=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"source\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "1de25de5c166f904ab89a88fec4dfef4f61c00bc0bf0e68be254bfe627a01614",
+      "after_bytes": 2518
+    },
+    {
+      "source": "tools/lane-exports-sub-session-match.mjs",
+      "destination": "tools/lane-exports-sub-session-match.mjs",
+      "move": false,
+      "before_sha256": "2db30420ec41221c51edcc498e80ee11a28fa2bca133714f80eb4ecd6aa57ee9",
+      "before_bytes": 466,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 2,
+          "expected_occurrences": 1,
+          "old_text": "const E='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';const needles=process.argv.slice(2);",
+          "new_text": "const E=auditHelperEvidence;const needles=process.argv.slice(2);",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "3c4cf7deb2e52e4a3c46d81bc40327b2c4e7dae117c3ef627a17ad9222cd5a3a",
+      "after_bytes": 518
+    },
+    {
+      "source": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "destination": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "move": false,
+      "before_sha256": "c133501d30e26036b197fcb305137fc73d6dcdcbe9aa20de14c3f12f8f621bf0",
+      "before_bytes": 1208,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const file='docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json';",
+          "new_text": "const file=auditHelperEvidence+'/active-checkout-diff-hunks-complete.json';",
+          "reason": "Read historical hunk evidence independently of cwd."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "f778d76056e68d2d64a5afbd80e5106877150c00cc760e7b3c28dd394363a649",
+      "after_bytes": 1289
+    },
+    {
+      "source": "tools/lane-exports-sub-session-native-prose.mjs",
+      "destination": "tools/lane-exports-sub-session-native-prose.mjs",
+      "move": false,
+      "before_sha256": "053f96549a8bf98f236774c32bd82998a767382629a2a25ef862769c5c16d05a",
+      "before_bytes": 11528,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [
+        {
+          "source_line": 3,
+          "expected_occurrences": 1,
+          "old_text": "const E='/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence';",
+          "new_text": "const E=auditHelperEvidence;",
+          "reason": "Resolve audit document paths from the relocated tools directory."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "c17b4d00c0625c64cd8c285b5b70f5b34e23d210cdf0eefad0abd352df87a64f",
+      "after_bytes": 11580
+    },
+    {
+      "source": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "destination": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "move": false,
+      "before_sha256": "2d71b779b5fd3c1c8f7bc03523607fc13462255426e1c338adfe0beec46a8782",
+      "before_bytes": 11060,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "d47b5a31bffa54f6ab8402166c5f7381fc253c7be4ba0301be3c78df6d4038cd",
+      "after_bytes": 11162
+    },
+    {
+      "source": "tools/lane-final-areas-active-identity.mjs",
+      "destination": "tools/lane-final-areas-active-identity.mjs",
+      "move": false,
+      "before_sha256": "c1ce827b4f4e1175257880adafb093fa019ba926a0f88099e7a74313b1f48280",
+      "before_bytes": 3138,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "candidates",
+          "first-pass-findings"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"candidates\",\"first-pass-findings\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "5f579c3252a76a26b50eb194c9b1aba8ccc8e69cb7a1824dec4454d0e59e2433",
+      "after_bytes": 3306
+    },
+    {
+      "source": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "destination": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "move": false,
+      "before_sha256": "1d1257b3572aae2a77f820ae7abc749dea2ee0ad8dd0785f92654accfbedc2a3",
+      "before_bytes": 9453,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "cb0b54682e2ffe2f0231a333a21d619977726f33ed0fe451545abccab2de7aa3",
+      "after_bytes": 9555
+    },
+    {
+      "source": "tools/lane-final-areas-active-review.mjs",
+      "destination": "tools/lane-final-areas-active-review.mjs",
+      "move": false,
+      "before_sha256": "17362916b29876dd861c542ce62b8534e6af63c41edddb7e6f934de28638b30a",
+      "before_bytes": 1475,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "17362916b29876dd861c542ce62b8534e6af63c41edddb7e6f934de28638b30a",
+      "after_bytes": 1475
+    },
+    {
+      "source": "tools/lane-final-areas-build-misc.mjs",
+      "destination": "tools/lane-final-areas-build-misc.mjs",
+      "move": false,
+      "before_sha256": "281db80c5b118e33e9a125acee3f68689df1d89fc07b7ee4dc303690838c47b4",
+      "before_bytes": 21513,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "08c42dbc53173688646915b883e4b92919c742012640e28aae4583ebd609f2cb",
+      "after_bytes": 21615
+    },
+    {
+      "source": "tools/lane-final-areas-exports.mjs",
+      "destination": "tools/lane-final-areas-exports.mjs",
+      "move": false,
+      "before_sha256": "87915887b00071849890e79de387a70a20968b6a59054fe85969ca02890b2e57",
+      "before_bytes": 2354,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "review"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"review\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "6a2df53bd98a419746796bc6aae1a7ac44b7c2e874538cef401021c96f4947ad",
+      "after_bytes": 2496
+    },
+    {
+      "source": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "destination": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "move": false,
+      "before_sha256": "58198b520aa8829c70606c5584254ade5f175e0d10d3a26f2ffcd1fe19b9b575",
+      "before_bytes": 9396,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "6693e0961123f000cb290d54d5c15d5fbb975e9851adf91e61b6ef97c376cb30",
+      "after_bytes": 9498
+    },
+    {
+      "source": "tools/lane-final-areas-inspect.mjs",
+      "destination": "tools/lane-final-areas-inspect.mjs",
+      "move": false,
+      "before_sha256": "56061a5d19b56cbe52c16200283c3a07b6bdef073675a433984594b25ffd10ee",
+      "before_bytes": 1178,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "56061a5d19b56cbe52c16200283c3a07b6bdef073675a433984594b25ffd10ee",
+      "after_bytes": 1178
+    },
+    {
+      "source": "tools/lane-final-areas-prepare.mjs",
+      "destination": "tools/lane-final-areas-prepare.mjs",
+      "move": false,
+      "before_sha256": "b88523539c3b232bd4b10d98a5f7817c1076a34532cd18d16df01b72b7bef6c3",
+      "before_bytes": 4477,
+      "role": "mixed historical writer and inspector",
+      "guard": {
+        "kind": "conditional-prefix",
+        "modes": [
+          "tui-qa"
+        ],
+        "reason": "Only the listed CLI modes write historical artifacts; inspection modes remain runnable after completion."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nif([\"tui-qa\"].includes(process.argv[2]))assertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "61343e2cbc83360c2f4badcd2b2a1ad0e530e7e33918605b9623d16fd8b213fa",
+      "after_bytes": 4619
+    },
+    {
+      "source": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "destination": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "move": false,
+      "before_sha256": "d04a7342f09ceb4afce9b7634a40e4fb336820346e18a97c837d415f920e32f4",
+      "before_bytes": 3976,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "d04a7342f09ceb4afce9b7634a40e4fb336820346e18a97c837d415f920e32f4",
+      "after_bytes": 3976
+    },
+    {
+      "source": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "destination": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "move": false,
+      "before_sha256": "71a0395080859d75c4b1dc5af9f16a3e8b6ba84eccf00acc36b4dba9df3d4bb5",
+      "before_bytes": 6537,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "71a0395080859d75c4b1dc5af9f16a3e8b6ba84eccf00acc36b4dba9df3d4bb5",
+      "after_bytes": 6537
+    },
+    {
+      "source": "tools/lane-final-areas-read-coverage.mjs",
+      "destination": "tools/lane-final-areas-read-coverage.mjs",
+      "move": false,
+      "before_sha256": "5397e5d7c3ed02e43da74bedbe6569aebbd84ff917f9df731fc7140094925668",
+      "before_bytes": 23649,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 5,
+          "expected_occurrences": 1,
+          "old_text": "const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../..'), ev=path.join(root,'docs/ice-gap/evidence');",
+          "new_text": "const root='/home/mewtwo/Zks/ice-rust', ev=auditHelperEvidence;",
+          "reason": "This historical canonical coverage generator explicitly describes old captured source roots; retain old Rust input and use current audit output."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 13,
+          "text": " if(p.startsWith('/home/mewtwo/Zks/ice-rust/'))p='rust:'+p.slice('/home/mewtwo/Zks/ice-rust/'.length);",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "468855280d11b2b5b973d2ff1aff9b7378b3395dcbf3c3f66a747d4dae5abf8c",
+      "after_bytes": 23771
+    },
+    {
+      "source": "tools/lane-final-areas-read-ranges.mjs",
+      "destination": "tools/lane-final-areas-read-ranges.mjs",
+      "move": false,
+      "before_sha256": "adf402d36177f56d2f0c202f4a7315401a3e4514b6a4897ffc39923c5538c7a3",
+      "before_bytes": 1005,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 2,
+          "expected_occurrences": 1,
+          "old_text": "const [tag,...args]=process.argv.slice(2);if(!/^[a-z0-9-]+$/.test(tag)||args.length%3)throw Error('args');const files=[];for(let i=0;i<args.length;i+=3){const[p,a,b]=args.slice(i,i+3);if(!p.startsWith('packages/')||p.includes('..'))throw Error('path');const bytes=fs.readFileSync(path.join('/home/mewtwo/Zks/ice',p));const lines=bytes.toString('utf8').split('\\n');const start=+a,end=Math.min(+b,lines.length);files.push({repo:'ice',path:p,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),total_lines:lines.length,ranges:[[start,end]],text:lines.slice(start-1,end).map((l,j)=>(start+j)+' | '+l).join('\\n')});}const evidence={owner:'/root/final_area_handoffs',scope:'Only displayed ranges independently read for export reconciliation.',files};fs.writeFileSync('docs/ice-gap/evidence/lane-final-areas-export-ranges-'+tag+'.json',JSON.stringify(evidence,null,2)+'\\n');console.log(JSON.stringify(evidence));",
+          "new_text": "const [tag,...args]=process.argv.slice(2);if(!/^[a-z0-9-]+$/.test(tag)||args.length%3)throw Error('args');const files=[];for(let i=0;i<args.length;i+=3){const[p,a,b]=args.slice(i,i+3);if(!p.startsWith('packages/')||p.includes('..'))throw Error('path');const bytes=fs.readFileSync(path.join('/home/mewtwo/Zks/ice',p));const lines=bytes.toString('utf8').split('\\n');const start=+a,end=Math.min(+b,lines.length);files.push({repo:'ice',path:p,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),total_lines:lines.length,ranges:[[start,end]],text:lines.slice(start-1,end).map((l,j)=>(start+j)+' | '+l).join('\\n')});}const evidence={owner:'/root/final_area_handoffs',scope:'Only displayed ranges independently read for export reconciliation.',files};fs.writeFileSync(auditHelperEvidence+'/lane-final-areas-export-ranges-'+tag+'.json',JSON.stringify(evidence,null,2)+'\\n');console.log(JSON.stringify(evidence));",
+          "reason": "Historical read-credit output stays inside this audit."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "5711934e53a12066dbe75a803f7d5f2c51d6ea7a1ad4dd7305267fb043cf7e1a",
+      "after_bytes": 1188
+    },
+    {
+      "source": "tools/lane-final-areas-readme-limits-review.mjs",
+      "destination": "tools/lane-final-areas-readme-limits-review.mjs",
+      "move": false,
+      "before_sha256": "fae0997215685af2714cfd55252259df6cd7205aec895e32e9bdce0fbdd1da0c",
+      "before_bytes": 3982,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "fae0997215685af2714cfd55252259df6cd7205aec895e32e9bdce0fbdd1da0c",
+      "after_bytes": 3982
+    },
+    {
+      "source": "tools/lane-final-areas-remap-review.mjs",
+      "destination": "tools/lane-final-areas-remap-review.mjs",
+      "move": false,
+      "before_sha256": "1f0972980f476ff2516797c9020fbfa91af3eb9eee96a5a2f146e01bed98a76a",
+      "before_bytes": 19936,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "1f0972980f476ff2516797c9020fbfa91af3eb9eee96a5a2f146e01bed98a76a",
+      "after_bytes": 19936
+    },
+    {
+      "source": "tools/lane-final-areas-type-contracts.mjs",
+      "destination": "tools/lane-final-areas-type-contracts.mjs",
+      "move": false,
+      "before_sha256": "96ffe4e17952f85f7b9437440ec5be9ae1e15779d2a3b7fa4ce1f6b67b8bd2af",
+      "before_bytes": 1903,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [
+        {
+          "source_line": 1,
+          "expected_occurrences": 1,
+          "old_text": "import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';const E='docs/ice-gap/evidence';const q=JSON.parse(fs.readFileSync(E+'/qa-unnamed-exports-2026-10-20.json','utf8'));const types=[...q.symbols.misc,...q.symbols.tui].filter(s=>s.kind==='type');const records=[];for(const s of types){const [,p,n0]=s.ts.match(/^ice:(.+):(\\d+)$/);const n=+n0;if(!p.startsWith('packages/')||p.includes('..'))throw Error('path');const bytes=fs.readFileSync(path.join('/home/mewtwo/Zks/ice',p));const all=bytes.toString('utf8').split('\\n');const rest=all.slice(n-1).join('\\n');const isInterface=/^export interface\\b/.test(rest);if(!isInterface&&!/^export type\\b/.test(rest))throw Error(s.ts);let brace=0,paren=0,bracket=0,quote='',lineComment=false,blockComment=false,end=-1,seen=false;for(let i=0;i<rest.length;i++){const c=rest[i],d=rest[i+1];if(lineComment){if(c==='\\n')lineComment=false;continue;}if(blockComment){if(c==='*'&&d==='/'){blockComment=false;i++;}continue;}if(quote){if(c==='\\\\'){i++;continue;}if(c===quote)quote='';continue;}if(c==='/'&&d==='/'){lineComment=true;i++;continue;}if(c==='/'&&d==='*'){blockComment=true;i++;continue;}if(c==='\\\"'||c===\"'\"||c==='`'){quote=c;continue;}if(c==='{'){brace++;seen=true;}else if(c==='}')brace--;else if(c==='(')paren++;else if(c===')')paren--;else if(c==='[')bracket++;else if(c===']')bracket--;if(isInterface&&seen&&brace===0&&c==='}'){end=i+1;break;}if(!isInterface&&brace===0&&paren===0&&bracket===0&&c===';'){end=i+1;break;}}if(end<0)throw Error('unterminated '+s.ts);const declaration=rest.slice(0,end);records.push({...s,path:p,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),range:[n,n+declaration.split('\\n').length-1],declaration});}fs.writeFileSync(E+'/lane-final-areas-export-type-contracts.json',JSON.stringify({owner:'/root/final_area_handoffs',records},null,2)+'\\n');console.log(JSON.stringify(records));",
+          "new_text": "import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';const E=auditHelperEvidence;const q=JSON.parse(fs.readFileSync(E+'/qa-unnamed-exports-2026-10-20.json','utf8'));const types=[...q.symbols.misc,...q.symbols.tui].filter(s=>s.kind==='type');const records=[];for(const s of types){const [,p,n0]=s.ts.match(/^ice:(.+):(\\d+)$/);const n=+n0;if(!p.startsWith('packages/')||p.includes('..'))throw Error('path');const bytes=fs.readFileSync(path.join('/home/mewtwo/Zks/ice',p));const all=bytes.toString('utf8').split('\\n');const rest=all.slice(n-1).join('\\n');const isInterface=/^export interface\\b/.test(rest);if(!isInterface&&!/^export type\\b/.test(rest))throw Error(s.ts);let brace=0,paren=0,bracket=0,quote='',lineComment=false,blockComment=false,end=-1,seen=false;for(let i=0;i<rest.length;i++){const c=rest[i],d=rest[i+1];if(lineComment){if(c==='\\n')lineComment=false;continue;}if(blockComment){if(c==='*'&&d==='/'){blockComment=false;i++;}continue;}if(quote){if(c==='\\\\'){i++;continue;}if(c===quote)quote='';continue;}if(c==='/'&&d==='/'){lineComment=true;i++;continue;}if(c==='/'&&d==='*'){blockComment=true;i++;continue;}if(c==='\\\"'||c===\"'\"||c==='`'){quote=c;continue;}if(c==='{'){brace++;seen=true;}else if(c==='}')brace--;else if(c==='(')paren++;else if(c===')')paren--;else if(c==='[')bracket++;else if(c===']')bracket--;if(isInterface&&seen&&brace===0&&c==='}'){end=i+1;break;}if(!isInterface&&brace===0&&paren===0&&bracket===0&&c===';'){end=i+1;break;}}if(end<0)throw Error('unterminated '+s.ts);const declaration=rest.slice(0,end);records.push({...s,path:p,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),range:[n,n+declaration.split('\\n').length-1],declaration});}fs.writeFileSync(E+'/lane-final-areas-export-type-contracts.json',JSON.stringify({owner:'/root/final_area_handoffs',records},null,2)+'\\n');console.log(JSON.stringify(records));",
+          "reason": "Saved evidence root follows relocated helper."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\nimport { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "36078f2a116d08fae496164a1542c3cebe5bdc572ada5de2ce5899434a727385",
+      "after_bytes": 2083
+    },
+    {
+      "source": "tools/lane-final-areas-verify-exports.mjs",
+      "destination": "tools/lane-final-areas-verify-exports.mjs",
+      "move": false,
+      "before_sha256": "13e1e45de7946beabe00ff835d86206da5e90784b5ebeaf9b4315edaf1bfa4b4",
+      "before_bytes": 2967,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [
+        {
+          "source_line": 1,
+          "expected_occurrences": 1,
+          "old_text": "import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';const E='docs/ice-gap/evidence';const read=n=>JSON.parse(fs.readFileSync(E+'/'+n,'utf8'));const p=read('lane-final-areas-export-proposal.json'),q=read('qa-unnamed-exports-2026-10-20.json');const specs=['ai','agent','tools','session','settings','extensions','rpc-remote','tui','subagents','safe-verify','observability','cognee','blackhole','providers-auth','cli-packaging','misc'].flatMap(a=>read('spec-'+a+'.json').entries);const entries=new Map(specs.map(e=>[e.id,structuredClone(e)]));const key=s=>s.kind+'|'+s.ts+'|'+s.symbol;const expected=new Set([...q.symbols.misc,...q.symbols.tui].map(key)),got=new Set(),problems=[];for(const r of p.field_replacements){const e=entries.get(r.id);if(!e||typeof e[r.field]!=='string')problems.push('replacement entry '+r.id);else if(e[r.field].split(r.old_text).length-1!==1)problems.push('replacement mismatch '+r.id+' '+r.field);else e[r.field]=e[r.field].replace(r.old_text,r.new_text);}for(const u of p.entry_updates){const e=entries.get(u.id);if(!e){problems.push('update unknown '+u.id);continue;}for(const[k,f]of [['source_append','source'],['mechanism_append','mechanism'],['interfaces_append','interfaces']])if(u[k])e[f]+='\\n\\n'+u[k];}const hashes=new Map();for(const d of p.dispositions){const k=key(d);if(got.has(k))problems.push('duplicate '+k);got.add(k);if(!expected.has(k))problems.push('unexpected '+k);if(!d.entry_ids.length)problems.push('owner '+k);for(const id of d.entry_ids){const e=entries.get(id);if(!e||!e.source.includes(d.symbol)||!e.source.includes(d.ts))problems.push('name/ref missing '+k+' '+id);}const x=d.source_evidence;if(!hashes.has(x.path)){const b=fs.readFileSync(path.join('/home/mewtwo/Zks/ice',x.path));hashes.set(x.path,crypto.createHash('sha256').update(b).digest('hex'));}if(hashes.get(x.path)!==x.sha256)problems.push('source drift '+x.path);if(!d.reason||!d.source_review||!x.definition)problems.push('missing evidence '+k);}for(const k of expected)if(!got.has(k))problems.push('missing '+k);const qa={owner:'/root/final_area_handoffs',status:problems.length?'failed':'verified',publication_ready:!problems.length,expected:expected.size,actual:got.size,misc:p.dispositions.filter(x=>x.qa_area==='misc').length,tui:p.dispositions.filter(x=>x.qa_area==='tui').length,types:p.dispositions.filter(x=>x.kind==='type').length,runtime:p.dispositions.filter(x=>x.kind==='runtime').length,entry_updates:p.entry_updates.length,field_replacements:p.field_replacements.length,source_files_current_hash_checked:hashes.size,new_entries:0,problems,scope:'Static audit-artifact/definition consistency only. No build/test/application execution. A current hash check is not independent full source review or retrospective baseline certification.'};fs.writeFileSync(E+'/lane-final-areas-export-qa.json',JSON.stringify(qa,null,2)+'\\n');console.log(JSON.stringify(qa,null,2));if(problems.length)process.exitCode=1;",
+          "new_text": "import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';const E=auditHelperEvidence;const read=n=>JSON.parse(fs.readFileSync(E+'/'+n,'utf8'));const p=read('lane-final-areas-export-proposal.json'),q=read('qa-unnamed-exports-2026-10-20.json');const specs=['ai','agent','tools','session','settings','extensions','rpc-remote','tui','subagents','safe-verify','observability','cognee','blackhole','providers-auth','cli-packaging','misc'].flatMap(a=>read('spec-'+a+'.json').entries);const entries=new Map(specs.map(e=>[e.id,structuredClone(e)]));const key=s=>s.kind+'|'+s.ts+'|'+s.symbol;const expected=new Set([...q.symbols.misc,...q.symbols.tui].map(key)),got=new Set(),problems=[];for(const r of p.field_replacements){const e=entries.get(r.id);if(!e||typeof e[r.field]!=='string')problems.push('replacement entry '+r.id);else if(e[r.field].split(r.old_text).length-1!==1)problems.push('replacement mismatch '+r.id+' '+r.field);else e[r.field]=e[r.field].replace(r.old_text,r.new_text);}for(const u of p.entry_updates){const e=entries.get(u.id);if(!e){problems.push('update unknown '+u.id);continue;}for(const[k,f]of [['source_append','source'],['mechanism_append','mechanism'],['interfaces_append','interfaces']])if(u[k])e[f]+='\\n\\n'+u[k];}const hashes=new Map();for(const d of p.dispositions){const k=key(d);if(got.has(k))problems.push('duplicate '+k);got.add(k);if(!expected.has(k))problems.push('unexpected '+k);if(!d.entry_ids.length)problems.push('owner '+k);for(const id of d.entry_ids){const e=entries.get(id);if(!e||!e.source.includes(d.symbol)||!e.source.includes(d.ts))problems.push('name/ref missing '+k+' '+id);}const x=d.source_evidence;if(!hashes.has(x.path)){const b=fs.readFileSync(path.join('/home/mewtwo/Zks/ice',x.path));hashes.set(x.path,crypto.createHash('sha256').update(b).digest('hex'));}if(hashes.get(x.path)!==x.sha256)problems.push('source drift '+x.path);if(!d.reason||!d.source_review||!x.definition)problems.push('missing evidence '+k);}for(const k of expected)if(!got.has(k))problems.push('missing '+k);const qa={owner:'/root/final_area_handoffs',status:problems.length?'failed':'verified',publication_ready:!problems.length,expected:expected.size,actual:got.size,misc:p.dispositions.filter(x=>x.qa_area==='misc').length,tui:p.dispositions.filter(x=>x.qa_area==='tui').length,types:p.dispositions.filter(x=>x.kind==='type').length,runtime:p.dispositions.filter(x=>x.kind==='runtime').length,entry_updates:p.entry_updates.length,field_replacements:p.field_replacements.length,source_files_current_hash_checked:hashes.size,new_entries:0,problems,scope:'Static audit-artifact/definition consistency only. No build/test/application execution. A current hash check is not independent full source review or retrospective baseline certification.'};fs.writeFileSync(E+'/lane-final-areas-export-qa.json',JSON.stringify(qa,null,2)+'\\n');console.log(JSON.stringify(qa,null,2));if(problems.length)process.exitCode=1;",
+          "reason": "Saved evidence root follows relocated helper."
+        }
+      ],
+      "prepend": "import { auditHelperEvidence } from './lane-exports-rpc-ai-auth-audit-paths.mjs';\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "4019f8bb3654fc73af91542ee6ea981a42d9eb1353bc3b9026609437ca17abd5",
+      "after_bytes": 3045
+    },
+    {
+      "source": "tools/lane-final-areas-verify.mjs",
+      "destination": "tools/lane-final-areas-verify.mjs",
+      "move": false,
+      "before_sha256": "aac760ce7720ffd2d6557fe6deddde1177235a94f5c7dfe9003e62e733ba3b44",
+      "before_bytes": 4222,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "aac760ce7720ffd2d6557fe6deddde1177235a94f5c7dfe9003e62e733ba3b44",
+      "after_bytes": 4222
+    },
+    {
+      "source": "tools/lookup-read-credit.mjs",
+      "destination": "tools/lookup-read-credit.mjs",
+      "move": false,
+      "before_sha256": "18930e72a78e2536839bace8b006f2b2ffc7fefb2bd1922570b32cf6a886719d",
+      "before_bytes": 1541,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "18930e72a78e2536839bace8b006f2b2ffc7fefb2bd1922570b32cf6a886719d",
+      "after_bytes": 1541
+    },
+    {
+      "source": "tools/merge-cli-fragments.mjs",
+      "destination": "tools/merge-cli-fragments.mjs",
+      "move": false,
+      "before_sha256": "964305261954219b6679dab76f024f9a7652ccfded6422f16ba8d604b5da0443",
+      "before_bytes": 5677,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "47d42a352f442672a0fe14e6dde9951187e5dd13668550b6abd885edf3daca7b",
+      "after_bytes": 5779
+    },
+    {
+      "source": "tools/normalize-citations.mjs",
+      "destination": "tools/normalize-citations.mjs",
+      "move": false,
+      "before_sha256": "50c3134117d3d83277baa6e27e699718d43202a6c57fc0362899cd8fa782408d",
+      "before_bytes": 6821,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "50c3134117d3d83277baa6e27e699718d43202a6c57fc0362899cd8fa782408d",
+      "after_bytes": 6821
+    },
+    {
+      "source": "tools/normalize-final-handoff.mjs",
+      "destination": "tools/normalize-final-handoff.mjs",
+      "move": false,
+      "before_sha256": "0c2f3c94a89ca9c8a9d273637907682ad5f889fc1d8df10dc0b7989a54106e1c",
+      "before_bytes": 4409,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 20,
+          "text": "  c.first_pass_source={path:r.version==='old'?'/home/mewtwo/Zks/ice-rust/ICE_PORTING.md':'/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md',sha256:r.version==='old'?'d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc':'43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "0c2f3c94a89ca9c8a9d273637907682ad5f889fc1d8df10dc0b7989a54106e1c",
+      "after_bytes": 4409
+    },
+    {
+      "source": "tools/normalize-final-schema.mjs",
+      "destination": "tools/normalize-final-schema.mjs",
+      "move": false,
+      "before_sha256": "8dcd0076762028fc8fe4c7b548751a61cc78823239b1c87f3fad11a7d9ae8c87",
+      "before_bytes": 4540,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "8dcd0076762028fc8fe4c7b548751a61cc78823239b1c87f3fad11a7d9ae8c87",
+      "after_bytes": 4540
+    },
+    {
+      "source": "tools/prepare-citation-normalizer.mjs",
+      "destination": "tools/prepare-citation-normalizer.mjs",
+      "move": false,
+      "before_sha256": "3e0e5a5276ca8df27ee2fb0e885bdad42395d2fc9676f9a31859c3873ae01415",
+      "before_bytes": 2414,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "3e0e5a5276ca8df27ee2fb0e885bdad42395d2fc9676f9a31859c3873ae01415",
+      "after_bytes": 2414
+    },
+    {
+      "source": "tools/qa-first-pass-read.mjs",
+      "destination": "tools/qa-first-pass-read.mjs",
+      "move": false,
+      "before_sha256": "9ab917d29e62ceb6c3b1b1a67f6577f8c82a5fff56da391ae5b315b9c3140697",
+      "before_bytes": 1973,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "9ab917d29e62ceb6c3b1b1a67f6577f8c82a5fff56da391ae5b315b9c3140697",
+      "after_bytes": 1973
+    },
+    {
+      "source": "tools/read-audit-json-part.mjs",
+      "destination": "tools/read-audit-json-part.mjs",
+      "move": false,
+      "before_sha256": "82e1c115bf37393a5a3fbe5de0f901d65b2384543387462a2ed876304bbcb614",
+      "before_bytes": 931,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "82e1c115bf37393a5a3fbe5de0f901d65b2384543387462a2ed876304bbcb614",
+      "after_bytes": 931
+    },
+    {
+      "source": "tools/reconcile-final-dependencies.mjs",
+      "destination": "tools/reconcile-final-dependencies.mjs",
+      "move": false,
+      "before_sha256": "10c1607a58798c9311c7113a23eacbae7a1cb1d64658a8efe1d4f2f2a8e99134",
+      "before_bytes": 9950,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "10c1607a58798c9311c7113a23eacbae7a1cb1d64658a8efe1d4f2f2a8e99134",
+      "after_bytes": 9950
+    },
+    {
+      "source": "tools/reconcile-final-first-pass.mjs",
+      "destination": "tools/reconcile-final-first-pass.mjs",
+      "move": false,
+      "before_sha256": "ef9d68c199028121d30ff263465b1f5db5ebe76db786559ae842b904b3caacff",
+      "before_bytes": 8222,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "ef9d68c199028121d30ff263465b1f5db5ebe76db786559ae842b904b3caacff",
+      "after_bytes": 8222
+    },
+    {
+      "source": "tools/reconcile-first-pass-records.mjs",
+      "destination": "tools/reconcile-first-pass-records.mjs",
+      "move": false,
+      "before_sha256": "b7667739dd60655365de4ed7abcbd66d80f7a9b184036a291765ea39b4bfdb8f",
+      "before_bytes": 4113,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [
+        {
+          "source_line": 20,
+          "text": "tc.first_pass_source={path:'/home/mewtwo/Zks/ice-rust/ICE_PORTING.md',sha256:'d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc'};",
+          "reason": "Explicit historical source identity/provenance or old/active comparison boundary; retained without reinterpretation."
+        }
+      ],
+      "after_sha256": "21a8668adf4e1a83f8cb4d06642adcd56081065edb61615726582e0a58138e79",
+      "after_bytes": 4215
+    },
+    {
+      "source": "tools/reconcile-readability.mjs",
+      "destination": "tools/reconcile-readability.mjs",
+      "move": false,
+      "before_sha256": "ac8aff0e0d50fba0cb26f917a7c073004b2bad6c2b3488870d23b1ed16fc269d",
+      "before_bytes": 6741,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "existing-completion-guard",
+        "reason": "Reviewed existing complete check executes before every canonical mutation; preview-only report output may remain available."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "ac8aff0e0d50fba0cb26f917a7c073004b2bad6c2b3488870d23b1ed16fc269d",
+      "after_bytes": 6741
+    },
+    {
+      "source": "tools/remap-rust-citations.mjs",
+      "destination": "tools/remap-rust-citations.mjs",
+      "move": false,
+      "before_sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+      "before_bytes": 20182,
+      "role": "current gated closeout helper",
+      "guard": {
+        "kind": "existing-current-gates",
+        "reason": "Reviewed current phase, identity and/or mode gates retained; current finalization and pure normalization are not historical regeneration."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+      "after_bytes": 20182
+    },
+    {
+      "source": "tools/repair-agent57-literal.mjs",
+      "destination": "tools/repair-agent57-literal.mjs",
+      "move": false,
+      "before_sha256": "3561eaa4e697def38bcbc3d67ccecdd752aae845221a497ae11b1957597fcd7c",
+      "before_bytes": 1454,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "e81f786ffffbffe4f96161f045a898e47d7a1a70a0d6274e603d9191bca62a84",
+      "after_bytes": 1556
+    },
+    {
+      "source": "tools/review-spacing.mjs",
+      "destination": "tools/review-spacing.mjs",
+      "move": false,
+      "before_sha256": "32e4533653ccac1c995a4b637f2f105527199a83e28ad8c98863ff516fd31dde",
+      "before_bytes": 877,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "32e4533653ccac1c995a4b637f2f105527199a83e28ad8c98863ff516fd31dde",
+      "after_bytes": 877
+    },
+    {
+      "source": "tools/verify-area-evidence.mjs",
+      "destination": "tools/verify-area-evidence.mjs",
+      "move": false,
+      "before_sha256": "3ac52585ad67886e55f884d07dd560e865b5e5e6e7dae75bbaa4cb5d15588ec0",
+      "before_bytes": 4205,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "3ac52585ad67886e55f884d07dd560e865b5e5e6e7dae75bbaa4cb5d15588ec0",
+      "after_bytes": 4205
+    },
+    {
+      "source": "tools/verify-complete-audit.py",
+      "destination": "tools/verify-complete-audit.py",
+      "move": false,
+      "before_sha256": "2a863d60b2f4439313e1f8a72feb046880801de61081b55c83b1c802c84739d5",
+      "before_bytes": 26992,
+      "role": "safe validation/report writer",
+      "guard": {
+        "kind": "none-validation-only",
+        "reason": "Inspected helper updates only diagnostic/validation artifacts, preserving current validator use after completion."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "2a863d60b2f4439313e1f8a72feb046880801de61081b55c83b1c802c84739d5",
+      "after_bytes": 26992
+    },
+    {
+      "source": "tools/verify-defect-provenance.mjs",
+      "destination": "tools/verify-defect-provenance.mjs",
+      "move": false,
+      "before_sha256": "d11da4011913227d95655fa2eaf3aada07793aee2f4f3fcaa14e5f291afb72f3",
+      "before_bytes": 4412,
+      "role": "historical audit writer",
+      "guard": {
+        "kind": "unconditional-prefix",
+        "reason": "Historical authoring, publication, canonical evidence generation or destructive housekeeping must refuse once progress.complete is true."
+      },
+      "patches": [],
+      "prepend": "import { assertAuditOpen } from './lane-exports-rpc-ai-auth-completion-guard.mjs';\nassertAuditOpen();\n",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "3477bdb9a92c26eb6c575e08eacb1a755d2e22622d391b2048a0d5dc68a49eff",
+      "after_bytes": 4514
+    },
+    {
+      "source": "tools/verify-supplemental-baseline.mjs",
+      "destination": "tools/verify-supplemental-baseline.mjs",
+      "move": false,
+      "before_sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "before_bytes": 1481,
+      "role": "read-only inspector",
+      "guard": {
+        "kind": "none-read-only",
+        "reason": "Inspected operations read source or saved audit artifacts and emit stdout; no audit file mutation."
+      },
+      "patches": [],
+      "prepend": "",
+      "source_root_policy": "Current generic readers use the containing native checkout. Explicit frozen source readers, provenance records and old/active comparisons retain their historical roots. Audit output and helper dependencies resolve from tools.",
+      "preserved_roots": [],
+      "after_sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "after_bytes": 1481
+    }
+  ],
+  "support_files": [
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-audit-paths.mjs",
+      "sha256": "42112063eb2fff4ed8ee0748018d1903912f746c72233768728e44d7723b5683",
+      "role": "pure support library"
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+      "sha256": "d4031503f1c08c94812264d0e1c1eb7bbb54ca742805eeb5b704b539d0a85509",
+      "role": "pure support library"
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-core.mjs",
+      "sha256": "0fbdd506d0824f3cf37c2f4ae61f3b4fe797b6b27f064b41ea8c049bdecb1f6f",
+      "role": "pure support library"
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+      "sha256": "3d42595c1e9e88dd0474da861eddbcd897982c4072f067b43e236900b5caebbb",
+      "role": "original-only syntax QA writer"
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+      "sha256": "4f02668052ca90ac3b32e1809061643be1e1a84e326281f45b802aabd51a58da",
+      "role": "active-only transactional migration runner"
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-prepare-migration.mjs",
+      "sha256": "816867616c229b1c88d666acb7e16bf960d9c1978bcec6904586ea040dfc0e06",
+      "role": "original-only plan writer"
+    },
+    {
+      "path": "tools/lane-exports-rpc-ai-auth-relocated-validation.mjs",
+      "sha256": "194d30e30b1152194c9f4650d4033c248402d4ee9aa78929f9fd28f7a59dc508",
+      "role": "active syntax and safe-validator report writer"
+    }
+  ],
+  "independent_review": {
+    "source": "independent-review",
+    "destination": "evidence/independent-review",
+    "status": "unfinished independent review; no semantic certification claimed",
+    "change_policy": "Move the whole directory unchanged; do not modify findings or assert completion.",
+    "files": [
+      {
+        "source": "independent-review/README.md",
+        "destination": "evidence/independent-review/README.md",
+        "sha256": "b548421dac01a89659d1d991f5a3dc57d6d1b769f4e12ff3f6b6544df16c8126",
+        "bytes": 3731
+      },
+      {
+        "source": "independent-review/baseline.json",
+        "destination": "evidence/independent-review/baseline.json",
+        "sha256": "41ba223382e1f29a6c938535022bac95e15406b068f2e1dd8cec29e6a4956ef4",
+        "bytes": 13907
+      }
+    ]
+  },
+  "preconditions": [
+    "Matching original source-only final gate passes with zero issues.",
+    "Coordinator freezes helper changes before the final plan and syntax QA hashes are bound.",
+    "The whole original audit is copied unchanged with /bin/cp -a and every copied file hash checked.",
+    "Application is restricted to the exact active copied audit and expected active HEAD.",
+    "Every script input, support module, import target and independent-review file matches the reviewed inventory and hashes."
+  ],
+  "transaction": {
+    "runner": "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+    "preview_argument": "--preview",
+    "apply_argument": "--apply",
+    "originals": "evidence/lane-exports-rpc-ai-auth-migration-originals.json",
+    "receipt": "evidence/lane-exports-rpc-ai-auth-migration-result.json",
+    "behavior": "Stage transformed helper bytes, recheck all inputs, then move/replace helpers and unchanged review directory. Any exception rolls back exact original helper bytes and review location."
+  },
+  "safe_validation": {
+    "preparation": "node docs/ice-gap/tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+    "active": "node docs/ice-gap/tools/lane-exports-rpc-ai-auth-relocated-validation.mjs",
+    "report": "evidence/relocated-helper-validation.json",
+    "methods": [
+      "Node --check only for every JavaScript helper.",
+      "/usr/bin/python3 -I with ast.parse from stdin for every Python helper; no compilation/cache writes.",
+      "Actual current read-only spec and structural validators plus visible-file local Git baseline comparison.",
+      "No historical writer, read-credit recorder, application module, test or build is executed."
+    ]
+  },
+  "limitations": [
+    "Preparing a plan does not apply active migration.",
+    "Syntax success does not certify semantic correctness of historical authoring tools.",
+    "Old and active source-body evidence retains its existing attributed reviews and exclusions.",
+    "The independent reviewer remains unfinished; relocation does not alter that status."
+  ]
+}

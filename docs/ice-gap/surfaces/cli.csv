@@ -1,0 +1,171 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+ice-ai help / --help / -h,packages/ai/src/cli.ts:82,,different-by-design,AI-017
+ice-ai list,packages/ai/src/cli.ts:89,,different-by-design,AI-017
+ice-ai login [provider],packages/ai/src/cli.ts:93,,different-by-design,AI-017
+model generator --strict,packages/ai/scripts/generate-models.ts:50,,missing,AI-058
+model generator --data-only,packages/ai/scripts/generate-models.ts:54,,missing,AI-058
+model generator --json-only,packages/ai/scripts/generate-models.ts:58,,missing,AI-058
+model generator --pretty,packages/ai/scripts/generate-models.ts:62,,missing,AI-058
+model generator --json-output <directory>,packages/ai/scripts/generate-models.ts:66,,missing,AI-058
+--auth-token,packages/coding-agent/src/cli/experimental/command-options.ts:6,crates/ice-cli/src/app.rs:43,missing,RPC-015
+--auth-token-file,packages/coding-agent/src/cli/experimental/command-options.ts:7,crates/ice-cli/src/app.rs:43,missing,RPC-015
+--listen,packages/coding-agent/src/cli/experimental/command-options.ts:9,crates/ice-cli/src/app.rs:43,missing,RPC-015
+--connect,packages/coding-agent/src/cli/experimental/command-options.ts:9,crates/ice-cli/src/app.rs:43,partial,RPC-015
+--connect,packages/coding-agent/src/cli/experimental/commands/client.ts:23,crates/ice-cli/src/app.rs:43,partial,RPC-015
+--listen,packages/coding-agent/src/cli/experimental/commands/ice.ts:24,crates/ice-cli/src/app.rs:43,missing,RPC-015
+--listen,packages/coding-agent/src/cli/experimental/commands/server.ts:23,crates/ice-cli/src/app.rs:43,missing,RPC-015
+--listen,packages/coding-agent/src/cli/experimental/transport-address.ts:12,crates/ice-cli/src/app.rs:43,missing,RPC-015
+--connect,packages/coding-agent/src/cli/experimental/transport-address.ts:12,crates/ice-cli/src/app.rs:43,partial,RPC-015
+--agents,packages/coding-agent/src/subagents/v2/extension.ts:209,crates/ice-cli/src/child_agents.rs:207,missing,SUB-003
+--sub-yolo[=true],packages/coding-agent/src/subagents/v2/extension.ts:214,crates/ice-cli/src/child_agents.rs:207,missing,SUB-009
+ice agents list/prune --json,packages/coding-agent/src/subagents/v2/cli.ts:64,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+ice agents prune --apply,packages/coding-agent/src/subagents/v2/cli.ts:122,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+ice agents list,packages/coding-agent/src/subagents/v2/cli.ts:62,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+ice agents validate,packages/coding-agent/src/subagents/v2/cli.ts:48,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+ice agents prune,packages/coding-agent/src/subagents/v2/cli.ts:48,crates/ice-cli/src/child_agents.rs:207,missing,SUB-033
+--import-agent-pack,packages/coding-agent/src/ice.ts:34,crates/ice-cli/src/child_agents.rs:207,missing,SUB-038
+--ice-mode,packages/coding-agent/src/ice-safe-verify.ts:834,,missing,SAFE-001
+--ice-allow-bash,packages/coding-agent/src/ice-safe-verify.ts:835,,missing,SAFE-004
+--allow-external,packages/coding-agent/src/ice-safe-verify.ts:839,,missing,SAFE-004
+--ice-verify,packages/coding-agent/src/ice-safe-verify.ts:844,,missing,SAFE-019
+--ice-workgraph-dispatch,packages/coding-agent/src/ice-safe-verify.ts:847,,missing,SAFE-023
+--ice-plan-model,packages/coding-agent/src/ice-safe-verify.ts:851,,missing,SAFE-007
+--ice-build-model,packages/coding-agent/src/ice-safe-verify.ts:855,,missing,SAFE-007
+--observe[=port],packages/coding-agent/src/cli/args.ts:91,,missing,OBS-003
+--help,packages/coding-agent/src/cli/args.ts:80,crates/ice-cli/src/args.rs:322,partial,CLI-003
+--version,packages/coding-agent/src/cli/args.ts:82,crates/ice-cli/src/args.rs:323,partial,CLI-003
+--print-system-template,packages/coding-agent/src/cli/args.ts:84,,partial,CLI-003
+--mode,packages/coding-agent/src/cli/args.ts:86,crates/ice-cli/src/args.rs:338,partial,CLI-003
+--observe,packages/coding-agent/src/cli/args.ts:91,,partial,CLI-003
+--observe,packages/coding-agent/src/cli/args.ts:92,,partial,CLI-003
+--continue,packages/coding-agent/src/cli/args.ts:102,crates/ice-cli/src/args.rs:367,partial,CLI-003
+--resume,packages/coding-agent/src/cli/args.ts:104,crates/ice-cli/src/args.rs:368,partial,CLI-003
+--provider,packages/coding-agent/src/cli/args.ts:106,crates/ice-cli/src/args.rs:385,partial,CLI-003
+--model,packages/coding-agent/src/cli/args.ts:108,crates/ice-cli/src/args.rs:386,partial,CLI-003
+--api-key,packages/coding-agent/src/cli/args.ts:110,crates/ice-cli/src/args.rs:387,partial,CLI-003
+--system-prompt,packages/coding-agent/src/cli/args.ts:112,crates/ice-cli/src/args.rs:401,partial,CLI-003
+--append-system-prompt,packages/coding-agent/src/cli/args.ts:114,crates/ice-cli/src/args.rs:402,partial,CLI-003
+--name,packages/coding-agent/src/cli/args.ts:117,crates/ice-cli/src/args.rs:407,partial,CLI-003
+--no-session,packages/coding-agent/src/cli/args.ts:123,crates/ice-cli/src/args.rs:369,partial,CLI-003
+--session,packages/coding-agent/src/cli/args.ts:125,crates/ice-cli/src/args.rs:408,partial,CLI-003
+--session-id,packages/coding-agent/src/cli/args.ts:127,crates/ice-cli/src/args.rs:409,partial,CLI-003
+--fork,packages/coding-agent/src/cli/args.ts:129,crates/ice-cli/src/args.rs:410,partial,CLI-003
+--session-dir,packages/coding-agent/src/cli/args.ts:131,crates/ice-cli/src/args.rs:431,partial,CLI-003
+--models,packages/coding-agent/src/cli/args.ts:133,crates/ice-cli/src/args.rs:411,partial,CLI-003
+--no-tools,packages/coding-agent/src/cli/args.ts:135,crates/ice-cli/src/args.rs:370,partial,CLI-003
+--no-builtin-tools,packages/coding-agent/src/cli/args.ts:137,crates/ice-cli/src/args.rs:371,partial,CLI-003
+--tools,packages/coding-agent/src/cli/args.ts:139,crates/ice-cli/src/args.rs:447,partial,CLI-003
+--exclude-tools,packages/coding-agent/src/cli/args.ts:144,crates/ice-cli/src/args.rs:452,partial,CLI-003
+--thinking,packages/coding-agent/src/cli/args.ts:149,crates/ice-cli/src/args.rs:436,partial,CLI-003
+--fast,packages/coding-agent/src/cli/args.ts:159,,partial,CLI-003
+--no-fast,packages/coding-agent/src/cli/args.ts:161,,partial,CLI-003
+--print,packages/coding-agent/src/cli/args.ts:163,crates/ice-cli/src/args.rs:324,partial,CLI-003
+--export,packages/coding-agent/src/cli/args.ts:170,crates/ice-cli/src/args.rs:472,partial,CLI-003
+--extension,packages/coding-agent/src/cli/args.ts:172,crates/ice-cli/src/args.rs:416,partial,CLI-003
+--no-extensions,packages/coding-agent/src/cli/args.ts:175,crates/ice-cli/src/args.rs:375,partial,CLI-003
+--skill,packages/coding-agent/src/cli/args.ts:177,crates/ice-cli/src/args.rs:421,partial,CLI-003
+--prompt-template,packages/coding-agent/src/cli/args.ts:180,crates/ice-cli/src/args.rs:426,partial,CLI-003
+--theme,packages/coding-agent/src/cli/args.ts:183,crates/ice-cli/src/args.rs:503,partial,CLI-003
+--no-skills,packages/coding-agent/src/cli/args.ts:186,crates/ice-cli/src/args.rs:372,partial,CLI-003
+--no-prompt-templates,packages/coding-agent/src/cli/args.ts:188,crates/ice-cli/src/args.rs:373,partial,CLI-003
+--no-themes,packages/coding-agent/src/cli/args.ts:190,crates/ice-cli/src/args.rs:506,partial,CLI-003
+--no-context-files,packages/coding-agent/src/cli/args.ts:192,crates/ice-cli/src/args.rs:374,partial,CLI-003
+--list-models,packages/coding-agent/src/cli/args.ts:194,crates/ice-cli/src/args.rs:457,partial,CLI-003
+--ui-mode,packages/coding-agent/src/cli/args.ts:201,,partial,CLI-003
+--verbose,packages/coding-agent/src/cli/args.ts:215,crates/ice-cli/src/args.rs:383,partial,CLI-003
+--approve,packages/coding-agent/src/cli/args.ts:217,crates/ice-cli/src/args.rs:477,partial,CLI-003
+--no-approve,packages/coding-agent/src/cli/args.ts:219,crates/ice-cli/src/args.rs:478,partial,CLI-003
+--offline,packages/coding-agent/src/cli/args.ts:221,crates/ice-cli/src/args.rs:471,partial,CLI-003
+--help,packages/coding-agent/src/cli/credential-print.ts:20,crates/ice-cli/src/auth.rs:48,missing,CLI-011
+--min-expiry,packages/coding-agent/src/cli/credential-print.ts:46,crates/ice-cli/src/auth.rs:48,missing,CLI-011
+--import-agent-pack,packages/coding-agent/src/ice.ts:34,crates/ice-cli/src/app.rs:138,partial,CLI-002
+--import-agent-pack,packages/coding-agent/src/ice.ts:41,crates/ice-cli/src/app.rs:138,partial,CLI-002
+--offline,packages/coding-agent/src/ice.ts:77,crates/ice-cli/src/app.rs:138,partial,CLI-002
+--help,packages/coding-agent/src/ice.ts:79,crates/ice-cli/src/app.rs:138,partial,CLI-002
+--version,packages/coding-agent/src/ice.ts:79,crates/ice-cli/src/app.rs:138,partial,CLI-002
+--session,packages/coding-agent/src/main.ts:259,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--continue,packages/coding-agent/src/main.ts:260,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--resume,packages/coding-agent/src/main.ts:261,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--no-session,packages/coding-agent/src/main.ts:262,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--session,packages/coding-agent/src/main.ts:275,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--continue,packages/coding-agent/src/main.ts:276,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--resume,packages/coding-agent/src/main.ts:277,crates/ice-cli/src/session.rs:154,partial,CLI-006
+--offline,packages/coding-agent/src/main.ts:533,crates/ice-cli/src/app.rs:100,partial,CLI-019
+-h,packages/coding-agent/src/cli/args.ts:80,crates/ice-cli/src/args.rs:322,partial,CLI-003
+-v,packages/coding-agent/src/cli/args.ts:82,crates/ice-cli/src/args.rs:323,partial,CLI-003
+-c,packages/coding-agent/src/cli/args.ts:102,crates/ice-cli/src/args.rs:367,partial,CLI-003
+-r,packages/coding-agent/src/cli/args.ts:104,crates/ice-cli/src/args.rs:368,partial,CLI-003
+-n,packages/coding-agent/src/cli/args.ts:117,crates/ice-cli/src/args.rs:407,partial,CLI-003
+-nt,packages/coding-agent/src/cli/args.ts:135,crates/ice-cli/src/args.rs:370,partial,CLI-003
+-nbt,packages/coding-agent/src/cli/args.ts:137,crates/ice-cli/src/args.rs:371,partial,CLI-003
+-t,packages/coding-agent/src/cli/args.ts:139,crates/ice-cli/src/args.rs:447,partial,CLI-003
+-xt,packages/coding-agent/src/cli/args.ts:144,crates/ice-cli/src/args.rs:452,partial,CLI-003
+-p,packages/coding-agent/src/cli/args.ts:163,crates/ice-cli/src/args.rs:324,partial,CLI-003
+-e,packages/coding-agent/src/cli/args.ts:172,crates/ice-cli/src/args.rs:416,partial,CLI-003
+-ne,packages/coding-agent/src/cli/args.ts:175,crates/ice-cli/src/args.rs:375,partial,CLI-003
+-ns,packages/coding-agent/src/cli/args.ts:186,crates/ice-cli/src/args.rs:372,partial,CLI-003
+-np,packages/coding-agent/src/cli/args.ts:188,crates/ice-cli/src/args.rs:373,partial,CLI-003
+-nc,packages/coding-agent/src/cli/args.ts:192,crates/ice-cli/src/args.rs:374,partial,CLI-003
+-a,packages/coding-agent/src/cli/args.ts:217,crates/ice-cli/src/args.rs:477,partial,CLI-003
+-na,packages/coding-agent/src/cli/args.ts:219,crates/ice-cli/src/args.rs:478,partial,CLI-003
+unknownFlags,packages/coding-agent/src/cli/args.ts:59,crates/ice-cli/src/args.rs:271,partial,CLI-003
+diagnostics,packages/coding-agent/src/cli/args.ts:60,crates/ice-cli/src/args.rs:271,partial,CLI-003
+parseArgs,packages/coding-agent/src/cli/args.ts:69,crates/ice-cli/src/args.rs:271,partial,CLI-003
+isValidThinkingLevel,packages/coding-agent/src/cli/args.ts:65,crates/ice-cli/src/args.rs:271,partial,CLI-003
+auth print-api-key,packages/coding-agent/src/cli/credential-print.ts:36,crates/ice-cli/src/auth.rs:48,missing,CLI-011
+auth print-bearer-token,packages/coding-agent/src/cli/credential-print.ts:36,crates/ice-cli/src/auth.rs:48,missing,CLI-011
+validateCredentialPrintArgs,packages/coding-agent/src/cli/credential-print.ts:66,crates/ice-cli/src/auth.rs:48,missing,CLI-011
+resolveCredentialForPrint,packages/coding-agent/src/cli/credential-print.ts:84,crates/ice-cli/src/auth.rs:48,missing,CLI-012
+minOAuthValidityMs,packages/coding-agent/src/cli/credential-print.ts:123,crates/ice-cli/src/auth.rs:48,missing,CLI-012
+autoResizeImages,packages/coding-agent/src/cli/file-processor.ts:19,crates/ice-cli/src/app.rs:807,partial,CLI-009
+cwd,packages/coding-agent/src/cli/file-processor.ts:21,crates/ice-cli/src/app.rs:807,partial,CLI-009
+maxTextBytes,packages/coding-agent/src/cli/file-processor.ts:23,crates/ice-cli/src/app.rs:807,partial,CLI-009
+FileArgumentError.code,packages/coding-agent/src/cli/file-processor.ts:28,crates/ice-cli/src/app.rs:807,partial,CLI-009
+processFileArguments,packages/coding-agent/src/cli/file-processor.ts:38,crates/ice-cli/src/app.rs:807,partial,CLI-009
+matchesEntryType,packages/coding-agent/src/core/legacy-compat/identity.ts:1,,different-by-design,CLI-018
+normalizeLegacySettings,packages/coding-agent/src/core/legacy-compat/identity.ts:5,,different-by-design,CLI-018
+LEGACY_PI_EXTENSION_ALIASES,packages/coding-agent/src/core/legacy-compat/extension-aliases.ts:17,,different-by-design,CLI-018
+buildInitialMessage,packages/coding-agent/src/cli/initial-message.ts:20,crates/ice-cli/src/app.rs:863,different-by-design,CLI-010
+readPipedStdin,packages/coding-agent/src/cli/piped-stdin.ts:7,crates/ice-cli/src/app.rs:776,partial,CLI-008
+listModels,packages/coding-agent/src/cli/list-models.ts:29,crates/ice-cli/src/app.rs:654,partial,CLI-017
+selectConfig,packages/coding-agent/src/cli/config-selector.ts:20,,partial,CLI-016
+selectSession,packages/coding-agent/src/cli/session-picker.ts:15,crates/ice-cli/src/resume_picker.rs:16,partial,CLI-016
+showStartupSelector,packages/coding-agent/src/cli/startup-ui.ts:134,,partial,CLI-016
+showStartupInput,packages/coding-agent/src/cli/startup-ui.ts:207,,partial,CLI-016
+shouldRunFirstTimeSetup,packages/coding-agent/src/cli/startup-ui.ts:115,crates/ice-cli/src/extras.rs:35,partial,CLI-015
+showFirstTimeSetup,packages/coding-agent/src/cli/startup-ui.ts:166,crates/ice-cli/src/extras.rs:35,partial,CLI-015
+createStartupTui,packages/coding-agent/src/cli/startup-ui.ts:77,crates/ice-cli/src/resume_picker.rs:102,partial,CLI-015
+startStartupTui,packages/coding-agent/src/cli/startup-ui.ts:87,crates/ice-cli/src/resume_picker.rs:110,partial,CLI-015
+runMigrations,packages/coding-agent/src/migrations.ts:304,crates/ice-cli/src/config.rs:176,partial,CLI-014
+showDeprecationWarnings,packages/coding-agent/src/migrations.ts:276,,partial,CLI-014
+main,packages/coding-agent/src/main.ts:530,crates/ice-cli/src/app.rs:82,partial,CLI-005
+globalFirstSettings,packages/coding-agent/src/main.ts:547,,partial,CLI-005
+agentViewBridge,packages/coding-agent/src/ice.ts:101,,partial,CLI-002
+install,packages/coding-agent/src/package-manager-cli.ts:211,crates/ice-cli/src/app.rs:151,partial,CLI-034
+remove,packages/coding-agent/src/package-manager-cli.ts:211,,partial,CLI-034
+uninstall,packages/coding-agent/src/package-manager-cli.ts:209,crates/ice-cli/src/app.rs:154,partial,CLI-034
+list,packages/coding-agent/src/package-manager-cli.ts:800,crates/ice-cli/src/packages.rs:192,partial,CLI-036
+update,packages/coding-agent/src/package-manager-cli.ts:337,crates/ice-cli/src/updates.rs:522,partial,CLI-034
+config,packages/coding-agent/src/package-manager-cli.ts:626,,partial,CLI-036
+--ice-mode,packages/coding-agent/src/package-manager-cli.ts:193,,partial,CLI-034
+--ice-mode=<value>,packages/coding-agent/src/package-manager-cli.ts:197,,partial,CLI-034
+--local,packages/coding-agent/src/package-manager-cli.ts:240,,partial,CLI-034
+-l,packages/coding-agent/src/package-manager-cli.ts:240,,partial,CLI-034
+--approve,packages/coding-agent/src/package-manager-cli.ts:285,,partial,CLI-035
+-a,packages/coding-agent/src/package-manager-cli.ts:285,,partial,CLI-035
+--no-approve,packages/coding-agent/src/package-manager-cli.ts:290,,partial,CLI-035
+-na,packages/coding-agent/src/package-manager-cli.ts:290,,partial,CLI-035
+--help,packages/coding-agent/src/package-manager-cli.ts:235,crates/ice-cli/src/updates.rs:522,partial,CLI-034
+-h,packages/coding-agent/src/package-manager-cli.ts:235,crates/ice-cli/src/updates.rs:522,partial,CLI-034
+--force,packages/coding-agent/src/package-manager-cli.ts:295,crates/ice-cli/src/updates.rs:668,partial,CLI-038
+--self,packages/coding-agent/src/package-manager-cli.ts:249,,partial,CLI-034
+--extensions,packages/coding-agent/src/package-manager-cli.ts:258,,partial,CLI-034
+--extension <source>,packages/coding-agent/src/package-manager-cli.ts:304,,partial,CLI-034
+--all,packages/coding-agent/src/package-manager-cli.ts:276,,partial,CLI-034
+--models,packages/coding-agent/src/package-manager-cli.ts:267,,missing,CLI-037
+update self,packages/coding-agent/src/package-manager-cli.ts:365,,partial,CLI-034
+update ice,packages/coding-agent/src/package-manager-cli.ts:365,,partial,CLI-034
+update <source>,packages/coding-agent/src/package-manager-cli.ts:374,crates/ice-cli/src/packages.rs:233,missing,CLI-027
+npm run eval,packages/evals/package.json:8,,missing,MISC-040
+eval --provider,packages/evals/scripts/run-evals.mjs:24,,missing,MISC-040
+eval --model,packages/evals/scripts/run-evals.mjs:24,,missing,MISC-040

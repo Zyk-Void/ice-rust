@@ -1,0 +1,250 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "source_only": true,
+  "tests_executed": false,
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/core/diagnostics.ts",
+      "sha256": "1914431098db1b4638e4fb3582ac22e8125356c4ab024671494f565c6d5ffb39",
+      "total_lines": 16,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/deprecation.ts",
+      "sha256": "5d299ae61779d60507f8634caada1283b0b63077bcc5d5a03d0a328168f3e46f",
+      "total_lines": 15,
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/highlight-js-lib-index.d.ts",
+      "sha256": "dbfb8a1b4856ac53d5f645296c7f9f50379204a84b7ba37c5bcf36a9aa520d07",
+      "total_lines": 20,
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/slash-commands.ts",
+      "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+      "total_lines": 56,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/index.ts",
+      "sha256": "9c8700b57dc9b572a217ef55925c99619d58a47a7e70b90ef78b42cf78cf26e9",
+      "total_lines": 81,
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/index.ts",
+      "sha256": "6517b05dc8dc7846dfe8181a646fbd1f05da08f621b48814282fee6e81c9830b",
+      "total_lines": 67,
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/client.ts",
+      "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+      "total_lines": null,
+      "ranges": [
+        [
+          262,
+          333
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "total_lines": null,
+      "ranges": [
+        [
+          17,
+          48
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/index.ts",
+      "sha256": "4437bb427d6170d2a3dffa2c77a71e20657dee33a96d307c6fa4e2257bc5b4fd",
+      "total_lines": null,
+      "ranges": [
+        [
+          140,
+          168
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/clipboard.ts",
+      "sha256": "03fbbed59a9b46a952a85a8a0fd7cc170b2bc912b477a53066bdfff8f2082947",
+      "total_lines": null,
+      "ranges": [
+        [
+          73,
+          138
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/index.ts",
+      "sha256": "a1b85d4a98148f3c9bfa1a38fa852d7cba302f421695243aaabe18b587d373bc",
+      "total_lines": null,
+      "ranges": [
+        [
+          1,
+          170
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/index.ts",
+      "sha256": "a1b85d4a98148f3c9bfa1a38fa852d7cba302f421695243aaabe18b587d373bc",
+      "total_lines": null,
+      "ranges": [
+        [
+          300,
+          482
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "total_lines": null,
+      "ranges": [
+        [
+          46,
+          65
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/clipboard-native.ts",
+      "sha256": "8b191a68f53546395cdeecbe2acf69367e46dea2800a3a44d505736dced8bc32",
+      "total_lines": 34,
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/clipboard.ts",
+      "sha256": "03fbbed59a9b46a952a85a8a0fd7cc170b2bc912b477a53066bdfff8f2082947",
+      "total_lines": null,
+      "ranges": [
+        [
+          35,
+          71
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/tools-manager.ts",
+      "sha256": "93485116f9210f807d823762c21c70d9fadef21bc27bf816be42fdd27a9cf90d",
+      "total_lines": null,
+      "ranges": [
+        [
+          125,
+          203
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/tools-manager.ts",
+      "sha256": "93485116f9210f807d823762c21c70d9fadef21bc27bf816be42fdd27a9cf90d",
+      "total_lines": null,
+      "ranges": [
+        [
+          245,
+          323
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "owner": "/root/final_area_handoffs",
+      "evidence": "Direct numbered source read during closeout recovery; no execution."
+    }
+  ],
+  "notes": [
+    "Only shown source intervals credited; original certified full-body evidence is retained separately.",
+    "llama client unlink() at lines283 and328 removes linked abort listeners; it is not a filesystem unlink.",
+    "warnDeprecation and clearDeprecationWarningsForTests have no other occurrence under packages/coding-agent in the source search; dormant helper behavior must not be promoted to an active user flow."
+  ]
+}

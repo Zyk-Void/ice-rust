@@ -1,0 +1,9 @@
+path,lines,area,entry_ids,status,notes
+packages/coding-agent/docs/observability.md,64,observability,,pending,
+packages/coding-agent/src/core/telemetry.ts,14,observability,,pending,
+packages/coding-agent/src/core/timings.ts,52,observability,,pending,
+packages/coding-agent/src/observe/observe-cognee.ts,251,observability,,pending,
+packages/coding-agent/src/observe/observe-dashboard.html,3361,observability,,pending,
+packages/coding-agent/src/observe/observe-recorder.ts,841,observability,,pending,
+packages/coding-agent/src/observe/observe-server.ts,596,observability,,pending,
+packages/coding-agent/src/observe/observe-store.ts,330,observability,,pending,

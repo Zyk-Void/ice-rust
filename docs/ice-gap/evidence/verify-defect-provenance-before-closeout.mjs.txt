@@ -1,0 +1,38 @@
+// Audit-only local Git provenance. No source execution, mutation, fetch, build or tests.
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync,spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const base=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const root=path.resolve(base,'../..');
+const git=args=>execFileSync('git',['--no-optional-locks',...args],{cwd:root,encoding:'utf8',maxBuffer:8*1024*1024});
+const upstream=git(['rev-parse','0fb2d89']).trim();
+const tree=git(['ls-tree','-r','--name-only',upstream,'--','crates']).trim().split('\n');
+const targets=[
+{id:'AGENT-049',file:'crates/ice-tools/src/os_env.rs',range:[840,867],anchor:'if options.inherit_env'},
+{id:'AGENT-050',file:'crates/ice-tools/src/os_env.rs',range:[929,1057],anchor:'let status_res = (&mut status_fut).await;'},
+{id:'AGENT-057',file:'crates/ice-harness/src/prompt_templates.rs',range:[393,419],anchor:'out.push(bytes[i] as char);'},
+{id:'OBS-RUST-001',file:'crates/ice-telemetry/src/context.rs',range:[83,103],anchor:'if Arc::strong_count(&inner) > 1'}
+];
+const report={captured_at:new Date().toISOString(),root,head:git(['rev-parse','HEAD']).trim(),upstream_commit:upstream,remotes:git(['remote','-v']).trim().split('\n'),tag_matches:git(['tag','--points-at',upstream]).trim().split('\n').filter(Boolean),upstream_cargo:git(['show',upstream+':Cargo.toml']),targets:[]};
+for(const t of targets){
+const bytes=fs.readFileSync(path.join(root,t.file));
+const current=bytes.toString('utf8').split('\n');
+const history=git(['blame','--line-porcelain','-L',t.range.join(','),'--',t.file]);
+const commits=[...new Set([...history.matchAll(/^([a-f0-9]{40}) \d+ \d+/gm)].map(m=>m[1]))];
+const ancestors=commits.map(sha=>({sha,in_upstream:spawnSync('git',['merge-base','--is-ancestor',sha,upstream],{cwd:root}).status===0}));
+const basename=path.basename(t.file);
+const candidates=tree.filter(p=>p.endsWith('/'+basename));
+const matching=[];
+for(const p of candidates){
+const content=git(['show',upstream+':'+p]);const lines=content.split('\n');
+const at=lines.findIndex(l=>l.includes(t.anchor));
+if(at>=0){const a=Math.max(0,at-12),b=Math.min(lines.length,at+18);matching.push({path:p,anchor_line:at+1,range:[a+1,b],excerpt:lines.slice(a,b).map((l,i)=>(a+i+1)+' | '+l).join('\n'),sha256:createHash('sha256').update(content).digest('hex')});}
+}
+report.targets.push({...t,current_sha256:createHash('sha256').update(bytes).digest('hex'),current_excerpt:current.slice(t.range[0]-1,t.range[1]).map((l,i)=>(t.range[0]+i)+' | '+l).join('\n'),blame_commits:ancestors,upstream_matches:matching});
+}
+const out=path.join(base,'evidence','rust-defect-provenance.json');
+fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify(report,null,2));
+
