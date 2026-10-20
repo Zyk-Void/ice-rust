@@ -3,7 +3,6 @@
 //! Provides functions for text manipulation with ANSI awareness.
 
 use unicode_segmentation::UnicodeSegmentation;
-use unicode_width::UnicodeWidthStr;
 
 use crate::ansi::StyleTracker;
 
@@ -14,163 +13,193 @@ pub fn visible_width(s: &str) -> usize {
     crate::ansi::visible_width(s)
 }
 
-/// Slice a string by column positions, accounting for ANSI codes.
-/// Returns the portion of the string that fits within start_col..end_col.
+/// Slice a string by column positions, keeping its styling.
+///
+/// Takes the graphemes that start in `start_col..start_col + max_cols`,
+/// leaving out a wide grapheme that would cross either edge, so the result
+/// never exceeds `max_cols` cells. With `pad` the result is padded with
+/// spaces to exactly `max_cols` cells. See [`slice_with_width`] for the
+/// non-strict form.
 pub fn slice_by_column(s: &str, start_col: usize, max_cols: usize, pad: bool) -> String {
-    let mut result = String::new();
-    let mut col = 0;
-    let mut in_escape = false;
-    let mut pending_styles = String::new();
-    let chars: Vec<char> = s.chars().collect();
-    let mut i = 0;
-
-    while i < chars.len() {
-        let c = chars[i];
-
-        if in_escape {
-            pending_styles.push(c);
-
-            // Check for sequence end
-            if c == '\x07' {
-                in_escape = false;
-            } else if c == '\\' && i + 1 < chars.len() && chars[i + 1] == '\\' {
-                pending_styles.push('\\');
-                i += 1;
-                in_escape = false;
-            } else if c >= '@' && c <= '~' && c != '[' {
-                in_escape = false;
-            }
-            // OSC sequence
-            else if c == ']' {
-                while i + 1 < chars.len() {
-                    i += 1;
-                    let next = chars[i];
-                    pending_styles.push(next);
-                    if next == '\x07' {
-                        in_escape = false;
-                        break;
-                    } else if next == '\x1b' && i + 1 < chars.len() && chars[i + 1] == '\\' {
-                        i += 1;
-                        pending_styles.push('\\');
-                        in_escape = false;
-                        break;
-                    }
-                }
-            }
-            i += 1;
-            continue;
-        }
-
-        if c == '\x1b' {
-            in_escape = true;
-            pending_styles.push(c);
-            i += 1;
-            continue;
-        }
-
-        // Skip control characters
-        if c < ' ' || c == '\x7f' {
-            i += 1;
-            continue;
-        }
-
-        // Get grapheme width
-        let char_width = UnicodeWidthStr::width(c.to_string().as_str());
-
-        // Check if we're at or past start_col
-        if col >= start_col && col < start_col + max_cols {
-            // Add pending styles before the character
-            if !pending_styles.is_empty() {
-                result.push_str(&pending_styles);
-                pending_styles.clear();
-            }
-            result.push(c);
-        }
-
-        col += char_width;
-        i += 1;
+    let (mut text, width) = slice_with_width(s, start_col, max_cols, true);
+    if pad {
+        text.push_str(&" ".repeat(max_cols.saturating_sub(width)));
     }
-
-    // Pad if needed
-    if pad && col < start_col + max_cols {
-        let padding = start_col + max_cols - col;
-        for _ in 0..padding {
-            result.push(' ');
-        }
-    }
-
-    result
+    text
 }
 
-/// Truncate a string to fit within a maximum width.
-/// Returns the truncated string with optional suffix.
+pub use crate::ansi::slice_with_width;
+
+const TRUNCATION_RESET: &str = "\x1b[0m";
+
+/// Truncate to `max_width` cells, ending with `suffix` when text is cut.
+///
+/// Port of ice `truncateToWidth` with `pad = false`; see
+/// [`truncate_to_width_padded`].
 pub fn truncate_to_width(s: &str, max_width: usize, suffix: &str) -> String {
+    truncate(s, max_width, suffix, false)
+}
+
+/// [`truncate_to_width`], then padded with spaces to exactly `max_width`
+/// cells.
+pub fn truncate_to_width_padded(s: &str, max_width: usize, suffix: &str) -> String {
+    truncate(s, max_width, suffix, true)
+}
+
+/// Text that fits is returned unchanged. Otherwise the longest contiguous
+/// grapheme prefix that leaves room for `suffix` is kept (a wide grapheme
+/// that does not fit ends the prefix; nothing later is kept), then a reset,
+/// the suffix and another reset. A suffix wider than the target is itself
+/// cut to whole graphemes. Escape sequences are kept only ahead of kept text.
+fn truncate(text: &str, max_width: usize, suffix: &str, pad: bool) -> String {
+    let padded = |s: String, width: usize| {
+        if pad {
+            s + &" ".repeat(max_width.saturating_sub(width))
+        } else {
+            s
+        }
+    };
     if max_width == 0 {
         return String::new();
     }
-
-    let width = visible_width(s);
-    if width <= max_width {
-        return s.to_string();
+    if text.is_empty() {
+        return padded(String::new(), 0);
     }
-
     let suffix_width = visible_width(suffix);
-    let target_width = max_width.saturating_sub(suffix_width);
-
-    if target_width == 0 {
-        return suffix.to_string();
+    if suffix_width >= max_width {
+        let text_width = visible_width(text);
+        if text_width <= max_width {
+            return padded(text.to_string(), text_width);
+        }
+        let (clipped, clipped_width) = crate::ansi::slice_with_width(suffix, 0, max_width, true);
+        if clipped_width == 0 {
+            return padded(String::new(), 0);
+        }
+        return padded(
+            format!("{TRUNCATION_RESET}{clipped}{TRUNCATION_RESET}"),
+            clipped_width,
+        );
     }
-
-    // Check if input has ANSI codes
-    let has_ansi = s.contains("\x1b");
-
-    let mut result = String::new();
-    let mut current_width = 0;
-    let mut in_escape = false;
-    let mut style_stack = String::new();
-
-    for c in s.chars() {
-        if in_escape {
-            style_stack.push(c);
-            if c == '\x07' || (c >= '@' && c <= '~' && c != '[') {
-                in_escape = false;
+    let target = max_width - suffix_width;
+    let mut kept = String::new();
+    let mut kept_width = 0;
+    let mut pending = String::new();
+    let mut contiguous = true;
+    let mut seen = 0;
+    let mut rest = text;
+    'scan: while !rest.is_empty() {
+        if rest.starts_with('\x1b') {
+            let len = crate::ansi::escape_len(rest);
+            pending.push_str(&rest[..len]);
+            rest = &rest[len..];
+            continue;
+        }
+        let end = rest.find('\x1b').unwrap_or(rest.len());
+        for grapheme in rest[..end].graphemes(true) {
+            let w = crate::ansi::grapheme_width(grapheme);
+            if contiguous && kept_width + w <= target {
+                kept.push_str(&std::mem::take(&mut pending));
+                kept.push_str(grapheme);
+                kept_width += w;
+            } else {
+                contiguous = false;
+                pending.clear();
             }
-            continue;
+            seen += w;
+            if seen > max_width {
+                break 'scan;
+            }
         }
-
-        if c == '\x1b' {
-            in_escape = true;
-            style_stack.push(c);
-            continue;
-        }
-
-        if c < ' ' || c == '\x7f' {
-            continue;
-        }
-
-        let char_width = UnicodeWidthStr::width(c.to_string().as_str());
-        if current_width + char_width > target_width {
-            break;
-        }
-
-        if !style_stack.is_empty() {
-            result.push_str(&style_stack);
-            style_stack.clear();
-        }
-        result.push(c);
-        current_width += char_width;
+        rest = &rest[end..];
     }
-
-    // Add suffix
-    result.push_str(suffix);
-
-    // Only reset style if input had ANSI codes
-    if has_ansi {
-        result.push_str("\x1b[0m");
+    if seen <= max_width {
+        return padded(text.to_string(), seen);
     }
-    result
+    let result = if suffix.is_empty() {
+        format!("{kept}{TRUNCATION_RESET}")
+    } else {
+        format!("{kept}{TRUNCATION_RESET}{suffix}{TRUNCATION_RESET}")
+    };
+    padded(result, kept_width + suffix_width)
 }
 
+/// The text left of an overlay and the text under-and-after it, in one pass
+/// (ice `extractSegments`).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Segments {
+    /// Graphemes that end at or before `before_end`.
+    pub before: String,
+    pub before_width: usize,
+    /// Graphemes starting in `after_start..after_start + after_len`, opened
+    /// with the style and hyperlink active at that point.
+    pub after: String,
+    pub after_width: usize,
+}
+
+/// Split `line` around an overlay. `before` never includes a grapheme that
+/// crosses `before_end`; `strict_after` likewise keeps `after` within
+/// `after_len` cells.
+pub fn extract_segments(
+    line: &str,
+    before_end: usize,
+    after_start: usize,
+    after_len: usize,
+    strict_after: bool,
+) -> Segments {
+    let mut out = Segments::default();
+    let mut tracker = StyleTracker::default();
+    let mut pending_before = String::new();
+    let mut after_started = false;
+    let after_end = after_start + after_len;
+    let done = |col: usize| {
+        if after_len == 0 {
+            col >= before_end
+        } else {
+            col >= after_end
+        }
+    };
+    let mut col = 0;
+    let mut rest = line;
+    while !rest.is_empty() && !done(col) {
+        if rest.starts_with('\x1b') {
+            let len = crate::ansi::escape_len(rest);
+            let code = &rest[..len];
+            tracker.process(code);
+            if col < before_end {
+                pending_before.push_str(code);
+            } else if col >= after_start && col < after_end && after_started {
+                out.after.push_str(code);
+            }
+            rest = &rest[len..];
+            continue;
+        }
+        let end = rest.find('\x1b').unwrap_or(rest.len());
+        for grapheme in rest[..end].graphemes(true) {
+            let w = crate::ansi::grapheme_width(grapheme);
+            if col < before_end && col + w <= before_end {
+                out.before.push_str(&std::mem::take(&mut pending_before));
+                out.before.push_str(grapheme);
+                out.before_width += w;
+            } else if col >= after_start
+                && col < after_end
+                && (!strict_after || col + w <= after_end)
+            {
+                if !after_started {
+                    out.after.push_str(&tracker.active_codes());
+                    after_started = true;
+                }
+                out.after.push_str(grapheme);
+                out.after_width += w;
+            }
+            col += w;
+            if done(col) {
+                break;
+            }
+        }
+        rest = &rest[end..];
+    }
+    out
+}
 /// Strip ANSI escape sequences from a string.
 ///
 /// Same as [`crate::ansi::strip_ansi`]; both names stay public.
@@ -436,75 +465,159 @@ pub fn is_whitespace_char(c: char) -> bool {
     c.is_whitespace() || c == '\t' || c == '\n' || c == '\r'
 }
 
-/// Get an OSC 8 hyperlink at a specific column position.
+/// URL of an OSC 8 open sequence, `Some("")` for a close, `None` for any
+/// other sequence. The URL follows the second `;` (`8;params;url`).
+fn osc8_url(code: &str) -> Option<&str> {
+    let body = code.strip_prefix("\x1b]8;")?;
+    let body = body
+        .strip_suffix('\x07')
+        .or_else(|| body.strip_suffix("\x1b\\"))?;
+    let (_, url) = body.split_once(';')?;
+    (!url.contains(['\x07', '\x1b'])).then_some(url)
+}
+
+/// The OSC 8 hyperlink URL covering visible `column`, for every cell of a
+/// wide grapheme (ice `getOsc8LinkAtColumn`).
 pub fn get_osc8_link_at_column(s: &str, column: usize) -> Option<String> {
+    let mut active: Option<&str> = None;
     let mut col = 0;
-    let mut in_escape = false;
-    let mut in_osc8 = false;
-    let mut osc8_link = String::new();
-    let mut chars = s.chars().peekable();
-
-    while let Some(c) = chars.next() {
-        if in_escape {
-            if c == ']' {
-                // OSC start - check for OSC 8
-                let mut osc_content = String::new();
-                while let Some(&next) = chars.peek() {
-                    chars.next();
-                    if next == '\x07' {
-                        break;
-                    } else if next == '\x1b' && chars.peek() == Some(&'\\') {
-                        chars.next();
-                        break;
-                    }
-                    osc_content.push(next);
-                }
-                // OSC 8 format: 8;params;uri
-                if osc_content.starts_with("8;") {
-                    in_osc8 = true;
-                    if let Some(uri_start) = osc_content.find(';').map(|i| i + 1) {
-                        if uri_start < osc_content.len() {
-                            osc8_link = osc_content[uri_start..].to_string();
-                        }
-                    }
-                }
-                in_escape = false;
-                continue;
-            } else if c >= '@' && c <= '~' && c != '[' {
-                in_escape = false;
+    let mut rest = s;
+    while !rest.is_empty() {
+        if rest.starts_with('\x1b') {
+            let len = crate::ansi::escape_len(rest);
+            if let Some(url) = osc8_url(&rest[..len]) {
+                active = (!url.is_empty()).then_some(url);
             }
+            rest = &rest[len..];
             continue;
         }
-
-        if c == '\x1b' {
-            in_escape = true;
-            continue;
+        let end = rest.find('\x1b').unwrap_or(rest.len());
+        for grapheme in rest[..end].graphemes(true) {
+            let w = crate::ansi::grapheme_width(grapheme);
+            if (col..col + w).contains(&column) {
+                return active.map(str::to_string);
+            }
+            col += w;
         }
-
-        if c < ' ' || c == '\x7f' {
-            continue;
-        }
-
-        if col == column && in_osc8 && !osc8_link.is_empty() {
-            return Some(osc8_link);
-        }
-
-        col += UnicodeWidthStr::width(c.to_string().as_str());
+        rest = &rest[end..];
     }
-
     None
 }
 
-/// Apply background color to a line, respecting existing styling.
+/// Rewrite a line's OSC 8 links: `visit` maps each text run (with the URL
+/// around it) and `keep_link` decides which link sequences stay. A close
+/// sequence is judged by the link it closes.
+fn rewrite_osc8_links(
+    line: &str,
+    keep_link: impl Fn(&str) -> bool,
+    visit: impl Fn(&str, Option<&str>) -> String,
+) -> String {
+    if !line.contains("\x1b]8;") {
+        return line.to_string();
+    }
+    let mut result = String::with_capacity(line.len());
+    let mut active: Option<&str> = None;
+    let mut rest = line;
+    while !rest.is_empty() {
+        if rest.starts_with('\x1b') {
+            let len = crate::ansi::escape_len(rest);
+            let code = &rest[..len];
+            match osc8_url(code) {
+                Some(url) => {
+                    let url = (!url.is_empty()).then_some(url);
+                    if keep_link(url.or(active).unwrap_or("")) {
+                        result.push_str(code);
+                    }
+                    active = url;
+                }
+                None => result.push_str(code),
+            }
+            rest = &rest[len..];
+            continue;
+        }
+        let end = rest.find('\x1b').unwrap_or(rest.len());
+        result.push_str(&visit(&rest[..end], active));
+        rest = &rest[end..];
+    }
+    result
+}
+
+/// Remove the OSC 8 wrappers of links whose URL matches, keeping their text
+/// and styling (ice `stripOsc8Links`).
+pub fn strip_osc8_links(line: &str, matches: impl Fn(&str) -> bool) -> String {
+    rewrite_osc8_links(line, |url| !matches(url), |text, _| text.to_string())
+}
+
+/// Wrap every text run inside the link to `url` in `open`/`close`, so the
+/// decoration survives inner style changes (ice `styleOsc8Link`).
+pub fn style_osc8_link(line: &str, url: &str, open: &str, close: &str) -> String {
+    rewrite_osc8_links(
+        line,
+        |_| true,
+        |text, active| {
+            if active == Some(url) {
+                format!("{open}{text}{close}")
+            } else {
+                text.to_string()
+            }
+        },
+    )
+}
+
+/// Whether an SGR parameter list resets the background: empty, `0` or
+/// `49`, skipping the arguments of 38/48 extended colours.
+fn sgr_resets_background(params: &str) -> bool {
+    if params.is_empty() {
+        return true;
+    }
+    let codes: Vec<&str> = params.split(';').collect();
+    let mut i = 0;
+    while i < codes.len() {
+        match codes[i] {
+            "38" | "48" => {
+                i += if codes.get(i + 1) == Some(&"2") { 5 } else { 3 };
+                continue;
+            }
+            "" | "0" | "49" => return true,
+            _ => {}
+        }
+        i += 1;
+    }
+    false
+}
+
+/// Pad `line` to `width` cells and apply `bg_fn`, re-applying it after
+/// every SGR that resets the background so padding stays covered. An
+/// already-wider line is not truncated (ice `applyBackgroundToLine`).
 pub fn apply_background_to_line(
     line: &str,
     width: usize,
     bg_fn: impl Fn(&str) -> String,
 ) -> String {
-    let line_width = visible_width(line);
-    let padding = " ".repeat(width.saturating_sub(line_width));
-    let padded = format!("{}{}", line, padding);
-    bg_fn(&padded)
+    let padded = format!(
+        "{line}{}",
+        " ".repeat(width.saturating_sub(visible_width(line)))
+    );
+    let mut result = String::with_capacity(padded.len() + 16);
+    let mut span_start = 0;
+    let mut offset = 0;
+    while let Some(i) = padded[offset..].find("\x1b[") {
+        let start = offset + i;
+        let len = crate::ansi::escape_len(&padded[start..]);
+        let code = &padded[start..start + len];
+        offset = start + len;
+        let Some(params) = code[2..].strip_suffix('m') else {
+            continue;
+        };
+        if params.bytes().all(|b| b.is_ascii_digit() || b == b';') && sgr_resets_background(params)
+        {
+            result.push_str(&bg_fn(&padded[span_start..start]));
+            result.push_str(code);
+            span_start = offset;
+        }
+    }
+    result.push_str(&bg_fn(&padded[span_start..]));
+    result
 }
 
 #[cfg(test)]
@@ -520,8 +633,12 @@ mod tests {
 
     #[test]
     fn test_truncate_to_width() {
-        assert_eq!(truncate_to_width("Hello World", 5, ""), "Hello");
-        assert_eq!(truncate_to_width("Hello World", 8, "..."), "Hello...");
+        assert_eq!(truncate_to_width("Hello World", 5, ""), "Hello\x1b[0m");
+        assert_eq!(
+            truncate_to_width("Hello World", 8, "..."),
+            "Hello\x1b[0m...\x1b[0m"
+        );
+        assert_eq!(truncate_to_width("Hello", 8, "..."), "Hello");
     }
 
     #[test]
@@ -719,6 +836,168 @@ mod tests {
         // parameter is applied on its own.
         let wrapped = wrap_text_with_ansi("\x1b[38;2;1;2;3;1mhello world", 6);
         assert_eq!(wrapped[1], "\x1b[1;38;2;1;2;3mworld");
+    }
+
+    // truncate-to-width.test.ts ("truncateToWidth"), background-line.test.ts
+    // and tab-width.test.ts.
+
+    #[test]
+    fn truncation_stays_within_width_for_huge_unicode_input() {
+        let text = "🙂界".repeat(100_000);
+        let truncated = truncate_to_width(&text, 40, "…");
+        assert!(visible_width(&truncated) <= 40);
+        assert!(truncated.ends_with("…\x1b[0m"));
+    }
+
+    #[test]
+    fn truncation_keeps_styles_and_brackets_the_ellipsis_with_resets() {
+        let text = format!("\x1b[31m{}\x1b[0m", "hello ".repeat(1000));
+        let truncated = truncate_to_width(&text, 20, "…");
+        assert!(visible_width(&truncated) <= 20);
+        assert!(truncated.contains("\x1b[31m"));
+        assert!(truncated.ends_with("\x1b[0m…\x1b[0m"));
+    }
+
+    #[test]
+    fn truncation_survives_malformed_escapes() {
+        let text = format!("abc\x1bnot-ansi {}", "🙂".repeat(1000));
+        assert!(visible_width(&truncate_to_width(&text, 20, "…")) <= 20);
+    }
+
+    #[test]
+    fn wide_ellipsis_is_clipped_and_bracketed() {
+        assert_eq!(truncate_to_width("abcdef", 1, "🙂"), "");
+        assert_eq!(truncate_to_width("abcdef", 2, "🙂"), "\x1b[0m🙂\x1b[0m");
+        assert_eq!(truncate_to_width("a", 2, "🙂"), "a");
+        assert_eq!(truncate_to_width("界", 2, "🙂"), "界");
+    }
+
+    #[test]
+    fn padded_truncation_fills_the_width() {
+        assert_eq!(
+            visible_width(&truncate_to_width_padded("🙂界🙂界🙂界", 8, "…")),
+            8
+        );
+        assert_eq!(truncate_to_width_padded("", 3, "…"), "   ");
+        assert_eq!(truncate_to_width_padded("ab", 4, "…"), "ab  ");
+    }
+
+    #[test]
+    fn truncation_without_ellipsis_ends_with_reset() {
+        let truncated = truncate_to_width(&format!("\x1b[31m{}", "hello".repeat(100)), 10, "");
+        assert!(visible_width(&truncated) <= 10);
+        assert!(truncated.ends_with("\x1b[0m"));
+    }
+
+    #[test]
+    fn truncation_keeps_a_contiguous_prefix() {
+        assert_eq!(
+            truncate_to_width_padded("🙂\t界 \x1b_abc\x07", 7, "…"),
+            "🙂\t\x1b[0m…\x1b[0m "
+        );
+    }
+
+    #[test]
+    fn background_is_reapplied_after_full_resets() {
+        let bg = |text: &str| format!("\x1b[44m{text}\x1b[49m");
+        let rendered = apply_background_to_line("before\x1b[0mafter", 12, bg);
+        assert!(rendered.contains("\x1b[0m\x1b[44m"), "{rendered:?}");
+        assert!(rendered.contains("\x1b[44mafter \x1b[49m"), "{rendered:?}");
+    }
+
+    #[test]
+    fn background_is_reapplied_after_default_background_resets() {
+        let bg = |text: &str| format!("\x1b[44m{text}\x1b[49m");
+        let rendered = apply_background_to_line("\x1b[100mcode\x1b[49m tail", 12, bg);
+        assert!(
+            rendered.contains("\x1b[49m\x1b[44m tail   \x1b[49m"),
+            "{rendered:?}"
+        );
+    }
+
+    #[test]
+    fn extended_colour_arguments_are_not_background_resets() {
+        let bg = |text: &str| format!("\x1b[44m{text}\x1b[49m");
+        assert_eq!(
+            apply_background_to_line("\x1b[38;5;0mx\x1b[48;2;0;0;49my", 4, bg),
+            bg("\x1b[38;5;0mx\x1b[48;2;0;0;49my  ")
+        );
+    }
+
+    #[test]
+    fn slice_widths_agree_with_visible_width() {
+        let text = "out 192M\t.ice/skill-tests/results-ha";
+        let (slice, width) = slice_with_width(text, 0, 10, true);
+        assert_eq!((slice.as_str(), width), ("out 192M", 8));
+        assert_eq!(visible_width(&slice), width);
+
+        let segments = extract_segments(text, 10, 13, 10, true);
+        assert_eq!(
+            (segments.before.as_str(), segments.before_width),
+            ("out 192M", 8)
+        );
+        let tab_fits = extract_segments(text, 11, 13, 10, true);
+        assert_eq!(tab_fits.before, "out 192M\t");
+        assert_eq!(tab_fits.before_width, 11);
+        assert_eq!(visible_width(&tab_fits.before), tab_fits.before_width);
+    }
+
+    #[test]
+    fn slices_keep_styles_and_respect_wide_edges() {
+        let line = "\x1b[31mab界cd\x1b[0m";
+        assert_eq!(
+            slice_with_width(line, 1, 2, false),
+            ("\x1b[31mb界".into(), 3)
+        );
+        assert_eq!(slice_with_width(line, 1, 2, true), ("\x1b[31mb".into(), 1));
+        // A glyph starting left of the span is never included.
+        assert_eq!(slice_with_width(line, 3, 2, true), ("\x1b[31mc".into(), 1));
+        assert_eq!(slice_by_column(line, 1, 2, true), "\x1b[31mb ");
+        assert_eq!(crate::ansi::slice_by_column(line, 0, 2, false), "ab");
+    }
+
+    #[test]
+    fn after_segment_inherits_style_set_under_the_overlay() {
+        let segments = extract_segments("ab\x1b[1mcd\x1b]8;;https://x\x07ef", 1, 4, 2, true);
+        assert_eq!(segments.before, "a");
+        assert_eq!(segments.after, "\x1b[1m\x1b]8;;https://x\x07ef");
+        assert_eq!(segments.after_width, 2);
+    }
+
+    #[test]
+    fn osc8_hit_test_reads_url_after_params_and_clears_on_close() {
+        let open = "\x1b]8;id=1;https://example.com\x1b\\";
+        let line = format!("a{open}界b\x1b]8;;\x1b\\c");
+        assert_eq!(get_osc8_link_at_column(&line, 0), None);
+        for column in [1, 2, 3] {
+            assert_eq!(
+                get_osc8_link_at_column(&line, column).as_deref(),
+                Some("https://example.com")
+            );
+        }
+        assert_eq!(get_osc8_link_at_column(&line, 4), None);
+        assert_eq!(get_osc8_link_at_column(&line, 9), None);
+    }
+
+    #[test]
+    fn strip_osc8_links_removes_only_matching_wrappers() {
+        let a = "\x1b]8;;https://a\x07";
+        let b = "\x1b]8;;https://b\x1b\\";
+        let line = format!("{a}\x1b[1mA\x1b]8;;\x07 {b}B\x1b]8;;\x1b\\");
+        assert_eq!(
+            strip_osc8_links(&line, |url| url == "https://a"),
+            format!("\x1b[1mA {b}B\x1b]8;;\x1b\\")
+        );
+    }
+
+    #[test]
+    fn style_osc8_link_wraps_each_run_of_the_link() {
+        let a = "\x1b]8;;https://a\x07";
+        let line = format!("x{a}one\x1b[1mtwo\x1b]8;;\x07y");
+        assert_eq!(
+            style_osc8_link(&line, "https://a", "<", ">"),
+            format!("x{a}<one>\x1b[1m<two>\x1b]8;;\x07y")
+        );
     }
 
     #[test]
