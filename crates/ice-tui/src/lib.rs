@@ -157,9 +157,11 @@ pub use tui_main_screen::TuiMainScreen;
 pub use undo_stack::{RedoStack, UndoRedoManager, UndoStack};
 pub use user_message::UserMessageComponent;
 pub use utils::{
-    apply_background_to_line, get_grapheme_segmenter, get_osc8_link_at_column, is_whitespace_char,
-    slice_by_column, truncate_to_width, visible_width as visible_width_util, wrap_text_with_ansi,
-    Grapheme, GraphemeSegmenter,
+    apply_background_to_line, extract_segments, get_grapheme_segmenter, get_osc8_link_at_column,
+    is_punctuation_char, is_whitespace_char, slice_by_column, slice_with_width, strip_osc8_links,
+    style_osc8_link, truncate_to_width, truncate_to_width_padded,
+    visible_width as visible_width_util, wrap_text_with_ansi, Grapheme, GraphemeSegmenter,
+    Segments,
 };
 pub use visual_truncate::{truncate_to_visual_lines, VisualTruncateResult};
 pub use vstack::{

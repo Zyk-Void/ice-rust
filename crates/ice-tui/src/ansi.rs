@@ -349,48 +349,69 @@ impl StyleTracker {
     }
 }
 
-/// Slice a string by visible column positions.
+/// Slice by visible columns: the graphemes that start in
+/// `start_col..start_col + width`, with the escape sequences seen before the
+/// first one replayed ahead of it and those inside the span kept.
 ///
-/// Returns a substring that starts at `start_col` and has at most `width` visible columns.
-/// Preserves ANSI escape sequences appropriately.
-pub fn slice_by_column(s: &str, start_col: usize, width: usize, preserve_styles: bool) -> String {
+/// `strict` also drops a wide grapheme that would cross the right edge, so
+/// the result never exceeds `width` cells. A grapheme that starts left of
+/// `start_col` is never included. Returns the text and its cell width; no
+/// padding is added. Port of ice `sliceWithWidth`.
+pub fn slice_with_width(
+    line: &str,
+    start_col: usize,
+    width: usize,
+    strict: bool,
+) -> (String, usize) {
     if width == 0 {
-        return String::new();
+        return (String::new(), 0);
     }
-
-    let stripped = strip_ansi(s);
-    let segments: Vec<&str> = stripped.graphemes(true).collect();
-
-    // Find the character indices for the column range
-    let mut current_col = 0;
-    let mut start_idx = None;
-    let mut end_idx = segments.len();
-    let mut col_count = 0;
-
-    for (i, seg) in segments.iter().enumerate() {
-        let seg_width = grapheme_width(seg);
-        if current_col >= start_col && start_idx.is_none() {
-            start_idx = Some(i);
+    let end_col = start_col + width;
+    let mut result = String::new();
+    let mut result_width = 0;
+    let mut col = 0;
+    let mut pending = String::new();
+    let mut rest = line;
+    while !rest.is_empty() && col < end_col {
+        if rest.starts_with('\x1b') {
+            let len = escape_len(rest);
+            if col >= start_col {
+                result.push_str(&rest[..len]);
+            } else {
+                pending.push_str(&rest[..len]);
+            }
+            rest = &rest[len..];
+            continue;
         }
-        if start_idx.is_some() {
-            col_count += seg_width;
-            if col_count >= width {
-                end_idx = i + 1;
+        let text_end = rest.find('\x1b').unwrap_or(rest.len());
+        for grapheme in rest[..text_end].graphemes(true) {
+            let w = grapheme_width(grapheme);
+            if col >= start_col && (!strict || col + w <= end_col) {
+                result.push_str(&std::mem::take(&mut pending));
+                result.push_str(grapheme);
+                result_width += w;
+            }
+            col += w;
+            if col >= end_col {
                 break;
             }
         }
-        current_col += seg_width;
+        rest = &rest[text_end..];
     }
+    (result, result_width)
+}
 
-    let start_idx = start_idx.unwrap_or(segments.len());
-    let result: String = segments[start_idx..end_idx].iter().copied().collect();
-
-    if preserve_styles && result != stripped {
-        // TODO: Preserve ANSI styles from the original string
-        // This is a simplified version
-        result
+/// Slice a string by visible column positions, at most `width` cells.
+///
+/// Wide graphemes that would cross the right edge are left out. With
+/// `preserve_styles` the escape sequences that apply to the span are kept;
+/// otherwise the result is plain text.
+pub fn slice_by_column(s: &str, start_col: usize, width: usize, preserve_styles: bool) -> String {
+    let (text, _) = slice_with_width(s, start_col, width, true);
+    if preserve_styles {
+        text
     } else {
-        result
+        strip_ansi(&text)
     }
 }
 
