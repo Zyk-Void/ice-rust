@@ -380,7 +380,7 @@ pub(super) fn extract_selected_text(
 /// (`arboard`) on non-Android platforms; otherwise returns `false` so the
 /// caller degrades to a hint.
 #[cfg(all(feature = "clipboard", not(target_os = "android")))]
-pub(super) fn copy_to_clipboard(text: &str) -> bool {
+fn copy_to_system_clipboard(text: &str) -> bool {
     match arboard::Clipboard::new() {
         Ok(mut cb) => cb.set_text(text).is_ok(),
         Err(_) => false,
@@ -388,8 +388,41 @@ pub(super) fn copy_to_clipboard(text: &str) -> bool {
 }
 
 #[cfg(any(not(feature = "clipboard"), target_os = "android"))]
-pub(super) fn copy_to_clipboard(_text: &str) -> bool {
+fn copy_to_system_clipboard(_text: &str) -> bool {
     false
+}
+
+/// Copy `text` like ice `copyToClipboard`: the system clipboard first, then,
+/// over SSH or mosh (where that clipboard is the remote machine's) or when it
+/// failed, also an OSC 52 request so the user's own terminal stores it.
+pub(super) fn copy_to_clipboard(text: &str) -> bool {
+    let copied = copy_to_system_clipboard(text);
+    if copied && !is_remote_session(|key| std::env::var_os(key)) {
+        return true;
+    }
+    match osc52_sequence(text) {
+        Some(sequence) => {
+            use std::io::Write;
+            let mut out = std::io::stdout().lock();
+            out.write_all(sequence.as_bytes()).is_ok() && out.flush().is_ok() || copied
+        }
+        None => copied,
+    }
+}
+
+/// ice `isRemoteSession`.
+pub(super) fn is_remote_session(env: impl Fn(&str) -> Option<std::ffi::OsString>) -> bool {
+    ["SSH_CONNECTION", "SSH_CLIENT", "MOSH_CONNECTION"]
+        .iter()
+        .any(|key| env(key).is_some_and(|v| !v.is_empty()))
+}
+
+/// The OSC 52 clipboard write for `text`, or `None` when the payload is too
+/// large for terminals to take reliably (ice `MAX_OSC52_ENCODED_LENGTH`).
+pub(super) fn osc52_sequence(text: &str) -> Option<String> {
+    const MAX_ENCODED: usize = 100_000;
+    let encoded = base64::engine::general_purpose::STANDARD.encode(text.as_bytes());
+    (encoded.len() <= MAX_ENCODED).then(|| format!("\x1b]52;c;{encoded}\x07"))
 }
 
 /// Best-effort clipboard text read for Ctrl+V paste. The optional `clipboard`
