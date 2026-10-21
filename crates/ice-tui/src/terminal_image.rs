@@ -209,12 +209,18 @@ pub fn encode_kitty(data: &[u8], options: &ImageRenderOptions) -> String {
         .map(|c| std::str::from_utf8(c).unwrap_or(""))
         .collect();
 
-    for (i, chunk) in chunks.iter().enumerate() {
-        let _m = if i == chunks.len() - 1 { 0 } else { 1 };
-        parts.push(format!("\x1b_G{};{}\x1b\\", control, chunk));
-        // After first chunk, don't repeat control
-        if i == 0 {
-            control.clear();
+    // A single frame carries no `m`; a chunked transmission marks every frame
+    // but the last with `m=1` and repeats only `m` after the first.
+    if chunks.len() == 1 {
+        parts.push(format!("\x1b_G{};{}\x1b\\", control, chunks[0]));
+    } else {
+        for (i, chunk) in chunks.iter().enumerate() {
+            let m = if i == chunks.len() - 1 { 0 } else { 1 };
+            if i == 0 {
+                parts.push(format!("\x1b_G{control},m={m};{chunk}\x1b\\"));
+            } else {
+                parts.push(format!("\x1b_Gm={m};{chunk}\x1b\\"));
+            }
         }
     }
 
@@ -554,5 +560,32 @@ mod tests {
         let dims = get_png_dimensions(&data).unwrap();
         assert_eq!(dims.width, 16);
         assert_eq!(dims.height, 32);
+    }
+
+    #[test]
+    fn kitty_chunks_carry_continuation_flags() {
+        // Regression: `m=` was computed but never written, so terminals could
+        // not tell a continued transmission from a finished one. Mirrors ice
+        // `encodeKitty`: one frame has no `m`; otherwise first `m=1` with the
+        // controls, middle `m=1`, last `m=0`.
+        let options = ImageRenderOptions {
+            id: Some(7),
+            ..Default::default()
+        };
+        let single = encode_kitty(b"png", &options);
+        assert_eq!(single.matches("\x1b_G").count(), 1);
+        assert!(!single.contains("m="));
+
+        // 7000 bytes -> 9336 base64 chars -> three chunks of at most 4000.
+        let encoded = encode_kitty(&[0u8; 7000], &options);
+        let frames: Vec<&str> = encoded.split("\x1b\\").filter(|f| !f.is_empty()).collect();
+        assert_eq!(frames.len(), 3);
+        let controls: Vec<&str> = frames
+            .iter()
+            .map(|f| f.trim_start_matches("\x1b_G").split(';').next().unwrap())
+            .collect();
+        assert_eq!(controls[0], "a=T,f=100,C=1,q=2,i=7,m=1");
+        assert_eq!(controls[1], "m=1");
+        assert_eq!(controls[2], "m=0");
     }
 }

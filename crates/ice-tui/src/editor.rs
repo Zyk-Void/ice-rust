@@ -113,6 +113,15 @@ fn snap_boundary(s: &str, idx: usize) -> usize {
         .unwrap_or(0)
 }
 
+/// Apply a `word_navigation` helper, which works in char indices, to the
+/// byte-offset caret: convert the caret to a char index, then the result back
+/// to a byte offset on a char boundary.
+fn word_target(s: &str, byte_col: usize, find: fn(&str, usize) -> usize) -> usize {
+    let char_col = s[..snap_boundary(s, byte_col)].chars().count();
+    let target = find(s, char_col);
+    s.char_indices().nth(target).map_or(s.len(), |(b, _)| b)
+}
+
 /// A folded store of a large paste, keyed by the id rendered in its marker.
 /// The document (`EditorState::lines`) only ever carries the short
 /// `[paste #id …]` marker; the real text lives here until the draft is
@@ -418,7 +427,10 @@ impl Editor {
             if pastes.remove(&id).is_none() {
                 return;
             }
-            let higher: Vec<u32> = pastes.keys().copied().filter(|k| *k > id).collect();
+            // Ascending, so each id moves into the slot its predecessor just
+            // vacated; HashMap order could overwrite a not-yet-moved entry.
+            let mut higher: Vec<u32> = pastes.keys().copied().filter(|k| *k > id).collect();
+            higher.sort_unstable();
             for old in higher {
                 if let Some(entry) = pastes.remove(&old) {
                     pastes.insert(old - 1, entry);
@@ -1049,7 +1061,11 @@ impl Editor {
         let killed = if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             let col = state.cursor_col;
-            let start = crate::word_navigation::find_word_backward(&state.lines[row], col);
+            let start = word_target(
+                &state.lines[row],
+                col,
+                crate::word_navigation::find_word_backward,
+            );
             let dead: String = state.lines[row].drain(start..col).collect();
             state.cursor_col = start;
             dead
@@ -1068,7 +1084,11 @@ impl Editor {
             let col = state.cursor_col;
             // Kill only the current word (not the trailing delimiter) —
             // `find_word_end` stops at the last word char.
-            let end = crate::word_navigation::find_word_end(&state.lines[row], col);
+            let end = word_target(
+                &state.lines[row],
+                col,
+                crate::word_navigation::find_word_end,
+            );
             let dead: String = state.lines[row].drain(col..end).collect();
             dead
         } else {
@@ -1082,8 +1102,11 @@ impl Editor {
     fn cursor_word_left(&self) {
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
-            state.cursor_col =
-                crate::word_navigation::find_word_backward(&state.lines[row], state.cursor_col);
+            state.cursor_col = word_target(
+                &state.lines[row],
+                state.cursor_col,
+                crate::word_navigation::find_word_backward,
+            );
         }
     }
 
@@ -1091,8 +1114,11 @@ impl Editor {
     fn cursor_word_right(&self) {
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
-            state.cursor_col =
-                crate::word_navigation::find_word_forward(&state.lines[row], state.cursor_col);
+            state.cursor_col = word_target(
+                &state.lines[row],
+                state.cursor_col,
+                crate::word_navigation::find_word_forward,
+            );
         }
     }
 
@@ -1117,7 +1143,9 @@ impl Editor {
     /// Jump the caret to the next/previous occurrence of `target` (pi
     /// `jumpToChar`): scan the current line from after/before the caret, then
     /// onward/backward line by line. Byte-safe: `find`/`rfind` return char
-    /// boundaries and all search offsets start on one.
+    /// boundaries and all search offsets start on one. On the caret's line a
+    /// forward search starts after the char under the caret and a backward
+    /// search accepts any match that starts before the caret.
     fn jump_to_char(&self, target: char, dir: i32) {
         let forward = dir > 0;
         let mut state = self.state.lock().unwrap();
@@ -1127,10 +1155,14 @@ impl Editor {
         loop {
             let line = &state.lines[row];
             let search_from = if row == start_row {
+                let caret = snap_boundary(line, state.cursor_col);
                 if forward {
-                    (state.cursor_col + target.len_utf8()).min(line.len())
+                    line[caret..]
+                        .chars()
+                        .next()
+                        .map_or(line.len(), |c| caret + c.len_utf8())
                 } else {
-                    state.cursor_col.saturating_sub(target.len_utf8())
+                    caret
                 }
             } else if forward {
                 0
@@ -1871,6 +1903,83 @@ l12",
         editor.handle_key(mk(KeyModifiers::CONTROL, KeyCode::Char('d')));
         assert_eq!(editor.get_text(), "ac");
     }
+
+    #[test]
+    fn word_ops_on_multibyte_text_use_byte_cursor() {
+        // Regression: word helpers return char indices but `cursor_col` is a
+        // byte offset; mixing them indexed past the char vector or drained
+        // inside a UTF-8 sequence. "你好 世界" is 13 bytes, 5 chars.
+        use crossterm::event::{KeyCode, KeyModifiers};
+        let mk = |m, c| crossterm::event::KeyEvent::new(c, m);
+        let editor = Editor::simple();
+
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 13);
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Left));
+        assert_eq!(editor.cursor_position(), (0, 7));
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Left));
+        assert_eq!(editor.cursor_position(), (0, 0));
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Right));
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
+        assert_eq!(editor.get_text(), "你好 ");
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 13);
+        editor.handle_key(mk(KeyModifiers::CONTROL, KeyCode::Char('w')));
+        assert_eq!(editor.get_text(), "你好 ");
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        // Kill forward from the start removes the whole first word.
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 0);
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
+        assert_eq!(editor.get_text(), " 世界");
+    }
+
+    #[test]
+    fn char_jump_steps_over_the_char_at_the_caret_not_the_target() {
+        // Regression: the search offset used the *target's* UTF-8 length, so
+        // a multibyte line sliced inside a char (panic) and a backward jump
+        // skipped a match directly before the caret. Mirrors ice
+        // `jumpToChar`: forward starts after the char under the caret,
+        // backward finds a match that starts before the caret.
+        use crossterm::event::{KeyCode, KeyModifiers};
+        let mk = |m, c| crossterm::event::KeyEvent::new(c, m);
+        let jump = |editor: &Editor, backward: bool, c: char| {
+            let mods = if backward {
+                KeyModifiers::CONTROL | KeyModifiers::ALT
+            } else {
+                KeyModifiers::CONTROL
+            };
+            editor.handle_key(mk(mods, KeyCode::Char(']')));
+            editor.handle_key(mk(KeyModifiers::NONE, KeyCode::Char(c)));
+        };
+        let editor = Editor::simple();
+
+        editor.set_text("你x");
+        editor.set_cursor(0, 0);
+        jump(&editor, false, 'x');
+        assert_eq!(editor.cursor_position(), (0, 3));
+
+        editor.set_text("x世");
+        editor.set_cursor(0, 0);
+        jump(&editor, false, '世');
+        assert_eq!(editor.cursor_position(), (0, 1));
+
+        editor.set_text("axb");
+        editor.set_cursor(0, 2);
+        jump(&editor, true, 'x');
+        assert_eq!(editor.cursor_position(), (0, 1));
+
+        editor.set_text("世x界");
+        editor.set_cursor(0, 7);
+        jump(&editor, true, '世');
+        assert_eq!(editor.cursor_position(), (0, 0));
+    }
+
     #[test]
     fn test_selection_cut_copy_paste() {
         let editor = Editor::simple();
@@ -2342,6 +2451,28 @@ l12",
         // Only the second survives, renumbered to #1, and it still expands.
         assert_eq!(editor.get_text(), "[paste #1 +12 lines]");
         assert_eq!(editor.get_expanded_text(), second);
+    }
+
+    #[test]
+    fn deleting_a_marker_renumbers_many_higher_pastes_without_collisions() {
+        // Regression: renumbering walked the HashMap's higher ids in
+        // arbitrary order, so moving #3 to #2 before #2 had moved to #1
+        // overwrote #2's payload. Six pastes make that order near-certain.
+        let editor = Editor::simple();
+        let payloads: Vec<String> = (1..=6).map(|n| format!("{n}\n").repeat(11)).collect();
+        for p in &payloads {
+            editor.handle_paste(p);
+        }
+        let marker_one = "[paste #1 +12 lines]";
+        editor.set_cursor(0, marker_one.len());
+        let _ = editor.handle_key(crossterm::event::KeyEvent::new(
+            KeyCode::Backspace,
+            KeyModifiers::NONE,
+        ));
+
+        let expected_text: String = (1..=5).map(|n| format!("[paste #{n} +12 lines]")).collect();
+        assert_eq!(editor.get_text(), expected_text);
+        assert_eq!(editor.get_expanded_text(), payloads[1..].concat());
     }
 
     #[test]
