@@ -346,6 +346,9 @@ pub(super) async fn replace_session_ui(
     chat: &Arc<Container>,
     state: &Arc<TuiState>,
 ) {
+    state.current_assistant.lock().unwrap().take();
+    state.cache_tracker.lock().unwrap().reset();
+    state.clear_auto_send();
     state.new_message_count.reset();
     state.run_started_at.lock().unwrap().take();
     *state.selection_start.lock().unwrap() = None;
@@ -367,6 +370,9 @@ pub(super) async fn replace_session_ui(
     state.footer.set_cache_hit_rate(None);
     state.footer.set_context_tokens(None);
     *state.last_assistant_text.lock().unwrap() = last_text;
+    // The harness rebuilds queued prompts from the selected session's durable
+    // records. Reconcile the dock with that queue, including an empty /new.
+    state.set_pending_queue(harness.queued_messages().await.unwrap_or_default());
     state.set_status(RunStatus::Idle);
 }
 
