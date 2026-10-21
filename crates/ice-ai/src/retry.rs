@@ -214,7 +214,7 @@ pub fn is_retryable_assistant_error(message: &AssistantMessage) -> bool {
     }
     let retryable = RETRYABLE.get_or_init(|| {
         Regex::new(concat!(
-            "(?i)(overloaded|rate.?limit|too many requests|429|500|502|503|504|524|",
+            "(?i)(overloaded|rate.?limit|too many requests|(?:^|\\D)(?:429|500|502|503|504|524)(?:\\D|$)|",
             "service.?unavailable|server.?error|internal.?error|provider.?returned.?error|",
             "network.?error|connection.?error|connection.?refused|connection.?lost|",
             "other side closed|fetch failed|getaddrinfo|ENOTFOUND|EAI_AGAIN|",
@@ -413,6 +413,19 @@ mod tests {
         assert!(!is_retryable_assistant_error(&error_message(
             "billing server error 500"
         )));
+    }
+
+    #[test]
+    fn status_codes_match_only_as_whole_numbers() {
+        for text in ["HTTP 503", "status=502", "503"] {
+            assert!(is_retryable_assistant_error(&error_message(text)), "{text}");
+        }
+        for text in ["invalid id 15003", "port 5000 refused value"] {
+            assert!(
+                !is_retryable_assistant_error(&error_message(text)),
+                "{text}"
+            );
+        }
     }
 
     #[test]
