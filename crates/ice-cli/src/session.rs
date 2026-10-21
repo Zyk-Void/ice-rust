@@ -2625,37 +2625,75 @@ pub(crate) async fn fork_session_storage(
     harness: &AgentHarness,
     cwd: &str,
 ) -> Result<Session, String> {
-    use ice_harness::session::jsonl::{JsonlSessionRepo, JsonlSessionRepoOptions};
+    fork_session_storage_with_options(
+        harness,
+        cwd,
+        &ice_harness::session::types::ForkOptions::default(),
+    )
+    .await
+}
+
+/// Fork the exact active JSONL file into its current directory, preserving
+/// custom locations and the normal exclusive lock for the new session.
+pub(crate) async fn fork_session_storage_with_options(
+    harness: &AgentHarness,
+    cwd: &str,
+    options: &ice_harness::session::types::ForkOptions,
+) -> Result<Session, String> {
+    use ice_harness::session::jsonl::{
+        JsonlSessionRepo, JsonlSessionRepoOptions, JsonlSessionStorage,
+    };
     use ice_tools::FileSystem;
 
-    let dir = default_session_dir(Path::new(cwd));
+    if harness
+        .snapshot()
+        .await
+        .map_err(|error| error.to_string())?
+        .active
+        .is_some()
+    {
+        return Err("wait for the current run to finish before forking".into());
+    }
+    let active = harness.session();
+    let source_path = active
+        .storage()
+        .persistence_path()
+        .ok_or("current session is not saved to a JSONL file")?;
+    let dir = Path::new(&source_path)
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+        .ok_or("current session file has no directory")?;
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));
     let fs: Arc<dyn FileSystem> = env.clone();
+    let source = JsonlSessionStorage::load(
+        fs.clone(),
+        &source_path,
+        Arc::new(SystemClock),
+        Arc::new(DefaultIdGenerator::new()),
+    )
+    .await
+    .map_err(|error| error.to_string())?
+    .jsonl_metadata();
+    if source.id != active.storage().metadata().id {
+        return Err("current session file no longer matches the active session".into());
+    }
     let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
         fs,
         sessions_root: dir.to_string_lossy().into_owned(),
         clock: Arc::new(SystemClock),
         ids: Arc::new(DefaultIdGenerator::new()),
     });
-    // The fork needs the rich JSONL metadata (with the on-disk path); resolve
-    // it from the session list by the current session's id.
-    let id = harness.session().storage().metadata().id.clone();
-    let metas = list_session_metadata(cwd)
-        .await
-        .map_err(|e| e.to_string())?;
-    let Some(source) = metas.iter().find(|m| m.id == id) else {
-        return Err(format!("current session {id} not found on disk"));
-    };
     let fork_storage = repo
-        .fork_typed(
-            source,
+        .fork_in_directory(
+            &source,
+            &dir.to_string_lossy(),
             &ice_harness::session::jsonl::JsonlSessionCreateOptions {
                 id: None,
                 parent_session_id: Some(source.id.clone()),
                 cwd: cwd.to_string(),
                 metadata: None,
             },
-            &ice_harness::session::types::ForkOptions::default(),
+            options,
         )
         .await
         .map_err(|e| e.to_string())?;

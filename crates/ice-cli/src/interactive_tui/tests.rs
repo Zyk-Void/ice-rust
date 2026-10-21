@@ -4218,3 +4218,388 @@ fn selection_preserves_combining_and_emoji_graphemes_at_the_edge() {
         Some("👩‍💻")
     );
 }
+
+/// First, earlier, and latest prompts all fork before the selected entry,
+/// preserve the original file, and restore the complete prompt for revision.
+#[test]
+fn fork_picker_preserves_exact_source_file_and_restores_each_prompt() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let source_project = tempfile::tempdir().unwrap();
+                let custom = tempfile::tempdir().unwrap();
+                let source = crate::session::create_jsonl_session_in_directory(
+                    custom.path(),
+                    &source_project.path().to_string_lossy(),
+                )
+                .await
+                .unwrap();
+                let old_id = source.storage().metadata().id.clone();
+                let old_path = source.storage().persistence_path().unwrap();
+                let prompts = [
+                    "first prompt\n猫🙂",
+                    "earlier prompt\nrevise this",
+                    "latest prompt",
+                ];
+                for (index, prompt) in prompts.iter().enumerate() {
+                    source
+                        .append_message(user_message_with_images(prompt, Vec::new()))
+                        .await
+                        .unwrap();
+                    let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+                    reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                        kind: ice_ai::types::TextContentType,
+                        text: format!("reply {index}"),
+                        text_signature: None,
+                    })];
+                    reply.usage.input = 100;
+                    reply.usage.output = 2;
+                    source
+                        .append_message(AgentMessage::Assistant(Box::new(reply)))
+                        .await
+                        .unwrap();
+                }
+                let old_bytes = std::fs::read(&old_path).unwrap();
+                // A different file in the default tree deliberately has the same
+                // session id: resolving by id would copy this decoy instead.
+                let decoy = crate::session::create_jsonl_session_with_id(
+                    &crate::session::default_session_dir(cwd.path()),
+                    &cwd_str,
+                    Some(old_id.clone()),
+                )
+                .await
+                .unwrap();
+                decoy
+                    .append_message(user_message_with_images("wrong file", Vec::new()))
+                    .await
+                    .unwrap();
+                let decoy_path = decoy.storage().persistence_path().unwrap();
+                let decoy_bytes = std::fs::read(&decoy_path).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let context = ice_extensions::ToolCallContext::new(cwd_str);
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                for (index, prompt) in prompts.iter().enumerate() {
+                    crate::session::set_active_session(&harness, source.clone(), Some(&context))
+                        .await
+                        .unwrap();
+                    let messages = user_messages_for_forking(&harness).await;
+                    assert_eq!(
+                        messages
+                            .iter()
+                            .map(|(_, text)| text.as_str())
+                            .collect::<Vec<_>>(),
+                        prompts
+                    );
+                    let selection = ForkSelection {
+                        session_id: old_id.clone(),
+                        session_path: Some(old_path.clone()),
+                        entry_id: messages[index].0.clone(),
+                    };
+                    state.footer.add_usage(999, 999, 0, 0, 1.0);
+                    state.tool_components.lock().unwrap().insert(
+                        "old".into(),
+                        Arc::new(ToolExecutionComponent::new("read", "old")),
+                    );
+                    state.editor.set_text("draft before fork");
+                    let restored = fork_before_message(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &context,
+                        &selection,
+                    )
+                    .await
+                    .expect("fork succeeds");
+                    assert_eq!(restored, *prompt);
+                    restore_fork_prompt(&state.editor, &restored);
+                    assert_eq!(state.editor.get_text(), *prompt);
+                    assert_eq!(
+                        state.editor.cursor_position(),
+                        (
+                            prompt.matches('\n').count(),
+                            prompt.rsplit('\n').next().unwrap().len()
+                        ),
+                    );
+                    let active = harness.session();
+                    let new_path = active.storage().persistence_path().unwrap();
+                    assert_ne!(active.storage().metadata().id, old_id);
+                    assert_eq!(
+                        active.storage().metadata().parent_session_id.as_deref(),
+                        Some(old_id.as_str())
+                    );
+                    assert_eq!(
+                        std::path::Path::new(&new_path).parent(),
+                        Some(custom.path())
+                    );
+                    let copied = user_messages_for_forking(&harness).await;
+                    assert_eq!(
+                        copied
+                            .iter()
+                            .map(|(_, text)| text.as_str())
+                            .collect::<Vec<_>>(),
+                        prompts[..index],
+                    );
+                    let usage = state.footer.usage();
+                    assert_eq!(
+                        (usage.input, usage.output),
+                        (100 * index as i64, 2 * index as i64)
+                    );
+                    assert!(state.tool_components.lock().unwrap().is_empty());
+                    assert_eq!(
+                        *state.last_assistant_text.lock().unwrap(),
+                        if index == 0 {
+                            String::new()
+                        } else {
+                            format!("reply {}", index - 1)
+                        },
+                    );
+                    assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                    assert_eq!(std::fs::read(&decoy_path).unwrap(), decoy_bytes);
+                    let lock = std::fs::OpenOptions::new()
+                        .write(true)
+                        .open(format!("{new_path}.lock"))
+                        .unwrap();
+                    assert!(
+                        fs2::FileExt::try_lock_exclusive(&lock).is_err(),
+                        "fork must own its session lock"
+                    );
+                }
+                // The extension's whole-branch fork shares the exact same path
+                // and lock helper, without changing the active session by itself.
+                crate::session::set_active_session(&harness, source, Some(&context))
+                    .await
+                    .unwrap();
+                let whole =
+                    crate::session::fork_session_storage(&harness, &cwd.path().to_string_lossy())
+                        .await
+                        .unwrap();
+                assert_eq!(
+                    harness.session().storage().persistence_path().as_deref(),
+                    Some(old_path.as_str())
+                );
+                assert_eq!(
+                    std::path::Path::new(&whole.storage().persistence_path().unwrap()).parent(),
+                    Some(custom.path())
+                );
+                assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+#[test]
+fn fork_picker_rejects_stale_files_missing_messages_and_busy_state() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let custom = tempfile::tempdir().unwrap();
+                let original =
+                    crate::session::create_jsonl_session_in_directory(custom.path(), &cwd_str)
+                        .await
+                        .unwrap();
+                original
+                    .append_message(user_message_with_images("original prompt", Vec::new()))
+                    .await
+                    .unwrap();
+                let original_path = original.storage().persistence_path().unwrap();
+                let bytes = std::fs::read(&original_path).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let context = ice_extensions::ToolCallContext::new(cwd_str);
+                crate::session::set_active_session(&harness, original.clone(), Some(&context))
+                    .await
+                    .unwrap();
+                let selection = ForkSelection {
+                    session_id: original.storage().metadata().id.clone(),
+                    session_path: Some(original_path.clone()),
+                    entry_id: user_messages_for_forking(&harness).await[0].0.clone(),
+                };
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                state.editor.set_text("keep this draft");
+                for bad in [
+                    ForkSelection {
+                        session_id: "different".into(),
+                        ..selection.clone()
+                    },
+                    ForkSelection {
+                        entry_id: "missing".into(),
+                        ..selection.clone()
+                    },
+                ] {
+                    assert!(fork_before_message(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &context,
+                        &bad
+                    )
+                    .await
+                    .is_none());
+                }
+                for status in [RunStatus::Working, RunStatus::Aborting] {
+                    state.set_status(status);
+                    assert!(fork_before_message(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &context,
+                        &selection
+                    )
+                    .await
+                    .is_none());
+                    assert!(
+                        !fork_session(
+                            &harness,
+                            cwd.path(),
+                            &chat,
+                            &state,
+                            &context,
+                            &Default::default()
+                        )
+                        .await
+                    );
+                }
+                state.set_status(RunStatus::Idle);
+                // A resumed copy has both the same session id and entry ids.
+                // File identity must invalidate the old selector nonetheless.
+                let copied = tempfile::tempdir().unwrap();
+                let copied_path = copied.path().join("copied.jsonl");
+                std::fs::write(&copied_path, &bytes).unwrap();
+                let storage = ice_harness::session::jsonl::JsonlSessionStorage::load(
+                    Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+                        cwd.path().to_path_buf(),
+                    )),
+                    &copied_path.to_string_lossy(),
+                    Arc::new(ice_harness::session::memory::SystemClock),
+                    Arc::new(ice_harness::session::session::DefaultIdGenerator::new()),
+                )
+                .await
+                .unwrap();
+                crate::session::set_active_session(
+                    &harness,
+                    ice_harness::session::Session::new(Arc::new(storage), None),
+                    Some(&context),
+                )
+                .await
+                .unwrap();
+                assert!(fork_message_text(&harness, &selection.entry_id)
+                    .await
+                    .is_some());
+                assert!(fork_before_message(
+                    &harness,
+                    cwd.path(),
+                    &chat,
+                    &state,
+                    &context,
+                    &selection
+                )
+                .await
+                .is_none());
+                assert_eq!(state.editor.get_text(), "keep this draft");
+                assert_eq!(std::fs::read(&original_path).unwrap(), bytes);
+                assert_eq!(std::fs::read(&copied_path).unwrap(), bytes);
+                for dir in [custom.path(), copied.path()] {
+                    let count = std::fs::read_dir(dir)
+                        .unwrap()
+                        .filter_map(Result::ok)
+                        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "jsonl"))
+                        .count();
+                    assert_eq!(count, 1, "rejected selections must not create a fork");
+                }
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+#[test]
+fn fork_picker_defaults_to_latest_and_cancel_preserves_draft() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                for prompt in ["first", "middle", "latest\nsecond line", ""] {
+                    harness
+                        .session()
+                        .append_message(user_message_with_images(prompt, Vec::new()))
+                        .await
+                        .unwrap();
+                }
+                let messages = user_messages_for_forking(&harness).await;
+                assert_eq!(messages.len(), 3, "empty prompts are not fork choices");
+                assert_eq!(messages.last().unwrap().1, "latest\nsecond line");
+                let latest = messages.last().unwrap().0.clone();
+                let state = test_tui_state();
+                let editor = state.editor.clone();
+                editor.set_text("unsent draft");
+                let editor_container = Arc::new(Container::new());
+                editor_container.add_child(editor.clone());
+                let chat = Arc::new(Container::new());
+                let tui = Arc::new(TuiAltScreen::new(
+                    Box::new(ProcessTerminal::new()),
+                    true,
+                    None,
+                ));
+                let (tx, mut rx) = mpsc::unbounded_channel();
+                for key in [KeyCode::Esc, KeyCode::Enter] {
+                    open_fork_selector(
+                        &harness,
+                        &state,
+                        &editor_container,
+                        &editor,
+                        &tui,
+                        &chat,
+                        &tx,
+                    )
+                    .await;
+                    let (view, kind) = state.active_selector.lock().unwrap().clone().unwrap();
+                    assert!(matches!(kind, SelectorKind::Fork));
+                    view.handle_key(KeyEvent::new(key, KeyModifiers::NONE));
+                    assert!(!state.selector_open());
+                    assert_eq!(editor.get_text(), "unsent draft");
+                    if key == KeyCode::Esc {
+                        assert!(rx.try_recv().is_err());
+                    } else {
+                        let TuiMessage::ForkBefore(selected) = rx.try_recv().unwrap() else {
+                            panic!("fork selection expected")
+                        };
+                        assert_eq!(selected.entry_id, latest);
+                        assert_eq!(
+                            selected.session_id,
+                            harness.session().storage().metadata().id
+                        );
+                    }
+                }
+                state.set_status(RunStatus::Working);
+                open_fork_selector(
+                    &harness,
+                    &state,
+                    &editor_container,
+                    &editor,
+                    &tui,
+                    &chat,
+                    &tx,
+                )
+                .await;
+                assert!(!state.selector_open());
+                assert!(rx.try_recv().is_err());
+                harness.close().await.unwrap();
+            })
+    })
+}

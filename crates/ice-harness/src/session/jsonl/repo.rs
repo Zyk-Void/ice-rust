@@ -311,6 +311,29 @@ impl JsonlSessionRepo {
         options: &JsonlSessionCreateOptions,
         fork: &ForkOptions,
     ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_at_directory(source, options, fork, None).await
+    }
+
+    /// Fork directly into the supplied session directory. The directory is
+    /// already resolved by the caller, as when continuing beside a resumed file.
+    pub async fn fork_in_directory(
+        &self,
+        source: &JsonlSessionMetadata,
+        directory: &str,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_at_directory(source, options, fork, Some(directory))
+            .await
+    }
+
+    async fn fork_at_directory(
+        &self,
+        source: &JsonlSessionMetadata,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+        directory: Option<&str>,
+    ) -> SessionResult<JsonlSessionStorage> {
         let source_storage = self.open_by_jsonl_metadata(source).await?;
         // TS: parentSessionId ?? source.id.
         let mut create_options = options.clone();
@@ -320,7 +343,7 @@ impl JsonlSessionRepo {
         let destination = self.resolve_create_destination(&create_options).await?;
         self.claim_create_destination(&destination, async {
             let (header, path) = self
-                .prepare_create(&destination, &create_options, None)
+                .prepare_create(&destination, &create_options, directory)
                 .await?;
             source_storage
                 .fork(&path, header, fork, self.clock.clone(), self.ids.clone())

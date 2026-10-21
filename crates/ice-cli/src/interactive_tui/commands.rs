@@ -424,10 +424,10 @@ impl SlashCommand for ForkCommand {
         "/fork"
     }
     fn description(&self) -> &'static str {
-        "Fork the session into a new one"
+        "Fork from an earlier message into a new session"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::ForkSession);
+        let _ = ctx.tx.send(TuiMessage::OpenForkSelector);
     }
 }
 

@@ -90,10 +90,6 @@ pub(super) async fn share_session(harness: &AgentHarness, chat: &Arc<Container>)
 // the TUI loop calls `AgentSession::export*` directly, so there is no separate
 // helper here.
 
-/// Fork the current session into a new JSONL session and switch to it (TS
-/// `/fork` — a copy of the transcript in a fresh file; the fork is a new
-/// session the user continues in). Uses the repo's `fork_typed`, then swaps
-/// the harness backing and renders the (empty-ish) fork transcript.
 /// Hot-switch the harness to another saved session: abort any in-flight run,
 /// open the target session file, swap the durable backing, and re-render the
 /// transcript from the new history (mirrors pi's `/session` resume-in-place).
@@ -180,68 +176,90 @@ pub(super) async fn import_session(
     }
 }
 
+/// Fork the current session into a new one per `options` and switch to it.
 pub(super) async fn fork_session(
     harness: &AgentHarness,
     cwd: &std::path::Path,
     chat: &Arc<Container>,
     state: &Arc<TuiState>,
     tool_context: &ice_extensions::ToolCallContext,
-) {
-    use ice_harness::session::jsonl::{JsonlSessionRepo, JsonlSessionRepoOptions};
-    use ice_tools::FileSystem;
-
-    let cwd_str = cwd.to_string_lossy().to_string();
-    let dir = crate::session::default_session_dir(cwd);
-    let env = Arc::new(ice_tools::OsExecutionEnv::with_cwd(cwd.to_path_buf()));
-    let fs: Arc<dyn FileSystem> = env.clone();
-    let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
-        fs,
-        sessions_root: dir.to_string_lossy().into_owned(),
-        clock: Arc::new(ice_harness::session::memory::SystemClock),
-        ids: Arc::new(ice_harness::session::session::DefaultIdGenerator::new()),
-    });
-    // The fork needs the rich JSONL metadata (with the on-disk path); resolve
-    // it from the session list by the current session's id.
-    let id = harness.session().storage().metadata().id.clone();
-    let metas = match crate::session::list_session_metadata(&cwd_str).await {
-        Ok(m) => m,
-        Err(e) => {
-            add_error_message(chat, &format!("Could not list sessions: {e}"));
-            return;
-        }
-    };
-    let Some(source) = metas.iter().find(|m| m.id == id) else {
-        add_error_message(chat, &format!("Current session {id} not found on disk."));
-        return;
-    };
-    let fork_storage = match repo
-        .fork_typed(
-            source,
-            &ice_harness::session::jsonl::JsonlSessionCreateOptions {
-                id: None,
-                parent_session_id: Some(source.id.clone()),
-                cwd: cwd_str.clone(),
-                metadata: None,
-            },
-            &ice_harness::session::types::ForkOptions::default(),
-        )
-        .await
+    options: &ice_harness::session::types::ForkOptions,
+) -> bool {
+    if *state.status.lock().unwrap() != RunStatus::Idle {
+        add_note_message(chat, "Wait for the current run to finish before forking.");
+        return false;
+    }
+    let new_session = match crate::session::fork_session_storage_with_options(
+        harness,
+        &cwd.to_string_lossy(),
+        options,
+    )
+    .await
     {
-        Ok(s) => s,
-        Err(e) => {
-            add_error_message(chat, &format!("Could not fork session: {e}"));
-            return;
+        Ok(session) => session,
+        Err(error) => {
+            add_error_message(chat, &format!("Could not fork session: {error}"));
+            return false;
         }
     };
-    let new_session = ice_harness::session::session::Session::new(Arc::new(fork_storage), None);
     if let Err(error) =
         crate::session::set_active_session(harness, new_session, Some(tool_context)).await
     {
         add_error_message(chat, &format!("Could not fork session: {error}"));
-        return;
+        return false;
     }
     replace_session_ui(harness, chat, state).await;
     add_note_message(chat, "Forked into a new session.");
+    true
+}
+
+/// Validate a picker result against the active file before creating
+/// a fork. Return the chosen prompt only after the session switch succeeds.
+pub(super) async fn fork_before_message(
+    harness: &AgentHarness,
+    cwd: &std::path::Path,
+    chat: &Arc<Container>,
+    state: &Arc<TuiState>,
+    tool_context: &ice_extensions::ToolCallContext,
+    selection: &ForkSelection,
+) -> Option<String> {
+    let active = harness.session();
+    if active.storage().metadata().id != selection.session_id
+        || active.storage().persistence_path() != selection.session_path
+    {
+        add_note_message(
+            chat,
+            "Session changed; open /fork again to choose a message.",
+        );
+        return None;
+    }
+    let Some(text) = fork_message_text(harness, &selection.entry_id).await else {
+        add_note_message(chat, "Message is no longer available; open /fork again.");
+        return None;
+    };
+    fork_session(
+        harness,
+        cwd,
+        chat,
+        state,
+        tool_context,
+        &ice_harness::session::types::ForkOptions::Branch {
+            entry_id: Some(selection.entry_id.clone()),
+            position: Some(ice_harness::session::types::ForkPosition::Before),
+        },
+    )
+    .await
+    .then_some(text)
+}
+
+/// Restore all prompt text, including newlines, and place the byte-based editor
+/// cursor after its final character.
+pub(super) fn restore_fork_prompt(editor: &Arc<Editor>, text: &str) {
+    editor.set_text(text);
+    editor.set_cursor(
+        text.matches('\n').count(),
+        text.rsplit('\n').next().map_or(0, str::len),
+    );
 }
 
 /// `/new`: start an empty session in the current session directory (ice

@@ -694,8 +694,13 @@ enum TuiMessage {
     ExportSessionWithFormat(crate::export::ExportFormat),
     /// Show live usage/context stats (from `/usage` and `/context`).
     ShowUsage,
-    /// Fork the current session into a new one and switch to it (from `/fork`).
+    /// Fork the whole current branch (extension runtime action).
     ForkSession,
+    /// `/fork`: pick the user message to fork before (ice
+    /// `showUserMessageSelector`).
+    OpenForkSelector,
+    /// Fork before this user-message entry and put its text in the editor.
+    ForkBefore(ForkSelection),
     /// Rename the current session (from `/name <name>`).
     SetSessionName(String),
     /// Import a JSONL session file into the session dir and switch to it
@@ -2285,7 +2290,7 @@ pub async fn interactive_tui(
                                 let _ = tx_for_key.send(TuiMessage::OpenTree);
                             }
                             "fork" => {
-                                let _ = tx_for_key.send(TuiMessage::ForkSession);
+                                let _ = tx_for_key.send(TuiMessage::OpenForkSelector);
                             }
                             _ => {}
                         }
@@ -3188,8 +3193,36 @@ pub async fn interactive_tui(
                     &chat_container,
                     &state,
                     &reload_context.tool_context,
+                    &ice_harness::session::types::ForkOptions::default(),
                 )
                 .await;
+                tui.request_render(false);
+            }
+            Some(TuiMessage::OpenForkSelector) => {
+                open_fork_selector(
+                    &harness,
+                    &state,
+                    &editor_container,
+                    &editor,
+                    &tui,
+                    &chat_container,
+                    &tx,
+                )
+                .await;
+            }
+            Some(TuiMessage::ForkBefore(selection)) => {
+                if let Some(text) = fork_before_message(
+                    &harness,
+                    &cwd,
+                    &chat_container,
+                    &state,
+                    &reload_context.tool_context,
+                    &selection,
+                )
+                .await
+                {
+                    restore_fork_prompt(&editor, &text);
+                }
                 tui.request_render(false);
             }
             Some(TuiMessage::ProviderOAuthAction {
