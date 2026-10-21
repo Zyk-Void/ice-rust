@@ -2185,6 +2185,7 @@ async fn fork_session_at_launch(source: &str, cwd: &str) -> Result<Session, Buil
 
 /// Errors from [`open_session_by_id`], split so the CLI can map them to
 /// [`BuildError`] while the TUI can surface a friendlier note.
+#[derive(Debug)]
 pub enum OpenError {
     /// No session matched the request.
     NotFound { requested: String },
