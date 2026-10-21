@@ -967,6 +967,9 @@ pub async fn interactive_tui(
     if let Some(persisted) = session_values.get_as::<bool>("display.hide_thinking") {
         hide_thinking = persisted;
     }
+    let tool_outputs_expanded = session_values
+        .get_as::<bool>("display.tool_outputs_expanded")
+        .unwrap_or(false);
 
     // Resolve the active model once, up front. The full id feeds the TuiState
     // tracking field + the selectors/key loop (which run on a blocking thread
@@ -1084,6 +1087,7 @@ pub async fn interactive_tui(
             initial_transformer.clone(),
             Some(reload_context.extension_session.clone()),
             show_images,
+            tool_outputs_expanded,
         )
         .await;
     }
@@ -1215,9 +1219,6 @@ pub async fn interactive_tui(
     ));
     let autocomplete_container = Arc::new(Container::new());
 
-    let tool_outputs_expanded = session_values
-        .get_as::<bool>("display.tool_outputs_expanded")
-        .unwrap_or(false);
     let state = Arc::new(TuiState {
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3024,6 +3025,7 @@ pub async fn interactive_tui(
                                 state.markdown_transformer(),
                                 Some(state.extension_session.clone()),
                                 state.images_visible(),
+                                state.transcript_view().expanded(),
                             )
                             .await;
                             add_note_message(

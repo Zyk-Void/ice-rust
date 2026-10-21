@@ -219,18 +219,10 @@ impl TranscriptView {
     }
 
     /// Set the global tool-output expansion preference and re-apply it to every
-    /// live panel.
+    /// live or restored panel.
     pub fn set_expanded(&self, expanded: bool) {
         *self.expanded.lock().unwrap() = expanded;
-        for child in self.chat.get_children() {
-            if let Some(component) = child.as_any().downcast_ref::<ToolExecutionComponent>() {
-                component.set_expanded(expanded);
-            } else if let Some(group) = child.as_any().downcast_ref::<ToolGroupComponent>() {
-                group.set_expanded(expanded);
-            } else if let Some(bash) = child.as_any().downcast_ref::<BashExecutionComponent>() {
-                bash.set_expanded(expanded);
-            }
-        }
+        set_tool_panels_expanded(&self.chat, expanded);
         for comp in self.tool_components.lock().unwrap().values() {
             comp.set_expanded(expanded);
         }
@@ -591,6 +583,20 @@ impl TranscriptView {
                 comp.set_result_markdown(true);
             }
             apply_edit_diff(&comp, name, details, width);
+        }
+    }
+}
+
+/// Apply the same expansion setting to retained panels, including replayed ones
+/// that have no entry in the live tool maps.
+pub(crate) fn set_tool_panels_expanded(chat: &Container, expanded: bool) {
+    for child in chat.get_children() {
+        if let Some(component) = child.as_any().downcast_ref::<ToolExecutionComponent>() {
+            component.set_expanded(expanded);
+        } else if let Some(group) = child.as_any().downcast_ref::<ToolGroupComponent>() {
+            group.set_expanded(expanded);
+        } else if let Some(bash) = child.as_any().downcast_ref::<BashExecutionComponent>() {
+            bash.set_expanded(expanded);
         }
     }
 }

@@ -361,6 +361,7 @@ pub(super) async fn replace_session_ui(
         state.markdown_transformer(),
         Some(state.extension_session.clone()),
         state.images_visible(),
+        state.transcript_view().expanded(),
     )
     .await;
     state.tool_components.lock().unwrap().clear();
@@ -425,6 +426,7 @@ pub(super) async fn render_session_history(
     transformer: Option<MarkdownTransformer>,
     extension_session: Option<crate::session::ExtensionSessionCell>,
     show_images: bool,
+    tool_outputs_expanded: bool,
 ) {
     let tree = harness.session().view("main");
     let entries = match tree
@@ -516,7 +518,7 @@ pub(super) async fn render_session_history(
                     if tool_result_requests_markdown(result.details.as_ref()) {
                         comp.set_result_markdown(true);
                     }
-                    crate::transcript_view::append_tool_panel(chat, comp, false);
+                    crate::transcript_view::append_tool_panel(chat, comp, tool_outputs_expanded);
                     for block in &result.content {
                         if let ice_ai::types::Content::Image(image) = block {
                             add_image_preview(chat, image, show_images);
@@ -612,6 +614,9 @@ pub(super) async fn render_session_history(
             }
         }
     }
+    // Replay includes panels (such as plan/todo) created outside the live tool
+    // maps. Keep their initial display in sync with the saved/current toggle.
+    crate::transcript_view::set_tool_panels_expanded(chat, tool_outputs_expanded);
     if rendered_any {
         // No trailing spacer here — each entry already adds its own trailing
         // Spacer(1), so an extra would double the bottom gap.

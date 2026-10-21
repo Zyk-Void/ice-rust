@@ -4,6 +4,9 @@ use ice_tui::Component;
 #[path = "sessions/reset_tests.rs"]
 mod session_reset;
 
+#[path = "sessions/replay_tests.rs"]
+mod session_replay;
+
 #[test]
 fn changelog_command_shows_current_release_and_all_is_explicit() {
     let entries = crate::changelog::bundled_entries();
