@@ -2628,6 +2628,24 @@ pub async fn interactive_tui(
                 continue;
             }
 
+            // 3b. Session actions bound by the user (unbound by default). Each
+            //     runs through its slash command so the key and the command
+            //     share one path.
+            if let Some((_, command)) = [
+                (ice_tui::keybindings::keys::SESSION_NEW, "/new"),
+                (ice_tui::keybindings::keys::SESSION_TREE, "/tree"),
+                (ice_tui::keybindings::keys::SESSION_FORK, "/fork"),
+                (ice_tui::keybindings::keys::SESSION_RESUME, "/session"),
+            ]
+            .into_iter()
+            .find(|(id, _)| keybinding_matches(&keybindings_for_key, &key, id))
+            {
+                if let Some(cmd) = registry_for_key.find(command) {
+                    cmd.execute(&ctx_for_key, "");
+                }
+                continue;
+            }
+
             // 4. Tab: accept the top autocomplete suggestion (if any).
             if key.modifiers == KeyModifiers::NONE && key.code == KeyCode::Tab {
                 if accept_top_suggestion(&state_for_key, &editor_for_key) {

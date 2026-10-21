@@ -1533,6 +1533,8 @@ fn test_registry_visible_entries_cover_dispatch() {
         "/images",
         "/thinking",
         "/usage",
+        "/context",
+        "/resume",
     ] {
         assert!(
             names.contains(&recognized.to_string()),
@@ -1540,7 +1542,7 @@ fn test_registry_visible_entries_cover_dispatch() {
         );
     }
     // Hidden commands stay off the list.
-    for hidden in ["/context", "/q", "/m", "/v", "/think", "/resume", "/?"] {
+    for hidden in ["/q", "/m", "/v", "/think", "/?"] {
         assert!(
             !names.contains(&hidden.to_string()),
             "{hidden} should be hidden from autocomplete"

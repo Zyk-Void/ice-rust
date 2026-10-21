@@ -300,6 +300,9 @@ impl SlashCommand for SessionCommand {
     fn aliases(&self) -> &'static [&'static str] {
         &["/resume"]
     }
+    fn alias_visible(&self) -> &'static [&'static str] {
+        &["/resume"]
+    }
     fn description(&self) -> &'static str {
         "List saved sessions"
     }
@@ -762,14 +765,13 @@ impl SlashCommand for ShareCommand {
 }
 
 /// `/context` — read-only active-context estimates, category grid and largest entries.
-/// Kept hidden from autocomplete for compatibility with the existing command.
 pub(super) struct ContextCommand;
 impl SlashCommand for ContextCommand {
     fn name(&self) -> &'static str {
         "/context"
     }
-    fn visible(&self) -> bool {
-        false
+    fn description(&self) -> &'static str {
+        "Show context usage by category"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
         context_usage::show(ctx);

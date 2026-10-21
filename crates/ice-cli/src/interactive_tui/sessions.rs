@@ -133,6 +133,9 @@ async fn activate_saved_session(
             }
             replace_session_ui(harness, chat, state).await;
             add_note_message(chat, &format!("Switched to session {id}."));
+            if let Some(note) = other_directory_note(harness, cwd) {
+                add_note_message(chat, &note);
+            }
             true
         }
         Err(e) => {
@@ -141,6 +144,21 @@ async fn activate_saved_session(
             false
         }
     }
+}
+
+/// Tools keep running in the directory icers was started in, not the one a
+/// resumed session was created in; say so rather than let it surprise anyone.
+fn other_directory_note(harness: &AgentHarness, cwd: &std::path::Path) -> Option<String> {
+    let path = harness.session().storage().persistence_path()?;
+    let created_in = crate::session_catalog::header_cwd(std::path::Path::new(&path))?;
+    let here = crate::session_catalog::canonical(cwd);
+    (created_in != here).then(|| {
+        format!(
+            "This session was created in {}. Tools still run in {}.",
+            created_in.display(),
+            here.display()
+        )
+    })
 }
 
 /// `/import <path>`: copy a JSONL session file into the default session dir,

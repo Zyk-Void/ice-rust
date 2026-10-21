@@ -89,6 +89,17 @@ pub(crate) fn load_rows(directories: &[PathBuf]) -> Vec<SessionRow> {
     rows
 }
 
+/// The working directory a session log was created in, from its header.
+pub(crate) fn header_cwd(path: &Path) -> Option<PathBuf> {
+    let file = std::fs::File::open(path).ok()?;
+    let mut header = String::new();
+    BufReader::new(file.take(64 * 1024))
+        .read_line(&mut header)
+        .ok()?;
+    let header: serde_json::Value = serde_json::from_str(&header).ok()?;
+    Some(canonical(Path::new(header.get("cwd")?.as_str()?)))
+}
+
 fn read_row(path: &Path) -> Option<SessionRow> {
     let file = std::fs::File::open(path).ok()?;
     let mut header = String::new();
@@ -117,6 +128,16 @@ fn read_row(path: &Path) -> Option<SessionRow> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn header_cwd_reads_the_directory_a_session_was_created_in() {
+        let root = tempfile::tempdir().unwrap();
+        let project = root.path().join("project");
+        std::fs::create_dir_all(&project).unwrap();
+        let path = write_session(&root.path().join("sessions"), "a.jsonl", &project);
+        assert_eq!(header_cwd(&path), Some(canonical(&project)));
+        assert_eq!(header_cwd(&root.path().join("missing.jsonl")), None);
+    }
 
     fn write_session(directory: &Path, name: &str, cwd: &Path) -> PathBuf {
         std::fs::create_dir_all(directory).unwrap();

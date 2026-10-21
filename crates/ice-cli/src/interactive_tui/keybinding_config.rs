@@ -224,6 +224,36 @@ mod tests {
     }
 
     #[test]
+    fn session_actions_are_unbound_until_the_user_binds_them() {
+        let unbound = load("{}", None);
+        let bound = load(
+            r#"{"newSession":"ctrl+n","tree":"f7","fork":"f8","resume":"f9"}"#,
+            None,
+        );
+        for (id, key) in [
+            (
+                "app.session.new",
+                KeyEvent::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
+            ),
+            (
+                "app.session.tree",
+                KeyEvent::new(KeyCode::F(7), KeyModifiers::NONE),
+            ),
+            (
+                "app.session.fork",
+                KeyEvent::new(KeyCode::F(8), KeyModifiers::NONE),
+            ),
+            (
+                "app.session.resume",
+                KeyEvent::new(KeyCode::F(9), KeyModifiers::NONE),
+            ),
+        ] {
+            assert!(unbound.get_keys(id).is_empty(), "{id} ships unbound");
+            assert!(bound.matches(&key, id), "{id} follows keybindings.json");
+        }
+    }
+
+    #[test]
     fn keybindings_file_overrides_settings_and_empty_array_unbinds() {
         let settings = serde_json::from_value(serde_json::json!({
             "app.model.select": "alt+m",
