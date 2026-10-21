@@ -707,6 +707,14 @@ pub(super) fn emergency_exit(tui: &Arc<TuiAltScreen>) -> ! {
     std::process::exit(130);
 }
 
+/// Size the editor's text viewport from the current terminal height (the
+/// resize event's own size is the console buffer on Windows, so read it).
+pub(super) fn sync_editor_viewport(editor: &Editor) {
+    if let Ok((_, rows)) = crossterm::terminal::size() {
+        editor.set_terminal_rows(rows as usize);
+    }
+}
+
 /// upstream's `handleCtrlZ` (`app.suspend`): hand the terminal back to the
 /// shell and stop the process. `raise(SIGTSTP)` returns once the user resumes
 /// us with `fg`/`bg`, at which point we re-enter the alternate screen.

@@ -317,26 +317,35 @@ trait SlashCommand: Send + Sync {
 /// Holds all registered slash commands; the single source of truth for both
 /// dispatch and the autocomplete list.
 struct CommandRegistry {
-    commands: Vec<Arc<dyn SlashCommand>>,
+    commands: Mutex<Vec<Arc<dyn SlashCommand>>>,
 }
 
 impl CommandRegistry {
     fn new() -> Self {
         Self {
-            commands: Vec::new(),
+            commands: Mutex::new(Vec::new()),
         }
     }
 
     fn register(&mut self, cmd: Arc<dyn SlashCommand>) {
-        self.commands.push(cmd);
+        self.commands.get_mut().unwrap().push(cmd);
+    }
+
+    /// Replace the snapshot for submit and key-loop closures that already share
+    /// this registry. Removed commands must disappear as well as new ones appear.
+    fn replace(&self, replacement: CommandRegistry) {
+        *self.commands.lock().unwrap() = replacement.commands.into_inner().unwrap();
     }
 
     /// Find the command whose `name()` or an alias matches `token` (e.g. "/q").
     /// `token` is the first whitespace-delimited word of the input, `/`-prefixed.
-    fn find(&self, token: &str) -> Option<&Arc<dyn SlashCommand>> {
+    fn find(&self, token: &str) -> Option<Arc<dyn SlashCommand>> {
         self.commands
+            .lock()
+            .unwrap()
             .iter()
             .find(|c| c.name() == token || c.aliases().contains(&token))
+            .cloned()
     }
 
     /// The autocomplete entries, derived from the registry so it can never drift
@@ -346,7 +355,8 @@ impl CommandRegistry {
     /// so they win on a fuzzy tie (unchanged).
     fn visible_entries(&self) -> Vec<SlashCommandEntry> {
         let mut out: Vec<SlashCommandEntry> = Vec::new();
-        for c in &self.commands {
+        let commands = self.commands.lock().unwrap().clone();
+        for c in commands {
             let description = c.description_owned();
             if c.visible() && !description.is_empty() {
                 out.push(SlashCommandEntry {
@@ -1110,6 +1120,7 @@ pub async fn interactive_tui(
         EditorStyle::default(),
         keybindings.clone(),
     ));
+    sync_editor_viewport(&editor);
 
     // Bash-mode border: a `!`-prefixed draft recolors the editor border to the
     // bash accent (upstream's `updateEditorBorderColor` / `isBashMode`). The
@@ -1165,19 +1176,6 @@ pub async fn interactive_tui(
     // Build autocomplete from the initial templates. /context shares a resource
     // snapshot that the async reload handler refreshes, so its blocking command
     // can list the current files without awaiting the harness accessor.
-    let template_slash_commands: Vec<SlashCommandEntry> = resources_snapshot
-        .prompt_templates
-        .clone()
-        .unwrap_or_default()
-        .iter()
-        .map(|t| SlashCommandEntry {
-            name: format!("/{}", t.name),
-            description: t
-                .description
-                .clone()
-                .unwrap_or_else(|| "Expand prompt template".to_string()),
-        })
-        .collect();
     let resources_arc = Arc::new(Mutex::new(resources_snapshot));
     // Build the built-in command registry once — the single source of truth for
     // both dispatch and the built-in autocomplete entries. The discovered
@@ -1190,19 +1188,12 @@ pub async fn interactive_tui(
         reload_context.extension_session.clone(),
     );
     let registry = Arc::new(command_registry);
-    let mut all_slash_commands = registry.visible_entries();
-    all_slash_commands.extend(template_slash_commands);
     let autocomplete = AutocompleteManager::new();
-    {
-        let mut combined = CombinedAutocompleteProvider::new();
-        combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(
-            all_slash_commands,
-        )));
-        combined.add_provider(Arc::new(FilePathAutocompleteProvider::with_root(
-            cwd.clone(),
-        )));
-        autocomplete.set_provider(Arc::new(combined));
-    }
+    autocomplete.set_provider(build_autocomplete_provider(
+        &registry,
+        &resources_arc.lock().unwrap(),
+        &cwd,
+    ));
     let autocomplete_container = Arc::new(Container::new());
 
     let tool_outputs_expanded = session_values
@@ -1764,6 +1755,7 @@ pub async fn interactive_tui(
             // window size itself; the event's own columns/rows are not used (on
             // Windows they carry the console buffer size, not the window).
             if let Event::Resize(..) = ev {
+                sync_editor_viewport(&editor_for_key);
                 tui_for_key.note_resize();
                 continue;
             }
@@ -3322,6 +3314,17 @@ pub async fn interactive_tui(
                     crate::session::reload_extension_resources(&harness, &reload_ctx).await;
                 if !outcome.had_errors {
                     if let Ok(resources) = harness.get_resources().await {
+                        // Refresh dispatch and completion from the same live
+                        // snapshot, including removed commands and descriptions.
+                        let mut fresh_registry = build_builtin_registry();
+                        register_extension_commands(
+                            &mut fresh_registry,
+                            reload_ctx.extension_session.clone(),
+                        );
+                        registry.replace(fresh_registry);
+                        state
+                            .autocomplete
+                            .set_provider(build_autocomplete_provider(&registry, &resources, &cwd));
                         update_resource_listing(
                             &ctx.resources,
                             ctx.startup_context.as_ref(),

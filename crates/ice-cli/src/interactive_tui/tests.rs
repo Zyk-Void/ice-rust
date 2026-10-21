@@ -1540,6 +1540,66 @@ fn test_registry_visible_entries_cover_dispatch() {
 }
 
 #[test]
+fn reload_replaces_command_dispatch_and_completion_for_existing_readers() {
+    struct TestCommand(&'static str, &'static str);
+    impl SlashCommand for TestCommand {
+        fn name(&self) -> &str {
+            self.0
+        }
+        fn description(&self) -> &'static str {
+            self.1
+        }
+        fn execute(&self, _: &CommandContext, _: &str) {}
+    }
+
+    let mut initial = build_builtin_registry();
+    initial.register(Arc::new(TestCommand("/removed-test", "Old command")));
+    initial.register(Arc::new(TestCommand("/kept-test", "Old description")));
+    let registry = Arc::new(initial);
+    let submit_reader = registry.clone();
+    let in_flight = submit_reader.find("/removed-test").unwrap();
+
+    let mut replacement = build_builtin_registry();
+    replacement.register(Arc::new(TestCommand("/added-test", "New command")));
+    replacement.register(Arc::new(TestCommand("/kept-test", "New description")));
+    registry.replace(replacement);
+
+    assert!(submit_reader.find("/removed-test").is_none());
+    assert_eq!(
+        submit_reader.find("/added-test").unwrap().name(),
+        "/added-test"
+    );
+    assert_eq!(submit_reader.find("/q").unwrap().name(), "/exit");
+    assert_eq!(in_flight.name(), "/removed-test");
+    assert!(
+        registry.commands.try_lock().is_ok(),
+        "dispatch must not retain the registry lock"
+    );
+    let entries = submit_reader.visible_entries();
+    assert!(!entries.iter().any(|entry| entry.name == "/removed-test"));
+    assert_eq!(
+        entries
+            .iter()
+            .find(|entry| entry.name == "/kept-test")
+            .unwrap()
+            .description,
+        "New description"
+    );
+
+    let provider = build_autocomplete_provider(
+        &registry,
+        &ice_harness::types::AgentHarnessResources::default(),
+        std::path::Path::new("."),
+    );
+    let suggestions = provider.get_suggestions("/added-test", 11).unwrap();
+    assert!(suggestions
+        .items
+        .iter()
+        .any(|item| item.text == "/added-test"));
+    assert!(provider.get_suggestions("/removed-test", 13).is_none());
+}
+
+#[test]
 fn test_agent_event_mapping_creates_assistant_and_tool() {
     // Synthetic AgentEvent sequence → UI mutations, exercised against the
     // real drain handler with a no-op TUI stand-in.
@@ -3481,4 +3541,40 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
             "op": "open", "requestId": "r4", "ui": {"kind": "input"}
         }))
         .is_err());
+}
+
+/// Completion was built once at startup, so a prompt template added before
+/// `/reload` expanded but was never offered. The builder the reload handler
+/// calls must include the templates it is given, after the built-ins.
+#[test]
+fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
+    use ice_tui::AutocompleteProvider;
+    let registry = build_builtin_registry();
+    let before = build_autocomplete_provider(
+        &registry,
+        &ice_harness::types::AgentHarnessResources::default(),
+        std::path::Path::new("."),
+    );
+    let names = |provider: &Arc<dyn AutocompleteProvider>| -> Vec<String> {
+        provider
+            .get_suggestions("/revi", 5)
+            .map(|s| s.items.into_iter().map(|i| i.text).collect())
+            .unwrap_or_default()
+    };
+    assert!(!names(&before).iter().any(|n| n == "/review-pr"));
+
+    let resources = ice_harness::types::AgentHarnessResources {
+        prompt_templates: Some(vec![ice_harness::types::PromptTemplate {
+            name: "review-pr".into(),
+            description: Some("Review a pull request".into()),
+            content: "Review it".into(),
+        }]),
+        ..Default::default()
+    };
+    let after = build_autocomplete_provider(&registry, &resources, std::path::Path::new("."));
+    assert!(
+        names(&after).iter().any(|n| n == "/review-pr"),
+        "{:?}",
+        names(&after)
+    );
 }

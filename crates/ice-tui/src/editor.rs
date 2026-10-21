@@ -323,8 +323,19 @@ fn byte_column_at_visual_column(line: &str, start: usize, end: usize, column: us
     end
 }
 
-/// Insert the zero-width cursor marker at a visible column without slicing
-/// through ANSI escape sequences added for selection/placeholder styling.
+/// Border row naming rows hidden above or below the editor viewport (ice
+/// `createScrollBorder`): `─── ↑ 3 more ─────`, cut to `width`.
+fn scroll_border(direction: &str, hidden: usize, width: usize) -> String {
+    let indicator = format!("─── {direction} {hidden} more ");
+    let used = crate::ansi::visible_width(&indicator);
+    if used <= width {
+        indicator + &"─".repeat(width - used)
+    } else {
+        crate::utils::truncate_to_width(&indicator, width, "")
+    }
+}
+
+/// Insert the zero-width cursor marker without slicing through ANSI styling.
 fn insert_cursor_marker(text: &str, column: usize) -> String {
     let mut out = String::with_capacity(text.len() + CURSOR_MARKER.len());
     let mut visible = 0usize;
@@ -395,6 +406,9 @@ pub struct Editor {
     pastes: Mutex<HashMap<u32, PasteEntry>>,
     /// Monotonic id source for [`Self::pastes`] (upstream's `pasteCounter`).
     paste_counter: Mutex<u32>,
+    /// Most text rows shown at once (ice: 30% of the terminal, at least 5);
+    /// longer drafts scroll inside the box. `None` shows every row.
+    max_visible_rows: Mutex<Option<usize>>,
 }
 
 /// State for the working indicator embedded in the editor's top border.
@@ -449,6 +463,7 @@ impl Editor {
             working: Mutex::new(None),
             pastes: Mutex::new(HashMap::new()),
             paste_counter: Mutex::new(0),
+            max_visible_rows: Mutex::new(None),
         }
     }
 
@@ -1339,6 +1354,16 @@ impl Editor {
         }
     }
 
+    /// Size the text viewport for a terminal `rows` tall: at most 30% of the
+    /// rows, never fewer than 5 (ice `editor.ts` `maxVisibleLines`). A draft
+    /// with more rows scrolls inside the box, following the caret, so a long
+    /// prompt no longer pushes the transcript off the screen.
+    pub fn set_terminal_rows(&self, rows: usize) {
+        if let Ok(mut max) = self.max_visible_rows.lock() {
+            *max = Some((rows.saturating_mul(3) / 10).max(5));
+        }
+    }
+
     /// Set an explicit top/bottom border color. `None` restores the theme's
     /// default border color. Mirrors upstream's `editor.borderColor`.
     pub fn set_border_color(&self, color: Option<Color>) {
@@ -1576,6 +1601,8 @@ impl Component for Editor {
     fn render(&self, width: usize) -> Vec<String> {
         let state = self.state.lock().map(|s| s.clone()).unwrap_or_default();
         let mut content_lines = Vec::new();
+        // Visual row holding the caret, for the scrolling viewport.
+        let mut cursor_line: Option<usize> = None;
 
         let pad = " ".repeat(self.options.padding_x);
         // `prompt` is no longer rendered (mirrors the TS editor, which draws a
@@ -1660,6 +1687,13 @@ impl Component for Editor {
                     );
                     rendered = insert_cursor_marker(&rendered, self.options.padding_x + cursor_col);
                 }
+                if row_idx == state.cursor_row
+                    && state.cursor_col >= chunk_start
+                    && (state.cursor_col < chunk_end
+                        || (is_last_chunk && state.cursor_col == chunk_end))
+                {
+                    cursor_line.get_or_insert(content_lines.len());
+                }
 
                 content_lines.push(rendered);
             }
@@ -1737,6 +1771,49 @@ impl Component for Editor {
             border_color.fg(&horizontal)
         };
 
+        // Scroll the text rows so the caret stays visible (ice `editor.ts`).
+        let max_rows = self
+            .max_visible_rows
+            .lock()
+            .ok()
+            .and_then(|max| *max)
+            .unwrap_or(usize::MAX);
+        let (top_border, bottom_border) = if content_lines.len() > max_rows {
+            let cursor_line = cursor_line.unwrap_or(0);
+            let mut offset = state.scroll_offset;
+            if cursor_line < offset {
+                offset = cursor_line;
+            } else if cursor_line >= offset + max_rows {
+                offset = cursor_line + 1 - max_rows;
+            }
+            offset = offset.min(content_lines.len() - max_rows);
+            if let Ok(mut live) = self.state.lock() {
+                live.scroll_offset = offset;
+            }
+            let below = content_lines.len() - offset - max_rows;
+            content_lines = content_lines.split_off(offset);
+            content_lines.truncate(max_rows);
+            let top = if offset > 0 && working_state.is_none() {
+                border_color.fg(&scroll_border("↑", offset, width))
+            } else {
+                top_border
+            };
+            let bottom = if below > 0 {
+                border_color.fg(&scroll_border("↓", below, width))
+            } else {
+                bottom_border
+            };
+            (top, bottom)
+        } else {
+            // The draft fits again: start from the top next time it grows.
+            if state.scroll_offset != 0 {
+                if let Ok(mut live) = self.state.lock() {
+                    live.scroll_offset = 0;
+                }
+            }
+            (top_border, bottom_border)
+        };
+
         let mut lines = Vec::with_capacity(content_lines.len() + 2);
         lines.push(top_border);
         lines.extend(content_lines);
@@ -1774,6 +1851,93 @@ impl Focusable for Editor {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn capped_viewport_keeps_caret_at_a_wrap_boundary_visible() {
+        let editor = Editor::simple();
+        editor.set_focused(true);
+        editor.set_terminal_rows(17);
+        editor.set_text(&"abcdef".repeat(10));
+        // With padding and the reserved cursor cell, width 8 wraps at 6.
+        // Byte 30 belongs to the sixth row, not the end of the fifth row.
+        editor.set_cursor(0, 30);
+        let rows = editor.render(8);
+        assert_eq!(rows.len(), 7);
+        assert_eq!(
+            rows.iter()
+                .filter(|row| row.contains(CURSOR_MARKER))
+                .count(),
+            1
+        );
+        assert!(rows[5].contains(CURSOR_MARKER));
+    }
+
+    #[test]
+    fn capped_unicode_draft_keeps_caret_after_resize_and_visual_movement() {
+        use crossterm::event::KeyEvent;
+        let editor = Editor::simple();
+        editor.set_focused(true);
+        editor.set_terminal_rows(20);
+        let text = "界 e\u{301} 👩‍💻 wide words ".repeat(20);
+        editor.set_text(&text);
+        editor.set_cursor(0, text.len());
+        for (width, height) in [(22, 20), (38, 40), (18, 12)] {
+            editor.set_terminal_rows(height);
+            let rows = editor.render(width);
+            assert!(rows.len() <= (height * 3 / 10).max(5) + 2);
+            assert_eq!(
+                rows.iter()
+                    .filter(|row| row.contains(CURSOR_MARKER))
+                    .count(),
+                1
+            );
+            editor.handle_key(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+            let rows = editor.render(width);
+            assert_eq!(
+                rows.iter()
+                    .filter(|row| row.contains(CURSOR_MARKER))
+                    .count(),
+                1
+            );
+            assert!(text.is_char_boundary(editor.cursor_position().1));
+        }
+    }
+
+    /// A long draft used to render every row, pushing the transcript off the
+    /// screen. The editor now shows at most 30% of the terminal (at least 5
+    /// rows) and scrolls to keep the caret visible, with "N more" borders.
+    #[test]
+    fn long_draft_scrolls_inside_a_capped_viewport() {
+        use crate::component::Component;
+        let editor = Editor::simple();
+        editor.set_terminal_rows(20); // 30% of 20 = 6 rows
+        let text: Vec<String> = (0..12).map(|i| format!("line {i}")).collect();
+        editor.set_text(&text.join("\n"));
+        editor.set_cursor(11, 0);
+        let rows = editor.render(40);
+        let plain: Vec<String> = rows.iter().map(|r| crate::strip_ansi(r)).collect();
+        assert_eq!(plain.len(), 6 + 2, "{plain:?}");
+        assert!(plain[0].starts_with("─── ↑ 6 more "), "{plain:?}");
+        assert!(plain[6].contains("line 11"), "{plain:?}");
+        assert!(plain[7].chars().all(|c| c == '─'), "{plain:?}");
+
+        // Moving the caret to the top scrolls back up.
+        editor.set_cursor(0, 0);
+        let plain: Vec<String> = editor
+            .render(40)
+            .iter()
+            .map(|r| crate::strip_ansi(r))
+            .collect();
+        assert!(plain[1].contains("line 0"), "{plain:?}");
+        assert!(plain[7].starts_with("─── ↓ 6 more "), "{plain:?}");
+
+        // Small terminals still get 5 rows; no cap shows everything.
+        editor.set_terminal_rows(8);
+        assert_eq!(editor.render(40).len(), 5 + 2);
+        let uncapped = Editor::simple();
+        uncapped.set_text(&text.join("\n"));
+        assert_eq!(uncapped.render(40).len(), 12 + 2);
+    }
 
     #[test]
     fn working_spinner_advances_per_render_not_per_timer() {
