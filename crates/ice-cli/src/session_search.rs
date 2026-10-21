@@ -298,6 +298,81 @@ mod tests {
         assert_eq!(cache.entries.len(), 1);
     }
 
+    #[tokio::test]
+    async fn persisted_messages_remain_searchable_after_picker_rename() {
+        let temp = tempfile::tempdir().unwrap();
+        let cwd = crate::session_catalog::canonical(temp.path());
+        let session =
+            crate::session::create_jsonl_session(&cwd.join("sessions"), &cwd.to_string_lossy())
+                .await
+                .unwrap();
+        session
+            .append_message(ice_agent::AgentMessage::User(
+                ice_ai::types::UserMessage::new("NeedleMark-before", 0),
+            ))
+            .await
+            .unwrap();
+        let active = session.storage();
+        active.set_name(Some("catalogue-before")).await.unwrap();
+        let path = PathBuf::from(active.persistence_path().unwrap());
+        let directory = path.parent().unwrap().to_path_buf();
+        let before = std::fs::read(&path).unwrap();
+        let mut cache = ContentCache::default();
+        let rows = crate::session_catalog::load_rows(std::slice::from_ref(&directory));
+        assert_eq!(
+            search_rows(
+                &rows,
+                &cwd,
+                false,
+                "re:NeedleMark-before",
+                &mut cache,
+                &|| false
+            )
+            .unwrap()
+            .indices,
+            vec![0]
+        );
+        crate::session_actions::perform(
+            &rows[0],
+            &crate::session_actions::SessionAction::Rename("catalogue-after".into()),
+            Some(&active),
+        )
+        .await
+        .unwrap();
+        session
+            .append_message(ice_agent::AgentMessage::User(
+                ice_ai::types::UserMessage::new("NeedleMark-after", 1),
+            ))
+            .await
+            .unwrap();
+        assert!(std::fs::read(&path).unwrap().starts_with(&before));
+        let rows = crate::session_catalog::load_rows(&[directory]);
+        for query in [
+            "re:catalogue-after",
+            "re:NeedleMark-after",
+            "re:NeedleMark-before",
+        ] {
+            assert_eq!(
+                search_rows(&rows, &cwd, false, query, &mut cache, &|| false)
+                    .unwrap()
+                    .indices,
+                vec![0],
+                "{query}"
+            );
+        }
+        assert!(search_rows(
+            &rows,
+            &cwd,
+            false,
+            "re:catalogue-before",
+            &mut cache,
+            &|| false
+        )
+        .unwrap()
+        .indices
+        .is_empty());
+    }
+
     #[test]
     fn cancellation_and_unreadable_files_do_not_install_false_results() {
         let mut cache = ContentCache::default();
