@@ -209,11 +209,12 @@ impl Markdown {
 
             // Streamed partial closing fences (pi #5825): while the assistant
             // streams the final ```` ``` ````, the tail arrives one char at a
-            // time (``, ```` ``` ````…). Rendering those would flicker the block
-            // (content shrinks, then the real fence closes) — and a lone ``
-            // or `````` would be mis-rendered as ordinary text. Trim any line
-            // that is a partial fence run (1-2 fence chars, whole line).
-            if is_partial_fence(line) {
+            // time. Rendering it would flicker the block. Like ice
+            // `trimPartialClosingFences`, trim only the document's last line,
+            // only inside an open block, and only a short run of that block's
+            // fence character; a `~` or `` `` `` line elsewhere is content.
+            if in_code_block && i + 1 == raw_lines.len() && is_partial_fence(line, code_fence_char)
+            {
                 i += 1;
                 continue;
             }
@@ -698,12 +699,12 @@ fn push_code_line(
 /// — a streamed, not-yet-complete closing fence. pi trims these (issue
 /// #5825) so code blocks don't flicker/shrink while the final fence char
 /// streams in; rendering them as text would also misrender the block tail.
-fn is_partial_fence(line: &str) -> bool {
+fn is_partial_fence(line: &str, fence_char: char) -> bool {
     let t = line.trim();
     if t.is_empty() || t.len() > 2 {
         return false;
     }
-    t.chars().all(|c| c == '`' || c == '~')
+    t.chars().all(|c| c == fence_char)
 }
 
 /// Strip a leading `prefix` of `#`s followed by a space from `line`.
@@ -989,7 +990,7 @@ mod tests {
         assert!(rendered.contains("\x1b[1m"), "nested strong style missing");
         assert!(rendered.contains("\x1b[3m"), "nested emphasis missing");
         assert!(
-            rendered.contains("\x1b[48;2;48;52;59m"),
+            rendered.contains(&crate::theme::Color::Rgb(48, 52, 59).to_bg()),
             "multi-backtick code span should use the code chip"
         );
     }
@@ -1007,7 +1008,7 @@ mod tests {
         let lines = md.render(80);
         assert!(!lines[0].is_empty());
         assert!(
-            lines[0].contains("\x1b[48;2;48;52;59m"),
+            lines[0].contains(&crate::theme::Color::Rgb(48, 52, 59).to_bg()),
             "inline code should use the theme chip background"
         );
     }
@@ -1042,7 +1043,7 @@ mod tests {
             "code block must not draw an outer frame: {plain}"
         );
         assert!(
-            joined.contains("\x1b[48;2;40;44;52m"),
+            joined.contains(&crate::theme::Color::Rgb(40, 44, 52).to_bg()),
             "code panel background missing: {joined:?}"
         );
         assert!(
@@ -1124,6 +1125,32 @@ mod tests {
         let joined = md.render(80).join("\n");
         assert!(joined.contains('☒'), "checked marker missing");
         assert!(joined.contains('☐'), "unchecked marker missing");
+    }
+
+    /// Regression: any line of one or two `~`/backticks was dropped, so a
+    /// literal `~` (home dir) line or a `` `` `` line inside code vanished.
+    /// Only the streamed tail of an open block's closing fence is trimmed.
+    #[test]
+    fn short_fence_runs_are_content_except_a_streamed_closing_tail() {
+        let plain = |md: &str| -> Vec<String> {
+            Markdown::new(md, 0, 0)
+                .render(40)
+                .iter()
+                .map(|l| crate::strip_ansi(l).trim_end().to_string())
+                .collect()
+        };
+        let text = plain("Go to\n~\nthen run it");
+        assert!(text.iter().any(|l| l.trim() == "~"), "{text:?}");
+        let code = plain("```sh\necho a\n``\necho b\n```");
+        assert!(code.iter().any(|l| l.contains("``")), "{code:?}");
+        // While streaming, `` at the end of an open ``` block is the closing
+        // fence arriving: not shown.
+        let streaming = plain("```sh\necho a\n``");
+        assert!(!streaming.iter().any(|l| l.contains("``")), "{streaming:?}");
+        assert!(
+            streaming.iter().any(|l| l.contains("echo a")),
+            "{streaming:?}"
+        );
     }
 
     #[test]

@@ -20,8 +20,8 @@ use std::sync::{Arc, Mutex};
 use base64::Engine;
 use ice_tui::{
     render_diff, AssistantBlock, AssistantMessageComponent, AssistantMessageOptions,
-    BashExecutionComponent, BashTruncation, Container, Spacer, ToolExecutionComponent, ToolStatus,
-    UserMessageComponent,
+    BashExecutionComponent, BashTruncation, Container, Spacer, ToolExecutionComponent,
+    ToolGroupComponent, ToolStatus, UserMessageComponent,
 };
 use serde_json::Value;
 
@@ -189,10 +189,12 @@ impl TranscriptView {
             }
             UiEvent::AssistantUpdate { blocks, tool_calls } => {
                 self.ensure_assistant();
-                self.sync_tool_calls(tool_calls);
                 if let Some(comp) = self.current_assistant.lock().unwrap().as_ref() {
                     comp.update_blocks(blocks);
                 }
+                // Apply text first so it establishes the ordering boundary for
+                // tool panels discovered in the same snapshot.
+                self.sync_tool_calls(tool_calls);
             }
             UiEvent::AssistantEnd { blocks } => {
                 if let Some(comp) = self.current_assistant.lock().unwrap().take() {
@@ -223,6 +225,10 @@ impl TranscriptView {
         for child in self.chat.get_children() {
             if let Some(component) = child.as_any().downcast_ref::<ToolExecutionComponent>() {
                 component.set_expanded(expanded);
+            } else if let Some(group) = child.as_any().downcast_ref::<ToolGroupComponent>() {
+                group.set_expanded(expanded);
+            } else if let Some(bash) = child.as_any().downcast_ref::<BashExecutionComponent>() {
+                bash.set_expanded(expanded);
             }
         }
         for comp in self.tool_components.lock().unwrap().values() {
@@ -364,7 +370,7 @@ impl TranscriptView {
                 } else {
                     let comp = Arc::new(BashExecutionComponent::new(command));
                     comp.set_expanded(self.expanded());
-                    self.chat.add_child(comp.clone());
+                    append_bash_panel(&self.chat, comp.clone(), self.expanded());
                     bash.insert(call.id.clone(), comp);
                 }
                 continue;
@@ -390,7 +396,7 @@ impl TranscriptView {
                 }
                 comp.set_expanded(self.expanded());
                 comp.set_running();
-                self.chat.add_child(comp.clone());
+                append_tool_panel(&self.chat, comp.clone(), self.expanded());
                 tools.insert(call.id.clone(), comp);
             }
         }
@@ -416,7 +422,7 @@ impl TranscriptView {
             } else {
                 let comp = Arc::new(BashExecutionComponent::new(command));
                 comp.set_expanded(self.expanded());
-                self.chat.add_child(comp.clone());
+                append_bash_panel(&self.chat, comp.clone(), self.expanded());
                 bash.insert(id.to_string(), comp);
             }
             return;
@@ -443,7 +449,7 @@ impl TranscriptView {
             }
             comp.set_expanded(self.expanded());
             comp.set_running();
-            self.chat.add_child(comp.clone());
+            append_tool_panel(&self.chat, comp.clone(), self.expanded());
             tools.insert(id.to_string(), comp);
         }
     }
@@ -510,7 +516,7 @@ impl TranscriptView {
                     if !ask_user {
                         apply_edit_diff(&comp, name, result.get("details"), width);
                     }
-                    self.chat.add_child(comp.clone());
+                    append_tool_panel(&self.chat, comp.clone(), self.expanded());
                     self.tool_components
                         .lock()
                         .unwrap()
@@ -553,7 +559,7 @@ impl TranscriptView {
                         comp.append_output(&text);
                     }
                     finalize_bash(&comp, result, is_error);
-                    self.chat.add_child(comp);
+                    append_bash_panel(&self.chat, comp, self.expanded());
                 }
             }
             return;
@@ -575,7 +581,7 @@ impl TranscriptView {
                     comp.set_display_title("ASK USER");
                 }
                 comp.set_expanded(self.expanded());
-                self.chat.add_child(comp.clone());
+                append_tool_panel(&self.chat, comp.clone(), self.expanded());
                 comp
             }
         };
@@ -587,6 +593,59 @@ impl TranscriptView {
             apply_edit_diff(&comp, name, details, width);
         }
     }
+}
+
+/// Append next to the previous exploration group without replacing tool update maps.
+pub(crate) fn append_tool_panel(
+    chat: &Arc<Container>,
+    tool: Arc<ToolExecutionComponent>,
+    expanded: bool,
+) {
+    let args = serde_json::from_str(&tool.args()).unwrap_or(Value::Null);
+    if !tool.is_skill() && ice_tui::describe_exploration(&tool.name(), &args).is_some() {
+        append_exploration(chat, expanded, |group| group.add_tool(tool));
+    } else {
+        chat.add_child(tool);
+    }
+}
+
+fn append_bash_panel(chat: &Arc<Container>, bash: Arc<BashExecutionComponent>, expanded: bool) {
+    if ice_tui::describe_exploration("bash", &serde_json::json!({"command":bash.command()}))
+        .is_some()
+    {
+        append_exploration(chat, expanded, |group| group.add_bash(bash));
+    } else {
+        chat.add_child(bash);
+    }
+}
+
+fn append_exploration(
+    chat: &Arc<Container>,
+    expanded: bool,
+    add: impl FnOnce(&ToolGroupComponent),
+) {
+    for child in chat.get_children().into_iter().rev() {
+        // Empty tool-only assistant snapshots and persisted spacers contribute
+        // no visible boundary. Text, thinking, errors, and other tools do.
+        if child.as_any().is::<Spacer>()
+            || child
+                .as_any()
+                .downcast_ref::<AssistantMessageComponent>()
+                .is_some_and(|message| !message.has_visible_content())
+        {
+            continue;
+        }
+        if let Some(group) = child.as_any().downcast_ref::<ToolGroupComponent>() {
+            if group.is_open() {
+                add(group);
+                return;
+            }
+        }
+        break;
+    }
+    let group = Arc::new(ToolGroupComponent::new(expanded));
+    add(&group);
+    chat.add_child(group);
 }
 
 /// Tool calls, slash commands, and restored entries share the same current plan.
@@ -1301,5 +1360,137 @@ mod tests {
             80,
         );
         assert_eq!(view.chat.child_count(), 2);
+    }
+}
+
+#[cfg(test)]
+mod exploration_tests {
+    use super::*;
+    use ice_tui::{strip_ansi, Component};
+
+    fn start(view: &TranscriptView, id: &str, name: &str, args: Value) {
+        view.apply(
+            &UiEvent::ToolStart {
+                id: id.into(),
+                name: name.into(),
+                args,
+            },
+            80,
+        );
+    }
+
+    #[test]
+    fn adjacent_exploration_calls_share_a_group_with_live_updates() {
+        let chat = Arc::new(Container::new());
+        let view = TranscriptView::new(chat.clone());
+        start(&view, "a", "read", serde_json::json!({"path":"a.rs"}));
+        start(
+            &view,
+            "b",
+            "grep",
+            serde_json::json!({"pattern":"needle","path":"src"}),
+        );
+        start(&view, "c", "bash", serde_json::json!({"command":"ls main"}));
+        assert_eq!(chat.child_count(), 1);
+        assert!(strip_ansi(&chat.render(80).join("\n")).contains("Exploring"));
+        for (id, name) in [("a", "read"), ("b", "grep"), ("c", "bash")] {
+            view.apply(&UiEvent::ToolEnd {
+                id: id.into(), name: name.into(),
+                result: serde_json::json!({"content":[{"type":"text","text":"complete output"}]}),
+                is_error: false,
+            }, 80);
+        }
+        let collapsed = strip_ansi(&chat.render(80).join("\n"));
+        assert!(collapsed.contains("Explored"));
+        assert!(!collapsed.contains("complete output"));
+        view.set_expanded(true);
+        assert!(strip_ansi(&chat.render(80).join("\n")).contains("complete output"));
+    }
+
+    #[test]
+    fn mutations_messages_and_failures_bound_exploration_groups() {
+        let chat = Arc::new(Container::new());
+        let view = TranscriptView::new(chat.clone());
+        start(&view, "a", "read", serde_json::json!({"path":"a"}));
+        start(&view, "b", "write", serde_json::json!({"path":"b"}));
+        start(&view, "c", "ls", serde_json::json!({"path":"."}));
+        assert_eq!(chat.child_count(), 3);
+        view.apply(
+            &UiEvent::ToolEnd {
+                id: "c".into(),
+                name: "ls".into(),
+                result: serde_json::json!({"content":[{"type":"text","text":"permission denied"}]}),
+                is_error: true,
+            },
+            80,
+        );
+        start(&view, "d", "find", serde_json::json!({"pattern":"*.rs"}));
+        assert_eq!(chat.child_count(), 4);
+        assert!(strip_ansi(&chat.render(80).join("\n")).contains("permission denied"));
+        view.add_user("continue");
+        start(&view, "e", "read", serde_json::json!({"path":"e"}));
+        assert_eq!(chat.child_count(), 7);
+    }
+
+    #[test]
+    fn restored_exploration_keeps_paths_and_global_expansion() {
+        let chat = Arc::new(Container::new());
+        let a = Arc::new(ToolExecutionComponent::new("read", r#"{"path":"a.rs"}"#));
+        a.set_result("restored content", false);
+        append_tool_panel(&chat, a, false);
+        chat.add_child(Arc::new(Spacer::new(1)));
+        let b = Arc::new(ToolExecutionComponent::new(
+            "grep",
+            r#"{"pattern":"foo","path":"src"}"#,
+        ));
+        b.set_result("found", false);
+        append_tool_panel(&chat, b, false);
+        assert_eq!(chat.child_count(), 2);
+        assert!(strip_ansi(&chat.render(80).join("\n")).contains("Read a.rs"));
+        TranscriptView::new(chat.clone()).set_expanded(true);
+        assert!(strip_ansi(&chat.render(80).join("\n")).contains("restored content"));
+    }
+
+    #[test]
+    fn exploration_crosses_empty_assistants_but_preserves_visible_text_order() {
+        let chat = Arc::new(Container::new());
+        let view = TranscriptView::new(chat.clone());
+        for id in ["a", "b", "c"] {
+            let blocks = if id == "c" {
+                vec![AssistantBlock::Text("Next step".into())]
+            } else {
+                vec![]
+            };
+            view.apply(
+                &UiEvent::AssistantUpdate {
+                    blocks: blocks.clone(),
+                    tool_calls: vec![UiToolCall {
+                        id: id.into(),
+                        name: "read".into(),
+                        args: serde_json::json!({"path": id}),
+                    }],
+                },
+                80,
+            );
+            view.apply(
+                &UiEvent::ToolEnd {
+                    id: id.into(),
+                    name: "read".into(),
+                    result: serde_json::json!({"content": []}),
+                    is_error: false,
+                },
+                80,
+            );
+            view.apply(&UiEvent::AssistantEnd { blocks }, 80);
+            let groups = chat
+                .get_children()
+                .iter()
+                .filter(|child| child.as_any().is::<ToolGroupComponent>())
+                .count();
+            assert_eq!(groups, if id == "c" { 2 } else { 1 });
+        }
+        let rendered = strip_ansi(&chat.render(80).join("\n"));
+        assert!(rendered.find("Read b").unwrap() < rendered.find("Next step").unwrap());
+        assert!(rendered.find("Next step").unwrap() < rendered.find("Read c").unwrap());
     }
 }

@@ -129,6 +129,7 @@ pub(super) async fn switch_to_session(
                 state.set_status(RunStatus::Idle);
                 return false;
             }
+            state.new_message_count.reset();
             chat.clear();
             add_welcome_message(chat);
             render_session_history(
@@ -255,6 +256,7 @@ pub(super) async fn fork_session(
         add_error_message(chat, &format!("Could not fork session: {error}"));
         return;
     }
+    state.new_message_count.reset();
     chat.clear();
     add_welcome_message(chat);
     render_session_history(
@@ -303,6 +305,7 @@ pub(super) async fn render_session_history(
         Err(_) => return,
     };
     let mut rendered_any = false;
+    let mut tool_arguments = std::collections::HashMap::new();
     for e in entries {
         match e {
             Entry::Message(me) => match &me.message {
@@ -312,6 +315,11 @@ pub(super) async fn render_session_history(
                     rendered_any = true;
                 }
                 AgentMessage::Assistant(a) => {
+                    for block in &a.content {
+                        if let ice_ai::types::Content::ToolCall(call) = block {
+                            tool_arguments.insert(call.id.clone(), call.arguments.clone());
+                        }
+                    }
                     let comp = Arc::new(AssistantMessageComponent::new(
                         AssistantMessageOptions::default(),
                     ));
@@ -360,12 +368,16 @@ pub(super) async fn render_session_history(
                     // not as part of the assistant text. Restore them as
                     // completed tool panels so resumed sessions show the
                     // command output as well as the user's prompts.
-                    let comp = Arc::new(ToolExecutionComponent::new(&result.tool_name, ""));
+                    let args = tool_arguments
+                        .remove(&result.tool_call_id)
+                        .map(|args| args.to_string())
+                        .unwrap_or_default();
+                    let comp = Arc::new(ToolExecutionComponent::new(&result.tool_name, &args));
                     comp.set_result(&tool_result_message_text(result), result.is_error);
                     if tool_result_requests_markdown(result.details.as_ref()) {
                         comp.set_result_markdown(true);
                     }
-                    chat.add_child(comp);
+                    crate::transcript_view::append_tool_panel(chat, comp, false);
                     for block in &result.content {
                         if let ice_ai::types::Content::Image(image) = block {
                             add_image_preview(chat, image, show_images);

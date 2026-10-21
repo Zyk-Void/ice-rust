@@ -457,6 +457,7 @@ fn test_tui_state() -> Arc<TuiState> {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -495,6 +496,7 @@ fn test_tui_state() -> Arc<TuiState> {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     })
 }
 
@@ -1631,6 +1633,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -1669,6 +1672,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
 
     // The drain handler takes `Arc<TuiAltScreen>`, which needs a real
@@ -2690,6 +2694,7 @@ fn test_autocomplete_slash_suggestions_render() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -2728,6 +2733,7 @@ fn test_autocomplete_slash_suggestions_render() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -2783,6 +2789,7 @@ fn test_select_list_swap_restores_editor() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -2821,6 +2828,7 @@ fn test_select_list_swap_restores_editor() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     let editor_container = Arc::new(Container::new());
     let editor = Arc::new(Editor::simple());
@@ -2879,6 +2887,7 @@ fn test_message_history_browse_restores_draft() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -2917,6 +2926,7 @@ fn test_message_history_browse_restores_draft() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     let editor = Arc::new(Editor::simple());
 
@@ -2978,6 +2988,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3016,6 +3027,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -3063,6 +3075,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3101,6 +3114,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     })
 }
 
@@ -3577,4 +3591,73 @@ fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
         "{:?}",
         names(&after)
     );
+}
+
+/// Over SSH the system clipboard is the remote machine's, so copies never
+/// reached the user. ice also sends OSC 52 then; oversized payloads are
+/// skipped because terminals drop or choke on them.
+#[test]
+fn osc52_copy_encodes_text_and_detects_remote_sessions() {
+    assert_eq!(
+        osc52_sequence("héllo").as_deref(),
+        Some("\x1b]52;c;aMOpbGxv\x07")
+    );
+    assert!(osc52_sequence(&"x".repeat(75_000)).is_some());
+    assert!(osc52_sequence(&"x".repeat(75_001)).is_none());
+    let env = |vars: &'static [(&'static str, &'static str)]| {
+        move |key: &str| {
+            vars.iter()
+                .find(|(k, _)| *k == key)
+                .map(|(_, v)| std::ffi::OsString::from(v))
+        }
+    };
+    assert!(is_remote_session(env(&[("SSH_CONNECTION", "1 2 3 4")])));
+    assert!(is_remote_session(env(&[("MOSH_CONNECTION", "1")])));
+    assert!(!is_remote_session(env(&[("SSH_CLIENT", "")])));
+    assert!(!is_remote_session(env(&[])));
+}
+
+/// ice leaves a dim "✻ Worked for 3m 17s" line when a run finishes on its
+/// own, and nothing after an aborted or failed run.
+#[test]
+fn run_summary_aborting_then_idle_does_not_report_a_cancelled_tool_run() {
+    let state = test_tui_state();
+    state.set_status(RunStatus::Working);
+    *state.run_started_at.lock().unwrap() = Some(std::time::Instant::now());
+    state.set_status(RunStatus::Aborting);
+    // The prompt result can win the race with the AgentEnd broadcast drain.
+    state.set_status(RunStatus::Idle);
+    let mut assistant = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+    assistant.stop_reason = ice_ai::types::StopReason::ToolUse;
+    let messages = [AgentMessage::Assistant(Box::new(assistant))];
+    let started = state.run_started_at.lock().unwrap().take();
+    assert_eq!(
+        started.and_then(|at| run_summary_line(&messages, at.elapsed())),
+        None,
+    );
+}
+
+#[test]
+fn run_summary_line_marks_finished_runs_only() {
+    use ice_ai::types::StopReason;
+    let reply = |stop: StopReason| {
+        let mut a = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+        a.stop_reason = stop;
+        AgentMessage::Assistant(Box::new(a))
+    };
+    let at = |secs: u64| std::time::Duration::from_secs(secs);
+    let done = run_summary_line(&[reply(StopReason::Stop)], at(197)).unwrap();
+    assert!(
+        done.starts_with("✻ ") && done.ends_with(" for 3m 17s"),
+        "{done}"
+    );
+    assert!(run_summary_line(&[reply(StopReason::Stop)], at(45))
+        .unwrap()
+        .ends_with(" for 45s"));
+    assert!(run_summary_line(&[reply(StopReason::Stop)], at(3720))
+        .unwrap()
+        .ends_with(" for 1h 2m"));
+    assert_eq!(run_summary_line(&[reply(StopReason::Aborted)], at(5)), None);
+    assert_eq!(run_summary_line(&[reply(StopReason::Error)], at(5)), None);
+    assert_eq!(run_summary_line(&[], at(5)), None);
 }

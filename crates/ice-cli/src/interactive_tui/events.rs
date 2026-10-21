@@ -178,14 +178,26 @@ pub(super) async fn handle_agent_event(
 ) {
     match event {
         AgentEvent::AgentStart => {
+            *state.run_started_at.lock().unwrap() = Some(std::time::Instant::now());
             state.set_status(RunStatus::Working);
             tui.request_render(false);
         }
 
-        AgentEvent::AgentEnd { .. } => {
+        AgentEvent::AgentEnd { messages } => {
             // Finalize any still-streaming assistant message.
             state.transcript_view().finalize_assistant();
             state.set_status(RunStatus::Idle);
+            // A run that finished on its own leaves a dim "✻ Worked for 3m
+            // 17s" line (ice `createRunSummary`); aborted or failed runs don't.
+            let started = state.run_started_at.lock().unwrap().take();
+            if let Some(line) = started.and_then(|at| run_summary_line(&messages, at.elapsed())) {
+                chat.add_child(Arc::new(Spacer::new(1)));
+                chat.add_child(Arc::new(Text::new(
+                    current_theme().colors.dim.fg(&line),
+                    0,
+                    0,
+                )));
+            }
             // Flush any `!command` results that completed mid-run: the run's
             // tool sequence is closed, so appending now keeps transcript order
             // intact (upstream's `flushPendingBashMessages`).
@@ -238,6 +250,7 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageStart { message } => match message {
             AgentMessage::Assistant(a) => {
+                state.new_message_count.begin_assistant_message();
                 // The shared transcript view renders this through the same
                 // component path as the remote client. It installs the live
                 // markdown transformer + hide-thinking preference itself.
@@ -250,6 +263,7 @@ pub(super) async fn handle_agent_event(
                 tui.request_render(false);
             }
             AgentMessage::Custom(custom) => {
+                state.new_message_count.custom_message();
                 let payload = serde_json::json!({
                     "customType": custom.role,
                     "content": custom.content,
@@ -281,15 +295,16 @@ pub(super) async fn handle_agent_event(
             // so no `message_start` is emitted for it — the submit handler
             // renders that bubble instead.
             AgentMessage::User(user) => {
+                state.new_message_count.other_message();
                 state.transcript_view().add_user(&user_message_text(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
                 refresh_pending_messages(state, lane).await;
                 tui.request_render(false);
             }
-            // ToolResult / other starts are echoed via the tool-execution
-            // components; ignore the dupes.
-            _ => {}
+            // Tool results break adjacent assistant continuations, but their
+            // starts are echoed via tool-execution components.
+            AgentMessage::ToolResult(_) => state.new_message_count.other_message(),
         },
 
         AgentEvent::MessageUpdate {
@@ -299,6 +314,9 @@ pub(super) async fn handle_agent_event(
             let _ = assistant_message_event; // the snapshot is authoritative
             let a: &ice_ai::types::AssistantMessage = &message;
             let text = assistant_text(a);
+            state
+                .new_message_count
+                .assistant_message(!text.trim().is_empty());
             // The shared view creates/updates tool + bash panels from the
             // snapshot's finalized tool calls and streams the block list, so a
             // thinking block renders live exactly as the remote client does.
@@ -317,6 +335,9 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageEnd { message } => {
             if let AgentMessage::Assistant(a) = &message {
+                state
+                    .new_message_count
+                    .assistant_message(!assistant_text(a).trim().is_empty());
                 let text = assistant_text(a);
                 state
                     .transcript_view()
@@ -506,4 +527,44 @@ pub(super) fn tool_result_requests_markdown(details: Option<&serde_json::Value>)
         .and_then(|details| details.get("markdown"))
         .and_then(|value| value.as_bool())
         .unwrap_or(false)
+}
+
+/// Verbs for the run-summary line, one picked per run (ice
+/// `RUN_SUMMARY_VERBS`).
+const RUN_SUMMARY_VERBS: [&str; 12] = [
+    "Worked", "Sautéed", "Simmered", "Brewed", "Baked", "Churned", "Cooked", "Crunched", "Whisked",
+    "Forged", "Pondered", "Tinkered",
+];
+
+/// `✻ Worked for 3m 17s` when the run's last assistant message finished on
+/// its own; `None` for an aborted or failed run.
+pub(super) fn run_summary_line(
+    messages: &[AgentMessage],
+    elapsed: std::time::Duration,
+) -> Option<String> {
+    let last = messages.iter().rev().find_map(|m| match m {
+        AgentMessage::Assistant(a) => Some(a),
+        _ => None,
+    })?;
+    if matches!(
+        last.stop_reason,
+        ice_ai::types::StopReason::Aborted | ice_ai::types::StopReason::Error
+    ) {
+        return None;
+    }
+    let verb = RUN_SUMMARY_VERBS[(elapsed.subsec_nanos() as usize) % RUN_SUMMARY_VERBS.len()];
+    Some(format!("✻ {verb} for {}", format_run_duration(elapsed)))
+}
+
+/// `45s`, `3m 17s`, `1h 2m` (ice `formatShellRuntime`).
+fn format_run_duration(elapsed: std::time::Duration) -> String {
+    let seconds = elapsed.as_secs();
+    if seconds < 60 {
+        return format!("{seconds}s");
+    }
+    let minutes = seconds / 60;
+    if minutes < 60 {
+        return format!("{minutes}m {}s", seconds % 60);
+    }
+    format!("{}h {}m", minutes / 60, minutes % 60)
 }

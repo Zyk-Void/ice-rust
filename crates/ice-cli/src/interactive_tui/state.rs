@@ -225,6 +225,8 @@ pub(super) struct TuiState {
     /// The last finalized assistant text (for `/copy`). Updated by the drain
     /// task on `MessageEnd` / `AgentEnd`.
     pub(super) last_assistant_text: std::sync::Mutex<String>,
+    /// Visible assistant turns added while the transcript is scrolled away.
+    pub(super) new_message_count: Arc<crate::transcript_navigation::NewMessageCount>,
     /// The active selector overlay, swapped into the editor slot. `Some` while
     /// a selector is open; the key loop routes to it first and restores the
     /// editor on done/cancel.
@@ -333,6 +335,8 @@ pub(super) struct TuiState {
     pub(super) pending_snapshot: std::sync::Mutex<ice_harness::agent_harness::QueuedMessages>,
     /// Fullscreen selection tracking for auto-copy.
     pub(super) selection_start: std::sync::Mutex<Option<(u16, u16)>>,
+    /// When the current agent run started, for the run-summary line.
+    pub(super) run_started_at: std::sync::Mutex<Option<std::time::Instant>>,
     pub(super) selection_end: std::sync::Mutex<Option<(u16, u16)>>,
 }
 
@@ -718,6 +722,27 @@ pub(super) fn sync_editor_viewport(editor: &Editor) {
     }
 }
 
+/// Inside tmux, check in the background whether its key settings block
+/// Shift+Enter and similar keys, and say how to fix them (ice
+/// `checkTmuxKeyboardSetup`). Never delays startup.
+pub(super) fn spawn_tmux_keyboard_check(chat: &Arc<Container>, tui: &Arc<TuiAltScreen>) {
+    if std::env::var_os("TMUX").map_or(true, |v| v.is_empty()) {
+        return;
+    }
+    let chat = chat.clone();
+    let tui = tui.clone();
+    std::thread::spawn(move || {
+        let keys = crate::extras::tmux_show("extended-keys");
+        let format = crate::extras::tmux_show("extended-keys-format");
+        if let Some(warning) =
+            crate::extras::tmux_keyboard_warning(keys.as_deref(), format.as_deref())
+        {
+            add_note_message(&chat, warning);
+            tui.request_render(false);
+        }
+    });
+}
+
 /// upstream's `handleCtrlZ` (`app.suspend`): hand the terminal back to the
 /// shell and stop the process. `raise(SIGTSTP)` returns once the user resumes
 /// us with `fg`/`bg`, at which point we re-enter the alternate screen.
@@ -778,6 +803,7 @@ pub(super) fn submit_draft(
     if text.trim().is_empty() || !state.try_start_working() {
         return;
     }
+    state.new_message_count.other_message();
     add_user_message(&state.chat_container, text);
     if let Some(tui) = &state.tui {
         if let Some(scroll) = tui.get_primary_scroll_view() {
@@ -929,6 +955,12 @@ impl TuiState {
     }
 
     pub(super) fn set_status(&self, status: RunStatus) {
+        if status == RunStatus::Aborting {
+            // Tool cancellation can retain a ToolUse assistant stop reason.
+            // Retire the summary timer now: prompt completion may restore Idle
+            // before the asynchronous AgentEnd event is drained.
+            self.run_started_at.lock().unwrap().take();
+        }
         *self.status.lock().unwrap() = status;
         self.apply_status(status);
     }

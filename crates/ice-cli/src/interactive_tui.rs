@@ -1001,19 +1001,13 @@ pub async fn interactive_tui(
     // components keep styled text, so doing this after the welcome banner left
     // the first screen in the dark palette until it was rebuilt.
     let theme_manager = Arc::new(ThemeManager::new());
-    if let Some(preset) = match theme {
-        Some("light") => Some(ThemePreset::Light),
-        Some("monochrome") => Some(ThemePreset::Monochrome),
-        Some("dark") => Some(ThemePreset::Dark),
-        _ => None,
-    } {
-        apply_theme_preset(preset);
-        theme_manager.apply_preset(preset);
-    }
+    let mut theme_input = crate::terminal_theme::ThemeInput::new(theme, theme_manager.clone());
 
     // ---- TUI + containers ----
     let terminal = Box::new(ProcessTerminal::new());
     let tui = Arc::new(TuiAltScreen::new(terminal, true, None));
+    let theme_tui = tui.clone();
+    theme_input.on_change(Arc::new(move || theme_tui.request_render(false)));
     // Plugin `ask_user` prompts (runtime action 17). Attaching marks this
     // session as interactive so a detached/headless host fails loudly instead
     // of returning a fabricated answer. The mailbox is session-scoped (held in
@@ -1042,6 +1036,7 @@ pub async fn interactive_tui(
         || saved_settings.last_changelog_version.is_some()
         || saved_settings.last_ice_changelog_version.is_some();
     crate::extras::maybe_first_time_setup(&chat_container);
+    spawn_tmux_keyboard_check(&chat_container, &tui);
     let collapse_changelog =
         preferred_project_setting(&project_settings, |settings| settings.collapse_changelog)
             .or(saved_settings.collapse_changelog)
@@ -1110,7 +1105,12 @@ pub async fn interactive_tui(
     // editor renders full-width `─` top/bottom borders with padding-only lines
     // (see Editor::render). padding_x:1 gives a 1-col inset inside the box.
     let keybindings = configured_keybindings();
-    crate::transcript_navigation::install(&tui, keybindings.clone());
+    let new_message_count = Arc::new(crate::transcript_navigation::NewMessageCount::default());
+    crate::transcript_navigation::install_with_message_count(
+        &tui,
+        keybindings.clone(),
+        Some(new_message_count.clone()),
+    );
     let editor = Arc::new(Editor::new(
         EditorOptions {
             padding_x: editor_padding_x,
@@ -1222,6 +1222,7 @@ pub async fn interactive_tui(
         loader: loader.clone(),
         editor: editor.clone(),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count,
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -1258,6 +1259,7 @@ pub async fn interactive_tui(
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
 
     let _compaction_watcher = harness.watch({
@@ -1720,13 +1722,11 @@ pub async fn interactive_tui(
             } else {
                 // `event::read()` blocks indefinitely. Poll first so shutdown can
                 // stop and join this worker even when no further key arrives.
-                match crossterm::event::poll(
-                    if cfg!(windows) && !windows_paste_run.text.is_empty() {
-                        windows_paste_run.grace()
-                    } else {
-                        std::time::Duration::from_millis(50)
-                    },
-                ) {
+                match theme_input.poll(if cfg!(windows) && !windows_paste_run.text.is_empty() {
+                    windows_paste_run.grace()
+                } else {
+                    std::time::Duration::from_millis(50)
+                }) {
                     Ok(true) => {}
                     Ok(false) => {
                         if cfg!(windows) && !windows_paste_run.text.is_empty() {
@@ -1742,7 +1742,7 @@ pub async fn interactive_tui(
                         break;
                     }
                 }
-                let Ok(ev) = crossterm::event::read() else {
+                let Ok(ev) = theme_input.read() else {
                     state_for_key.cancel_js_preparation();
                     let _ = tx_for_key.send(TuiMessage::Exit);
                     break;
@@ -2673,6 +2673,7 @@ pub async fn interactive_tui(
                         // Direct send: the harness emits no user `message_start`
                         // for it, so render the bubble here (see the submit
                         // handler in `interactive_tui`).
+                        state_for_key.new_message_count.other_message();
                         add_user_message(&state_for_key.chat_container, &prompt);
                         push_history(&state_for_key, &prompt);
                         let _ = tx_for_key.send(TuiMessage::UserInput(
@@ -2747,8 +2748,8 @@ pub async fn interactive_tui(
                     )
                 {
                     let (more_queued, stashed) = probe_paste_input(pending_event.take(), || {
-                        if crossterm::event::poll(PASTE_PROBE).unwrap_or(false) {
-                            crossterm::event::read().ok()
+                        if theme_input.poll(PASTE_PROBE).unwrap_or(false) {
+                            theme_input.read().ok()
                         } else {
                             None
                         }
@@ -2832,6 +2833,7 @@ pub async fn interactive_tui(
         // The harness emits no user `message_start` for a directly-sent prompt
         // (it drives the loop with an empty prompts vec), so the initial
         // `-p` / `--prompt` bubbles are rendered here.
+        state.new_message_count.other_message();
         add_user_message(&chat_container, &prompt);
         add_image_previews(&chat_container, &images, show_images);
         tui.request_render(false);
@@ -2973,6 +2975,7 @@ pub async fn interactive_tui(
                 match lane.navigate_tree(Some(&entry_id), false, None, None).await {
                     Ok(result) => match result.outcome {
                         ice_harness::agent_harness::NavigationOutcome::Completed { .. } => {
+                            state.new_message_count.reset();
                             chat_container.clear();
                             add_welcome_message(&chat_container);
                             render_session_history(
@@ -3004,6 +3007,7 @@ pub async fn interactive_tui(
                 tui.request_render(false);
             }
             Some(TuiMessage::ClearChat) => {
+                state.new_message_count.reset();
                 chat_container.clear();
                 add_welcome_message(&chat_container);
                 tui.request_render(false);

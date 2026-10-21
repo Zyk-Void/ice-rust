@@ -56,6 +56,7 @@ pub mod terminal_image;
 pub mod text;
 pub mod theme;
 pub mod tool_execution;
+pub mod tool_group;
 mod tool_panel;
 pub mod truncated_text;
 pub mod tui;
@@ -147,6 +148,7 @@ pub use theme::{
     ThemeManager, ThemePreset, ThemeSpacing,
 };
 pub use tool_execution::{ToolExecutionComponent, ToolStatus};
+pub use tool_group::{describe_exploration, ToolGroupComponent};
 pub use truncated_text::TruncatedText;
 pub use tui::{
     OverlayAnchor, OverlayHandle as TuiOverlayHandle, OverlayMargin, OverlayOptions, TuiMode,

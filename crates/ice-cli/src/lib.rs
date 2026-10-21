@@ -67,6 +67,7 @@ mod session_search;
 pub mod settings;
 mod side_questions;
 pub mod source_info;
+mod terminal_theme;
 pub mod timings;
 mod transcript_navigation;
 pub mod transcript_view;
