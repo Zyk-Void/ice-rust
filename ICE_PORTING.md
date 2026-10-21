@@ -509,6 +509,9 @@ dialogs, side questions and `ask_user`, own stdio, and run child agents
 passes to `main()` so global settings win over project ones.
 
 ### 7.5 Interactive TUI components missing
+
+**Phase 0 TUI parity landed 2026-10-21** (PRs [#1](https://github.com/Zyk-Void/ice-rust/pull/1), [#2](https://github.com/Zyk-Void/ice-rust/pull/2), [#27](https://github.com/Zyk-Void/ice-rust/pull/27), [#28](https://github.com/Zyk-Void/ice-rust/pull/28), [#29](https://github.com/Zyk-Void/ice-rust/pull/29)). This covers the reachable defects from TUI-226/244/248/254, grapheme width and wrapping (TUI-201/202), grapheme-cell slicing and OSC 8 handling (TUI-203/204), and Text/TruncatedText/Box/Spacer contracts (TUI-205). PR #29 changes the public `ice-tui` component API and rendering behavior. The detailed `docs/ice-gap/tui.md` audit is not present on this branch; this note records only the landed Phase 0 scope, not completion of the broader TUI parity audit.
+
 From `CA/modes/interactive/components/`:
 - **Appearance:** `appearance-customizer.ts` (3110 lines) edits semantic theme-token
   groups, one group per editor screen. `appearance-preview.ts` adds live preview
