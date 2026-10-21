@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
 
 use crossterm::event::{KeyCode, KeyModifiers};
-use unicode_width::UnicodeWidthStr;
+use unicode_segmentation::UnicodeSegmentation;
 
 use super::component::{Component, Focusable};
 use super::keybindings::Keybindings;
@@ -198,9 +198,17 @@ fn decode_csi_u_ctrl(text: &str) -> String {
     .into_owned()
 }
 
-/// Split a logical editor line into terminal-width chunks. The editor keeps
-/// logical lines for editing and cursor movement; wrapping is strictly a
-/// rendering concern so a long draft cannot escape the bordered input box.
+/// A rendered segment of a logical editor line.
+#[derive(Debug, Clone, Copy)]
+struct VisualLine {
+    logical_row: usize,
+    start: usize,
+    end: usize,
+}
+
+/// Split a logical editor line into terminal-width chunks at grapheme
+/// boundaries. Rendering and vertical navigation share this layout so a
+/// caret can move through the visual rows users actually see.
 fn wrap_line_ranges(line: &str, max_width: usize) -> Vec<(usize, usize)> {
     if line.is_empty() {
         return vec![(0, 0)];
@@ -208,45 +216,79 @@ fn wrap_line_ranges(line: &str, max_width: usize) -> Vec<(usize, usize)> {
     let max_width = max_width.max(1);
     let mut ranges = Vec::new();
     let mut start = 0;
-    let mut width = 0;
-    for (idx, ch) in line.char_indices() {
-        let char_width = UnicodeWidthStr::width(ch.to_string().as_str());
-        if idx > start && width + char_width > max_width {
+    let mut width = 0usize;
+    for (idx, grapheme) in line.grapheme_indices(true) {
+        let grapheme_width = crate::ansi::visible_width(grapheme);
+        if idx > start && width.saturating_add(grapheme_width) > max_width {
             ranges.push((start, idx));
             start = idx;
             width = 0;
         }
-        width += char_width;
+        width = width.saturating_add(grapheme_width);
     }
     ranges.push((start, line.len()));
     ranges
+}
+
+fn visual_lines(lines: &[String], width: usize) -> Vec<VisualLine> {
+    lines
+        .iter()
+        .enumerate()
+        .flat_map(|(logical_row, line)| {
+            wrap_line_ranges(line, width)
+                .into_iter()
+                .map(move |(start, end)| VisualLine {
+                    logical_row,
+                    start,
+                    end,
+                })
+        })
+        .collect()
+}
+
+fn visual_column(line: &str, start: usize, end: usize, byte_col: usize) -> usize {
+    crate::ansi::visible_width(&line[start..byte_col.min(end)])
+}
+
+/// Convert a display-cell column in one visual segment back to a valid byte
+/// offset. If the target falls inside a wide grapheme, stop before it.
+fn byte_column_at_visual_column(line: &str, start: usize, end: usize, column: usize) -> usize {
+    let mut width = 0usize;
+    for (idx, grapheme) in line[start..end].grapheme_indices(true) {
+        let grapheme_width = crate::ansi::visible_width(grapheme);
+        if width.saturating_add(grapheme_width) > column {
+            return start + idx;
+        }
+        width = width.saturating_add(grapheme_width);
+    }
+    end
 }
 
 /// Insert the zero-width cursor marker at a visible column without slicing
 /// through ANSI escape sequences added for selection/placeholder styling.
 fn insert_cursor_marker(text: &str, column: usize) -> String {
     let mut out = String::with_capacity(text.len() + CURSOR_MARKER.len());
-    let mut visible = 0;
-    let mut chars = text.char_indices().peekable();
+    let mut visible = 0usize;
+    let mut cursor = 0usize;
     let mut inserted = false;
-    while let Some((idx, ch)) = chars.next() {
-        if ch == '\x1b' {
-            out.push(ch);
-            while let Some((_, esc)) = chars.next() {
-                out.push(esc);
-                if esc == '\x07' || ('@'..='~').contains(&esc) {
-                    break;
-                }
-            }
+    while cursor < text.len() {
+        if text[cursor..].starts_with('\x1b') {
+            let escape_len = crate::ansi::escape_len(&text[cursor..]);
+            out.push_str(&text[cursor..cursor + escape_len]);
+            cursor += escape_len;
             continue;
         }
+        let grapheme = text[cursor..]
+            .graphemes(true)
+            .next()
+            .expect("cursor is at a UTF-8 boundary");
         if !inserted && visible >= column {
             out.push_str(CURSOR_MARKER);
             inserted = true;
         }
-        out.push(ch);
-        visible += UnicodeWidthStr::width(ch.to_string().as_str());
-        let _ = idx;
+        out.push_str(grapheme);
+        visible = visible.saturating_add(crate::ansi::visible_width(grapheme));
+        cursor += grapheme.len();
     }
     if !inserted {
         out.push_str(CURSOR_MARKER);
@@ -257,6 +299,10 @@ fn insert_cursor_marker(text: &str, column: usize) -> String {
 /// Editor - A multi-line text editor component.
 pub struct Editor {
     state: Mutex<EditorState>,
+    /// Display width used to lay out visual rows, updated by `render`.
+    visual_width: Mutex<usize>,
+    /// Sticky display column for consecutive vertical cursor movements.
+    preferred_visual_column: Mutex<Option<usize>>,
     options: EditorOptions,
     #[allow(dead_code)]
     style: EditorStyle,
@@ -328,6 +374,8 @@ impl Editor {
 
         Self {
             state: Mutex::new(state),
+            visual_width: Mutex::new(79),
+            preferred_visual_column: Mutex::new(None),
             options,
             style,
             keybindings,
@@ -571,6 +619,7 @@ impl Editor {
             state.cursor_col = col;
             state.selection_anchor = None;
         }
+        self.reset_preferred_visual_column();
     }
 
     /// Snapshot the current text + caret state (for undo/redo), including the
@@ -960,6 +1009,7 @@ impl Editor {
 
     /// Move cursor left.
     fn cursor_left(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             if state.cursor_col > 0 {
                 let row = state.cursor_row;
@@ -987,6 +1037,7 @@ impl Editor {
 
     /// Move cursor right.
     fn cursor_right(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             let line = &state.lines[row];
@@ -1012,34 +1063,75 @@ impl Editor {
         }
     }
 
-    /// Move cursor up.
-    fn cursor_up(&self) {
-        if let Ok(mut state) = self.state.lock() {
-            if state.cursor_row > 0 {
-                state.cursor_row -= 1;
-                let new_row = state.cursor_row;
-                let max = state.lines[new_row].len();
-                // The byte column may fall mid-character in the new (shorter
-                // or differently-encoded) line; snap to a boundary.
-                state.cursor_col = snap_boundary(&state.lines[new_row], state.cursor_col.min(max));
-            }
-        }
+    fn move_cursor_vertical(&self, direction: isize) {
+        let Ok(mut state) = self.state.lock() else {
+            return;
+        };
+        let width = self.visual_width.lock().map(|w| *w).unwrap_or(79).max(1);
+        let visual = visual_lines(&state.lines, width);
+        let Some(current) = visual.iter().position(|line| {
+            line.logical_row == state.cursor_row
+                && (state.cursor_col >= line.start
+                    && (state.cursor_col < line.end
+                        || (line.end == state.lines[state.cursor_row].len()
+                            && state.cursor_col == line.end)))
+        }) else {
+            return;
+        };
+        let target = if direction < 0 {
+            current.checked_sub(1)
+        } else {
+            (current + 1 < visual.len()).then_some(current + 1)
+        };
+        let Some(target) = target else {
+            return;
+        };
+        let source = visual[current];
+        let destination = visual[target];
+        let source_text = &state.lines[source.logical_row];
+        let destination_text = &state.lines[destination.logical_row];
+        let current_column = visual_column(source_text, source.start, source.end, state.cursor_col);
+        let mut preferred = self.preferred_visual_column.lock().unwrap();
+        let preferred_column = *preferred.get_or_insert(current_column);
+        let destination_width =
+            crate::ansi::visible_width(&destination_text[destination.start..destination.end]);
+        let continues_on_next_visual_row = visual
+            .get(target + 1)
+            .is_some_and(|next| next.logical_row == destination.logical_row);
+        let max_column = if continues_on_next_visual_row {
+            destination_width.saturating_sub(1)
+        } else {
+            destination_width
+        };
+        let target_byte_column = byte_column_at_visual_column(
+            destination_text,
+            destination.start,
+            destination.end,
+            preferred_column.min(max_column),
+        );
+        state.cursor_row = destination.logical_row;
+        state.cursor_col = target_byte_column;
     }
 
-    /// Move cursor down.
+    /// Move cursor to the previous rendered row.
+    fn cursor_up(&self) {
+        self.move_cursor_vertical(-1);
+    }
+
+    /// Move cursor to the next rendered row.
     fn cursor_down(&self) {
-        if let Ok(mut state) = self.state.lock() {
-            if state.cursor_row < state.lines.len() - 1 {
-                state.cursor_row += 1;
-                let new_row = state.cursor_row;
-                let max = state.lines[new_row].len();
-                state.cursor_col = snap_boundary(&state.lines[new_row], state.cursor_col.min(max));
-            }
+        self.move_cursor_vertical(1);
+    }
+
+    fn reset_preferred_visual_column(&self) {
+        if let Ok(mut preferred) = self.preferred_visual_column.lock() {
+            *preferred = None;
         }
     }
 
     /// Move cursor to start of line.
     fn cursor_home(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             state.cursor_col = 0;
         }
@@ -1047,6 +1139,7 @@ impl Editor {
 
     /// Move cursor to end of line.
     fn cursor_end(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             state.cursor_col = state.lines[row].len();
@@ -1238,6 +1331,7 @@ impl Editor {
 
     /// Notify change callback.
     fn notify_change(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(cb) = self.on_change.lock() {
             if let Some(callback) = cb.as_ref() {
                 let text = self.get_text();
@@ -1430,19 +1524,15 @@ impl Component for Editor {
         // `editor.ts:539-578`). The `EditorStyle.prompt` field is retained for
         // API compatibility but unread here.
         let content_width = width.saturating_sub(self.options.padding_x).max(1);
-        // Leave one cell for the cursor marker on the active logical line so
-        // the terminal never performs an implicit wrap at the right border.
-        let active_width = content_width.saturating_sub(1).max(1);
+        // Reserve the final cell for the cursor on every visual row so wrap
+        // boundaries stay stable while navigating between logical lines.
+        let visual_width = content_width.saturating_sub(1).max(1);
+        if let Ok(mut stored_width) = self.visual_width.lock() {
+            *stored_width = visual_width;
+        }
         for (row_idx, line) in state.lines.iter().enumerate() {
-            let ranges = wrap_line_ranges(
-                line,
-                if row_idx == state.cursor_row {
-                    active_width
-                } else {
-                    content_width
-                },
-            );
-            for (chunk_start, chunk_end) in ranges {
+            let ranges = wrap_line_ranges(line, visual_width);
+            for (range_idx, (chunk_start, chunk_end)) in ranges.iter().copied().enumerate() {
                 let chunk = &line[chunk_start..chunk_end];
                 // Placeholder (dim) only on the single empty line at the cursor —
                 // honors callers that set `placeholder`; production drops it.
@@ -1499,15 +1589,15 @@ impl Component for Editor {
                 // and the prefix length is computed in *bytes* of the source line,
                 // snap the insertion point to the nearest preceding char boundary
                 // in `rendered` before byte-slicing — never slice mid-character.
+                let is_last_chunk = range_idx + 1 == ranges.len();
                 if state.focused
                     && row_idx == state.cursor_row
                     && state.cursor_col >= chunk_start
-                    && state.cursor_col <= chunk_end
+                    && (state.cursor_col < chunk_end
+                        || (is_last_chunk && state.cursor_col == chunk_end))
                 {
-                    let cursor_col = UnicodeWidthStr::width(
-                        line[chunk_start..state.cursor_col.min(chunk_end)]
-                            .to_string()
-                            .as_str(),
+                    let cursor_col = crate::ansi::visible_width(
+                        &line[chunk_start..state.cursor_col.min(chunk_end)],
                     );
                     rendered = insert_cursor_marker(&rendered, self.options.padding_x + cursor_col);
                 }
@@ -2299,6 +2389,95 @@ l12",
         let rendered = crate::ansi::strip_ansi(&lines.join("\n"));
         assert!(rendered.contains("1234567"));
         assert!(rendered.contains("90123456"));
+    }
+
+    #[test]
+    fn up_and_down_move_between_visual_rows_of_a_wrapped_line() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("abcdefghijklmnopqrst");
+        editor.render(10); // 8 text cells per visual line; active row reserves 1.
+        editor.set_cursor(0, 13);
+
+        editor.handle_key(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (0, 5));
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (0, 13));
+    }
+
+    #[test]
+    fn vertical_visual_column_is_sticky_across_short_logical_lines() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("abcdefghij\nxyz\nabcdefghij");
+        editor.render(12);
+        editor.set_cursor(0, 8);
+
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (1, 3));
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (2, 8));
+    }
+
+    #[test]
+    fn vertical_visual_movement_uses_grapheme_cell_widths() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("ab界defgh\n12345678");
+        editor.render(12);
+        editor.set_cursor(0, 5); // after `界`, at display column 4
+
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (1, 4));
+    }
+
+    #[test]
+    fn horizontal_movement_resets_visual_column_preference() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("abcdefghij\nxyz\nabcdefghij");
+        editor.render(12);
+        editor.set_cursor(0, 8);
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        editor.handle_key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE));
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (2, 2));
     }
 
     #[test]
