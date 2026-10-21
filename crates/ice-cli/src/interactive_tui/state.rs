@@ -62,6 +62,8 @@ pub(super) enum SelectorKind {
     Settings,
     /// `/tree` — navigate to an existing entry in the current session.
     Tree,
+    /// `/fork` — choose the user message to fork before.
+    Fork,
     /// Extension-provided selector; uses the same keyboard contract.
     Extension,
 }
@@ -81,15 +83,43 @@ pub(super) enum SelectorView {
     /// The `/settings` menu: value rows cycle in place, submenu rows open a
     /// nested selector.
     Settings(Arc<SettingsList>),
+    /// Feature-specific keyboard handling with a separate component view.
+    Custom(Arc<dyn Fn(KeyEvent) + Send + Sync>),
 }
 
 impl SelectorView {
     /// Route a key to the appropriate child.
     pub(super) fn handle_key(&self, key: KeyEvent) {
+        let bindings = ice_tui::get_keybindings().clone();
+        let selection_key = bindings.selection_key(&key);
         match self {
-            Self::List(list) => list.handle_key(key),
-            Self::Searchable(searchable) => searchable.handle_key(key),
-            Self::Settings(settings) => settings.handle_key(key),
+            Self::List(list) => {
+                if let Some(key) = selection_key {
+                    list.handle_key(key);
+                } else if list.is_multi_select()
+                    && key.code == KeyCode::Char(' ')
+                    && key.modifiers == KeyModifiers::NONE
+                {
+                    list.handle_key(key);
+                }
+            }
+            Self::Searchable(searchable) => searchable.handle_key_with_bindings(key, &bindings),
+            Self::Settings(settings) => {
+                if let Some(key) = selection_key {
+                    settings.handle_key(key);
+                } else if !matches!(
+                    key.code,
+                    KeyCode::Up
+                        | KeyCode::Down
+                        | KeyCode::Enter
+                        | KeyCode::Esc
+                        | KeyCode::PageUp
+                        | KeyCode::PageDown
+                ) {
+                    settings.handle_key(key);
+                }
+            }
+            Self::Custom(handle) => handle(key),
         }
     }
 }
@@ -155,6 +185,10 @@ pub(super) fn auto_send_step(
 }
 
 pub(super) struct TuiState {
+    /// Tree navigation cancellation must not move source-session queues into the draft.
+    pub(super) tree_navigation_active: std::sync::atomic::AtomicBool,
+    /// Serializes a session replacement after the old run's UI events.
+    pub(super) event_drain: AgentEventDrain,
     /// The in-flight streaming assistant message (cleared on finalize).
     /// `Arc`-shared with the [`TranscriptView`] the event drain renders through,
     /// so the render-tick / reload / toggle paths keep direct access.
@@ -222,6 +256,8 @@ pub(super) struct TuiState {
     /// The last finalized assistant text (for `/copy`). Updated by the drain
     /// task on `MessageEnd` / `AgentEnd`.
     pub(super) last_assistant_text: std::sync::Mutex<String>,
+    /// Visible assistant turns added while the transcript is scrolled away.
+    pub(super) new_message_count: Arc<crate::transcript_navigation::NewMessageCount>,
     /// The active selector overlay, swapped into the editor slot. `Some` while
     /// a selector is open; the key loop routes to it first and restores the
     /// editor on done/cancel.
@@ -295,9 +331,9 @@ pub(super) struct TuiState {
     /// counts and prices prompt-cache misses across turns using the same
     /// noise floor, idle-gap, and model-change logic as the batch scan.
     pub(super) cache_tracker: std::sync::Mutex<ice_harness::cache_stats::CacheMissTracker>,
-    /// The in-progress scoped-models selection while the `/scoped-models`
-    /// selector is open (toggle per item, Esc saves). `None` when not editing.
-    pub(super) scoped_edit: std::sync::Mutex<Option<Vec<String>>>,
+    /// Runtime model scope. Settings are read at startup and written only on
+    /// explicit save; selector cancellation leaves this selection unchanged.
+    pub(super) scoped_models: std::sync::Mutex<Option<Vec<String>>>,
     /// B5e: the live assistant-markdown transformer, built from the current
     /// `RegistrySnapshot`'s `register_markdown_transformer` handlers. `None`
     /// when no markdown transformers are registered (identity render path).
@@ -328,8 +364,9 @@ pub(super) struct TuiState {
     /// `set_pending_queue` skip redundant rebuilds + frame requests when the
     /// polled queue is unchanged.
     pub(super) pending_snapshot: std::sync::Mutex<ice_harness::agent_harness::QueuedMessages>,
-    /// Fullscreen selection tracking for auto-copy.
-    pub(super) selection_start: std::sync::Mutex<Option<(u16, u16)>>,
+    /// Logical transcript (column, row, wrapping width) where a drag began.
+    pub(super) selection_start: std::sync::Mutex<Option<(usize, usize, usize)>>,
+    /// Logical transcript endpoint of the current selection.
     pub(super) selection_end: std::sync::Mutex<Option<(u16, u16)>>,
 }
 
@@ -350,33 +387,37 @@ pub(super) const MOUSE_WHEEL_SCROLL_LINES: i32 = 3;
 /// Parse the compact key notation used by upstream settings (for example
 /// `ctrl+g`, `shift+tab`, or `escape`) into crossterm's representation.
 pub(super) fn parse_configured_key(value: &str) -> Option<ice_tui::KeyCombo> {
+    let value = value.trim().to_ascii_lowercase();
+    let (prefix, key) = if value == "+" {
+        ("", "+")
+    } else if let Some(prefix) = value.strip_suffix("++") {
+        (prefix, "+")
+    } else {
+        value.rsplit_once('+').unwrap_or(("", value.as_str()))
+    };
     let mut modifiers = KeyModifiers::NONE;
-    let mut key = None;
-    for part in value.trim().to_ascii_lowercase().split('+') {
-        match part {
-            "ctrl" | "control" => modifiers |= KeyModifiers::CONTROL,
-            "shift" => modifiers |= KeyModifiers::SHIFT,
-            "alt" | "option" => modifiers |= KeyModifiers::ALT,
-            "super" | "cmd" | "command" | "meta" => modifiers |= KeyModifiers::SUPER,
-            part if !part.is_empty() => key = Some(part.to_string()),
-            _ => {}
+    if !prefix.is_empty() {
+        for modifier in prefix.split('+') {
+            modifiers |= match modifier {
+                "ctrl" | "control" => KeyModifiers::CONTROL,
+                "shift" => KeyModifiers::SHIFT,
+                "alt" | "option" => KeyModifiers::ALT,
+                "super" | "cmd" | "command" | "meta" => KeyModifiers::SUPER,
+                _ => return None,
+            };
         }
     }
-    let key = key?;
-    let code = match key.as_str() {
+    let code = match key {
         "esc" | "escape" => KeyCode::Esc,
         "enter" | "return" => KeyCode::Enter,
-        "tab" => {
-            if modifiers.contains(KeyModifiers::SHIFT) {
-                return Some(ice_tui::KeyCombo::new(
-                    KeyCode::BackTab,
-                    modifiers & !KeyModifiers::SHIFT,
-                ));
-            }
-            KeyCode::Tab
+        "tab" if modifiers.contains(KeyModifiers::SHIFT) => {
+            modifiers.remove(KeyModifiers::SHIFT);
+            KeyCode::BackTab
         }
+        "tab" => KeyCode::Tab,
         "backspace" | "back" => KeyCode::Backspace,
         "delete" | "del" => KeyCode::Delete,
+        "insert" => KeyCode::Insert,
         "up" | "arrowup" => KeyCode::Up,
         "down" | "arrowdown" => KeyCode::Down,
         "left" | "arrowleft" => KeyCode::Left,
@@ -386,87 +427,25 @@ pub(super) fn parse_configured_key(value: &str) -> Option<ice_tui::KeyCombo> {
         "pageup" | "page-up" => KeyCode::PageUp,
         "pagedown" | "page-down" => KeyCode::PageDown,
         "space" => KeyCode::Char(' '),
-        "f1" => KeyCode::F(1),
-        "f2" => KeyCode::F(2),
-        "f3" => KeyCode::F(3),
-        "f4" => KeyCode::F(4),
-        "f5" => KeyCode::F(5),
-        "f6" => KeyCode::F(6),
-        "f7" => KeyCode::F(7),
-        "f8" => KeyCode::F(8),
-        "f9" => KeyCode::F(9),
-        "f10" => KeyCode::F(10),
-        "f11" => KeyCode::F(11),
-        "f12" => KeyCode::F(12),
-        value if value.chars().count() == 1 => KeyCode::Char(value.chars().next().unwrap()),
+        function if function.starts_with('f') && function.len() > 1 => {
+            let number: u8 = function[1..].parse().ok()?;
+            if !(1..=24).contains(&number) {
+                return None;
+            }
+            KeyCode::F(number)
+        }
+        character if character.chars().count() == 1 => KeyCode::Char(character.chars().next()?),
         _ => return None,
     };
     Some(ice_tui::KeyCombo::new(code, modifiers))
 }
 
 pub(crate) fn configured_keybindings() -> Arc<ice_tui::Keybindings> {
-    let mut bindings = ice_tui::Keybindings::new();
     let settings = crate::settings::load_settings().unwrap_or_default();
-    let Some(overrides) = settings.keybindings else {
-        ice_tui::set_keybindings(bindings.clone());
-        return Arc::new(bindings);
-    };
-    let known: &[(&str, ice_tui::KeybindingId)] = &[
-        ("app.interrupt", ice_tui::keybindings::keys::INTERRUPT),
-        ("app.clear", ice_tui::keybindings::keys::CLEAR),
-        ("app.exit", ice_tui::keybindings::keys::EXIT),
-        ("app.model.select", ice_tui::keybindings::keys::MODEL_SELECT),
-        (
-            "app.model.cycleForward",
-            ice_tui::keybindings::keys::MODEL_CYCLE_FORWARD,
-        ),
-        ("app.tools.expand", ice_tui::keybindings::keys::TOOLS_EXPAND),
-        (
-            "app.thinking.toggle",
-            ice_tui::keybindings::keys::THINKING_TOGGLE,
-        ),
-        (
-            "app.editor.external",
-            ice_tui::keybindings::keys::EXTERNAL_EDITOR,
-        ),
-        (
-            "app.thinking.cycle",
-            ice_tui::keybindings::keys::THINKING_CYCLE,
-        ),
-        (
-            "app.clipboard.pasteImage",
-            ice_tui::keybindings::keys::PASTE_IMAGE,
-        ),
-        ("app.message.dequeue", ice_tui::keybindings::keys::DEQUEUE),
-        ("tui.altScreen.bottom", ice_tui::keybindings::keys::BOTTOM),
-        ("tui.altScreen.top", ice_tui::keybindings::keys::TOP),
-        ("tui.altScreen.pageUp", ice_tui::keybindings::keys::PAGE_UP),
-        (
-            "tui.altScreen.pageDown",
-            ice_tui::keybindings::keys::PAGE_DOWN,
-        ),
-    ];
-    for (name, id) in known {
-        let Some(value) = overrides.get(*name) else {
-            continue;
-        };
-        let values: Vec<String> = match value {
-            serde_json::Value::String(value) => vec![value.clone()],
-            serde_json::Value::Array(values) => values
-                .iter()
-                .filter_map(|v| v.as_str().map(str::to_string))
-                .collect(),
-            serde_json::Value::Null => Vec::new(),
-            _ => continue,
-        };
-        let combos: Vec<_> = values
-            .iter()
-            .filter_map(|value| parse_configured_key(value))
-            .collect();
-        if values.is_empty() || !combos.is_empty() {
-            bindings.set(id, combos);
-        }
-    }
+    let path = crate::config::agent_dir()
+        .ok()
+        .map(|dir| dir.join("keybindings.json"));
+    let bindings = load_keybindings(settings.keybindings.as_ref(), path.as_deref());
     ice_tui::set_keybindings(bindings.clone());
     Arc::new(bindings)
 }
@@ -704,6 +683,35 @@ pub(super) fn emergency_exit(tui: &Arc<TuiAltScreen>) -> ! {
     std::process::exit(130);
 }
 
+/// Size the editor's text viewport from the current terminal height (the
+/// resize event's own size is the console buffer on Windows, so read it).
+pub(super) fn sync_editor_viewport(editor: &Editor) {
+    if let Ok((_, rows)) = crossterm::terminal::size() {
+        editor.set_terminal_rows(rows as usize);
+    }
+}
+
+/// Inside tmux, check in the background whether its key settings block
+/// Shift+Enter and similar keys, and say how to fix them (ice
+/// `checkTmuxKeyboardSetup`). Never delays startup.
+pub(super) fn spawn_tmux_keyboard_check(chat: &Arc<Container>, tui: &Arc<TuiAltScreen>) {
+    if std::env::var_os("TMUX").map_or(true, |v| v.is_empty()) {
+        return;
+    }
+    let chat = chat.clone();
+    let tui = tui.clone();
+    std::thread::spawn(move || {
+        let keys = crate::extras::tmux_show("extended-keys");
+        let format = crate::extras::tmux_show("extended-keys-format");
+        if let Some(warning) =
+            crate::extras::tmux_keyboard_warning(keys.as_deref(), format.as_deref())
+        {
+            add_note_message(&chat, warning);
+            tui.request_render(false);
+        }
+    });
+}
+
 /// upstream's `handleCtrlZ` (`app.suspend`): hand the terminal back to the
 /// shell and stop the process. `raise(SIGTSTP)` returns once the user resumes
 /// us with `fg`/`bg`, at which point we re-enter the alternate screen.
@@ -764,6 +772,7 @@ pub(super) fn submit_draft(
     if text.trim().is_empty() || !state.try_start_working() {
         return;
     }
+    state.new_message_count.other_message();
     add_user_message(&state.chat_container, text);
     if let Some(tui) = &state.tui {
         if let Some(scroll) = tui.get_primary_scroll_view() {
@@ -882,17 +891,20 @@ impl TuiState {
 
     /// Register a cancellation token for a new user bash run, cancelling any
     /// previous one (mirrors `begin_js_preparation`).
-    pub(super) fn begin_user_bash(&self) -> CancellationToken {
-        let cancellation = CancellationToken::new();
-        if let Some(previous) = self
-            .user_bash_cancel
-            .lock()
-            .unwrap()
-            .replace(cancellation.clone())
+    pub(super) fn begin_user_bash(&self) -> Option<CancellationToken> {
+        let mut active = self.user_bash_cancel.lock().unwrap();
+        if self
+            .event_drain
+            .session_changing
+            .load(std::sync::atomic::Ordering::Acquire)
         {
+            return None;
+        }
+        let cancellation = CancellationToken::new();
+        if let Some(previous) = active.replace(cancellation.clone()) {
             previous.cancel();
         }
-        cancellation
+        Some(cancellation)
     }
 
     /// Clear the user-bash slot. Called when the command finishes so the
@@ -975,7 +987,14 @@ impl TuiState {
     /// than one operation.
     pub(super) fn try_start_working(&self) -> bool {
         let mut status = self.status.lock().unwrap();
-        if *status != RunStatus::Idle {
+        // A session change rebuilds the transcript while the status is already
+        // Idle; a prompt admitted then would have its echo erased.
+        if *status != RunStatus::Idle
+            || self
+                .event_drain
+                .session_changing
+                .load(std::sync::atomic::Ordering::Acquire)
+        {
             return false;
         }
         *status = RunStatus::Working;

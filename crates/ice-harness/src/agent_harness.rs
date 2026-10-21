@@ -83,6 +83,8 @@ use crate::types::{
 };
 use crate::watcher::{watch_listener, HarnessWatcher};
 
+mod navigation;
+
 // ===========================================================================
 // Outcomes — mirror the TS RunOutcome / CompactionOutcome / NavigationOutcome
 // unions (agent-harness.ts:89-103). Each carries the lane + terminal ids.
@@ -135,9 +137,10 @@ pub enum CompactionOutcome {
     },
 }
 
-/// `NavigationOutcome`. Mirrors TS `NavigationOutcome`. v1 only emits
-/// `Declined` on a no-op navigation (the real branch navigation loop is
-/// deferred).
+/// Result of exact-entry branch navigation with optional summarization.
+/// Declined, aborted and failed outcomes preserve the source position.
+/// Storage errors after a durable commit return an error with an open intent
+/// for recovery instead of claiming that the committed move was rejected.
 #[derive(Debug, Clone)]
 pub enum NavigationOutcome {
     Completed {
@@ -460,6 +463,8 @@ struct ActiveRun {
     children: CancellationToken,
     idle: Arc<tokio::sync::Notify>,
     kind: OperationKind,
+    /// Pin the stream through the final RunSettled barrier, including reloads.
+    agent_emitter: Option<Arc<dyn AgentEmitter>>,
 }
 
 /// A queued user message keeps its public entry id until the agent loop drains
@@ -610,6 +615,7 @@ struct HarnessInner {
     stream_options: AgentHarnessStreamOptions,
     retry: RetryPolicy,
     compaction: CompactionSettings,
+    branch_summary_reserve_tokens: i64,
     /// v1 leaves the harness in `Automatic` driving mode; the field is kept so
     /// the contract mirrors TS `AgentHarnessOptions.drive`.
     #[allow(dead_code)]
@@ -732,7 +738,9 @@ impl AgentHarness {
                 !died_awaiting_retry,
             )
             .await?;
-            if let Some(dead) = interrupted {
+            if let Some(dead) = interrupted.filter(|operation| {
+                !matches!(&operation.intent, OperationIntent::Navigation { .. })
+            }) {
                 let died_before_any_output =
                     Self::tip_is_user_message(&options.session, "main").await;
                 if died_awaiting_retry
@@ -761,6 +769,7 @@ impl AgentHarness {
             stream_options: options.stream_options,
             retry: options.retry,
             compaction: options.compaction,
+            branch_summary_reserve_tokens: 16384,
             driving: options.drive,
             tool_execution: options.tool_execution,
             system_prompt: options.system_prompt,
@@ -1353,7 +1362,7 @@ impl AgentHarness {
     /// Context-only messages are already durable. Emit directly to the client
     /// emitter so they do not increment the loop's persistence indices.
     async fn emit_appended_messages(&self, messages: Vec<AgentMessage>) {
-        let emitter = self.inner.lock().unwrap().agent_emitter.clone();
+        let emitter = self.operation_emitter();
         if let Some(emitter) = emitter {
             for message in messages {
                 emitter
@@ -1471,10 +1480,31 @@ impl AgentHarness {
                     continue;
                 }
             }
+            if end.is_some() {
+                // Synchronous/nonblocking broadcast under the admission gate:
+                // all RunEnd-listener messages precede this barrier, and no
+                // next run can publish AgentStart until after it. No awaited
+                // emitter callback is invoked while holding the gate.
+                if let Some(emitter) = self.operation_emitter() {
+                    emitter.try_emit(AgentEvent::RunSettled {
+                        run_id: run_id.to_string(),
+                    });
+                }
+            }
             self.release_run(run_id);
             drop(gate);
             return Ok(terminal_leaf);
         }
+    }
+
+    /// Keep run messages and their final barrier on the same emitter even if
+    /// reload changes the configured emitter while the operation is active.
+    fn operation_emitter(&self) -> Option<Arc<dyn AgentEmitter>> {
+        let inner = self.inner.lock().unwrap();
+        inner.active_run.as_ref().map_or_else(
+            || inner.agent_emitter.clone(),
+            |run| run.agent_emitter.clone(),
+        )
     }
 
     /// Compose boundary delivery with compaction. The common path borrows the
@@ -2162,6 +2192,32 @@ impl AgentHarness {
     // `set_tools`/`set_session` and leaves room for future emission (e.g. a
     // `ResourcesChanged` harness event) without an API break.
 
+    /// Configure `branchSummary.reserveTokens` for subsequent navigation.
+    /// Defaults to 16384; nonpositive values clamp to one token. Generation
+    /// also caps the reserve below the active model's context window, retaining
+    /// at least one input token (nonpositive budgets mean unlimited to the
+    /// shared branch preparer). Models with fewer than two context tokens fail.
+    pub async fn set_branch_summary_reserve_tokens(
+        &self,
+        reserve_tokens: i64,
+    ) -> HarnessResult<()> {
+        let mut inner = self.inner.lock().unwrap();
+        if inner.closed {
+            return Err(HarnessError::closed());
+        }
+        inner.branch_summary_reserve_tokens = reserve_tokens.max(1);
+        Ok(())
+    }
+
+    /// Return the configured reserve before the per-model context-window cap.
+    pub async fn branch_summary_reserve_tokens(&self) -> HarnessResult<i64> {
+        let inner = self.inner.lock().unwrap();
+        if inner.closed {
+            return Err(HarnessError::closed());
+        }
+        Ok(inner.branch_summary_reserve_tokens)
+    }
+
     /// `setSystemPrompt(prompt)`. Replace the composed base system prompt the
     /// harness was built with. B5d `/reload` calls this after recomposing
     /// (base + context + append); the next run's `snapshot_config` picks it up.
@@ -2268,6 +2324,7 @@ impl AgentHarness {
         let run_id = self.session.id_generator().next();
         let signal = CancellationToken::new();
         let idle = Arc::new(tokio::sync::Notify::new());
+        let agent_emitter = inner.agent_emitter.clone();
         inner.active_run = Some(ActiveRun {
             finishing: false,
             run_id: run_id.clone(),
@@ -2276,6 +2333,7 @@ impl AgentHarness {
             children: self.child_scope.lock().unwrap().child_token(),
             idle: Arc::clone(&idle),
             kind,
+            agent_emitter,
         });
         Ok((run_id, signal, idle))
     }
@@ -2839,6 +2897,9 @@ impl AgentHarness {
         let Some(operation) = open.first() else {
             return Ok(());
         };
+        if Self::recover_navigation(session, lane, operation).await? {
+            return Ok(());
+        }
         let run_id = operation.base.id.clone();
 
         session
@@ -3076,13 +3137,17 @@ impl AgentHarness {
             stream_options: inner.stream_options.clone(),
             retry: inner.retry.clone(),
             compaction: inner.compaction,
+            branch_summary_reserve_tokens: inner.branch_summary_reserve_tokens,
             tool_execution: inner.tool_execution,
             driving: inner.driving,
             models: inner.models.clone(),
             to_provider_messages: inner.to_provider_messages.clone(),
             entry_projectors: inner.entry_projectors.clone(),
             entry_transforms: inner.entry_transforms.clone(),
-            agent_emitter: inner.agent_emitter.clone(),
+            agent_emitter: inner.active_run.as_ref().map_or_else(
+                || inner.agent_emitter.clone(),
+                |run| run.agent_emitter.clone(),
+            ),
             before_tool_call: inner.before_tool_call.clone(),
             after_tool_call: inner.after_tool_call.clone(),
             transform_context: inner.transform_context.clone(),
@@ -3430,6 +3495,7 @@ impl AgentHarness {
         new_messages: &[AgentMessage],
         leaf_id: Option<String>,
         final_entry_id: Option<String>,
+        cancelled: bool,
     ) -> HarnessRunOutcome {
         let leaf = leaf_id.unwrap_or_default();
         let final_id = final_entry_id.unwrap_or_default();
@@ -3451,6 +3517,14 @@ impl AgentHarness {
                     Some(final_id)
                 },
                 final_message: None,
+            },
+            // Cancellation can stop tool execution after a valid ToolUse
+            // assistant message landed. Preserve that message, but classify the
+            // operation from its signal, not the retained message's stop reason.
+            Some(am) if cancelled => HarnessRunOutcome::Aborted {
+                leaf_id: leaf,
+                final_entry_id: final_id,
+                final_message: am.clone(),
             },
             Some(am) => match am.stop_reason {
                 StopReason::Error => HarnessRunOutcome::Failed {
@@ -4157,7 +4231,6 @@ impl AgentHarness {
                         );
                     }
                 }
-                let outcome = Self::derive_outcome(&new_messages, leaf.clone(), final_id.clone());
                 // The run's messages are durable now, so its frames are no
                 // longer needed as progress. Retiring them here (rather than at
                 // each `MessageEnd`) is what keeps a *failed retry attempt*'s
@@ -4165,6 +4238,12 @@ impl AgentHarness {
                 if let Err(error) = frame_recorder.clear().await {
                     tracing::warn!(lane = %self.lane, %error, "could not clear assistant frames");
                 }
+                let outcome = Self::derive_outcome(
+                    &new_messages,
+                    leaf.clone(),
+                    final_id.clone(),
+                    signal.is_cancelled(),
+                );
                 let op_outcome = match &outcome {
                     HarnessRunOutcome::Completed { .. } => OperationOutcome::Completed,
                     HarnessRunOutcome::Aborted { .. } => OperationOutcome::Aborted,
@@ -4456,6 +4535,7 @@ struct ConfigSnapshot {
     stream_options: AgentHarnessStreamOptions,
     retry: RetryPolicy,
     compaction: CompactionSettings,
+    branch_summary_reserve_tokens: i64,
     tool_execution: HarnessToolExecution,
     driving: DrivingMode,
     models: Vec<Arc<dyn AiProvider>>,
@@ -4592,45 +4672,12 @@ impl AgentLane for AgentHarness {
     async fn navigate_tree(
         &self,
         target_id: Option<&str>,
-        _summarize: bool,
-        _custom_instructions: Option<&str>,
-        _label: Option<&str>,
+        summarize: bool,
+        custom_instructions: Option<&str>,
+        label: Option<&str>,
     ) -> HarnessResult<NavigationResult> {
-        let run_id = self.session.id_generator().next();
-        let target = target_id.filter(|id| !id.is_empty());
-        match self.session.move_lane(&self.lane, target).await {
-            Ok(()) => {
-                let leaf = self
-                    .session
-                    .view(&self.lane)
-                    .get_leaf_id()
-                    .await
-                    .map_err(session_to_harness_err)?;
-                Ok(NavigationResult {
-                    run_id,
-                    outcome: NavigationOutcome::Completed {
-                        new_leaf_id: leaf,
-                        summary_entry: None,
-                    },
-                })
-            }
-            Err(error) => Ok(NavigationResult {
-                run_id,
-                outcome: NavigationOutcome::Failed {
-                    leaf_id: self
-                        .session
-                        .view(&self.lane)
-                        .get_leaf_id()
-                        .await
-                        .ok()
-                        .flatten(),
-                    error: OperationError {
-                        code: "navigation_failed".into(),
-                        message: error.to_string(),
-                    },
-                },
-            }),
-        }
+        self.navigate_tree_core(target_id, summarize, custom_instructions, label)
+            .await
     }
 
     async fn abort(&self) -> HarnessResult<AbortResult> {

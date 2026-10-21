@@ -56,6 +56,7 @@ pub mod terminal_image;
 pub mod text;
 pub mod theme;
 pub mod tool_execution;
+pub mod tool_group;
 mod tool_panel;
 pub mod truncated_text;
 pub mod tui;
@@ -76,8 +77,8 @@ pub use ansi::{bold, strip_ansi, visible_width, CURSOR_MARKER};
 pub use assistant_message::{AssistantBlock, AssistantMessageComponent, AssistantMessageOptions};
 pub use autocomplete::{
     AutocompleteItem, AutocompleteManager, AutocompleteProvider, AutocompleteSuggestions,
-    CombinedAutocompleteProvider, FilePathAutocompleteProvider, SlashCommand,
-    SlashCommandAutocompleteProvider,
+    CombinedAutocompleteProvider, FilePathAutocompleteProvider, FileSearchFn,
+    RecursiveFileAutocompleteProvider, SlashCommand, SlashCommandAutocompleteProvider,
 };
 pub use bash_execution::{BashExecutionComponent, BashStatus, BashTruncation};
 pub use bordered_loader::{BorderedLoader, BorderedLoaderInner};
@@ -147,12 +148,13 @@ pub use theme::{
     ThemeManager, ThemePreset, ThemeSpacing,
 };
 pub use tool_execution::{ToolExecutionComponent, ToolStatus};
+pub use tool_group::{describe_exploration, ToolGroupComponent};
 pub use truncated_text::TruncatedText;
 pub use tui::{
     OverlayAnchor, OverlayHandle as TuiOverlayHandle, OverlayMargin, OverlayOptions, TuiMode,
     TuiStopOptions, TUI,
 };
-pub use tui_alt_screen::{is_viewport_tui, TuiAltScreen, VIEWPORT_TUI};
+pub use tui_alt_screen::{is_viewport_tui, TranscriptSnapshot, TuiAltScreen, VIEWPORT_TUI};
 pub use tui_main_screen::TuiMainScreen;
 pub use undo_stack::{RedoStack, UndoRedoManager, UndoStack};
 pub use user_message::UserMessageComponent;

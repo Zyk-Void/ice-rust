@@ -183,6 +183,80 @@ pub enum Color {
     Rgb(u8, u8, u8),
 }
 
+/// Whether the terminal renders 24-bit colour, decided once per process
+/// from the environment (ice `detectCapabilities().trueColor`). Without it,
+/// [`Color::Rgb`] is written as the nearest 256-colour index, which every
+/// supported terminal understands; 24-bit codes on a 256-colour terminal
+/// (macOS Terminal.app, many tmux/SSH setups) come out as wrong colours.
+/// `COLORTERM=truecolor` (or `24bit`) always enables it.
+pub fn supports_true_color() -> bool {
+    static TRUE_COLOR: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *TRUE_COLOR.get_or_init(|| detect_true_color(|key| std::env::var(key).ok(), cfg!(windows)))
+}
+
+/// ice `detectCapabilities` truecolor rules: an explicit `COLORTERM` hint;
+/// inside tmux or screen only that hint counts; terminals known to render
+/// 24-bit colour; Windows consoles; otherwise no.
+fn detect_true_color(env: impl Fn(&str) -> Option<String>, windows: bool) -> bool {
+    let lower = |key: &str| env(key).unwrap_or_default().to_lowercase();
+    let set = |key: &str| env(key).is_some_and(|value| !value.is_empty());
+    let color_term = lower("COLORTERM");
+    if color_term == "truecolor" || color_term == "24bit" {
+        return true;
+    }
+    let term = lower("TERM");
+    if set("TMUX") || term.starts_with("tmux") || term.starts_with("screen") {
+        return false;
+    }
+    let program = lower("TERM_PROGRAM");
+    set("KITTY_WINDOW_ID")
+        || set("GHOSTTY_RESOURCES_DIR")
+        || set("WEZTERM_PANE")
+        || set("WARP_SESSION_ID")
+        || set("WARP_TERMINAL_SESSION_UUID")
+        || set("ITERM_SESSION_ID")
+        || set("WT_SESSION")
+        || term.contains("ghostty")
+        || matches!(
+            program.as_str(),
+            "kitty" | "ghostty" | "wezterm" | "warpterminal" | "iterm.app" | "vscode" | "alacritty"
+        )
+        || lower("TERMINAL_EMULATOR") == "jetbrains-jediterm"
+        || windows
+}
+
+/// Nearest xterm 256-colour index for an RGB colour (ice `rgbTo256`): the
+/// closest 6×6×6 cube entry, or a grey-ramp entry when the colour is nearly
+/// neutral and the grey is closer. Distance is weighted for the eye.
+pub fn rgb_to_256(r: u8, g: u8, b: u8) -> u8 {
+    const CUBE: [i32; 6] = [0, 95, 135, 175, 215, 255];
+    let distance = |(r1, g1, b1): (i32, i32, i32), (r2, g2, b2): (i32, i32, i32)| {
+        let (dr, dg, db) = ((r1 - r2) as f64, (g1 - g2) as f64, (b1 - b2) as f64);
+        dr * dr * 0.299 + dg * dg * 0.587 + db * db * 0.114
+    };
+    let nearest_cube = |v: i32| {
+        (0..CUBE.len())
+            .min_by_key(|&i| (CUBE[i] - v).abs())
+            .unwrap_or(0)
+    };
+    let (r, g, b) = (r as i32, g as i32, b as i32);
+    let (ri, gi, bi) = (nearest_cube(r), nearest_cube(g), nearest_cube(b));
+    let cube_index = 16 + 36 * ri + 6 * gi + bi;
+    let cube_dist = distance((r, g, b), (CUBE[ri], CUBE[gi], CUBE[bi]));
+    let grey = (0.299 * r as f64 + 0.587 * g as f64 + 0.114 * b as f64).round() as i32;
+    let grey_index = (0..24)
+        .min_by_key(|&i| (8 + 10 * i - grey).abs())
+        .unwrap_or(0);
+    let grey_value = 8 + 10 * grey_index;
+    let grey_dist = distance((r, g, b), (grey_value, grey_value, grey_value));
+    let spread = r.max(g).max(b) - r.min(g).min(b);
+    if spread < 10 && grey_dist < cube_dist {
+        (232 + grey_index) as u8
+    } else {
+        cube_index as u8
+    }
+}
+
 impl Color {
     /// Convert to ANSI foreground escape sequence.
     pub fn to_fg(&self) -> String {
@@ -190,7 +264,10 @@ impl Color {
             Color::Default => "\x1b[39m".to_string(),
             Color::Ansi16(c) => format!("\x1b[{}m", c),
             Color::Ansi256(c) => format!("\x1b[38;5;{}m", c),
-            Color::Rgb(r, g, b) => format!("\x1b[38;2;{};{};{}m", r, g, b),
+            Color::Rgb(r, g, b) if supports_true_color() => {
+                format!("\x1b[38;2;{};{};{}m", r, g, b)
+            }
+            Color::Rgb(r, g, b) => format!("\x1b[38;5;{}m", rgb_to_256(*r, *g, *b)),
         }
     }
 
@@ -200,7 +277,10 @@ impl Color {
             Color::Default => "\x1b[49m".to_string(),
             Color::Ansi16(c) => format!("\x1b[{}m", c + 10),
             Color::Ansi256(c) => format!("\x1b[48;5;{}m", c),
-            Color::Rgb(r, g, b) => format!("\x1b[48;2;{};{};{}m", r, g, b),
+            Color::Rgb(r, g, b) if supports_true_color() => {
+                format!("\x1b[48;2;{};{};{}m", r, g, b)
+            }
+            Color::Rgb(r, g, b) => format!("\x1b[48;5;{}m", rgb_to_256(*r, *g, *b)),
         }
     }
 
@@ -549,5 +629,51 @@ mod tests {
         manager.apply_preset(ThemePreset::Dark);
         let theme = manager.get();
         assert!(matches!(theme.colors.accent, Color::Ansi256(108)));
+    }
+}
+
+#[cfg(test)]
+mod true_color_tests {
+    use super::*;
+
+    fn detect(vars: &[(&str, &str)], windows: bool) -> bool {
+        detect_true_color(
+            |key| {
+                vars.iter()
+                    .find(|(k, _)| *k == key)
+                    .map(|(_, v)| v.to_string())
+            },
+            windows,
+        )
+    }
+
+    /// RGB colours were always written as 24-bit codes, which 256-colour
+    /// terminals show as wrong colours. ice decides from the environment.
+    #[test]
+    fn true_color_follows_the_ice_terminal_rules() {
+        assert!(detect(&[("COLORTERM", "truecolor")], false));
+        assert!(detect(&[("COLORTERM", "24bit"), ("TMUX", "/tmp/t")], false));
+        assert!(!detect(
+            &[("TMUX", "/tmp/t"), ("TERM_PROGRAM", "kitty")],
+            false
+        ));
+        assert!(!detect(&[("TERM", "screen-256color")], false));
+        assert!(detect(&[("TERM_PROGRAM", "iTerm.app")], false));
+        assert!(detect(&[("KITTY_WINDOW_ID", "1")], false));
+        assert!(detect(&[("WT_SESSION", "abc")], false));
+        assert!(!detect(&[("TERM_PROGRAM", "Apple_Terminal")], false));
+        assert!(!detect(&[("TERM", "xterm-256color")], false));
+        assert!(detect(&[], true));
+    }
+
+    /// ice `rgbTo256`: cube corners, the grey ramp for neutral colours, and a
+    /// tinted dark background staying in the cube.
+    #[test]
+    fn rgb_maps_to_the_nearest_256_colour() {
+        assert_eq!(rgb_to_256(0, 0, 0), 16);
+        assert_eq!(rgb_to_256(255, 255, 255), 231);
+        assert_eq!(rgb_to_256(255, 0, 0), 196);
+        assert_eq!(rgb_to_256(128, 128, 128), 244);
+        assert_eq!(rgb_to_256(40, 44, 52), 17);
     }
 }

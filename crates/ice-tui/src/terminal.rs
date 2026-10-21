@@ -205,7 +205,7 @@ impl ProcessTerminal {
         let info = TerminalInfo {
             columns: cols as usize,
             rows: rows as usize,
-            supports_true_color: true, // Assume true color support
+            supports_true_color: crate::theme::supports_true_color(),
             supports_mouse: true,
             supports_kitty_keyboard: false, // Will be detected
         };

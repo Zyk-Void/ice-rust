@@ -1296,6 +1296,12 @@ pub struct SessionCreateOptions {
 #[async_trait::async_trait]
 pub trait SessionStorage: Send + Sync {
     fn metadata(&self) -> SessionMetadata;
+    /// Exact file backing this session when the backend exposes one.
+    /// Consumers must not reconstruct a path from the session id: files in
+    /// separate directories can share an id. Ephemeral backends return None.
+    fn persistence_path(&self) -> Option<String> {
+        None
+    }
     async fn get_metadata(&self) -> SessionMetadata {
         self.metadata()
     }

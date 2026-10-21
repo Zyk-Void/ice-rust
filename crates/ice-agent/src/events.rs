@@ -15,7 +15,8 @@ use std::sync::Arc;
 use crate::message::AgentMessage;
 use crate::types::AgentToolResult;
 
-/// An event emitted by the agent loop. Mirrors TS `AgentEvent` (tagged on
+/// Lifecycle events emitted by the agent loop, plus the harness-only
+/// [`AgentEvent::RunSettled`] barrier. Mirrors TS `AgentEvent` (tagged on
 /// `type`). `AgentMessage` payloads are owned (cloned) so broadcast subscribers
 /// get independent copies — except [`AgentEvent::MessageUpdate`], which carries
 /// the streaming partial as a cheap `Arc` because it fires once per delta.
@@ -25,6 +26,13 @@ pub enum AgentEvent {
     AgentStart,
     /// Emitted once at the end of a run; carries the new messages produced.
     AgentEnd { messages: Vec<AgentMessage> },
+    /// Harness-only post-finalization barrier. Emitted once after durable run
+    /// finalization, RunEnd listeners, and their final transcript messages,
+    /// before another run can be admitted. The raw agent loop never emits it.
+    ///
+    /// Additive public lifecycle variant; consumers should use `run_id` to
+    /// correlate harness RunEnd metadata, not infer completion from AgentEnd.
+    RunSettled { run_id: String },
     /// Emitted after a retryable provider failure, before the backoff wait.
     RetryScheduled {
         /// One-based retry number (the initial request is not counted).
@@ -92,6 +100,7 @@ impl AgentEvent {
         match self {
             AgentEvent::AgentStart => "agent_start",
             AgentEvent::AgentEnd { .. } => "agent_end",
+            AgentEvent::RunSettled { .. } => "run_settled",
             AgentEvent::RetryScheduled { .. } => "retry_scheduled",
             AgentEvent::TurnStart => "turn_start",
             AgentEvent::TurnEnd { .. } => "turn_end",
@@ -119,8 +128,10 @@ impl AgentEvent {
 /// - [`AgentEmitter::try_emit`] — sync, non-blocking, used by tool `on_update`
 ///   callbacks (which are `&dyn Fn` and cannot await). For `CollectorEmitter`
 ///   this pushes under the mutex; for `BroadcastEmitter` it's `tx.send`.
-///   Order is preserved because `try_emit` is only ever called from within a
-///   single tool's `execute`, and `emit` is awaited between tool phases.
+///   The harness also uses it for the ordered `RunSettled` barrier while
+///   admission is still held, after all awaited final-message callbacks finish.
+///   Implementations needing that barrier must forward `try_emit` synchronously;
+///   it must not call back into admission or block waiting for the harness.
 pub trait AgentEmitter: Send + Sync {
     /// Async emit — awaited by the loop so event order matches emit call order.
     fn emit(&self, event: AgentEvent) -> futures::future::BoxFuture<'static, ()>;

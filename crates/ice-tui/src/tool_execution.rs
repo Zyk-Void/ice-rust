@@ -185,6 +185,11 @@ impl ToolExecutionComponent {
         self.name.lock().unwrap().clone()
     }
 
+    /// Current arguments used by the compact exploration group.
+    pub fn args(&self) -> String {
+        self.args.lock().unwrap().clone()
+    }
+
     /// Override the title shown in the header without changing the underlying
     /// tool name used to summarize arguments and route updates.
     pub fn set_display_title(&self, title: impl Into<String>) {
@@ -1479,9 +1484,10 @@ mod tests {
             .iter()
             .all(|line| crate::utils::visible_width(line) <= 12));
         // Nested foreground resets must re-apply the panel background.
-        assert!(rendered
-            .iter()
-            .any(|line| line.matches("\x1b[48;2;38;48;52m").count() > 1));
+        assert!(rendered.iter().any(|line| line
+            .matches(&crate::theme::Color::Rgb(38, 48, 52).to_bg())
+            .count()
+            > 1));
     }
 
     #[test]
@@ -1566,7 +1572,9 @@ mod tests {
         assert!(!plain.contains("Steps"), "collapsed hides body: {plain}");
         // Uses the custom-message background (dark: #2d2838), not a tool tint.
         assert!(
-            collapsed.iter().any(|l| l.contains("\x1b[48;2;45;40;56m")),
+            collapsed
+                .iter()
+                .any(|l| l.contains(&crate::theme::Color::Rgb(45, 40, 56).to_bg())),
             "custom-message bg missing: {collapsed:?}"
         );
 

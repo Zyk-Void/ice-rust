@@ -31,7 +31,8 @@ pub fn event_tag_for(event: &AgentEvent) -> Option<EventTag> {
     match event {
         AgentEvent::AgentStart => Some(EventTag::AgentStart),
         AgentEvent::AgentEnd { .. } => Some(EventTag::AgentEnd),
-        AgentEvent::RetryScheduled { .. } => None,
+        // Host-only lifecycle metadata; no plugin ABI variant is introduced.
+        AgentEvent::RetryScheduled { .. } | AgentEvent::RunSettled { .. } => None,
         AgentEvent::TurnStart => Some(EventTag::TurnStart),
         AgentEvent::TurnEnd { .. } => Some(EventTag::TurnEnd),
         AgentEvent::MessageStart { .. } => Some(EventTag::MessageStart),
@@ -117,7 +118,7 @@ pub fn translate(event: &AgentEvent) -> Option<StablePluginEvent> {
         | AgentEvent::AgentEnd { .. }
         | AgentEvent::TurnEnd { .. } => Some(StablePluginEvent::empty(tag)),
 
-        AgentEvent::RetryScheduled { .. } => None,
+        AgentEvent::RetryScheduled { .. } | AgentEvent::RunSettled { .. } => None,
     }
 }
 
@@ -990,6 +991,15 @@ mod tests {
     // dispatch is synchronous (fn-pointer calls), so the guard is released
     // before the test returns — no handler outlives the test.
     static HANDLER_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn settled_barrier_is_host_only_without_plugin_abi_event() {
+        let event = AgentEvent::RunSettled {
+            run_id: "run-a".into(),
+        };
+        assert!(event_tag_for(&event).is_none());
+        assert!(translate(&event).is_none());
+    }
 
     #[test]
     fn all_ten_agent_events_map_to_a_tag() {

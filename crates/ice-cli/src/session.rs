@@ -30,7 +30,6 @@
 //!   The interactive `-c`/`-r`/`--session` paths enable that mode and replay
 //!   the existing branch before appending new messages. See [`SessionSelection`].
 
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -804,6 +803,11 @@ pub async fn build_prepared(
 
     let harness = match AgentHarness::create(options).await {
         Ok(h) => {
+            if let Some(reserve_tokens) = saved_settings.branch_summary_reserve_tokens() {
+                h.set_branch_summary_reserve_tokens(reserve_tokens)
+                    .await
+                    .map_err(|error| BuildError::HarnessCreate(error.to_string()))?;
+            }
             // Fill the extension action host now that the harness exists
             // (plugin runtime_action calls can then reach it).
             crate::extensions_actions::HarnessActionHost::set_harness(
@@ -2185,6 +2189,7 @@ async fn fork_session_at_launch(source: &str, cwd: &str) -> Result<Session, Buil
 
 /// Errors from [`open_session_by_id`], split so the CLI can map them to
 /// [`BuildError`] while the TUI can surface a friendlier note.
+#[derive(Debug)]
 pub enum OpenError {
     /// No session matched the request.
     NotFound { requested: String },
@@ -2491,6 +2496,44 @@ fn first_resumable_session<'a>(
 /// (so `--session 01a02…` / a partial id / a full file name all work). The
 /// TUI `/session` hot-switch calls this with the selector's item value.
 pub async fn open_session_by_id(id: &str, cwd: &str) -> Result<Session, OpenError> {
+    let requested = Path::new(id);
+    if requested.is_absolute() || requested.components().count() > 1 {
+        let target = if requested.is_absolute() {
+            requested.to_path_buf()
+        } else {
+            Path::new(cwd).join(requested)
+        };
+        let target = target.canonicalize().map_err(|_| OpenError::NotFound {
+            requested: format!("session {id}"),
+        })?;
+        // An exact file can sit directly in a custom directory. Repository
+        // listing treats its root as a parent of cwd-encoded directories, so
+        // scanning that parent would miss the selected file.
+        use ice_harness::session::jsonl::{metadata_from_header, parse_header};
+        use std::io::BufRead;
+        let file =
+            std::fs::File::open(&target).map_err(|error| OpenError::Other(error.to_string()))?;
+        let modified_at = file
+            .metadata()
+            .and_then(|metadata| metadata.modified())
+            .ok()
+            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|duration| duration.as_millis().min(i64::MAX as u128) as i64)
+            .unwrap_or_default();
+        let mut header_line = String::new();
+        std::io::BufReader::new(std::io::Read::take(file, 64 * 1024))
+            .read_line(&mut header_line)
+            .map_err(|error| OpenError::Other(error.to_string()))?;
+        let header = parse_header(header_line.trim_end())
+            .map_err(|error| OpenError::Other(error.to_string()))?;
+        let path = target
+            .to_str()
+            .ok_or_else(|| OpenError::Other("The session path is not valid UTF-8.".into()))?;
+        let meta = metadata_from_header(&header, path, modified_at);
+        return open_session(&meta, cwd)
+            .await
+            .map_err(|error| OpenError::Other(error.to_string()));
+    }
     let dir = default_session_dir(Path::new(cwd));
     open_session_by_id_in_dir(id, cwd, &dir).await
 }
@@ -2563,10 +2606,15 @@ pub(crate) async fn set_active_session(
     tool_context: Option<&ice_extensions::ToolCallContext>,
 ) -> Result<(), String> {
     let metadata = session.get_metadata().await.ok();
+    let previous = harness.session().storage().persistence_path();
+    let incoming = session.storage().persistence_path();
     harness
         .set_session(session)
         .await
         .map_err(|e| e.to_string())?;
+    if let Some(previous) = previous.filter(|previous| Some(previous) != incoming.as_ref()) {
+        release_session_lock(&previous);
+    }
     if let Some(metadata) = metadata {
         std::env::set_var(ice_plugin_sdk::SESSION_ID_ENV, &metadata.id);
         if let Some(context) = tool_context {
@@ -2586,37 +2634,75 @@ pub(crate) async fn fork_session_storage(
     harness: &AgentHarness,
     cwd: &str,
 ) -> Result<Session, String> {
-    use ice_harness::session::jsonl::{JsonlSessionRepo, JsonlSessionRepoOptions};
+    fork_session_storage_with_options(
+        harness,
+        cwd,
+        &ice_harness::session::types::ForkOptions::default(),
+    )
+    .await
+}
+
+/// Fork the exact active JSONL file into its current directory, preserving
+/// custom locations and the normal exclusive lock for the new session.
+pub(crate) async fn fork_session_storage_with_options(
+    harness: &AgentHarness,
+    cwd: &str,
+    options: &ice_harness::session::types::ForkOptions,
+) -> Result<Session, String> {
+    use ice_harness::session::jsonl::{
+        JsonlSessionRepo, JsonlSessionRepoOptions, JsonlSessionStorage,
+    };
     use ice_tools::FileSystem;
 
-    let dir = default_session_dir(Path::new(cwd));
+    if harness
+        .snapshot()
+        .await
+        .map_err(|error| error.to_string())?
+        .active
+        .is_some()
+    {
+        return Err("wait for the current run to finish before forking".into());
+    }
+    let active = harness.session();
+    let source_path = active
+        .storage()
+        .persistence_path()
+        .ok_or("current session is not saved to a JSONL file")?;
+    let dir = Path::new(&source_path)
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+        .ok_or("current session file has no directory")?;
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));
     let fs: Arc<dyn FileSystem> = env.clone();
+    let source = JsonlSessionStorage::load(
+        fs.clone(),
+        &source_path,
+        Arc::new(SystemClock),
+        Arc::new(DefaultIdGenerator::new()),
+    )
+    .await
+    .map_err(|error| error.to_string())?
+    .jsonl_metadata();
+    if source.id != active.storage().metadata().id {
+        return Err("current session file no longer matches the active session".into());
+    }
     let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
         fs,
         sessions_root: dir.to_string_lossy().into_owned(),
         clock: Arc::new(SystemClock),
         ids: Arc::new(DefaultIdGenerator::new()),
     });
-    // The fork needs the rich JSONL metadata (with the on-disk path); resolve
-    // it from the session list by the current session's id.
-    let id = harness.session().storage().metadata().id.clone();
-    let metas = list_session_metadata(cwd)
-        .await
-        .map_err(|e| e.to_string())?;
-    let Some(source) = metas.iter().find(|m| m.id == id) else {
-        return Err(format!("current session {id} not found on disk"));
-    };
     let fork_storage = repo
-        .fork_typed(
-            source,
+        .fork_in_directory(
+            &source,
+            &dir.to_string_lossy(),
             &ice_harness::session::jsonl::JsonlSessionCreateOptions {
                 id: None,
                 parent_session_id: Some(source.id.clone()),
                 cwd: cwd.to_string(),
                 metadata: None,
             },
-            &ice_harness::session::types::ForkOptions::default(),
+            options,
         )
         .await
         .map_err(|e| e.to_string())?;
@@ -2624,11 +2710,15 @@ pub(crate) async fn fork_session_storage(
     Ok(Session::new(Arc::new(fork_storage), None))
 }
 
-/// Session logs this process has claimed, so re-claiming is a no-op.
-static SESSION_LOCK_PATHS: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
-/// The held lock handles. Kept alive for the process lifetime — dropping the
-/// `File` would release the OS lock, so the guard is parked here.
-static SESSION_LOCKS: OnceLock<Mutex<Vec<std::fs::File>>> = OnceLock::new();
+/// Session logs this process has claimed, with their held lock handles.
+/// Dropping a `File` releases the OS lock, so each guard is parked here until
+/// the session is switched away from ([`release_session_lock`]).
+static SESSION_LOCKS: OnceLock<Mutex<std::collections::HashMap<PathBuf, std::fs::File>>> =
+    OnceLock::new();
+
+fn session_lock_path(session_path: &str) -> PathBuf {
+    PathBuf::from(format!("{session_path}.lock"))
+}
 
 /// Claim the exclusive lock for a session log.
 ///
@@ -2639,13 +2729,12 @@ static SESSION_LOCKS: OnceLock<Mutex<Vec<std::fs::File>>> = OnceLock::new();
 /// exits (no stale-lock cleanup). Re-claiming a path this process already holds
 /// is a no-op, so the TUI's session hot-switch can re-open freely.
 fn claim_session_lock(session_path: &str) -> Result<(), String> {
-    let lock_path = PathBuf::from(format!("{session_path}.lock"));
-    if SESSION_LOCK_PATHS
-        .get_or_init(|| Mutex::new(HashSet::new()))
+    let lock_path = session_lock_path(session_path);
+    let mut held = SESSION_LOCKS
+        .get_or_init(|| Mutex::new(Default::default()))
         .lock()
-        .unwrap()
-        .contains(&lock_path)
-    {
+        .unwrap();
+    if held.contains_key(&lock_path) {
         return Ok(());
     }
     let file = std::fs::OpenOptions::new()
@@ -2658,17 +2747,19 @@ fn claim_session_lock(session_path: &str) -> Result<(), String> {
             "session {session_path} is already open in another icers process"
         ));
     }
-    SESSION_LOCKS
-        .get_or_init(|| Mutex::new(Vec::new()))
-        .lock()
-        .unwrap()
-        .push(file);
-    SESSION_LOCK_PATHS
-        .get_or_init(|| Mutex::new(HashSet::new()))
-        .lock()
-        .unwrap()
-        .insert(lock_path);
+    held.insert(lock_path, file);
     Ok(())
+}
+
+/// Drop this process's claim on a session log it has switched away from, so
+/// the picker and other icers processes can change it. The sidecar file stays
+/// (see `session_actions::perform`).
+pub(crate) fn release_session_lock(session_path: &str) {
+    if let Some(held) = SESSION_LOCKS.get() {
+        held.lock()
+            .unwrap()
+            .remove(&session_lock_path(session_path));
+    }
 }
 
 /// Wrap an opened [`JsonlSessionStorage`] in the `Session` facade (shared by
@@ -2748,6 +2839,24 @@ pub(crate) async fn create_jsonl_session_with_id(
     cwd: &str,
     id: Option<String>,
 ) -> Result<Session, String> {
+    create_jsonl_session_at(dir, cwd, id, false).await
+}
+
+/// Create beside an active JSONL file, preserving its exact directory instead
+/// of treating that directory as a root for another cwd-encoded subdirectory.
+pub(crate) async fn create_jsonl_session_in_directory(
+    dir: &Path,
+    cwd: &str,
+) -> Result<Session, String> {
+    create_jsonl_session_at(dir, cwd, None, true).await
+}
+
+async fn create_jsonl_session_at(
+    dir: &Path,
+    cwd: &str,
+    id: Option<String>,
+    exact_directory: bool,
+) -> Result<Session, String> {
     use ice_harness::session::jsonl::{
         JsonlSessionCreateOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
     };
@@ -2771,10 +2880,13 @@ pub(crate) async fn create_jsonl_session_with_id(
         cwd: cwd.to_string(),
         metadata: None,
     };
-    let storage = repo
-        .create_typed(&opts)
-        .await
-        .map_err(|e| format!("create session: {e}"))?;
+    let storage = if exact_directory {
+        repo.create_in_directory(&dir.to_string_lossy(), &opts)
+            .await
+    } else {
+        repo.create_typed(&opts).await
+    }
+    .map_err(|e| format!("create session: {e}"))?;
     claim_session_lock(&storage.jsonl_metadata().path)
         .map_err(|e| format!("create session: {e}"))?;
     // `JsonlSessionStorage` implements `SessionStorage`; wrap in the facade.
@@ -2813,7 +2925,153 @@ fn read_prompt_source(path: &Path, sources: &mut Vec<String>) -> Option<String> 
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn releasing_a_session_lock_lets_others_lock_the_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("a.jsonl").to_string_lossy().into_owned();
+        claim_session_lock(&log).unwrap();
+        let probe = || {
+            let file = std::fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .open(format!("{log}.lock"))
+                .unwrap();
+            fs2::FileExt::try_lock_exclusive(&file).map(|_| file)
+        };
+        assert!(probe().is_err(), "claimed lock must exclude others");
+        release_session_lock(&log);
+        assert!(probe().is_ok(), "a released lock must be free");
+    }
+
     use super::*;
+
+    #[test]
+    fn branch_summary_settings_reach_created_harness() {
+        const CHILD: &str = "ICERS_BRANCH_SUMMARY_SETTINGS_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let dir = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::branch_summary_settings_reach_created_harness",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, dir.path())
+                .env("ICERS_OFFLINE", "1")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                use ice_ai::providers::faux::{FauxProvider, FauxScript};
+                let agent = crate::config::agent_dir().unwrap();
+                let cwd = agent.join("project");
+                std::fs::create_dir_all(&cwd).unwrap();
+                // Resolve only to initialize the binding; all harness providers
+                // and the selected model are replaced by the in-memory fixture.
+                let mut resolved = crate::provider::resolve(
+                    Some("anthropic"),
+                    Some(crate::provider::DEFAULT_MODEL_ID),
+                    None,
+                    Some("local-test-placeholder"),
+                    None,
+                )
+                .unwrap();
+                let provider = FauxProvider::new(FauxScript::new());
+                resolved.model = provider.default_model().clone();
+                resolved.provider = provider.clone();
+                resolved.providers = vec![provider];
+                let args = Args {
+                    no_session: true,
+                    no_extensions: true,
+                    no_skills: true,
+                    no_prompt_templates: true,
+                    no_tools: true,
+                    ..Default::default()
+                };
+                for (configured, expected) in [(Some(2048), 2048), (Some(0), 1), (None, 16384)] {
+                    let settings = match configured {
+                        Some(value) => {
+                            serde_json::json!({"branchSummary": {"reserveTokens": value}})
+                        }
+                        None => serde_json::json!({}),
+                    };
+                    std::fs::write(
+                        agent.join("settings.json"),
+                        serde_json::to_string(&settings).unwrap(),
+                    )
+                    .unwrap();
+                    let (harness, _events, _context) =
+                        build(&resolved, &args, &cwd, false).await.unwrap();
+                    assert_eq!(
+                        harness.branch_summary_reserve_tokens().await.unwrap(),
+                        expected,
+                        "configured reserve {configured:?} must reach the created harness"
+                    );
+                }
+            });
+    }
+
+    #[tokio::test]
+    async fn session_absolute_path_opens_the_selected_project_with_duplicate_ids() {
+        let temp = tempfile::tempdir().unwrap();
+        let a = temp.path().join("project-a");
+        let b = temp.path().join("project-b");
+        let mut selected_path = PathBuf::new();
+        for (cwd, label) in [
+            (&a, "first project message"),
+            (&b, "second project message"),
+        ] {
+            let directory = cwd.join("saved-sessions");
+            std::fs::create_dir_all(&directory).unwrap();
+            let session = create_jsonl_session_with_id(
+                &directory,
+                &cwd.to_string_lossy(),
+                Some("same-session-id".into()),
+            )
+            .await
+            .unwrap();
+            session
+                .append_message(ice_agent::AgentMessage::User(
+                    ice_ai::types::UserMessage::new(label, 0),
+                ))
+                .await
+                .unwrap();
+            if cwd == &a {
+                selected_path = PathBuf::from(session.storage().persistence_path().unwrap());
+            }
+        }
+        // The same ID in the execution cwd must not shadow the selected file.
+        let selected = open_session_by_id(&selected_path.to_string_lossy(), &b.to_string_lossy())
+            .await
+            .unwrap();
+        let entries = selected
+            .view("main")
+            .find_entries(&Default::default())
+            .await
+            .unwrap();
+        let serialized = serde_json::to_value(&entries).unwrap();
+        assert_eq!(serialized[0]["message"]["content"], "first project message");
+        assert!(matches!(
+            open_session_by_id(
+                &a.join("missing.jsonl").to_string_lossy(),
+                &b.to_string_lossy()
+            )
+            .await,
+            Err(OpenError::NotFound { .. })
+        ));
+    }
 
     #[tokio::test]
     async fn unauthenticated_packages_are_not_reintroduced_as_legacy_adapters() {
