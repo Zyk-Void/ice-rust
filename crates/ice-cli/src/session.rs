@@ -2502,19 +2502,31 @@ pub async fn open_session_by_id(id: &str, cwd: &str) -> Result<Session, OpenErro
         let target = target.canonicalize().map_err(|_| OpenError::NotFound {
             requested: format!("session {id}"),
         })?;
-        let directory = target.parent().ok_or_else(|| OpenError::NotFound {
-            requested: format!("session {id}"),
-        })?;
-        let metas = list_session_metadata_in_dir(cwd, directory)
-            .await
+        // An exact file can sit directly in a custom directory. Repository
+        // listing treats its root as a parent of cwd-encoded directories, so
+        // scanning that parent would miss the selected file.
+        use ice_harness::session::jsonl::{metadata_from_header, parse_header};
+        use std::io::BufRead;
+        let file =
+            std::fs::File::open(&target).map_err(|error| OpenError::Other(error.to_string()))?;
+        let modified_at = file
+            .metadata()
+            .and_then(|metadata| metadata.modified())
+            .ok()
+            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|duration| duration.as_millis().min(i64::MAX as u128) as i64)
+            .unwrap_or_default();
+        let mut header_line = String::new();
+        std::io::BufReader::new(std::io::Read::take(file, 64 * 1024))
+            .read_line(&mut header_line)
             .map_err(|error| OpenError::Other(error.to_string()))?;
-        let meta = metas
-            .iter()
-            .find(|meta| Path::new(&meta.path).canonicalize().ok().as_ref() == Some(&target))
-            .ok_or_else(|| OpenError::NotFound {
-                requested: format!("session {id}"),
-            })?;
-        return open_session(meta, cwd)
+        let header = parse_header(header_line.trim_end())
+            .map_err(|error| OpenError::Other(error.to_string()))?;
+        let path = target
+            .to_str()
+            .ok_or_else(|| OpenError::Other("The session path is not valid UTF-8.".into()))?;
+        let meta = metadata_from_header(&header, path, modified_at);
+        return open_session(&meta, cwd)
             .await
             .map_err(|error| OpenError::Other(error.to_string()));
     }
