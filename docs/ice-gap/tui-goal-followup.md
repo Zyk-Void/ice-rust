@@ -1,9 +1,8 @@
-# Selected TUI goal — local completion follow-up
+# Selected TUI goal — completion follow-up
 
-This updates the implementation status in `goal.md` §9; it does **not** mark
-anything delivered to `main`, authorize publication, or certify earlier PR SHAs.
-The working branch is `feat/tui-goal-finish`. Changes are intentionally unstaged
-and uncommitted pending review.
+These items landed on `main` in PR #44 (`44072f0`, 2026-10-21). This file records
+what they cover and what was not verified. Delivery of the older stacked PRs
+(#6-#24, #33-#43) was replaced by #44.
 
 ## Previously missing code now implemented
 
@@ -40,25 +39,23 @@ plugin translation also ignores it.
 
 ## Verification status
 
-**Combined Linux verification passed** on the actual uncommitted workspace:
-**2,178 Rust tests passed, zero failed, five ignored**, plus four release-helper
-Python tests. No focused regression was excluded from the workspace run.
+At the merged head (`1009a42` before squash): `cargo fmt --check`, a
+`-D warnings` check of all targets, **2,195 Rust tests passed with none failed
+and five ignored**, embedded-doc parity, and the four release-helper Python tests
+all passed locally. Hosted CI on #44 (Linux and Windows check, test and
+installer jobs) passed. Two OpenCodeReview passes over the whole change were
+triaged; confirmed findings were fixed with regression tests.
 
-Commands (with disposable `ICERS_CODING_AGENT_DIR`, `ICERS_OFFLINE=1`, and compiler
-and rustdoc warnings denied):
+Commands (with a disposable `ICERS_CODING_AGENT_DIR`, `ICERS_OFFLINE=1`, and
+compiler and rustdoc warnings denied):
 
 ```sh
 cargo fmt --all -- --check
 cargo check --workspace --all-targets --locked
 cargo test --workspace --locked
 python3 scripts/test_prebuilt_release.py
-cargo build -p ice-cli --bin icers --locked
+sh scripts/sync-embedded-docs.sh && git diff --exit-code -- crates/ice-cli/embedded-docs
 ```
-
-Embedded docs were synchronized and all seven generated files compared
-byte-for-byte with their source. Because changes intentionally remain unstaged,
-`git diff --exit-code` against HEAD is not a clean-tree certification; that gate
-must be rerun after reviewed commits.
 
 Baseline commit: `e49cf6e56bc0a3aa4642d18569902919c0f0a66c`. The tested compiled
 workspace file digest was unchanged before/after the run:
@@ -90,16 +87,16 @@ binding while retaining Enter. No real user configuration was changed.
 
 ## Remaining boundaries
 
-- The combined Linux gates and embedded-document parity passed locally; reviewed
-  commits and their final-head CI remain outstanding.
-- Final-source real-terminal mouse scroll/partial-drag/clipboard, vim,
-  `code --wait`, streaming external-editor handoff, OSC52 delivery, and terminal
-  light/dark observations are not yet certified by this follow-up.
-- Rust 1.78 and final-head Windows CI have not been run here. Earlier Windows
-  results belong only to their published SHAs. The prior evidence recorded
-  baseline dependency MSRV blockers; no dependency versions were changed here.
-- Review, publication/readiness, dependency-ordered PR delivery and authorized
-  merges remain separate work. Existing remote-operation restrictions are not
-  lifted by local implementation. Delivery checkboxes in `goal.md` stay open
-  until target `main` is verified.
+- Real-terminal checks are not done: mouse scroll/partial-drag/clipboard, vim,
+  `code --wait`, an editor opened during a streaming run, OSC 52 delivery over
+  SSH, and terminal light/dark detection. Only a nano preflight ran, before the
+  final source.
+- Rust 1.78 was not run; the baseline already had dependency MSRV blockers and
+  no dependency versions were changed.
+- Resuming a session created in another directory keeps tools in the current
+  directory; a note tells the user. Ctrl+C, Ctrl+D, Esc, Tab and Up/Down are
+  fixed keys. `app.session.new/tree/fork/resume` ship unbound and are bindable
+  in `keybindings.json`.
+- Recovery reports a dangling deferred write when an append fails after a
+  navigation move; this matches how failed run steps are already reported.
 - `goal.md` §7.2 remains deferred and §7.3 excluded, as originally selected.
