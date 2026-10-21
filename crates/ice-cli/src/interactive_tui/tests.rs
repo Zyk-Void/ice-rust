@@ -481,7 +481,7 @@ fn test_tui_state() -> Arc<TuiState> {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -1592,6 +1592,7 @@ fn reload_replaces_command_dispatch_and_completion_for_existing_readers() {
         &registry,
         &ice_harness::types::AgentHarnessResources::default(),
         std::path::Path::new("."),
+        None,
     );
     let suggestions = provider.get_suggestions("/added-test", 11).unwrap();
     assert!(suggestions
@@ -1657,7 +1658,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2192,7 +2193,7 @@ fn remove_provider_deletes_from_models_json() {
 
 /// Isolate the config dir (and serialize against other env-touching tests)
 /// while `body` runs, then restore the previous value.
-fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
+pub(super) fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
     let _guard = crate::config::test_support::env_lock().lock().unwrap();
     let prev = std::env::var_os(crate::config::CONFIG_DIR_ENV);
     let tmp = tempfile::tempdir().unwrap();
@@ -2718,7 +2719,7 @@ fn test_autocomplete_slash_suggestions_render() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2813,7 +2814,7 @@ fn test_select_list_swap_restores_editor() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2911,7 +2912,7 @@ fn test_message_history_browse_restores_draft() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3012,7 +3013,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3164,7 +3165,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -4602,4 +4603,455 @@ fn fork_picker_defaults_to_latest_and_cancel_preserves_draft() {
                 harness.close().await.unwrap();
             })
     })
+}
+
+fn model_switch_tui() -> Arc<TuiAltScreen> {
+    Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ))
+}
+
+fn model_switch_model(id: &str) -> ice_ai::Model {
+    ice_ai::Model::new(id, id, ice_ai::Api::Faux, "faux", "http://unused")
+}
+
+/// A current-thread runtime keeps the spawned switch pending until we await it,
+/// making the former optimistic footer and success note fail deterministically.
+#[test]
+fn model_switch_waits_for_acceptance_before_footer_and_note() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let lane = harness.lane("main");
+                let state = test_tui_state();
+                let first = model_switch_model("first");
+                lane.set_model(first.clone()).await.unwrap();
+                state.set_current_model(&first);
+                let footer_before = state.footer.render(120);
+                let chat = Arc::new(Container::new());
+                let pending = spawn_set_model(
+                    &state,
+                    &lane,
+                    model_switch_model("second"),
+                    &chat,
+                    &model_switch_tui(),
+                    ModelSwitchMode::Session,
+                );
+                assert_eq!(state.current_model_id(), "first");
+                assert_eq!(state.footer.render(120), footer_before);
+                assert!(!strip_ansi(&chat.render(120).join("\n")).contains("Model set"));
+
+                pending.await.unwrap();
+                assert_eq!(state.current_model_id(), "second");
+                assert_eq!(lane.get_model().await.unwrap().id, "second");
+                assert!(strip_ansi(&state.footer.render(120).join("\n")).contains("second"));
+                let text = strip_ansi(&chat.render(120).join("\n"));
+                assert_eq!(text.matches("Model set to faux/second").count(), 1);
+                assert!(crate::settings::load_settings()
+                    .unwrap()
+                    .default_model
+                    .is_none());
+                harness.close().await.unwrap();
+            });
+    });
+}
+
+#[test]
+fn model_switch_rejection_keeps_footer_and_saved_default() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                set_default_model("faux", "first").unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let lane = harness.lane("main");
+                harness.close().await.unwrap();
+                for mode in [
+                    ModelSwitchMode::Cycle,
+                    ModelSwitchMode::Session,
+                    ModelSwitchMode::PersistDefault,
+                ] {
+                    let state = test_tui_state();
+                    state.set_current_model(&model_switch_model("first"));
+                    let footer_before = state.footer.render(120);
+                    let chat = Arc::new(Container::new());
+                    spawn_set_model(
+                        &state,
+                        &lane,
+                        model_switch_model("second"),
+                        &chat,
+                        &model_switch_tui(),
+                        mode,
+                    )
+                    .await
+                    .unwrap();
+                    assert_eq!(state.current_model_id(), "first");
+                    assert_eq!(state.footer.render(120), footer_before);
+                    let text = strip_ansi(&chat.render(120).join("\n"));
+                    assert!(text.contains("Could not switch to faux/second"));
+                    assert!(!text.contains("Model set"));
+                    assert_eq!(
+                        crate::settings::load_settings()
+                            .unwrap()
+                            .default_model
+                            .as_deref(),
+                        Some("first"),
+                    );
+                }
+            });
+    });
+}
+
+#[test]
+fn model_switch_save_failure_reports_active_model_and_unsaved_default() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let lane = harness.lane("main");
+                let dir = crate::config::agent_dir().unwrap();
+                std::fs::create_dir(dir.join("settings.json")).unwrap();
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                spawn_set_model(
+                    &state,
+                    &lane,
+                    model_switch_model("second"),
+                    &chat,
+                    &model_switch_tui(),
+                    ModelSwitchMode::PersistDefault,
+                )
+                .await
+                .unwrap();
+                assert_eq!(state.current_model_id(), "second");
+                assert_eq!(lane.get_model().await.unwrap().id, "second");
+                let text = strip_ansi(&chat.render(120).join("\n"));
+                assert!(text.contains("Model set to faux/second"));
+                assert!(text.contains("could not save its default"));
+                assert!(!text.contains("Model saved as the default."));
+                harness.close().await.unwrap();
+            });
+    });
+}
+
+/// Port of 7209-model-selector-filter-resets-selection.test.ts: opening selects
+/// the current model, but every query edit resets to the first filtered match.
+#[test]
+fn model_selector_opens_on_current_then_search_resets_selection() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let lane = harness.lane("main");
+                let state = test_tui_state();
+                let ec = Arc::new(Container::new());
+                let tui = model_switch_tui();
+                let catalog = vec![
+                    model_switch_model("alpha-1"),
+                    model_switch_model("alpha-2"),
+                    model_switch_model("alpha-3"),
+                    model_switch_model("beta"),
+                ];
+                let selector = open_model_selector(
+                    &state,
+                    &ec,
+                    &state.editor,
+                    &tui,
+                    &catalog,
+                    &lane,
+                    "alpha-3",
+                    &state.chat_container,
+                    None,
+                )
+                .unwrap();
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-3"
+                );
+                for ch in "alpha".chars() {
+                    selector.handle_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE));
+                }
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-1"
+                );
+                selector.list().set_selected_index(2);
+                selector.handle_key(KeyEvent::new(KeyCode::Backspace, KeyModifiers::NONE));
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-1"
+                );
+                selector.set_search_text("no-such-model");
+                assert!(selector.list().get_selected_item().is_none());
+                selector.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+                assert!(state.active_selector.lock().unwrap().is_some());
+                selector.handle_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+                assert!(state.active_selector.lock().unwrap().is_none());
+
+                let prefilled = open_model_selector(
+                    &state,
+                    &ec,
+                    &state.editor,
+                    &tui,
+                    &catalog,
+                    &lane,
+                    "alpha-3",
+                    &state.chat_container,
+                    Some("beta"),
+                )
+                .unwrap();
+                assert_eq!(
+                    prefilled.list().get_selected_item().unwrap().value,
+                    "faux/beta"
+                );
+                open_settings_model_selector(
+                    &state,
+                    &ec,
+                    &state.editor,
+                    &tui,
+                    &lane,
+                    &catalog,
+                    "alpha-3",
+                    &state.chat_container,
+                );
+                let selector = match &state.active_selector.lock().unwrap().as_ref().unwrap().0 {
+                    SelectorView::Searchable(selector) => selector.clone(),
+                    _ => panic!("expected the default-model search selector"),
+                };
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-3"
+                );
+                harness.close().await.unwrap();
+            });
+    });
+}
+
+/// Exercise the real on_select callback as well as the shared outcome handler.
+#[test]
+fn model_selector_rejected_cross_provider_switch_never_announces_or_saves() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                set_default_model("faux", "first").unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let lane = harness.lane("main");
+                harness.close().await.unwrap();
+                let state = test_tui_state();
+                let first = model_switch_model("first");
+                state.set_current_model(&first);
+                let mut second = model_switch_model("second");
+                second.provider = "other".into();
+                let selector = open_model_selector(
+                    &state,
+                    &Arc::new(Container::new()),
+                    &state.editor,
+                    &model_switch_tui(),
+                    &[first, second],
+                    &lane,
+                    "first",
+                    &state.chat_container,
+                    None,
+                )
+                .unwrap();
+                selector.list().set_selected_index(1);
+                selector.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+                assert_eq!(state.current_model_id(), "first");
+                assert!(state.active_selector.lock().unwrap().is_none());
+                assert!(
+                    !strip_ansi(&state.chat_container.render(120).join("\n")).contains("Model set")
+                );
+                tokio::time::timeout(std::time::Duration::from_secs(1), async {
+                    loop {
+                        let text = strip_ansi(&state.chat_container.render(120).join("\n"));
+                        if text.contains("Could not switch to other/second") {
+                            break;
+                        }
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .expect("switch failure must be reported");
+                assert_eq!(state.current_model_id(), "first");
+                let settings = crate::settings::load_settings().unwrap();
+                assert_eq!(settings.default_model.as_deref(), Some("first"));
+                assert_eq!(settings.default_provider.as_deref(), Some("faux"));
+            });
+    });
+}
+
+/// `/tree` labels used to be only `message #N`, so picking a point meant
+/// guessing. They now say who said what.
+#[test]
+fn tree_labels_preview_each_entry() {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let harness = AgentHarness::create(Default::default()).await.unwrap();
+            let long = format!("\n  please refactor {}", "x".repeat(120));
+            harness
+                .session()
+                .append_message(user_message_with_images(&long, Vec::new()))
+                .await
+                .unwrap();
+            let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+            reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                kind: ice_ai::types::TextContentType,
+                text: "Done.\nDetails follow".into(),
+                text_signature: None,
+            })];
+            harness
+                .session()
+                .append_message(AgentMessage::Assistant(Box::new(reply)))
+                .await
+                .unwrap();
+            let entries = harness
+                .session()
+                .view("main")
+                .find_entries(&EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+            let labels: Vec<String> = entries.iter().map(tree_entry_summary).collect();
+            assert_eq!(labels.len(), 2, "{labels:?}");
+            assert!(
+                labels[0].starts_with("user: please refactor xxx"),
+                "{labels:?}"
+            );
+            assert!(labels[0].ends_with('…') && ice_tui::visible_width(&labels[0]) == 80);
+            assert_eq!(labels[1], "assistant: Done. Details follow");
+            harness.close().await.unwrap();
+        })
+}
+
+#[test]
+fn tree_preview_covers_metadata_and_untruncated_search_content() {
+    fn entry(kind: &str, extra: serde_json::Value) -> Entry {
+        let mut raw = serde_json::json!({
+            "type": kind, "id": "entry-1", "seq": 1, "parentId": null, "timestamp": 0
+        });
+        raw.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        serde_json::from_value(raw).unwrap()
+    }
+    for (kind, data, expected) in [
+        (
+            "model_change",
+            serde_json::json!({"provider":"p","modelId":"m"}),
+            "model → p/m",
+        ),
+        (
+            "thinking_level_change",
+            serde_json::json!({"thinkingLevel":"high"}),
+            "thinking: high",
+        ),
+        (
+            "active_tools_change",
+            serde_json::json!({"activeToolNames":["read","bash"]}),
+            "active tools: read, bash",
+        ),
+        (
+            "branch_summary",
+            serde_json::json!({"fromId":"old","summary":"earlier branch"}),
+            "branch summary: earlier branch",
+        ),
+        (
+            "compaction",
+            serde_json::json!({"summary":"retained facts","retainedTail":[],"tokensBefore":100}),
+            "compaction: retained facts",
+        ),
+        (
+            "custom",
+            serde_json::json!({"customType":"bashExecution","data":{"output":"build passed"}}),
+            "Command output: build passed",
+        ),
+    ] {
+        assert_eq!(tree_entry_summary(&entry(kind, data)), expected);
+    }
+
+    let content = format!("{}\nfind-this-late-word", "界".repeat(100));
+    let entry = Entry::Message(ice_harness::session::types::MessageEntry {
+        base: ice_harness::session::types::EntryBase {
+            entry_type: "message".into(),
+            id: "ユニコード識別子と長い文字列".into(),
+            seq: 2,
+            parent_id: None,
+            timestamp: 0,
+        },
+        message: user_message_with_images(&content, Vec::new()),
+        terminate: None,
+    });
+    let item = tree_entry_item(&entry, Some(entry.id()));
+    assert!(ice_tui::visible_width(&tree_entry_summary(&entry)) <= 80);
+    assert!(item.label.ends_with("(current)"));
+    assert!(item.description.as_ref().unwrap().starts_with("#2 "));
+    let list = Arc::new(SelectList::new(vec![item], 5));
+    let search = SearchableSelectList::new(None, None, list.clone());
+    search.set_search_text("find-this-late-word");
+    assert_eq!(list.get_selected_item().unwrap().value, entry.id());
+}
+
+#[test]
+fn tree_preview_handles_empty_and_aborted_assistant_without_losing_graphemes() {
+    let base = ice_harness::session::types::EntryBase {
+        entry_type: "message".into(),
+        id: "a".into(),
+        seq: 1,
+        parent_id: None,
+        timestamp: 0,
+    };
+    let mut assistant = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+    let entry = |assistant: AssistantMessage| {
+        Entry::Message(ice_harness::session::types::MessageEntry {
+            base: base.clone(),
+            message: AgentMessage::Assistant(Box::new(assistant)),
+            terminate: None,
+        })
+    };
+    assert_eq!(
+        tree_entry_summary(&entry(assistant.clone())),
+        "assistant: (no content)"
+    );
+    assistant.stop_reason = ice_ai::types::StopReason::Aborted;
+    assert_eq!(
+        tree_entry_summary(&entry(assistant.clone())),
+        "assistant: (aborted)"
+    );
+    assistant.stop_reason = ice_ai::types::StopReason::Error;
+    assistant.error_message = Some("provider failed".into());
+    assert_eq!(
+        tree_entry_summary(&entry(assistant.clone())),
+        "assistant: provider failed"
+    );
+    assistant.content = vec![Content::Text(ice_ai::types::TextContent {
+        kind: ice_ai::types::TextContentType,
+        text: format!("\u{1b}[31m{}\u{7}\u{1b}[0m", "👨‍👩‍👧‍👦".repeat(100)),
+        text_signature: None,
+    })];
+    let preview = tree_entry_summary(&entry(assistant));
+    assert!(ice_tui::visible_width(&preview) <= 80);
+    assert!(!preview.contains('\u{1b}') && !preview.contains('\u{7}'));
+    assert!(preview.ends_with("👨‍👩‍👧‍👦…"));
 }

@@ -311,19 +311,9 @@ impl SessionPicker {
             self.rebuild();
             return;
         }
-        let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
-        if matches!(
-            key.code,
-            KeyCode::Esc
-                | KeyCode::Enter
-                | KeyCode::Up
-                | KeyCode::Down
-                | KeyCode::PageUp
-                | KeyCode::PageDown
-        ) || (ctrl && matches!(key.code, KeyCode::Char('j' | 'k' | 'n' | 'p')))
-        {
+        if let Some(selection_key) = self.bindings.selection_key(&key) {
             let list = self.list.lock().unwrap().clone();
-            list.handle_key(key);
+            list.handle_key(selection_key);
         } else {
             self.input.handle_key(key);
         }
@@ -581,6 +571,92 @@ mod tests {
                 .all(|line| ice_tui::visible_width(line) <= width));
         }
     }
+    #[test]
+    fn picker_uses_effective_keys_for_navigation_actions_and_cancellation() {
+        let mut bindings = ice_tui::Keybindings::new();
+        for (action, code) in [
+            ("tui.select.up", KeyCode::F(7)),
+            ("tui.select.down", KeyCode::F(8)),
+            ("tui.select.confirm", KeyCode::F(10)),
+            ("tui.select.cancel", KeyCode::F(12)),
+            ("app.session.scope", KeyCode::F(6)),
+        ] {
+            bindings.set(
+                action,
+                vec![ice_tui::KeyCombo::new(code, KeyModifiers::NONE)],
+            );
+        }
+        let selected = Arc::new(Mutex::new(None));
+        let chosen = selected.clone();
+        let cancellations = Arc::new(AtomicU64::new(0));
+        let cancelled = cancellations.clone();
+        let rows = picker().rows.lock().unwrap().clone();
+        let picker = SessionPicker::new(
+            Path::new("/project-a"),
+            Arc::new(move |path| *chosen.lock().unwrap() = Some(path)),
+            Arc::new(move || {
+                cancelled.fetch_add(1, Ordering::Relaxed);
+            }),
+            Arc::new(|| {}),
+            None,
+            Arc::new(bindings),
+        );
+        *picker.rows.lock().unwrap() = rows;
+        picker.loading.store(false, Ordering::Relaxed);
+        picker.rebuild();
+        settle(&picker);
+        picker.handle_key(KeyEvent::new(KeyCode::F(6), KeyModifiers::NONE));
+        settle(&picker);
+        assert!(picker.all.load(Ordering::Relaxed));
+        let current = || {
+            picker
+                .list
+                .lock()
+                .unwrap()
+                .get_selected_item()
+                .unwrap()
+                .value
+        };
+        assert_eq!(current(), "/a.jsonl");
+        picker.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(current(), "/a.jsonl", "released default must not navigate");
+        picker.handle_key(KeyEvent::new(KeyCode::F(8), KeyModifiers::NONE));
+        assert_eq!(current(), "/b.jsonl");
+        picker.handle_key(KeyEvent::new(KeyCode::F(7), KeyModifiers::NONE));
+        assert_eq!(current(), "/a.jsonl");
+        picker.handle_key(KeyEvent::new(KeyCode::F(8), KeyModifiers::NONE));
+        for key in [KeyCode::Enter, KeyCode::Esc] {
+            picker.handle_key(KeyEvent::new(key, KeyModifiers::NONE));
+        }
+        assert!(selected.lock().unwrap().is_none());
+        assert_eq!(cancellations.load(Ordering::Relaxed), 0);
+        picker.handle_key(KeyEvent::new(KeyCode::F(2), KeyModifiers::NONE));
+        assert!(matches!(
+            *picker.mode.lock().unwrap(),
+            PickerMode::Rename(_)
+        ));
+        picker.handle_key(KeyEvent::new(KeyCode::F(12), KeyModifiers::NONE));
+        assert!(matches!(*picker.mode.lock().unwrap(), PickerMode::Browse));
+        picker.handle_key(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::CONTROL));
+        assert!(matches!(
+            *picker.mode.lock().unwrap(),
+            PickerMode::ConfirmDelete(_)
+        ));
+        picker.handle_key(KeyEvent::new(KeyCode::F(12), KeyModifiers::NONE));
+        assert!(matches!(*picker.mode.lock().unwrap(), PickerMode::Browse));
+        assert_eq!(cancellations.load(Ordering::Relaxed), 0);
+        picker.handle_key(KeyEvent::new(KeyCode::F(10), KeyModifiers::NONE));
+        assert_eq!(selected.lock().unwrap().as_deref(), Some("/b.jsonl"));
+        picker.handle_key(KeyEvent::new(KeyCode::F(12), KeyModifiers::NONE));
+        assert_eq!(cancellations.load(Ordering::Relaxed), 1);
+        let hints = ice_tui::strip_ansi(&picker.render(240).join("\n"));
+        assert!(
+            hints.contains("F6: scope")
+                && hints.contains("F10: resume")
+                && hints.contains("F12: cancel")
+        );
+    }
+
     #[test]
     fn obsolete_results_cannot_replace_the_latest_query() {
         let picker = picker();

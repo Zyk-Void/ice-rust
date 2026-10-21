@@ -35,6 +35,10 @@ mod commands;
 use commands::*;
 mod settings;
 use settings::*;
+mod scoped_models;
+use scoped_models::*;
+mod keybinding_config;
+use keybinding_config::*;
 mod sessions;
 use sessions::*;
 mod run;
@@ -44,6 +48,8 @@ use events::*;
 mod selectors;
 mod session_picker;
 use selectors::*;
+mod tree_selector;
+use tree_selector::*;
 mod autocomplete;
 use autocomplete::*;
 mod rendering;
@@ -1259,7 +1265,7 @@ pub async fn interactive_tui(
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(saved_settings.scoped_models.clone()),
         markdown_transformer: Arc::new(std::sync::Mutex::new(initial_transformer)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: reload_context.extension_session.clone(),
@@ -2364,24 +2370,27 @@ pub async fn interactive_tui(
                 ice_tui::keybindings::keys::MODEL_CYCLE_FORWARD,
             ) {
                 let current = state_for_key.current_model_id();
-                // Cycle within the `/scoped-models` set (settings.json) when
+                // Cycle within the session's `/scoped-models` selection when
                 // configured; otherwise the full catalog, restricted to the
                 // current provider (the lane cannot route another provider).
+                let catalog = ctx_for_key
+                    .model_catalog
+                    .read()
+                    .unwrap_or_else(|error| error.into_inner());
+                let provider_catalog = same_provider_catalog(&catalog, &current);
                 let scope = scoped_catalog(
-                    &ctx_for_key
-                        .model_catalog
-                        .read()
-                        .unwrap_or_else(|error| error.into_inner()),
-                    &current,
+                    &provider_catalog,
+                    state_for_key.scoped_models.lock().unwrap().as_deref(),
                 );
-                let scope = same_provider_catalog(&scope, &current);
                 if let Some(next) = cycle_next_model(&scope, &current) {
-                    state_for_key.set_current_model(&next);
-                    let lane = lane_for_key.clone();
-                    tokio::spawn(async move {
-                        let _ = lane.set_model(next).await;
-                    });
-                    tui_for_key.request_render_reusing_scroll_content();
+                    spawn_set_model(
+                        &state_for_key,
+                        &lane_for_key,
+                        next,
+                        &state_for_key.chat_container,
+                        &tui_for_key,
+                        ModelSwitchMode::Cycle,
+                    );
                 }
                 continue;
             }
@@ -2394,21 +2403,24 @@ pub async fn interactive_tui(
                 ice_tui::keybindings::keys::MODEL_CYCLE_BACKWARD,
             ) {
                 let current = state_for_key.current_model_id();
+                let catalog = ctx_for_key
+                    .model_catalog
+                    .read()
+                    .unwrap_or_else(|error| error.into_inner());
+                let provider_catalog = same_provider_catalog(&catalog, &current);
                 let scope = scoped_catalog(
-                    &ctx_for_key
-                        .model_catalog
-                        .read()
-                        .unwrap_or_else(|error| error.into_inner()),
-                    &current,
+                    &provider_catalog,
+                    state_for_key.scoped_models.lock().unwrap().as_deref(),
                 );
-                let scope = same_provider_catalog(&scope, &current);
                 if let Some(prev) = cycle_prev_model(&scope, &current) {
-                    state_for_key.set_current_model(&prev);
-                    let lane = lane_for_key.clone();
-                    tokio::spawn(async move {
-                        let _ = lane.set_model(prev).await;
-                    });
-                    tui_for_key.request_render_reusing_scroll_content();
+                    spawn_set_model(
+                        &state_for_key,
+                        &lane_for_key,
+                        prev,
+                        &state_for_key.chat_container,
+                        &tui_for_key,
+                        ModelSwitchMode::Cycle,
+                    );
                 }
                 continue;
             }

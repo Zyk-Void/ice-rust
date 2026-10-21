@@ -323,36 +323,11 @@ pub(super) fn add_hotkeys_message(container: &Arc<Container>) {
         0,
     )));
     container.add_child(Arc::new(Spacer::new(1)));
-    let keys: &[(&str, &str)] = &[
-        ("Enter", "Send message"),
-        ("Shift+Enter", "New line"),
-        ("Tab", "Accept autocomplete suggestion"),
-        ("Ctrl+A / Ctrl+E", "Line start / end"),
-        (
-            "Ctrl+K / Ctrl+U",
-            "Kill to end / start of line (Ctrl+Y yanks)",
-        ),
-        ("Ctrl+- / Ctrl+R", "Undo / redo"),
-        ("Ctrl+Y / Alt+Y", "Yank / yank-pop"),
-        ("Alt+Backspace", "Kill previous word"),
-        ("Ctrl+C", "Clear the editor (press twice quickly to exit)"),
-        ("Ctrl+X", "Copy the editor selection or the last reply"),
-        ("Esc", "Abort a running prompt"),
-        ("Ctrl+L", "Open model selector"),
-        ("Ctrl+P", "Cycle to the next model (live)"),
-        ("Ctrl+O", "Expand/collapse all tool output"),
-        ("Ctrl+T", "Show/hide reasoning blocks"),
-        ("PageUp/Down", "Scroll transcript by one page"),
-        ("Home / End", "Jump to transcript start / latest output"),
-    ];
-    let key_w = keys.iter().map(|(k, _)| k.len()).max().unwrap_or(0);
-    for (key, desc) in keys {
-        let row = format!(
-            "  {:<key_w$}  {}  {}",
-            c.accent.fg(key),
-            c.dim.fg("—"),
-            c.muted.fg(desc)
-        );
+    let bindings = ice_tui::get_keybindings().clone();
+    let rows = effective_hotkey_rows(&bindings);
+    let key_w = rows.iter().map(|row| row.1.len()).max().unwrap_or(0);
+    for (id, key, description) in rows {
+        let row = format!("  {key:<key_w$}  —  {description} [{id}]");
         container.add_child(Arc::new(Text::new(row, 1, 0)));
     }
     container.add_child(Arc::new(Spacer::new(1)));

@@ -376,7 +376,6 @@ pub struct Editor {
     options: EditorOptions,
     #[allow(dead_code)]
     style: EditorStyle,
-    #[allow(dead_code)]
     keybindings: Arc<Keybindings>,
     on_submit: Mutex<Option<Arc<dyn Fn(&str) + Send + Sync>>>,
     on_change: Mutex<Option<Arc<dyn Fn(&str) + Send + Sync>>>,
@@ -1424,8 +1423,87 @@ impl Editor {
         }
     }
 
-    /// Handle keyboard input.
-    pub fn handle_key(&self, key: crossterm::event::KeyEvent) -> bool {
+    /// Route configured editor actions before text input and selection handling.
+    pub fn handle_key(&self, mut key: crossterm::event::KeyEvent) -> bool {
+        use KeyCode::*;
+        use KeyModifiers as M;
+
+        // Terminal protocols can deliver Enter as a raw CR/LF codepoint.
+        if matches!(key.code, Char('\n' | '\r')) {
+            key.code = Enter;
+        }
+        let actions = [
+            ("tui.editor.cursorLeft", Left, M::NONE),
+            ("tui.editor.cursorRight", Right, M::NONE),
+            ("tui.editor.cursorUp", Up, M::NONE),
+            ("tui.editor.cursorDown", Down, M::NONE),
+            ("tui.editor.cursorLineStart", Home, M::NONE),
+            ("tui.editor.cursorLineEnd", End, M::NONE),
+            ("tui.editor.cursorWordLeft", Left, M::ALT),
+            ("tui.editor.cursorWordRight", Right, M::ALT),
+            ("tui.editor.deleteCharBackward", Backspace, M::NONE),
+            ("tui.editor.deleteCharForward", Delete, M::NONE),
+            ("tui.editor.deleteWordBackward", Backspace, M::ALT),
+            ("tui.editor.deleteWordForward", Delete, M::ALT),
+            ("tui.editor.deleteToLineStart", Char('u'), M::CONTROL),
+            ("tui.editor.deleteToLineEnd", Char('k'), M::CONTROL),
+            ("tui.editor.yank", Char('y'), M::CONTROL),
+            ("tui.editor.yankPop", Char('y'), M::ALT),
+            ("tui.editor.undo", Char('-'), M::CONTROL),
+            ("tui.editor.jumpForward", Char(']'), M::CONTROL),
+            ("tui.editor.jumpBackward", Char(']'), M::CONTROL | M::ALT),
+            ("tui.editor.pageUp", PageUp, M::CONTROL),
+            ("tui.editor.pageDown", PageDown, M::CONTROL),
+            ("tui.input.newLine", Enter, M::SHIFT),
+            ("tui.input.submit", Enter, M::NONE),
+            ("tui.input.copy", Char('c'), M::CONTROL),
+        ];
+        for &(id, code, modifiers) in &actions {
+            if self.keybindings.matches(&key, id) {
+                return self
+                    .handle_key_unconfigured(crossterm::event::KeyEvent::new(code, modifiers));
+            }
+        }
+        let is_default = |id, key: &crossterm::event::KeyEvent| {
+            self.keybindings
+                .get_definition(id)
+                .is_some_and(|definition| {
+                    definition
+                        .default_keys
+                        .iter()
+                        .any(|combo| combo.code == key.code && combo.modifiers == key.modifiers)
+                })
+        };
+        // Shift extends a configured cursor movement. A rebound movement must
+        // also release its former shifted selection shortcut.
+        if key.modifiers.contains(M::SHIFT) {
+            let mut movement = key;
+            movement.modifiers.remove(M::SHIFT);
+            if let Char(character) = movement.code {
+                movement.code = Char(character.to_ascii_lowercase());
+            }
+            for &(id, code, _) in &actions[..6] {
+                if self.keybindings.matches(&movement, id) {
+                    return self
+                        .handle_key_unconfigured(crossterm::event::KeyEvent::new(code, M::SHIFT));
+                }
+            }
+            if actions[..6]
+                .iter()
+                .any(|(id, _, _)| is_default(*id, &movement))
+            {
+                return false;
+            }
+        }
+        // Do not keep a default key active after rebinding or explicitly
+        // unbinding its action. Other keys retain the text/selection protocol.
+        if actions.iter().any(|(id, _, _)| is_default(*id, &key)) {
+            return false;
+        }
+        self.handle_key_unconfigured(key)
+    }
+
+    fn handle_key_unconfigured(&self, key: crossterm::event::KeyEvent) -> bool {
         match (key.modifiers, key.code) {
             // Navigation — plain movement clears any active selection;
             // Shift+movement extends it.

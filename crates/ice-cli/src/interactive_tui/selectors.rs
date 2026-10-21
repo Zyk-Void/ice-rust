@@ -138,7 +138,11 @@ pub(super) fn open_model_selector(
         tui.request_render(false);
         return None;
     }
+    let current = current_model_index(&items);
     let list = Arc::new(SelectList::new(items, 10));
+    if let Some(index) = current {
+        list.set_selected_index(index);
+    }
 
     // Capture the catalog + lane so the on_select closure can resolve the
     // chosen Model and apply it. `on_select` fires on the blocking key thread,
@@ -168,25 +172,15 @@ pub(super) fn open_model_selector(
             .iter()
             .find(|m| m.id.eq_ignore_ascii_case(&lane_model_sel))
             .map(|m| m.provider.clone());
-        if current_provider
+        let mode = if current_provider
             .as_deref()
             .map_or(true, |cur| !model.provider.eq_ignore_ascii_case(cur))
         {
-            let _ = set_default_model(&model.provider, &model.id);
-        }
-
-        state_sel.set_current_model(&model);
-        let lane = lane_sel.clone();
-        tokio::spawn(async move {
-            let _ = lane.set_model(model).await;
-        });
-        add_note_message(
-            &chat_sel,
-            &format!(
-                "Model set to {} — applies to the next message.",
-                short_model_name(&item.value)
-            ),
-        );
+            ModelSwitchMode::PersistDefault
+        } else {
+            ModelSwitchMode::Session
+        };
+        spawn_set_model(&state_sel, &lane_sel, model, &chat_sel, &tui_sel, mode);
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();
@@ -211,6 +205,74 @@ pub(super) fn open_model_selector(
         searchable.set_search_text(term);
     }
     Some(searchable)
+}
+
+/// Index of the item `model_selector_items` marked as the current model, so
+/// `/model` opens on it.
+pub(super) fn current_model_index(items: &[SelectItem]) -> Option<usize> {
+    items.iter().position(|item| {
+        item.description
+            .as_deref()
+            .is_some_and(|d| d.ends_with(" (current)"))
+    })
+}
+
+/// The caller's requested behavior after a model switch has succeeded.
+#[derive(Clone, Copy)]
+pub(super) enum ModelSwitchMode {
+    Cycle,
+    Session,
+    PersistDefault,
+}
+
+/// Report only the accepted result. In particular a pending or rejected switch
+/// must not change the footer, context-window badge, or saved default. Keeping
+/// the previous state also works after the harness closes and get_model fails.
+pub(super) fn spawn_set_model(
+    state: &Arc<TuiState>,
+    lane: &Arc<dyn AgentLane>,
+    model: ice_ai::Model,
+    chat: &Arc<Container>,
+    tui: &Arc<TuiAltScreen>,
+    mode: ModelSwitchMode,
+) -> tokio::task::JoinHandle<()> {
+    let state = state.clone();
+    let lane = lane.clone();
+    let chat = chat.clone();
+    let tui = tui.clone();
+    tokio::spawn(async move {
+        match lane.set_model(model.clone()).await {
+            Ok(()) => {
+                state.set_current_model(&model);
+                if !matches!(mode, ModelSwitchMode::Cycle) {
+                    add_note_message(
+                        &chat,
+                        &format!(
+                            "Model set to {}/{} — applies to the next message.",
+                            model.provider, model.id
+                        ),
+                    );
+                }
+                if matches!(mode, ModelSwitchMode::PersistDefault) {
+                    match set_default_model(&model.provider, &model.id) {
+                        Ok(_) => add_note_message(&chat, "Model saved as the default."),
+                        Err(error) => add_error_message(
+                            &chat,
+                            &format!("Model is active, but could not save its default: {error}"),
+                        ),
+                    }
+                }
+            }
+            Err(error) => add_error_message(
+                &chat,
+                &format!(
+                    "Could not switch to {}/{}: {error}",
+                    model.provider, model.id
+                ),
+            ),
+        }
+        tui.request_render(false);
+    })
 }
 
 /// Cycle to the next catalog entry after `current_id`, wrapping to the first.
@@ -414,9 +476,98 @@ pub(super) async fn open_fork_selector(
     );
 }
 
-/// Open a selector for the current session's persisted entry tree. Selecting a
-/// message moves the main lane leaf to that entry, then the caller reloads the
-/// visible branch from durable storage.
+/// Content and role used by tree search and preview formatting. Keep this full:
+/// a clipped row must not make words later in a message impossible to find.
+pub(super) fn tree_entry_text(entry: &Entry) -> String {
+    match entry {
+        Entry::Message(me) => match &me.message {
+            AgentMessage::User(user) => format!("user: {}", user_message_text(user)),
+            AgentMessage::Assistant(assistant) => {
+                let text = assistant_text(assistant);
+                let text = if !text.trim().is_empty() {
+                    text
+                } else if assistant.stop_reason == ice_ai::types::StopReason::Aborted {
+                    "(aborted)".into()
+                } else if let Some(error) = &assistant.error_message {
+                    error.clone()
+                } else {
+                    let tools = assistant
+                        .content
+                        .iter()
+                        .filter_map(|content| match content {
+                            Content::ToolCall(call) => Some(call.name.as_str()),
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>();
+                    if tools.is_empty() {
+                        "(no content)".into()
+                    } else {
+                        format!("(tool calls: {})", tools.join(", "))
+                    }
+                };
+                format!("assistant: {text}")
+            }
+            AgentMessage::ToolResult(result) => {
+                let text = result
+                    .content
+                    .iter()
+                    .filter_map(|content| match content {
+                        Content::Text(text) => Some(text.text.as_str()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                format!("tool result: {} {text}", result.tool_name)
+            }
+            AgentMessage::Custom(custom) => custom_message_fallback(custom),
+        },
+        Entry::ModelChange(model) => format!("model → {}/{}", model.provider, model.model_id),
+        Entry::ThinkingLevel(thinking) => format!("thinking: {}", thinking.thinking_level),
+        Entry::ActiveTools(tools) => {
+            format!("active tools: {}", tools.active_tool_names.join(", "))
+        }
+        Entry::Compaction(compaction) => format!("compaction: {}", compaction.summary),
+        Entry::BranchSummary(branch) => format!("branch summary: {}", branch.summary),
+        Entry::Custom(custom) => {
+            custom_entry_display_text(&custom.custom_type, custom.data.as_ref())
+                .unwrap_or_else(|| format!("custom: {}", custom.custom_type))
+        }
+    }
+}
+
+/// A bounded one-row preview that does not split wide graphemes or emit control
+/// characters from stored content. The selectable row retains the full entry ID.
+pub(super) fn tree_entry_summary(entry: &Entry) -> String {
+    let text = ice_tui::strip_ansi(&tree_entry_text(entry));
+    let line = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let line: String = line
+        .chars()
+        .filter(|character| !character.is_control())
+        .collect();
+    ice_tui::strip_ansi(&ice_tui::truncate_to_width(&line, 80, "…"))
+}
+
+pub(super) fn tree_entry_item(entry: &Entry, current: Option<&str>) -> SelectItem {
+    let summary = tree_entry_summary(entry);
+    let label = if current == Some(entry.id()) {
+        format!("{summary} (current)")
+    } else {
+        summary.clone()
+    };
+    let short_id: String = entry.id().chars().take(12).collect();
+    SelectItem::new(entry.id(), &label)
+        .with_description(&format!("#{} {short_id}", entry.seq()))
+        .with_search_text(&format!(
+            "{} {} {} {}",
+            tree_entry_text(entry),
+            entry.entry_type(),
+            entry.seq(),
+            entry.id()
+        ))
+}
+
+/// Open the persisted tree with branch hierarchy and filtering. The selected
+/// full entry ID is sent to the main loop only when the user confirms.
 pub(super) async fn open_tree_selector(
     harness: &AgentHarness,
     state: &Arc<TuiState>,
@@ -442,54 +593,56 @@ pub(super) async fn open_tree_selector(
             return;
         }
     };
-    let current = harness.session().get_leaf_id().await.ok().flatten();
-    let items: Vec<SelectItem> = entries
-        .iter()
-        .map(|entry| {
-            let label = if current.as_deref() == Some(entry.id()) {
-                format!("{} #{} (current)", entry.entry_type(), entry.seq())
-            } else {
-                format!("{} #{}", entry.entry_type(), entry.seq())
-            };
-            let short_id = &entry.id()[..entry.id().len().min(12)];
-            // Search on the entry type, sequence, and id so `/tree` stays
-            // usable in long sessions.
-            let search_text = format!("{} {} {}", entry.entry_type(), entry.seq(), entry.id());
-            SelectItem::new(entry.id(), &label)
-                .with_description(short_id)
-                .with_search_text(&search_text)
-        })
-        .collect();
-    if items.is_empty() {
+    if entries.is_empty() {
         add_note_message(chat, "The current session has no entries to navigate.");
         tui.request_render(false);
         return;
     }
-    let list = Arc::new(SelectList::new(items, 12));
+    let snapshot = match harness.lane("main").snapshot().await {
+        Ok(snapshot) => snapshot,
+        Err(error) => {
+            add_error_message(
+                chat,
+                &format!("Could not read current tree position: {error}"),
+            );
+            tui.request_render(false);
+            return;
+        }
+    };
     let state_sel = state.clone();
     let ec_sel = editor_container.clone();
     let editor_sel = editor.clone();
     let tui_sel = tui.clone();
     let tx_sel = tx.clone();
-    list.on_select(Arc::new(move |item| {
-        let _ = tx_sel.send(TuiMessage::NavigateTree(item.value.clone()));
-        close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
-    }));
     let state_cancel = state.clone();
     let ec_cancel = editor_container.clone();
     let editor_cancel = editor.clone();
     let tui_cancel = tui.clone();
-    list.on_cancel(Arc::new(move || {
-        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
-    }));
-    open_searchable_selector(
+    let selector = Arc::new(TreeSelector::new(
+        entries,
+        snapshot.leaf_id.as_deref(),
+        snapshot.labels,
+        ice_tui::get_keybindings().clone(),
+        Arc::new(move |entry_id| {
+            close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
+            let _ = tx_sel.send(TuiMessage::NavigateTree(entry_id));
+        }),
+        Arc::new(move || {
+            close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
+        }),
+    ));
+    let router = selector.clone();
+    let render = tui.clone();
+    open_selector_with_view(
         state,
         editor_container,
         editor,
         tui,
-        Some("Session tree"),
-        Some("Type to filter by entry type, sequence, or id"),
-        list,
+        SelectorView::Custom(Arc::new(move |key| {
+            router.handle_key(key);
+            render.request_render(false);
+        })),
+        selector,
         SelectorKind::Tree,
     );
 }
