@@ -23,26 +23,25 @@ pub(super) fn same_provider_catalog(
         .collect()
 }
 
-pub(super) fn scoped_catalog(catalog: &[ice_ai::Model], current_id: &str) -> Vec<ice_ai::Model> {
-    let scoped = crate::settings::load_settings()
-        .ok()
-        .and_then(|s| s.scoped_models)
-        .unwrap_or_default();
-    if scoped.is_empty() {
+/// Resolve the runtime scope in its chosen order. Legacy empty scope means all.
+pub(super) fn scoped_catalog(
+    catalog: &[ice_ai::Model],
+    scoped: Option<&[String]>,
+) -> Vec<ice_ai::Model> {
+    let Some(scoped) = scoped.filter(|ids| !ids.is_empty()) else {
         return catalog.to_vec();
-    }
-    let mut out: Vec<ice_ai::Model> = catalog
-        .iter()
-        .filter(|m| scoped.iter().any(|s| s.eq_ignore_ascii_case(&m.id)))
-        .cloned()
-        .collect();
-    // Never strand the user: if the current model isn't in scope, keep it.
-    if !out.iter().any(|m| m.id.eq_ignore_ascii_case(current_id)) {
-        if let Some(cur) = catalog
-            .iter()
-            .find(|m| m.id.eq_ignore_ascii_case(current_id))
-        {
-            out.push(cur.clone());
+    };
+    let mut out = Vec::new();
+    for id in scoped {
+        for model in catalog.iter().filter(|model| {
+            id.eq_ignore_ascii_case(&model.id)
+                || id.eq_ignore_ascii_case(&format!("{}/{}", model.provider, model.id))
+        }) {
+            if !out.iter().any(|previous: &ice_ai::Model| {
+                previous.id == model.id && previous.provider == model.provider
+            }) {
+                out.push(model.clone());
+            }
         }
     }
     out
@@ -171,7 +170,7 @@ pub(super) fn settings_menu_items(
         .default_thinking_level
         .clone()
         .unwrap_or_else(|| "(default)".to_string());
-    let scoped_desc = match &settings.scoped_models {
+    let scoped_desc = match &*state.scoped_models.lock().unwrap() {
         Some(list) if !list.is_empty() => format!("{} model(s)", list.len()),
         _ => "all models".to_string(),
     };
@@ -1848,96 +1847,5 @@ pub(super) fn open_settings_thinking_selector(
         tui,
         list,
         SelectorKind::Settings,
-    );
-}
-
-/// `/scoped-models`: a multi-toggle selector over the catalog. Selecting an
-/// item toggles it in the in-progress set (the selector stays open); Esc saves
-/// the set to settings.json and closes. The active scoped set is echoed after
-/// each toggle so the user sees the current selection.
-pub(super) fn open_scoped_models_selector(
-    state: &Arc<TuiState>,
-    editor_container: &Arc<Container>,
-    editor: &Arc<Editor>,
-    tui: &Arc<TuiAltScreen>,
-    catalog: &[ice_ai::Model],
-    chat: &Arc<Container>,
-) {
-    if catalog.is_empty() {
-        add_note_message(chat, "No models in the catalog.");
-        tui.request_render(false);
-        return;
-    }
-    // Seed the edit set from the saved scoped models.
-    let seed: Vec<String> = crate::settings::load_settings()
-        .ok()
-        .and_then(|s| s.scoped_models)
-        .unwrap_or_default();
-    *state.scoped_edit.lock().unwrap() = Some(seed);
-
-    let mut items: Vec<SelectItem> = Vec::new();
-    for m in catalog {
-        items.push(SelectItem::new(&m.id, &m.id));
-    }
-    let list = Arc::new(SelectList::new(items, 10));
-
-    let state_sel = state.clone();
-    let chat_sel = chat.clone();
-    let tui_sel = tui.clone();
-    list.on_select(Arc::new(move |item| {
-        // Toggle the model in the in-progress set; the selector stays open.
-        let mut set = state_sel.scoped_edit.lock().unwrap();
-        let set = set.get_or_insert_with(Vec::new);
-        if let Some(pos) = set.iter().position(|m| m.eq_ignore_ascii_case(&item.value)) {
-            set.remove(pos);
-            add_note_message(&chat_sel, &format!("{} removed — Esc to save", item.label));
-        } else {
-            set.push(item.value.clone());
-            add_note_message(&chat_sel, &format!("{} added — Esc to save", item.label));
-        }
-        tui_sel.request_render(false);
-    }));
-    let state_cancel = state.clone();
-    let ec_cancel = editor_container.clone();
-    let editor_cancel = editor.clone();
-    let tui_cancel = tui.clone();
-    let chat_cancel = chat.clone();
-    list.on_cancel(Arc::new(move || {
-        // Save the edited set to settings.json and close.
-        let set = state_cancel
-            .scoped_edit
-            .lock()
-            .unwrap()
-            .take()
-            .unwrap_or_default();
-        let mut settings = crate::settings::load_settings().unwrap_or_default();
-        settings.scoped_models = if set.is_empty() {
-            None
-        } else {
-            Some(set.clone())
-        };
-        match crate::settings::save_settings(&settings) {
-            Ok(()) => {
-                if set.is_empty() {
-                    add_note_message(&chat_cancel, "Ctrl+P cycles all models (scope cleared).");
-                } else {
-                    add_note_message(
-                        &chat_cancel,
-                        &format!("Ctrl+P cycle scope: {}", set.join(", ")),
-                    );
-                }
-            }
-            Err(e) => add_error_message(&chat_cancel, &format!("Could not save settings: {e}")),
-        }
-        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
-    }));
-
-    open_selector(
-        state,
-        editor_container,
-        editor,
-        tui,
-        list,
-        SelectorKind::ScopedModels,
     );
 }

@@ -480,7 +480,7 @@ fn test_tui_state() -> Arc<TuiState> {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -1594,7 +1594,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2128,7 +2128,7 @@ fn remove_provider_deletes_from_models_json() {
 
 /// Isolate the config dir (and serialize against other env-touching tests)
 /// while `body` runs, then restore the previous value.
-fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
+pub(super) fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
     let _guard = crate::config::test_support::env_lock().lock().unwrap();
     let prev = std::env::var_os(crate::config::CONFIG_DIR_ENV);
     let tmp = tempfile::tempdir().unwrap();
@@ -2653,7 +2653,7 @@ fn test_autocomplete_slash_suggestions_render() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2746,7 +2746,7 @@ fn test_select_list_swap_restores_editor() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2842,7 +2842,7 @@ fn test_message_history_browse_restores_draft() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -2941,7 +2941,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3026,7 +3026,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(

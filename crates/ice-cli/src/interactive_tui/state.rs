@@ -81,6 +81,8 @@ pub(super) enum SelectorView {
     /// The `/settings` menu: value rows cycle in place, submenu rows open a
     /// nested selector.
     Settings(Arc<SettingsList>),
+    /// Feature-specific keyboard handling with a separate component view.
+    Custom(Arc<dyn Fn(KeyEvent) + Send + Sync>),
 }
 
 impl SelectorView {
@@ -90,6 +92,7 @@ impl SelectorView {
             Self::List(list) => list.handle_key(key),
             Self::Searchable(searchable) => searchable.handle_key(key),
             Self::Settings(settings) => settings.handle_key(key),
+            Self::Custom(handle) => handle(key),
         }
     }
 }
@@ -295,9 +298,9 @@ pub(super) struct TuiState {
     /// counts and prices prompt-cache misses across turns using the same
     /// noise floor, idle-gap, and model-change logic as the batch scan.
     pub(super) cache_tracker: std::sync::Mutex<ice_harness::cache_stats::CacheMissTracker>,
-    /// The in-progress scoped-models selection while the `/scoped-models`
-    /// selector is open (toggle per item, Esc saves). `None` when not editing.
-    pub(super) scoped_edit: std::sync::Mutex<Option<Vec<String>>>,
+    /// Runtime model scope. Settings are read at startup and written only on
+    /// explicit save; selector cancellation leaves this selection unchanged.
+    pub(super) scoped_models: std::sync::Mutex<Option<Vec<String>>>,
     /// B5e: the live assistant-markdown transformer, built from the current
     /// `RegistrySnapshot`'s `register_markdown_transformer` handlers. `None`
     /// when no markdown transformers are registered (identity render path).
@@ -412,6 +415,13 @@ pub(crate) fn configured_keybindings() -> Arc<ice_tui::Keybindings> {
         return Arc::new(bindings);
     };
     let known: &[(&str, ice_tui::KeybindingId)] = &[
+        ("app.models.toggle", "app.models.toggle"),
+        ("app.models.save", "app.models.save"),
+        ("app.models.enableAll", "app.models.enableAll"),
+        ("app.models.clearAll", "app.models.clearAll"),
+        ("app.models.toggleProvider", "app.models.toggleProvider"),
+        ("app.models.reorderUp", "app.models.reorderUp"),
+        ("app.models.reorderDown", "app.models.reorderDown"),
         ("app.interrupt", ice_tui::keybindings::keys::INTERRUPT),
         ("app.clear", ice_tui::keybindings::keys::CLEAR),
         ("app.exit", ice_tui::keybindings::keys::EXIT),

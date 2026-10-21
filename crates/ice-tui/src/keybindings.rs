@@ -82,6 +82,7 @@ impl KeyCombo {
             parts.push("Super".into());
         }
         let key = match self.code {
+            KeyCode::Char(' ') => "Space".into(),
             KeyCode::Char(c) => c.to_uppercase().to_string(),
             KeyCode::Enter => "Enter".into(),
             KeyCode::Esc => "Esc".into(),
@@ -526,6 +527,45 @@ impl Keybindings {
                 description: Some("Copy selection"),
             },
         );
+
+        // Scoped-model working selection; Enter applies, Escape discards.
+        for (id, code, modifiers, description) in [
+            (
+                "app.models.toggle",
+                Char(' '),
+                M::NONE,
+                "Toggle model selection",
+            ),
+            ("app.models.save", Char('s'), M::CONTROL, "Save model scope"),
+            (
+                "app.models.enableAll",
+                Char('a'),
+                M::CONTROL,
+                "Enable matching models",
+            ),
+            (
+                "app.models.clearAll",
+                Char('x'),
+                M::CONTROL,
+                "Clear matching models",
+            ),
+            (
+                "app.models.toggleProvider",
+                Char('p'),
+                M::CONTROL,
+                "Toggle model provider",
+            ),
+            ("app.models.reorderUp", Up, M::ALT, "Move model earlier"),
+            ("app.models.reorderDown", Down, M::ALT, "Move model later"),
+        ] {
+            map.insert(
+                id,
+                KeybindingDefinition {
+                    default_keys: vec![KeyCombo::new(code, modifiers)],
+                    description: Some(description),
+                },
+            );
+        }
 
         // Generic selection actions
         map.insert(
