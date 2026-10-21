@@ -71,7 +71,10 @@ mod tests {
     #[test]
     fn test_short_text_kept_full() {
         let r = truncate_to_visual_lines("hello\nworld", 5, 40, 0);
-        assert_eq!(r.visual_lines, vec!["hello", "world"]);
+        assert_eq!(
+            r.visual_lines,
+            vec![format!("{:<40}", "hello"), format!("{:<40}", "world")]
+        );
         assert_eq!(r.skipped_count, 0);
     }
 
@@ -80,7 +83,10 @@ mod tests {
         // 4 lines, keep last 2.
         let text = "a\nb\nc\nd";
         let r = truncate_to_visual_lines(text, 2, 40, 0);
-        assert_eq!(r.visual_lines, vec!["c", "d"]);
+        assert_eq!(
+            r.visual_lines,
+            vec![format!("{:<40}", "c"), format!("{:<40}", "d")]
+        );
         assert_eq!(r.skipped_count, 2);
     }
 
