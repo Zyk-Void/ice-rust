@@ -402,6 +402,15 @@ pub(super) async fn start_new_session(
     true
 }
 
+/// A failed abort leaves the run going, so the status must not stay on
+/// "Aborting". Events may have moved the status on since; only undo ours.
+fn restore_working_after_failed_abort(state: &Arc<TuiState>) {
+    let mut status = state.status.lock().unwrap();
+    if *status == RunStatus::Aborting {
+        *status = RunStatus::Working;
+    }
+}
+
 /// Abort an in-flight run and wait for the lane to go idle before the session
 /// backing is replaced. Reports the failure as "Could not {action}: …".
 async fn settle_active_run(
@@ -421,15 +430,12 @@ async fn settle_active_run(
             return None;
         }
     };
-    // A failed settle leaves the run going, so the status must not stay on
-    // "Aborting".
-    let prior_status = *state.status.lock().unwrap();
     if active {
         state.set_status(RunStatus::Aborting);
         match lane.abort().await {
             Ok(_) | Err(ice_harness::result::HarnessError::NoActiveRun { .. }) => {}
             Err(error) => {
-                state.set_status(prior_status);
+                restore_working_after_failed_abort(state);
                 add_error_message(chat, &format!("Could not {action}: {error}"));
                 return None;
             }
@@ -437,7 +443,7 @@ async fn settle_active_run(
     }
     if let Err(error) = lane.wait_for_idle().await {
         if active {
-            state.set_status(prior_status);
+            restore_working_after_failed_abort(state);
         }
         add_error_message(chat, &format!("Could not {action}: {error}"));
         return None;

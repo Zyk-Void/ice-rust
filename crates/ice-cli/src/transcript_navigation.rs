@@ -48,9 +48,8 @@ impl NewMessageCount {
     }
 
     pub(crate) fn custom_message(&self) {
-        let mut state = self.state.lock().unwrap();
-        state.entries += 1;
-        state.current_assistant_entry = None;
+        // Like any non-assistant entry, it ends the preceding assistant turn.
+        self.other_message();
     }
 
     pub(crate) fn reset(&self) {
@@ -182,6 +181,18 @@ mod tests {
         assert_eq!(count.count_since_snapshot(false), 1);
 
         count.other_message();
+        count.begin_assistant_message();
+        count.assistant_message(true);
+        assert_eq!(count.count_since_snapshot(false), 2);
+    }
+
+    #[test]
+    fn a_custom_message_ends_the_preceding_assistant_turn() {
+        let count = NewMessageCount::default();
+        assert_eq!(count.count_since_snapshot(false), 0);
+        count.begin_assistant_message();
+        count.assistant_message(true);
+        count.custom_message();
         count.begin_assistant_message();
         count.assistant_message(true);
         assert_eq!(count.count_since_snapshot(false), 2);

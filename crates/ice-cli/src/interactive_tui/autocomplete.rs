@@ -17,6 +17,9 @@ pub(super) fn build_autocomplete_provider(
     on_ready: Option<Arc<dyn Fn() + Send + Sync>>,
 ) -> Arc<dyn ice_tui::AutocompleteProvider> {
     let mut commands = registry.visible_entries();
+    // A built-in or extension command wins over a template of the same name.
+    let taken: std::collections::HashSet<String> =
+        commands.iter().map(|c| c.name.clone()).collect();
     commands.extend(
         resources
             .prompt_templates
@@ -29,7 +32,8 @@ pub(super) fn build_autocomplete_provider(
                     .description
                     .clone()
                     .unwrap_or_else(|| "Expand prompt template".to_string()),
-            }),
+            })
+            .filter(|entry| !taken.contains(&entry.name)),
     );
     let mut combined = CombinedAutocompleteProvider::new();
     combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));

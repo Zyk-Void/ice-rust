@@ -3673,6 +3673,31 @@ fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
     );
 }
 
+/// A template that shares a name with a built-in must not add a second row.
+#[test]
+fn a_template_named_like_a_builtin_is_not_suggested_twice() {
+    let registry = build_builtin_registry();
+    let resources = ice_harness::types::AgentHarnessResources {
+        prompt_templates: Some(vec![ice_harness::types::PromptTemplate {
+            name: "help".into(),
+            description: Some("shadow".into()),
+            content: "x".into(),
+        }]),
+        ..Default::default()
+    };
+    let provider =
+        build_autocomplete_provider(&registry, &resources, std::path::Path::new("."), None);
+    let items = provider
+        .get_suggestions("/hel", 4)
+        .map(|s| s.items)
+        .unwrap_or_default();
+    assert_eq!(
+        items.iter().filter(|i| i.text == "/help").count(),
+        1,
+        "{items:?}"
+    );
+}
+
 /// Over SSH the system clipboard is the remote machine's, so copies never
 /// reached the user. ice also sends OSC 52 then; oversized payloads are
 /// skipped because terminals drop or choke on them.
