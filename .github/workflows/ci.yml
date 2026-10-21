@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [blacksmith-2vcpu-ubuntu-2404, windows-latest]
     env:
       RUSTFLAGS: "-D warnings"
     steps:
@@ -58,7 +58,7 @@ jobs:
 
   test:
     name: Cargo test
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 20
     env:
       RUSTFLAGS: "-D warnings"
