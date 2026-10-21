@@ -540,6 +540,10 @@ pub(super) fn is_remote_session(env: impl Fn(&str) -> Option<std::ffi::OsString>
 /// large for terminals to take reliably (ice `MAX_OSC52_ENCODED_LENGTH`).
 pub(super) fn osc52_sequence(text: &str) -> Option<String> {
     const MAX_ENCODED: usize = 100_000;
+    // Reject by the known encoded length before allocating it.
+    if text.len().div_ceil(3).saturating_mul(4) > MAX_ENCODED {
+        return None;
+    }
     let encoded = base64::engine::general_purpose::STANDARD.encode(text.as_bytes());
     (encoded.len() <= MAX_ENCODED).then(|| format!("\x1b]52;c;{encoded}\x07"))
 }

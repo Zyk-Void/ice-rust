@@ -235,7 +235,7 @@ pub fn describe_exploration(name: &str, args: &Value) -> Option<String> {
 }
 
 fn classify_shell(command: &str) -> Option<&'static str> {
-    if command.contains(['>', '`']) || command.contains("$(") || command.contains("<(") {
+    if command.contains(['>', '<', '`']) || command.contains("$(") {
         return None;
     }
     let mut rank = 0;
@@ -310,6 +310,13 @@ mod tests {
 
     fn tool(name: &str, args: Value) -> Arc<ToolExecutionComponent> {
         Arc::new(ToolExecutionComponent::new(name, &args.to_string()))
+    }
+
+    #[test]
+    fn shell_input_redirection_is_not_classified_as_exploration() {
+        assert!(classify_shell("cat < secret").is_none());
+        assert!(classify_shell("cat <<EOF").is_none());
+        assert!(classify_shell("rg foo src").is_some());
     }
 
     // ice compact-tool-rows.test.ts: lists each exploration, keeps failures

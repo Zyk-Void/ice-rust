@@ -594,9 +594,21 @@ fn fd_search(fd: &Path, base: &Path, query: &str) -> Vec<(String, bool)> {
         return Vec::new();
     };
     let reader = std::thread::spawn(move || {
+        // Keep draining past the memory cap and discard the excess: a reader
+        // that stops leaves `fd` blocked on a full pipe until the timeout.
+        const CAP: usize = 1024 * 1024;
+        let mut pipe = pipe;
         let mut bytes = Vec::new();
-        let mut limited = std::io::Read::take(pipe, 1024 * 1024);
-        let _ = std::io::Read::read_to_end(&mut limited, &mut bytes);
+        let mut buffer = [0u8; 8192];
+        loop {
+            match std::io::Read::read(&mut pipe, &mut buffer) {
+                Ok(0) | Err(_) => break,
+                Ok(n) => {
+                    let room = CAP.saturating_sub(bytes.len());
+                    bytes.extend_from_slice(&buffer[..n.min(room)]);
+                }
+            }
+        }
         bytes
     });
     let deadline = std::time::Instant::now() + FD_SEARCH_TIMEOUT;
