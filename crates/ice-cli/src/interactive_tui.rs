@@ -42,6 +42,7 @@ use run::*;
 mod events;
 use events::*;
 mod selectors;
+mod session_picker;
 use selectors::*;
 mod autocomplete;
 use autocomplete::*;
@@ -898,6 +899,23 @@ pub async fn interactive_tui(
     // which project settings or package update roots this TUI observes.
     let cwd = reload_context.cwd.clone();
     let saved_settings = crate::settings::load_settings().unwrap_or_default();
+    // Remember visited projects for the all-project session picker. The index
+    // points to existing files; it never moves or rewrites a session log.
+    if let Ok(agent_dir) = crate::config::agent_dir() {
+        let directory = harness
+            .session()
+            .storage()
+            .persistence_path()
+            .and_then(|path| {
+                std::path::PathBuf::from(path)
+                    .parent()
+                    .map(std::path::Path::to_path_buf)
+            })
+            .unwrap_or_else(|| crate::session::default_session_dir(&cwd));
+        if let Err(error) = crate::session_catalog::register_directory(&agent_dir, &directory) {
+            eprintln!("warning: could not index session directory: {error}");
+        }
+    }
     let project_trusted = reload_context.project_trusted;
     let project_settings = if project_trusted {
         crate::settings::load_project_settings(&cwd)

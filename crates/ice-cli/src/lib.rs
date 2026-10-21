@@ -59,6 +59,7 @@ pub mod remote;
 pub mod resource_dirs;
 pub mod resume_picker;
 pub mod session;
+mod session_catalog;
 pub mod session_cwd;
 pub mod session_driver;
 pub mod settings;

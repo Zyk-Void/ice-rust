@@ -2491,6 +2491,32 @@ fn first_resumable_session<'a>(
 /// (so `--session 01a02…` / a partial id / a full file name all work). The
 /// TUI `/session` hot-switch calls this with the selector's item value.
 pub async fn open_session_by_id(id: &str, cwd: &str) -> Result<Session, OpenError> {
+    let requested = Path::new(id);
+    if requested.is_absolute() || requested.components().count() > 1 {
+        let target = if requested.is_absolute() {
+            requested.to_path_buf()
+        } else {
+            Path::new(cwd).join(requested)
+        };
+        let target = target.canonicalize().map_err(|_| OpenError::NotFound {
+            requested: format!("session {id}"),
+        })?;
+        let directory = target.parent().ok_or_else(|| OpenError::NotFound {
+            requested: format!("session {id}"),
+        })?;
+        let metas = list_session_metadata_in_dir(cwd, directory)
+            .await
+            .map_err(|error| OpenError::Other(error.to_string()))?;
+        let meta = metas
+            .iter()
+            .find(|meta| Path::new(&meta.path).canonicalize().ok().as_ref() == Some(&target))
+            .ok_or_else(|| OpenError::NotFound {
+                requested: format!("session {id}"),
+            })?;
+        return open_session(meta, cwd)
+            .await
+            .map_err(|error| OpenError::Other(error.to_string()));
+    }
     let dir = default_session_dir(Path::new(cwd));
     open_session_by_id_in_dir(id, cwd, &dir).await
 }
@@ -2814,6 +2840,59 @@ fn read_prompt_source(path: &Path, sources: &mut Vec<String>) -> Option<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn session_absolute_path_opens_the_selected_project_with_duplicate_ids() {
+        let temp = tempfile::tempdir().unwrap();
+        let a = temp.path().join("project-a");
+        let b = temp.path().join("project-b");
+        let mut selected_path = PathBuf::new();
+        for (cwd, label) in [
+            (&a, "first project message"),
+            (&b, "second project message"),
+        ] {
+            let directory = default_session_dir(cwd);
+            std::fs::create_dir_all(&directory).unwrap();
+            let session = create_jsonl_session_with_id(
+                &directory,
+                &cwd.to_string_lossy(),
+                Some("same-session-id".into()),
+            )
+            .await
+            .unwrap();
+            session
+                .append_message(
+                    serde_json::from_value(serde_json::json!({
+                        "role": "user", "content": label, "timestamp": 0,
+                    }))
+                    .unwrap(),
+                )
+                .await
+                .unwrap();
+            if cwd == &a {
+                selected_path = list_session_files_sync(&directory).remove(0);
+            }
+        }
+        // The same ID in the execution cwd must not shadow the selected file.
+        let selected = open_session_by_id(&selected_path.to_string_lossy(), &b.to_string_lossy())
+            .await
+            .unwrap();
+        let entries = selected
+            .view("main")
+            .find_entries(&Default::default())
+            .await
+            .unwrap();
+        let serialized = serde_json::to_value(&entries).unwrap();
+        assert_eq!(serialized[0]["message"]["content"], "first project message");
+        assert!(matches!(
+            open_session_by_id(
+                &a.join("missing.jsonl").to_string_lossy(),
+                &b.to_string_lossy()
+            )
+            .await,
+            Err(OpenError::NotFound { .. })
+        ));
+    }
 
     #[tokio::test]
     async fn unauthenticated_packages_are_not_reintroduced_as_legacy_adapters() {

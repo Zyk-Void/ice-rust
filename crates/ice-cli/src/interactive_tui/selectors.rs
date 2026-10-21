@@ -257,11 +257,7 @@ pub(super) fn cycle_prev_model(
     }
 }
 
-/// Build + open the `/session` selector. Lists JSONL session files under the
-/// default session dir (`<cwd>/.icers/sessions`
-/// fallback), newest-first, labelled with the session name or first prompt so
-/// two sessions are distinguishable. Header-only sessions are skipped: there is
-/// nothing to switch to.
+/// Browse current-project or indexed cross-project sessions without blocking input.
 pub(super) fn open_session_selector(
     state: &Arc<TuiState>,
     editor_container: &Arc<Container>,
@@ -270,80 +266,7 @@ pub(super) fn open_session_selector(
     cwd: &std::path::Path,
     tx: &mpsc::UnboundedSender<TuiMessage>,
 ) {
-    let dir = crate::session::default_session_dir(cwd);
-    let mut items: Vec<SelectItem> = Vec::new();
-    for path in crate::session::list_session_files_sync(&dir) {
-        let summary = crate::session::summarize_session_file(&path);
-        if summary.empty {
-            continue;
-        }
-        let stem = path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("(unnamed)")
-            .to_string();
-        let label = crate::session::session_display_label(&summary);
-        // The file stem is `<timestamp>_<uuid>`; the id tail disambiguates rows
-        // that share a timestamp.
-        let id_tail = stem.rsplit('_').next().unwrap_or(&stem);
-        let short_id = crate::session::short_session_id(id_tail);
-        let description = format!(
-            "{} · {}",
-            crate::session::format_session_bytes(summary.bytes),
-            short_id,
-        );
-        items.push(
-            SelectItem::new(&stem, &label)
-                .with_description(&description)
-                .with_search_text(&format!("{label} {short_id} {stem}")),
-        );
-    }
-    if items.is_empty() {
-        add_note_message(
-            &state.chat_container,
-            "No saved sessions found. Sessions are created automatically in interactive mode.",
-        );
-        tui.request_render(false);
-        return;
-    }
-    let mut list = SelectList::new(items, 10);
-    list.set_layout(ice_tui::SelectListLayoutOptions {
-        min_primary_column_width: Some(56),
-        max_primary_column_width: Some(72),
-        truncate_primary: None,
-    });
-    let list = Arc::new(list);
-
-    let state_sel = state.clone();
-    let ec_sel = editor_container.clone();
-    let editor_sel = editor.clone();
-    let tui_sel = tui.clone();
-    let tx_sel = tx.clone();
-    list.on_select(Arc::new(move |item| {
-        // Close the selector first, then ask the async loop to hot-switch:
-        // opening the session file + swapping the harness backing is async
-        // (repo list/open) and must not run on the blocking key thread.
-        close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
-        let _ = tx_sel.send(TuiMessage::SwitchSession(item.value.clone()));
-    }));
-    let state_cancel = state.clone();
-    let ec_cancel = editor_container.clone();
-    let editor_cancel = editor.clone();
-    let tui_cancel = tui.clone();
-    list.on_cancel(Arc::new(move || {
-        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
-    }));
-
-    open_searchable_selector(
-        state,
-        editor_container,
-        editor,
-        tui,
-        Some("Resume session"),
-        Some("Type to filter sessions"),
-        list,
-        SelectorKind::Session,
-    );
+    session_picker::open(state, editor_container, editor, tui, cwd, tx);
 }
 
 pub(super) fn custom_entry_display_text(

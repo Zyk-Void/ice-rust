@@ -81,6 +81,8 @@ pub(super) enum SelectorView {
     /// The `/settings` menu: value rows cycle in place, submenu rows open a
     /// nested selector.
     Settings(Arc<SettingsList>),
+    /// A selector with its own typed key handler and separate rendered view.
+    Custom(Arc<dyn Fn(KeyEvent) + Send + Sync>),
 }
 
 impl SelectorView {
@@ -90,6 +92,7 @@ impl SelectorView {
             Self::List(list) => list.handle_key(key),
             Self::Searchable(searchable) => searchable.handle_key(key),
             Self::Settings(settings) => settings.handle_key(key),
+            Self::Custom(handle) => handle(key),
         }
     }
 }
