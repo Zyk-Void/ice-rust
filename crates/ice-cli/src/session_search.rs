@@ -121,7 +121,12 @@ impl ContentCache {
             self.bytes -= self.entries.remove(index).unwrap().text.len();
         }
         let text: Arc<str> = read_message_text(path, cancelled)?.into();
-        if text.len() <= CACHE_BYTES {
+        // A writer that appended during the read leaves text that matches
+        // neither version; only cache what provably matches the key.
+        let unchanged = std::fs::metadata(path)
+            .map(|after| after.len() == bytes && after.modified().ok() == metadata.modified().ok())
+            .unwrap_or(false);
+        if unchanged && text.len() <= CACHE_BYTES {
             while self.bytes + text.len() > CACHE_BYTES {
                 self.bytes -= self.entries.pop_front().unwrap().text.len();
             }

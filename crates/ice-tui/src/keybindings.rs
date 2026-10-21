@@ -529,6 +529,23 @@ impl Keybindings {
             },
         );
 
+        // Session actions that ship unbound (ice `app.session.*`); users bind
+        // them in keybindings.json.
+        for (id, description) in [
+            ("app.session.new", "Start a new session"),
+            ("app.session.tree", "Open session tree"),
+            ("app.session.fork", "Fork from an earlier message"),
+            ("app.session.resume", "Resume a session"),
+        ] {
+            map.insert(
+                id,
+                KeybindingDefinition {
+                    default_keys: Vec::new(),
+                    description: Some(description),
+                },
+            );
+        }
+
         // Saved-session picker actions.
         map.insert(
             "app.session.scope",
@@ -978,6 +995,10 @@ pub mod keys {
     pub const CLEAR: KeybindingId = "app.clear";
     pub const EXIT: KeybindingId = "app.exit";
     pub const MODEL_SELECT: KeybindingId = "app.model.select";
+    pub const SESSION_NEW: KeybindingId = "app.session.new";
+    pub const SESSION_TREE: KeybindingId = "app.session.tree";
+    pub const SESSION_FORK: KeybindingId = "app.session.fork";
+    pub const SESSION_RESUME: KeybindingId = "app.session.resume";
     pub const MODEL_CYCLE_FORWARD: KeybindingId = "app.model.cycleForward";
     pub const MODEL_CYCLE_BACKWARD: KeybindingId = "app.model.cycleBackward";
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";

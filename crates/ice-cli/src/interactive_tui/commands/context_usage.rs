@@ -444,14 +444,20 @@ pub(super) fn show(ctx: &CommandContext) {
     let tui = ctx.tui.clone();
     let state = ctx.state.clone();
     tokio::spawn(async move {
-        let Ok(fence) = Fence::capture(&session, &lane).await else {
-            return;
+        let report = |error: String| {
+            add_error_message(&chat, &format!("Could not read context usage: {error}"));
+            tui.request_render(false);
+        };
+        let fence = match Fence::capture(&session, &lane).await {
+            Ok(fence) => fence,
+            Err(error) => return report(error.to_string()),
         };
         if !Arc::ptr_eq(&storage, &fence.storage) {
             return;
         }
-        let Ok(snapshot) = collect_at(&session, &lane, &fence).await else {
-            return;
+        let snapshot = match collect_at(&session, &lane, &fence).await {
+            Ok(snapshot) => snapshot,
+            Err(error) => return report(error.to_string()),
         };
         if !fence.current(&session, &lane).await {
             return;
