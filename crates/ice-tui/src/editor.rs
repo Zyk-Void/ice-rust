@@ -206,28 +206,87 @@ struct VisualLine {
     end: usize,
 }
 
-/// Split a logical editor line into terminal-width chunks at grapheme
-/// boundaries. Rendering and vertical navigation share this layout so a
-/// caret can move through the visual rows users actually see.
+/// Split a logical editor line into display-width chunks, preferring word
+/// boundaries and falling back to grapheme boundaries for overlong words.
+/// Rendering and vertical navigation share this layout.
 fn wrap_line_ranges(line: &str, max_width: usize) -> Vec<(usize, usize)> {
     if line.is_empty() {
         return vec![(0, 0)];
     }
     let max_width = max_width.max(1);
+    let graphemes: Vec<(usize, &str, usize, bool)> = line
+        .grapheme_indices(true)
+        .map(|(index, grapheme)| {
+            let width = crate::ansi::visible_width(grapheme);
+            let whitespace = grapheme.chars().all(char::is_whitespace);
+            (index, grapheme, width, whitespace)
+        })
+        .collect();
     let mut ranges = Vec::new();
-    let mut start = 0;
-    let mut width = 0usize;
-    for (idx, grapheme) in line.grapheme_indices(true) {
-        let grapheme_width = crate::ansi::visible_width(grapheme);
-        if idx > start && width.saturating_add(grapheme_width) > max_width {
-            ranges.push((start, idx));
-            start = idx;
-            width = 0;
+    let mut chunk_start = 0;
+    let mut current_width = 0usize;
+    let mut wrap_opportunity: Option<(usize, usize)> = None;
+
+    for (position, (index, grapheme, grapheme_width, is_whitespace)) in
+        graphemes.iter().copied().enumerate()
+    {
+        if current_width.saturating_add(grapheme_width) > max_width {
+            if let Some((break_at, width_at_break)) = wrap_opportunity {
+                if current_width
+                    .saturating_sub(width_at_break)
+                    .saturating_add(grapheme_width)
+                    <= max_width
+                {
+                    ranges.push((chunk_start, break_at));
+                    chunk_start = break_at;
+                    current_width = current_width.saturating_sub(width_at_break);
+                } else if chunk_start < index {
+                    ranges.push((chunk_start, index));
+                    chunk_start = index;
+                    current_width = 0;
+                }
+            } else if chunk_start < index {
+                ranges.push((chunk_start, index));
+                chunk_start = index;
+                current_width = 0;
+            }
+            wrap_opportunity = None;
         }
-        width = width.saturating_add(grapheme_width);
+
+        current_width = current_width.saturating_add(grapheme_width);
+        if let Some((next_index, next_grapheme, _, next_whitespace)) = graphemes.get(position + 1) {
+            if is_whitespace && !next_whitespace {
+                wrap_opportunity = Some((*next_index, current_width));
+            } else if !is_whitespace
+                && !next_whitespace
+                && (is_cjk_grapheme(grapheme) || is_cjk_grapheme(next_grapheme))
+            {
+                wrap_opportunity = Some((*next_index, current_width));
+            }
+        }
     }
-    ranges.push((start, line.len()));
+    ranges.push((chunk_start, line.len()));
     ranges
+}
+
+fn is_cjk_grapheme(grapheme: &str) -> bool {
+    grapheme.chars().any(|character| {
+        matches!(
+            character as u32,
+            0x2E80..=0x2FFF
+                | 0x3000..=0x30FF
+                | 0x31F0..=0x31FF
+                | 0x3200..=0x33FF
+                | 0x3400..=0x4DBF
+                | 0x4E00..=0x9FFF
+                | 0xA960..=0xA97F
+                | 0xAC00..=0xD7FF
+                | 0xF900..=0xFAFF
+                | 0xFE30..=0xFE4F
+                | 0xFF00..=0xFFEF
+                | 0x20000..=0x3134F
+        )
+    })
 }
 
 fn visual_lines(lines: &[String], width: usize) -> Vec<VisualLine> {
@@ -2389,6 +2448,40 @@ l12",
         let rendered = crate::ansi::strip_ansi(&lines.join("\n"));
         assert!(rendered.contains("1234567"));
         assert!(rendered.contains("90123456"));
+    }
+
+    #[test]
+    fn word_wrap_prefers_word_boundaries_and_keeps_the_separator_space() {
+        let line = "hello world test";
+        let ranges = wrap_line_ranges(line, 11);
+        let chunks: Vec<&str> = ranges
+            .iter()
+            .map(|(start, end)| &line[*start..*end])
+            .collect();
+        assert_eq!(chunks, ["hello ", "world test"]);
+    }
+
+    #[test]
+    fn word_wrap_breaks_long_words_only_when_required() {
+        let line = "abcde fghijklmnop q";
+        let ranges = wrap_line_ranges(line, 8);
+        let chunks: Vec<&str> = ranges
+            .iter()
+            .map(|(start, end)| &line[*start..*end])
+            .collect();
+        assert_eq!(chunks, ["abcde ", "fghijklm", "nop q"]);
+        assert_eq!(chunks.concat(), line);
+    }
+
+    #[test]
+    fn word_wrap_allows_breaks_between_cjk_graphemes() {
+        let line = "你好世界和平";
+        let ranges = wrap_line_ranges(line, 4);
+        let chunks: Vec<&str> = ranges
+            .iter()
+            .map(|(start, end)| &line[*start..*end])
+            .collect();
+        assert_eq!(chunks, ["你好", "世界", "和平"]);
     }
 
     #[test]
