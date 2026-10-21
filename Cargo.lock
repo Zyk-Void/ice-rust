@@ -1144,6 +1144,7 @@ dependencies = [
  "nix",
  "percent-encoding",
  "png",
+ "regex",
  "reqwest",
  "rpassword",
  "schemars",

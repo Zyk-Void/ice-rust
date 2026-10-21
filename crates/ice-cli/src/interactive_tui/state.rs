@@ -415,6 +415,9 @@ pub(crate) fn configured_keybindings() -> Arc<ice_tui::Keybindings> {
         return Arc::new(bindings);
     };
     let known: &[(&str, ice_tui::KeybindingId)] = &[
+        ("app.session.scope", "app.session.scope"),
+        ("app.session.rename", "app.session.rename"),
+        ("app.session.delete", "app.session.delete"),
         ("app.interrupt", ice_tui::keybindings::keys::INTERRUPT),
         ("app.clear", ice_tui::keybindings::keys::CLEAR),
         ("app.exit", ice_tui::keybindings::keys::EXIT),

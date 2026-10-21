@@ -527,6 +527,29 @@ impl Keybindings {
             },
         );
 
+        // Saved-session picker actions.
+        map.insert(
+            "app.session.scope",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Tab, M::NONE)],
+                description: Some("Toggle current/all-project session scope"),
+            },
+        );
+        map.insert(
+            "app.session.rename",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(F(2), M::NONE)],
+                description: Some("Rename the selected saved session"),
+            },
+        );
+        map.insert(
+            "app.session.delete",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('d'), M::CONTROL)],
+                description: Some("Delete the selected saved session after confirmation"),
+            },
+        );
+
         // Generic selection actions
         map.insert(
             "tui.select.up",

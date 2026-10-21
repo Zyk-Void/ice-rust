@@ -2852,7 +2852,7 @@ mod tests {
             (&a, "first project message"),
             (&b, "second project message"),
         ] {
-            let directory = default_session_dir(cwd);
+            let directory = cwd.join("saved-sessions");
             std::fs::create_dir_all(&directory).unwrap();
             let session = create_jsonl_session_with_id(
                 &directory,
@@ -2862,16 +2862,13 @@ mod tests {
             .await
             .unwrap();
             session
-                .append_message(
-                    serde_json::from_value(serde_json::json!({
-                        "role": "user", "content": label, "timestamp": 0,
-                    }))
-                    .unwrap(),
-                )
+                .append_message(ice_agent::AgentMessage::User(
+                    ice_ai::types::UserMessage::new(label, 0),
+                ))
                 .await
                 .unwrap();
             if cwd == &a {
-                selected_path = list_session_files_sync(&directory).remove(0);
+                selected_path = PathBuf::from(session.storage().persistence_path().unwrap());
             }
         }
         // The same ID in the execution cwd must not shadow the selected file.

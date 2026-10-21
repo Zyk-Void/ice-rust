@@ -313,6 +313,7 @@ impl SlashCommand for SessionCommand {
             &ctx.tui,
             &ctx.cwd,
             &ctx.tx,
+            Some(ctx.session.harness().session().storage()),
         );
     }
 }

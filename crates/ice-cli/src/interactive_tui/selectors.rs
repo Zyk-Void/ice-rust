@@ -265,8 +265,9 @@ pub(super) fn open_session_selector(
     tui: &Arc<TuiAltScreen>,
     cwd: &std::path::Path,
     tx: &mpsc::UnboundedSender<TuiMessage>,
+    active: Option<Arc<dyn ice_harness::session::types::SessionStorage>>,
 ) {
-    session_picker::open(state, editor_container, editor, tui, cwd, tx);
+    session_picker::open(state, editor_container, editor, tui, cwd, tx, active);
 }
 
 pub(super) fn custom_entry_display_text(
