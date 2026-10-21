@@ -185,6 +185,10 @@ pub(super) fn auto_send_step(
 }
 
 pub(super) struct TuiState {
+    /// Tree navigation cancellation must not move source-session queues into the draft.
+    pub(super) tree_navigation_active: std::sync::atomic::AtomicBool,
+    /// Serializes a session replacement after the old run's UI events.
+    pub(super) event_drain: AgentEventDrain,
     /// The in-flight streaming assistant message (cleared on finalize).
     /// `Arc`-shared with the [`TranscriptView`] the event drain renders through,
     /// so the render-tick / reload / toggle paths keep direct access.
@@ -362,8 +366,7 @@ pub(super) struct TuiState {
     pub(super) pending_snapshot: std::sync::Mutex<ice_harness::agent_harness::QueuedMessages>,
     /// Logical transcript (column, row, wrapping width) where a drag began.
     pub(super) selection_start: std::sync::Mutex<Option<(usize, usize, usize)>>,
-    /// When the current agent run started, for the run-summary line.
-    pub(super) run_started_at: std::sync::Mutex<Option<std::time::Instant>>,
+    /// Logical transcript endpoint of the current selection.
     pub(super) selection_end: std::sync::Mutex<Option<(u16, u16)>>,
 }
 
@@ -888,17 +891,20 @@ impl TuiState {
 
     /// Register a cancellation token for a new user bash run, cancelling any
     /// previous one (mirrors `begin_js_preparation`).
-    pub(super) fn begin_user_bash(&self) -> CancellationToken {
-        let cancellation = CancellationToken::new();
-        if let Some(previous) = self
-            .user_bash_cancel
-            .lock()
-            .unwrap()
-            .replace(cancellation.clone())
+    pub(super) fn begin_user_bash(&self) -> Option<CancellationToken> {
+        let mut active = self.user_bash_cancel.lock().unwrap();
+        if self
+            .event_drain
+            .session_changing
+            .load(std::sync::atomic::Ordering::Acquire)
         {
+            return None;
+        }
+        let cancellation = CancellationToken::new();
+        if let Some(previous) = active.replace(cancellation.clone()) {
             previous.cancel();
         }
-        cancellation
+        Some(cancellation)
     }
 
     /// Clear the user-bash slot. Called when the command finishes so the
@@ -921,12 +927,6 @@ impl TuiState {
     }
 
     pub(super) fn set_status(&self, status: RunStatus) {
-        if status == RunStatus::Aborting {
-            // Tool cancellation can retain a ToolUse assistant stop reason.
-            // Retire the summary timer now: prompt completion may restore Idle
-            // before the asynchronous AgentEnd event is drained.
-            self.run_started_at.lock().unwrap().take();
-        }
         *self.status.lock().unwrap() = status;
         self.apply_status(status);
     }

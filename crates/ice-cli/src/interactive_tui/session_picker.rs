@@ -270,7 +270,14 @@ impl SessionPicker {
                 if self.bindings.matches(&key, "tui.select.cancel") {
                     *self.mode.lock().unwrap() = PickerMode::Browse;
                 } else if self.bindings.matches(&key, "tui.select.confirm") {
-                    self.start_action(row, SessionAction::Rename(self.name_input.get_value()));
+                    let name = self.name_input.get_value();
+                    if name.trim() == row.label.trim() {
+                        // Unedited: the prefill may be the first-message
+                        // preview, which must not be saved as a name.
+                        *self.mode.lock().unwrap() = PickerMode::Browse;
+                    } else {
+                        self.start_action(row, SessionAction::Rename(name));
+                    }
                 } else {
                     self.name_input.handle_key(key);
                 }
@@ -686,6 +693,13 @@ mod tests {
             .as_deref()
             .unwrap()
             .contains("Invalid regular expression"));
+    }
+    #[test]
+    fn confirming_an_unedited_rename_changes_nothing() {
+        let picker = picker();
+        picker.handle_key(KeyEvent::new(KeyCode::F(2), KeyModifiers::NONE));
+        picker.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        assert!(matches!(*picker.mode.lock().unwrap(), PickerMode::Browse));
     }
     #[test]
     fn cancelling_rename_or_delete_returns_to_the_same_picker() {

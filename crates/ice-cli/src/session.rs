@@ -804,6 +804,11 @@ pub async fn build_prepared(
 
     let harness = match AgentHarness::create(options).await {
         Ok(h) => {
+            if let Some(reserve_tokens) = saved_settings.branch_summary_reserve_tokens() {
+                h.set_branch_summary_reserve_tokens(reserve_tokens)
+                    .await
+                    .map_err(|error| BuildError::HarnessCreate(error.to_string()))?;
+            }
             // Fill the extension action host now that the harness exists
             // (plugin runtime_action calls can then reach it).
             crate::extensions_actions::HarnessActionHost::set_harness(
@@ -2912,6 +2917,84 @@ fn read_prompt_source(path: &Path, sources: &mut Vec<String>) -> Option<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn branch_summary_settings_reach_created_harness() {
+        const CHILD: &str = "ICERS_BRANCH_SUMMARY_SETTINGS_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let dir = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::branch_summary_settings_reach_created_harness",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, dir.path())
+                .env("ICERS_OFFLINE", "1")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                use ice_ai::providers::faux::{FauxProvider, FauxScript};
+                let agent = crate::config::agent_dir().unwrap();
+                let cwd = agent.join("project");
+                std::fs::create_dir_all(&cwd).unwrap();
+                // Resolve only to initialize the binding; all harness providers
+                // and the selected model are replaced by the in-memory fixture.
+                let mut resolved = crate::provider::resolve(
+                    Some("anthropic"),
+                    Some(crate::provider::DEFAULT_MODEL_ID),
+                    None,
+                    Some("local-test-placeholder"),
+                    None,
+                )
+                .unwrap();
+                let provider = FauxProvider::new(FauxScript::new());
+                resolved.model = provider.default_model().clone();
+                resolved.provider = provider.clone();
+                resolved.providers = vec![provider];
+                let args = Args {
+                    no_session: true,
+                    no_extensions: true,
+                    no_skills: true,
+                    no_prompt_templates: true,
+                    no_tools: true,
+                    ..Default::default()
+                };
+                for (configured, expected) in [(Some(2048), 2048), (Some(0), 1), (None, 16384)] {
+                    let settings = match configured {
+                        Some(value) => {
+                            serde_json::json!({"branchSummary": {"reserveTokens": value}})
+                        }
+                        None => serde_json::json!({}),
+                    };
+                    std::fs::write(
+                        agent.join("settings.json"),
+                        serde_json::to_string(&settings).unwrap(),
+                    )
+                    .unwrap();
+                    let (harness, _events, _context) =
+                        build(&resolved, &args, &cwd, false).await.unwrap();
+                    assert_eq!(
+                        harness.branch_summary_reserve_tokens().await.unwrap(),
+                        expected,
+                        "configured reserve {configured:?} must reach the created harness"
+                    );
+                }
+            });
+    }
 
     #[tokio::test]
     async fn session_absolute_path_opens_the_selected_project_with_duplicate_ids() {

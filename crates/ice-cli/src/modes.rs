@@ -262,7 +262,20 @@ pub async fn json(
 }
 
 fn emit_agent_event(event: &AgentEvent) {
-    println!("{}", agent_event_json(event));
+    if let Some(value) = wire_agent_event_json(event) {
+        println!("{value}");
+    }
+}
+
+/// The harness finalization barrier is process-local TUI metadata. Keep it out
+/// of default JSON/RPC streams so older strict --connect clients retain their
+/// existing event schema. All wire emission paths use this filter.
+fn wire_agent_event_json(event: &AgentEvent) -> Option<serde_json::Value> {
+    if matches!(event, AgentEvent::RunSettled { .. }) {
+        None
+    } else {
+        Some(agent_event_json(event))
+    }
 }
 
 /// `rpc` mode: a headless JSONL command loop (the server-side agent).
@@ -342,7 +355,11 @@ where
                     event = rx.recv() => event,
                 };
                 match received {
-                    Ok(event) => write_line(&out, &agent_event_json(&event)).await,
+                    Ok(event) => {
+                        if let Some(value) = wire_agent_event_json(&event) {
+                            write_line(&out, &value).await;
+                        }
+                    }
                     Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                     Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
                 }
@@ -640,7 +657,11 @@ async fn drain_rpc_events(
 ) {
     loop {
         match events.try_recv() {
-            Ok(event) => write_line(out, &agent_event_json(&event)).await,
+            Ok(event) => {
+                if let Some(value) = wire_agent_event_json(&event) {
+                    write_line(out, &value).await;
+                }
+            }
             Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => continue,
             Err(_) => break,
         }
@@ -1532,6 +1553,18 @@ mod tests {
         assert_eq!(run_end_outcome_str(RunEndOutcome::Completed), "completed");
         assert_eq!(run_end_outcome_str(RunEndOutcome::Aborted), "aborted");
         assert_eq!(run_end_outcome_str(RunEndOutcome::Failed), "failed");
+    }
+
+    #[test]
+    fn wire_projection_filters_local_settled_barrier_but_retains_agent_end() {
+        assert!(wire_agent_event_json(&AgentEvent::RunSettled {
+            run_id: "local-run".into(),
+        })
+        .is_none());
+        let end = wire_agent_event_json(&AgentEvent::AgentEnd { messages: vec![] })
+            .expect("legacy terminal event must remain on the wire");
+        assert_eq!(end["type"], "agent_end");
+        assert_eq!(end["messages"], serde_json::json!([]));
     }
 
     #[test]

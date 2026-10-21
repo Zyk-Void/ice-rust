@@ -618,19 +618,40 @@ pub(super) async fn open_tree_selector(
     let ec_cancel = editor_container.clone();
     let editor_cancel = editor.clone();
     let tui_cancel = tui.clone();
+    // Keep the exact view (filter, query, folding and selected row) available
+    // when the summary chooser or operation returns to the tree. The callback
+    // holds only a weak reference so the selector cannot retain itself.
+    let return_view = Arc::new(Mutex::new(std::sync::Weak::<TreeSelector>::new()));
+    let view_sel = return_view.clone();
     let selector = Arc::new(TreeSelector::new(
         entries,
         snapshot.leaf_id.as_deref(),
         snapshot.labels,
         ice_tui::get_keybindings().clone(),
         Arc::new(move |entry_id| {
+            let view = view_sel.lock().unwrap().upgrade();
             close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
-            let _ = tx_sel.send(TuiMessage::NavigateTree(entry_id));
+            if let Some(view) = view {
+                let _ = tx_sel.send(TuiMessage::NavigateTree(entry_id, view));
+            }
         }),
         Arc::new(move || {
             close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
         }),
     ));
+    *return_view.lock().unwrap() = Arc::downgrade(&selector);
+    reopen_tree_selector(selector, state, editor_container, editor, tui);
+}
+
+/// Reuse the tree itself rather than reconstructing it at the current leaf:
+/// cancelling a chooser must not discard the user's search or folded branches.
+pub(super) fn reopen_tree_selector(
+    selector: Arc<TreeSelector>,
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+) {
     let router = selector.clone();
     let render = tui.clone();
     open_selector_with_view(

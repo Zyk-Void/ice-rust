@@ -2,6 +2,8 @@
 
 use super::*;
 
+mod context_usage;
+
 // ---- Built-in command implementations ----
 
 pub(super) struct HelpCommand;
@@ -759,9 +761,8 @@ impl SlashCommand for ShareCommand {
     }
 }
 
-/// `/context` — lists discovered context files, skills, and prompt templates.
-/// Hidden from autocomplete (needs the resources snapshot to be meaningful as a
-/// discovery surface; like `/name`, it's recognized-v1 but kept off the list).
+/// `/context` — read-only active-context estimates, category grid and largest entries.
+/// Kept hidden from autocomplete for compatibility with the existing command.
 pub(super) struct ContextCommand;
 impl SlashCommand for ContextCommand {
     fn name(&self) -> &'static str {
@@ -771,11 +772,7 @@ impl SlashCommand for ContextCommand {
         false
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let resources = ctx.resources.lock().unwrap().clone();
-        show_context_panel(&ctx.chat, &resources);
-        // Live session stats are async, so ask the main loop to append them.
-        let _ = ctx.tx.send(TuiMessage::ShowUsage);
-        ctx.tui.request_render(false);
+        context_usage::show(ctx);
     }
 }
 

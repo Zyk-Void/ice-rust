@@ -115,7 +115,7 @@ pub fn map_agent_event(event: &AgentEvent) -> Option<UiEvent> {
             delay_ms: *delay_ms,
             error: error.clone(),
         }),
-        AgentEvent::TurnStart | AgentEvent::TurnEnd { .. } => None,
+        AgentEvent::TurnStart | AgentEvent::TurnEnd { .. } | AgentEvent::RunSettled { .. } => None,
         AgentEvent::MessageStart { message } => match message {
             AgentMessage::Assistant(a) => Some(UiEvent::AssistantStart {
                 blocks: assistant_blocks(a),
@@ -360,6 +360,8 @@ pub fn map_remote_event(event: &RemoteEvent) -> Option<UiEvent> {
         RemoteEvent::UiDialogRequest { .. } | RemoteEvent::UiDialogClosed { .. } => None,
         RemoteEvent::AgentStart => Some(UiEvent::AgentStart),
         RemoteEvent::AgentEnd { .. } => Some(UiEvent::AgentEnd),
+        // This normalized driver has no run-summary presentation layer.
+        RemoteEvent::RunSettled { .. } => None,
         RemoteEvent::RetryScheduled {
             attempt,
             max_retries,

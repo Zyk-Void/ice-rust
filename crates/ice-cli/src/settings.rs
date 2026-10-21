@@ -55,9 +55,8 @@ pub struct CompactionSettingsJson {
 pub struct BranchSummarySettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reserve_tokens: Option<i64>,
-    /// When true, upstream skips its "Summarize branch?" prompt and defaults to
-    /// *no* summary. icers has no such prompt, so this is what makes the key mean
-    /// something: `Some(true)` suppresses the summary.
+    /// Skip the tree-navigation summary chooser and navigate without a summary.
+    /// This matches upstream's `skipPrompt` default of *no* summary.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skip_prompt: Option<bool>,
 }
@@ -138,12 +137,8 @@ pub struct Settings {
     pub compaction: Option<CompactionSettingsJson>,
 
     /// Branch-summary settings. Mirrors upstream `branchSummary`.
-    ///
-    /// Parsed for shape fidelity, but **nothing consumes it yet**: icers's
-    /// `navigate_tree` ignores its `summarize` argument outright (`_summarize`),
-    /// and `generate_branch_summary` has no production caller. Until
-    /// navigation-with-summary is wired, these keys cannot change behaviour — see
-    /// the doc comment on the accessors.
+    /// `reserveTokens` configures the harness's summary budget; `skipPrompt`
+    /// disables the interactive chooser and navigates without summarizing.
     #[serde(default)]
     pub branch_summary: Option<BranchSummarySettings>,
 
@@ -303,18 +298,13 @@ impl Settings {
     }
 
     /// Tokens reserved for a branch summary's prompt + output.
-    ///
-    /// Not consumed yet: `AgentLane::navigate_tree` ignores `summarize`, so no
-    /// branch summary is ever generated from this path. Wiring it means
-    /// implementing navigation-with-summary in the harness, not reading a key.
+    /// The session builder applies this to the harness; `None` retains its default.
     pub fn branch_summary_reserve_tokens(&self) -> Option<i64> {
         self.branch_summary.as_ref().and_then(|s| s.reserve_tokens)
     }
 
-    /// Whether branch summaries are suppressed (upstream's `skipPrompt`).
-    ///
-    /// Not consumed yet, for the same reason as
-    /// [`Self::branch_summary_reserve_tokens`].
+    /// Whether tree navigation skips the chooser and uses no summary
+    /// (upstream's `skipPrompt`).
     pub fn branch_summary_skipped(&self) -> bool {
         self.branch_summary
             .as_ref()

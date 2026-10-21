@@ -104,9 +104,20 @@ pub(super) async fn switch_to_session(
     state: &Arc<TuiState>,
     tool_context: &ice_extensions::ToolCallContext,
 ) -> bool {
-    if !settle_active_run(lane, chat, state, "switch session").await {
+    let Some(_transition) = settle_active_run(lane, chat, state, "switch session").await else {
         return false;
-    }
+    };
+    activate_saved_session(harness, id, cwd, chat, state, tool_context).await
+}
+
+async fn activate_saved_session(
+    harness: &AgentHarness,
+    id: &str,
+    cwd: &std::path::Path,
+    chat: &Arc<Container>,
+    state: &Arc<TuiState>,
+    tool_context: &ice_extensions::ToolCallContext,
+) -> bool {
     let cwd_str = cwd.to_string_lossy().to_string();
     match crate::session::open_session_by_id(id, &cwd_str).await {
         Ok(new_session) => {
@@ -159,21 +170,77 @@ pub(super) async fn import_session(
         add_error_message(chat, "Import source must be a .jsonl session file.");
         return;
     }
+    // Settle before copying as well as activating: a failed drain or active
+    // bash must not overwrite a file belonging to the still-selected session.
+    let Some(_transition) = settle_active_run(lane, chat, state, "import session").await else {
+        return;
+    };
     let dir = crate::session::default_session_dir(cwd);
     if let Err(e) = std::fs::create_dir_all(&dir) {
         add_error_message(chat, &format!("Could not create session dir: {e}"));
         return;
     }
-    let dest = dir.join(fname);
-    match std::fs::copy(src, &dest) {
-        Ok(_) => {
-            let id = fname.strip_suffix(".jsonl").unwrap_or(fname).to_string();
-            if switch_to_session(harness, lane, &id, cwd, chat, state, tool_context).await {
+    match copy_import(src, &dir, fname) {
+        Ok(dest) => {
+            // Activate the exact copied file. Repository id scans expect a
+            // cwd-encoded subdirectory and can miss this direct import path.
+            if activate_saved_session(
+                harness,
+                &dest.to_string_lossy(),
+                cwd,
+                chat,
+                state,
+                tool_context,
+            )
+            .await
+            {
                 add_note_message(chat, &format!("Imported session from {path}"));
             }
         }
         Err(e) => add_error_message(chat, &format!("Could not copy import: {e}")),
     }
+}
+
+/// Copy an import into `dir` without ever replacing an existing session file.
+/// A source that already lives in `dir` is activated in place; a name clash
+/// gets a numeric suffix (`name-1.jsonl`).
+pub(super) fn copy_import(
+    src: &std::path::Path,
+    dir: &std::path::Path,
+    fname: &str,
+) -> std::io::Result<std::path::PathBuf> {
+    let direct = dir.join(fname);
+    if let (Ok(a), Ok(b)) = (src.canonicalize(), direct.canonicalize()) {
+        if a == b {
+            return Ok(direct);
+        }
+    }
+    let stem = fname.strip_suffix(".jsonl").unwrap_or(fname);
+    for attempt in 0u32.. {
+        let dest = if attempt == 0 {
+            direct.clone()
+        } else {
+            dir.join(format!("{stem}-{attempt}.jsonl"))
+        };
+        let mut out = match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&dest)
+        {
+            Ok(out) => out,
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e),
+        };
+        let copied =
+            std::fs::File::open(src).and_then(|mut input| std::io::copy(&mut input, &mut out));
+        if let Err(e) = copied {
+            drop(out);
+            let _ = std::fs::remove_file(&dest);
+            return Err(e);
+        }
+        return Ok(dest);
+    }
+    unreachable!()
 }
 
 /// Fork the current session into a new one per `options` and switch to it.
@@ -187,6 +254,23 @@ pub(super) async fn fork_session(
 ) -> bool {
     if *state.status.lock().unwrap() != RunStatus::Idle {
         add_note_message(chat, "Wait for the current run to finish before forking.");
+        return false;
+    }
+    let Some(_transition) = begin_session_change(chat, state, "fork session") else {
+        return false;
+    };
+    match harness.snapshot().await {
+        Ok(snapshot) if snapshot.active.is_none() => {}
+        Ok(_) => {
+            add_note_message(chat, "Wait for the current run to finish before forking.");
+            return false;
+        }
+        Err(error) => {
+            add_error_message(chat, &format!("Could not fork session: {error}"));
+            return false;
+        }
+    }
+    if !settle_agent_events(chat, state, "fork session").await {
         return false;
     }
     let new_session = match crate::session::fork_session_storage_with_options(
@@ -275,9 +359,10 @@ pub(super) async fn start_new_session(
     state: &Arc<TuiState>,
     tool_context: &ice_extensions::ToolCallContext,
 ) -> bool {
-    if !settle_active_run(lane, chat, state, "start a new session").await {
+    let Some(_transition) = settle_active_run(lane, chat, state, "start a new session").await
+    else {
         return false;
-    }
+    };
     let active_dir = harness
         .session()
         .storage()
@@ -324,12 +409,86 @@ async fn settle_active_run(
     chat: &Arc<Container>,
     state: &Arc<TuiState>,
     action: &str,
-) -> bool {
-    if *state.status.lock().unwrap() == RunStatus::Working {
+) -> Option<SessionTransition> {
+    let transition = begin_session_change(chat, state, action)?;
+    // Extensions can start a run before the AgentStart broadcast reaches the
+    // UI. Consult the authoritative lane rather than waiting forever on a run
+    // the display still believes is idle.
+    let active = match lane.snapshot().await {
+        Ok(snapshot) => snapshot.active.is_some(),
+        Err(error) => {
+            add_error_message(chat, &format!("Could not {action}: {error}"));
+            return None;
+        }
+    };
+    // A failed settle leaves the run going, so the status must not stay on
+    // "Aborting".
+    let prior_status = *state.status.lock().unwrap();
+    if active {
         state.set_status(RunStatus::Aborting);
-        let _ = lane.abort().await;
+        match lane.abort().await {
+            Ok(_) | Err(ice_harness::result::HarnessError::NoActiveRun { .. }) => {}
+            Err(error) => {
+                state.set_status(prior_status);
+                add_error_message(chat, &format!("Could not {action}: {error}"));
+                return None;
+            }
+        }
     }
     if let Err(error) = lane.wait_for_idle().await {
+        if active {
+            state.set_status(prior_status);
+        }
+        add_error_message(chat, &format!("Could not {action}: {error}"));
+        return None;
+    }
+    if !settle_agent_events(chat, state, action).await {
+        return None;
+    }
+    Some(transition)
+}
+
+/// Owns admission until both the backing and its UI have been replaced. The
+/// key thread cannot start a user bash in the await gap between guard and swap.
+pub(super) struct SessionTransition(Arc<TuiState>);
+
+impl Drop for SessionTransition {
+    fn drop(&mut self) {
+        self.0
+            .event_drain
+            .session_changing
+            .store(false, std::sync::atomic::Ordering::Release);
+    }
+}
+
+pub(super) fn begin_session_change(
+    chat: &Arc<Container>,
+    state: &Arc<TuiState>,
+    action: &str,
+) -> Option<SessionTransition> {
+    // Match begin_user_bash's lock order so checking bash and claiming the
+    // transition is atomic with respect to key-thread command admission.
+    let bash = state.user_bash_cancel.lock().unwrap();
+    if bash.is_some() {
+        add_note_message(
+            chat,
+            &format!("Wait for the bash command to finish or cancel it before you {action}."),
+        );
+        return None;
+    }
+    if state
+        .event_drain
+        .session_changing
+        .swap(true, std::sync::atomic::Ordering::AcqRel)
+    {
+        add_note_message(chat, "Wait for the current session change to finish.");
+        return None;
+    }
+    Some(SessionTransition(state.clone()))
+}
+
+async fn settle_agent_events(chat: &Arc<Container>, state: &Arc<TuiState>, action: &str) -> bool {
+    if let Err(error) = state.event_drain.flush().await {
         add_error_message(chat, &format!("Could not {action}: {error}"));
         return false;
     }
@@ -350,7 +509,6 @@ pub(super) async fn replace_session_ui(
     state.cache_tracker.lock().unwrap().reset();
     state.clear_auto_send();
     state.new_message_count.reset();
-    state.run_started_at.lock().unwrap().take();
     *state.selection_start.lock().unwrap() = None;
     *state.selection_end.lock().unwrap() = None;
     chat.clear();
@@ -377,13 +535,12 @@ pub(super) async fn replace_session_ui(
     state.set_status(RunStatus::Idle);
 }
 
-/// Usage summed over the session's assistant messages, plus the last
-/// assistant text (for `/copy`).
+/// Usage summed over session responses and paid summaries, plus the last assistant
+/// text on the active branch (for `/copy`).
 async fn session_usage_and_last_text(
     harness: &AgentHarness,
 ) -> (ice_tui::footer::UsageTotals, String) {
     let mut totals = ice_tui::footer::UsageTotals::default();
-    let mut last_text = String::new();
     let entries = harness
         .session()
         .view("main")
@@ -397,17 +554,45 @@ async fn session_usage_and_last_text(
         .await
         .unwrap_or_default();
     for entry in entries {
-        if let Entry::Message(me) = entry {
-            if let AgentMessage::Assistant(a) = &me.message {
-                let u = &a.usage;
-                totals.add(u.input, u.output, u.cache_read, u.cache_write, u.cost.total);
-                let text = assistant_text(a);
-                if !text.is_empty() {
-                    last_text = text;
-                }
-            }
+        let usage = match &entry {
+            Entry::Message(message) => match &message.message {
+                AgentMessage::Assistant(assistant) => Some(&assistant.usage),
+                _ => None,
+            },
+            Entry::BranchSummary(summary) => summary.usage.as_ref(),
+            Entry::Compaction(summary) => summary.usage.as_ref(),
+            _ => None,
+        };
+        if let Some(u) = usage {
+            totals.add(u.input, u.output, u.cache_read, u.cache_write, u.cost.total);
         }
     }
+    // Billing is session-wide: changing branches must not erase paid usage.
+    // /copy, however, describes the selected conversation, not an orphaned future.
+    let last_text = harness
+        .session()
+        .view("main")
+        .find_entries_on_branch(
+            &EntryQuery {
+                order: Some(EntryOrder::NewestFirst),
+                ..Default::default()
+            },
+            &Default::default(),
+        )
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .find_map(|entry| match entry {
+            Entry::Message(message) => match message.message {
+                AgentMessage::Assistant(assistant) => {
+                    let text = assistant_text(&assistant);
+                    (!text.is_empty()).then_some(text)
+                }
+                _ => None,
+            },
+            _ => None,
+        })
+        .unwrap_or_default();
     (totals, last_text)
 }
 
@@ -430,16 +615,19 @@ pub(super) async fn render_session_history(
 ) {
     let tree = harness.session().view("main");
     let entries = match tree
-        .find_entries(&EntryQuery {
-            entry_type: None,
-            custom_type: None,
-            // Session queries default to newest-first for selectors and
-            // pagination. The transcript appends children top-to-bottom, so
-            // restored history must explicitly be chronological.
-            order: Some(EntryOrder::OldestFirst),
-            limit: None,
-            cursor: None,
-        })
+        .find_entries_on_branch(
+            &EntryQuery {
+                entry_type: None,
+                custom_type: None,
+                // Session queries default to newest-first for selectors and
+                // pagination. The transcript appends children top-to-bottom, so
+                // restored history must explicitly be chronological.
+                order: Some(EntryOrder::OldestFirst),
+                limit: None,
+                cursor: None,
+            },
+            &Default::default(),
+        )
         .await
     {
         Ok(e) => e,

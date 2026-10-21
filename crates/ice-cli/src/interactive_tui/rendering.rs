@@ -469,6 +469,7 @@ pub(super) fn add_note_message(container: &Arc<Container>, text: &str) {
 /// Mirrors pi's context-panel intent (pi surfaces loaded resources on startup +
 /// via `/reload`); here it's a transcript note rather than an overlay since the
 /// resource set is refreshed after successful `/reload`s.
+#[cfg(test)]
 pub(super) fn show_context_panel(
     chat: &Arc<Container>,
     resources: &ice_harness::types::AgentHarnessResources,
@@ -532,6 +533,7 @@ pub(super) fn show_context_panel(
 }
 
 /// Append a multi-line neutral note (header line + body) to the chat container.
+#[cfg(test)]
 pub(super) fn container_note_block(container: &Arc<Container>, body: &str) {
     for line in body.lines() {
         container.add_child(Arc::new(Text::new(line.to_string(), 1, 0)));

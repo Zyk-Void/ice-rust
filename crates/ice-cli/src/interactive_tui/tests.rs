@@ -439,8 +439,10 @@ fn markdown_flag_only_comes_from_an_explicit_true() {
 
 /// Minimal `TuiState` for unit tests that only touch state flags. Mirrors
 /// the explicit literals other tests build, but keeps one copy in sync.
-fn test_tui_state() -> Arc<TuiState> {
+pub(super) fn test_tui_state() -> Arc<TuiState> {
     Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -502,7 +504,6 @@ fn test_tui_state() -> Arc<TuiState> {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     })
 }
 
@@ -1051,7 +1052,7 @@ fn parse_user_bash_ignores_bare_bang_and_plain_text() {
 fn user_bash_run_slot_guards_and_cancels() {
     let state = test_tui_state();
     assert!(!state.user_bash_running());
-    let cancel = state.begin_user_bash();
+    let cancel = state.begin_user_bash().unwrap();
     assert!(state.user_bash_running());
     // Esc cancels without freeing the slot; the spawned task clears it when
     // the capture resolves (upstream's `isBashRunning`).
@@ -1618,6 +1619,8 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
     };
 
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -1679,7 +1682,6 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     });
 
     // The drain handler takes `Arc<TuiAltScreen>`, which needs a real
@@ -2679,6 +2681,8 @@ fn test_autocomplete_slash_suggestions_render() {
     // The autocomplete container should render at least one suggestion
     // line when the editor holds a `/` prefix, and clear when it doesn't.
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -2740,7 +2744,6 @@ fn test_autocomplete_slash_suggestions_render() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -2774,6 +2777,8 @@ fn test_select_list_swap_restores_editor() {
     // child; closing restores it. Verify the container child count + the
     // active_selector flag round-trip.
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -2835,7 +2840,6 @@ fn test_select_list_swap_restores_editor() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     });
     let editor_container = Arc::new(Container::new());
     let editor = Arc::new(Editor::simple());
@@ -2872,6 +2876,8 @@ fn test_message_history_browse_restores_draft() {
     // messages, browse older → newer → back past the newest restores the
     // draft the user was typing.
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -2933,7 +2939,6 @@ fn test_message_history_browse_restores_draft() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     });
     let editor = Arc::new(Editor::simple());
 
@@ -2973,6 +2978,8 @@ fn test_message_history_browse_restores_draft() {
 fn test_accept_top_suggestion_replaces_prefix() {
     // `/he` + Tab → `/help ` (slash command provider inserts a space).
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3034,7 +3041,6 @@ fn test_accept_top_suggestion_replaces_prefix() {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -3125,6 +3131,8 @@ fn autocomplete_keeps_the_caret_inside_a_quoted_directory() {
 /// installed by each test).
 fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
     Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3186,7 +3194,6 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     })
 }
 
@@ -3690,26 +3697,6 @@ fn osc52_copy_encodes_text_and_detects_remote_sessions() {
     assert!(!is_remote_session(env(&[])));
 }
 
-/// ice leaves a dim "✻ Worked for 3m 17s" line when a run finishes on its
-/// own, and nothing after an aborted or failed run.
-#[test]
-fn run_summary_aborting_then_idle_does_not_report_a_cancelled_tool_run() {
-    let state = test_tui_state();
-    state.set_status(RunStatus::Working);
-    *state.run_started_at.lock().unwrap() = Some(std::time::Instant::now());
-    state.set_status(RunStatus::Aborting);
-    // The prompt result can win the race with the AgentEnd broadcast drain.
-    state.set_status(RunStatus::Idle);
-    let mut assistant = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
-    assistant.stop_reason = ice_ai::types::StopReason::ToolUse;
-    let messages = [AgentMessage::Assistant(Box::new(assistant))];
-    let started = state.run_started_at.lock().unwrap().take();
-    assert_eq!(
-        started.and_then(|at| run_summary_line(&messages, at.elapsed())),
-        None,
-    );
-}
-
 /// Exercise the provider boundary as well as storage: resetting only the
 /// transcript or only the JSONL backing must not preserve the old lane context.
 #[test]
@@ -4189,28 +4176,15 @@ fn selection_into_blank_viewport_rows_copies_the_complete_tail() {
 }
 
 #[test]
-fn run_summary_line_marks_finished_runs_only() {
-    use ice_ai::types::StopReason;
-    let reply = |stop: StopReason| {
-        let mut a = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
-        a.stop_reason = stop;
-        AgentMessage::Assistant(Box::new(a))
-    };
+fn run_summary_line_formats_elapsed_run_duration() {
     let at = |secs: u64| std::time::Duration::from_secs(secs);
-    let done = run_summary_line(&[reply(StopReason::Stop)], at(197)).unwrap();
+    let done = run_summary_line(at(197));
     assert!(
         done.starts_with("✻ ") && done.ends_with(" for 3m 17s"),
         "{done}"
     );
-    assert!(run_summary_line(&[reply(StopReason::Stop)], at(45))
-        .unwrap()
-        .ends_with(" for 45s"));
-    assert!(run_summary_line(&[reply(StopReason::Stop)], at(3720))
-        .unwrap()
-        .ends_with(" for 1h 2m"));
-    assert_eq!(run_summary_line(&[reply(StopReason::Aborted)], at(5)), None);
-    assert_eq!(run_summary_line(&[reply(StopReason::Error)], at(5)), None);
-    assert_eq!(run_summary_line(&[], at(5)), None);
+    assert!(run_summary_line(at(45)).ends_with(" for 45s"));
+    assert!(run_summary_line(at(3720)).ends_with(" for 1h 2m"));
 }
 
 #[test]
@@ -5061,3 +5035,53 @@ fn tree_preview_handles_empty_and_aborted_assistant_without_losing_graphemes() {
     assert!(!preview.contains('\u{1b}') && !preview.contains('\u{7}'));
     assert!(preview.ends_with("👨‍👩‍👧‍👦…"));
 }
+
+#[test]
+fn blank_editor_variables_fall_through_to_the_next_candidate() {
+    let env = |name: &str| match name {
+        "VISUAL" => Some(String::new()),
+        "EDITOR" => Some("hx".to_string()),
+        _ => None,
+    };
+    assert_eq!(run::external_editor_from(env), "hx");
+    assert_eq!(
+        run::external_editor_from(|_| None),
+        if cfg!(windows) { "notepad" } else { "nano" }
+    );
+}
+
+#[test]
+fn import_never_replaces_an_existing_session_file() {
+    let src_dir = tempfile::tempdir().unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let src = src_dir.path().join("s.jsonl");
+    std::fs::write(&src, "incoming").unwrap();
+    std::fs::write(dir.path().join("s.jsonl"), "existing").unwrap();
+
+    let dest = sessions::copy_import(&src, dir.path(), "s.jsonl").unwrap();
+
+    assert_eq!(dest, dir.path().join("s-1.jsonl"));
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join("s.jsonl")).unwrap(),
+        "existing"
+    );
+    assert_eq!(std::fs::read_to_string(dest).unwrap(), "incoming");
+}
+
+#[test]
+fn import_of_a_file_already_in_the_session_dir_is_not_truncated() {
+    let dir = tempfile::tempdir().unwrap();
+    let src = dir.path().join("s.jsonl");
+    std::fs::write(&src, "live").unwrap();
+
+    let dest = sessions::copy_import(&src, dir.path(), "s.jsonl").unwrap();
+
+    assert_eq!(dest, src);
+    assert_eq!(std::fs::read_to_string(src).unwrap(), "live");
+}
+
+#[path = "events/session_drain_tests.rs"]
+mod session_drain;
+
+#[path = "run/clipboard_tests.rs"]
+mod clipboard;

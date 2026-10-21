@@ -50,6 +50,8 @@ mod session_picker;
 use selectors::*;
 mod tree_selector;
 use tree_selector::*;
+mod tree_summary;
+use tree_summary::*;
 mod autocomplete;
 use autocomplete::*;
 mod rendering;
@@ -578,6 +580,16 @@ fn parse_user_bash(text: &str) -> Option<(&str, bool)> {
 /// `bashExecution` message (skipped from context for `!!`). Mirrors
 /// `handleBashCommand` (`interactive-mode.ts:6729`).
 fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bool) {
+    // Admission shares the bash-slot lock with session replacement. A command
+    // typed while the old response is draining must not attach to either session.
+    let Some(cancel) = ctx.state.begin_user_bash() else {
+        add_note_message(
+            &ctx.chat,
+            "Wait for the session change to finish before running bash.",
+        );
+        ctx.tui.request_render(false);
+        return;
+    };
     let comp = Arc::new(BashExecutionComponent::new_with_context(
         command,
         exclude_from_context,
@@ -587,7 +599,6 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
 
     // Register the cancellation slot before spawning so an Esc arriving on the
     // key thread can never miss the run (upstream's `_bashAbortControllers`).
-    let cancel = ctx.state.begin_user_bash();
     ctx.tui.request_render(false);
 
     let env: Arc<dyn ice_tools::ExecutionEnv> =
@@ -681,7 +692,9 @@ enum TuiMessage {
     SwitchProvider(String),
     OpenProviderSelector,
     OpenTree,
-    NavigateTree(String),
+    NavigateTree(String, Arc<TreeSelector>),
+    OpenTreeAt(Arc<TreeSelector>),
+    CommitTreeNavigation(TreeNavigationRequest, Arc<TreeSelector>),
     Exit,
     /// Start a new session (from `/new` and its `/clear` alias).
     NewSession,
@@ -1220,6 +1233,8 @@ pub async fn interactive_tui(
     let autocomplete_container = Arc::new(Container::new());
 
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -1279,7 +1294,6 @@ pub async fn interactive_tui(
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
-        run_started_at: std::sync::Mutex::new(None),
     });
 
     let _compaction_watcher = harness.watch({
@@ -1553,16 +1567,19 @@ pub async fn interactive_tui(
 
     // ---- Streaming drain task ----
     let drain_handle = if let Some(rx) = event_rx {
+        let requests = state.event_drain.install();
         let tui_drain = tui.clone();
         let state_drain = state.clone();
         let chat_drain = chat_container.clone();
         let lane_drain = lane.clone();
         Some(tokio::spawn(async move {
-            drain_agent_events(rx, tui_drain, state_drain, chat_drain, lane_drain).await;
+            drain_agent_events(rx, tui_drain, state_drain, chat_drain, lane_drain, requests).await;
         }))
     } else {
         None
     };
+
+    let _run_summary_watcher = watch_run_summaries(&harness, &state);
 
     // ---- B5d: plugin→TUI reload bridge ----
     // A plugin's `runtime_action(Reload)` can't drive the reload synchronously
@@ -2196,9 +2213,7 @@ pub async fn interactive_tui(
             if state_for_key.selector_open() {
                 // Esc always cancels the selector (even with modifiers off).
                 // Route through `SelectList::handle_key(Esc)` so the list's
-                // `on_cancel` fires (the `/scoped-models` toggle selector saves
-                // its edits there) — the old shortcut called `close_selector`
-                // directly and skipped the callback.
+                // `on_cancel` fires and each selector can clean up.
                 if key.code == KeyCode::Esc {
                     let (selector, _kind) = state_for_key
                         .active_selector
@@ -2253,7 +2268,6 @@ pub async fn interactive_tui(
             ) {
                 let status = *state_for_key.status.lock().unwrap();
                 if status == RunStatus::Working {
-                    state_for_key.set_status(RunStatus::Aborting);
                     ask_user_for_key.cancel_all();
                     if !run_extension_cancel(&state_for_key)
                         && state_for_key.extension_dialog_open()
@@ -2267,7 +2281,9 @@ pub async fn interactive_tui(
                     }
                     // upstream's `onEscape` restores the queue before it
                     // aborts, so an interrupt hands the staged messages back.
-                    abort_run_restoring_queue(
+                    dispatch_run_interrupt(
+                        &key,
+                        &keybindings_for_key,
                         lane_for_key.clone(),
                         editor_for_key.clone(),
                         state_for_key.clone(),
@@ -3012,41 +3028,28 @@ pub async fn interactive_tui(
                     .await;
                 }
             }
-            Some(TuiMessage::NavigateTree(entry_id)) => {
-                match lane.navigate_tree(Some(&entry_id), false, None, None).await {
-                    Ok(result) => match result.outcome {
-                        ice_harness::agent_harness::NavigationOutcome::Completed { .. } => {
-                            state.new_message_count.reset();
-                            chat_container.clear();
-                            add_welcome_message(&chat_container);
-                            render_session_history(
-                                &harness,
-                                &chat_container,
-                                state.markdown_transformer(),
-                                Some(state.extension_session.clone()),
-                                state.images_visible(),
-                                state.transcript_view().expanded(),
-                            )
-                            .await;
-                            add_note_message(
-                                &chat_container,
-                                "Moved to the selected session entry.",
-                            );
-                        }
-                        ice_harness::agent_harness::NavigationOutcome::Failed { error, .. } => {
-                            add_error_message(&chat_container, &error.message);
-                        }
-                        _ => add_note_message(
-                            &chat_container,
-                            "The selected entry could not be opened.",
-                        ),
-                    },
-                    Err(error) => add_error_message(
-                        &chat_container,
-                        &format!("Could not navigate session tree: {error}"),
-                    ),
+            Some(TuiMessage::NavigateTree(entry_id, tree)) => {
+                choose_tree_navigation(
+                    entry_id,
+                    tree,
+                    &harness,
+                    &state,
+                    &editor_container,
+                    &editor,
+                    &tui,
+                    &tx,
+                )
+                .await;
+            }
+            Some(TuiMessage::OpenTreeAt(tree)) => {
+                if *state.status.lock().unwrap() == RunStatus::Idle {
+                    reopen_tree_selector(tree, &state, &editor_container, &editor, &tui);
                 }
-                tui.request_render(false);
+            }
+            Some(TuiMessage::CommitTreeNavigation(request, tree)) => {
+                if run_tree_navigation(&request, &harness, &lane, &state, &tui).await {
+                    let _ = tx.send(TuiMessage::OpenTreeAt(tree));
+                }
             }
             Some(TuiMessage::NewSession) => {
                 start_new_session(

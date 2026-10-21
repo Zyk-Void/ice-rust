@@ -374,6 +374,17 @@ impl RecursiveFileAutocompleteProvider {
         let notify = self.notify.clone();
         let state = self.state.clone();
         std::thread::spawn(move || {
+            // A panicking search must not leave `running` set, or recursive
+            // search would stay off for the rest of the session.
+            struct ClearRunning(Arc<Mutex<RecursiveSearchState>>);
+            impl Drop for ClearRunning {
+                fn drop(&mut self) {
+                    if let Ok(mut st) = self.0.lock() {
+                        st.running = false;
+                    }
+                }
+            }
+            let _clear = ClearRunning(state.clone());
             let mut query = query;
             let mut generation = generation;
             loop {

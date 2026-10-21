@@ -89,11 +89,14 @@ pub(super) fn run_external_editor(
 /// `ICERS_EXTERNAL_EDITOR` (nonblank), then `VISUAL`, `EDITOR`, then the
 /// platform default.
 fn external_editor_command() -> String {
-    std::env::var("ICERS_EXTERNAL_EDITOR")
-        .ok()
-        .filter(|value| !value.trim().is_empty())
-        .or_else(|| std::env::var("VISUAL").ok())
-        .or_else(|| std::env::var("EDITOR").ok())
+    external_editor_from(|name| std::env::var(name).ok())
+}
+
+pub(super) fn external_editor_from(get: impl Fn(&str) -> Option<String>) -> String {
+    ["ICERS_EXTERNAL_EDITOR", "VISUAL", "EDITOR"]
+        .into_iter()
+        .filter_map(get)
+        .find(|value| !value.trim().is_empty())
         .unwrap_or_else(|| {
             if cfg!(windows) {
                 "notepad".to_string()
@@ -207,6 +210,7 @@ pub(super) async fn run_prompt_streaming(
     state.set_status(RunStatus::Working);
     tui.request_render(false);
 
+    let started = std::time::Instant::now();
     let outcome = if resume {
         // Continuing an interrupted run: no new user turn, just the provider call
         // the interrupted run never reached. upstream behaves the same way.
@@ -223,6 +227,24 @@ pub(super) async fn run_prompt_streaming(
         }
     } else {
         lane.prompt_text(prompt, images).await
+    };
+
+    // Settle final tool/message delivery before completion reconciliation. This
+    // also consumes the ordered RunSettled marker and its authoritative summary.
+    // A stopped consumer must not turn into a successful-looking completion.
+    let updates_settled = if streaming {
+        match state.event_drain.flush().await {
+            Ok(()) => true,
+            Err(error) => {
+                add_error_message(
+                    &state.chat_container,
+                    &format!("Could not finish response updates: {error}"),
+                );
+                false
+            }
+        }
+    } else {
+        false
     };
 
     if streaming {
@@ -282,7 +304,7 @@ pub(super) async fn run_prompt_streaming(
                 // in streaming mode. In regular mode there is no drain task,
                 // so suppressing this branch merely hides 405/auth/network
                 // diagnostics from the user.
-                let already_rendered = streaming && final_message.is_some();
+                let already_rendered = updates_settled && final_message.is_some();
                 if !already_rendered {
                     let msg = final_message
                         .as_ref()
@@ -316,6 +338,7 @@ pub(super) async fn run_prompt_streaming(
                         );
                         *state.last_assistant_text.lock().unwrap() = text;
                     }
+                    add_run_summary(&state.chat_container, started.elapsed());
                 }
             }
         },
@@ -440,15 +463,47 @@ pub(super) fn extract_selected_text(
     Some(selected.join("\n"))
 }
 
+#[cfg(all(feature = "clipboard", not(target_os = "android")))]
+thread_local! {
+    // X11 clipboard ownership must outlive set_text so other clients can read
+    // the selection. Keep one owner per calling UI/runtime thread; Clipboard
+    // does not need to be Send, and successful copies reuse the same owner.
+    static SYSTEM_CLIPBOARD: std::cell::RefCell<Option<arboard::Clipboard>> =
+        std::cell::RefCell::new(None);
+}
+
+/// Lazily retain a successful backend and retire a failed one so a later copy
+/// can retry. The generic seam tests ownership without accessing an OS clipboard.
+#[cfg(any(test, all(feature = "clipboard", not(target_os = "android"))))]
+pub(super) fn write_retained_resource<T, E>(
+    slot: &std::cell::RefCell<Option<T>>,
+    initialize: impl FnOnce() -> Result<T, E>,
+    write: impl FnOnce(&mut T) -> Result<(), E>,
+) -> bool {
+    let mut retained = slot.borrow_mut();
+    if retained.is_none() {
+        match initialize() {
+            Ok(resource) => *retained = Some(resource),
+            Err(_) => return false,
+        }
+    }
+    let succeeded = write(retained.as_mut().expect("initialized resource")).is_ok();
+    if !succeeded {
+        retained.take();
+    }
+    succeeded
+}
+
 /// Best-effort clipboard write. Enabled only with the `clipboard` feature
 /// (`arboard`) on non-Android platforms; otherwise returns `false` so the
 /// caller degrades to a hint.
 #[cfg(all(feature = "clipboard", not(target_os = "android")))]
 fn copy_to_system_clipboard(text: &str) -> bool {
-    match arboard::Clipboard::new() {
-        Ok(mut cb) => cb.set_text(text).is_ok(),
-        Err(_) => false,
-    }
+    SYSTEM_CLIPBOARD.with(|slot| {
+        write_retained_resource(slot, arboard::Clipboard::new, |clipboard| {
+            clipboard.set_text(text)
+        })
+    })
 }
 
 #[cfg(any(not(feature = "clipboard"), target_os = "android"))]
