@@ -3482,3 +3482,55 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// A bare `/trust` used to mean "yes" and silently overrode a saved "no".
+/// It must only report the saved decision; explicit arguments change it.
+#[test]
+fn bare_trust_command_reports_and_never_changes_trust() {
+    with_isolated_config_dir(|| {
+        let project = tempfile::tempdir().unwrap();
+        let cwd = project.path();
+        crate::config::set_project_trust(cwd, Some(false)).unwrap();
+
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+
+        let note = run_trust_command(cwd, "yes", false).unwrap();
+        assert!(
+            note.contains("marked trusted") && note.contains("Restart"),
+            "{note}"
+        );
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(true)
+        );
+
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("trusted (saved)"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+
+        run_trust_command(cwd, "no", true).unwrap();
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+        let note = run_trust_command(cwd, "", true).unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert!(note.contains("Current session: trusted"), "{note}");
+
+        run_trust_command(cwd, "clear", true).unwrap();
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("no saved decision"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+
+        let note = run_trust_command(cwd, "maybe", false).unwrap();
+        assert!(note.starts_with("Usage:"), "{note}");
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+    })
+}
