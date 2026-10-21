@@ -84,6 +84,7 @@ impl KeyCombo {
         let key = match self.code {
             KeyCode::Char(' ') => "Space".into(),
             KeyCode::Char(c) => c.to_uppercase().to_string(),
+            KeyCode::F(number) => format!("F{number}"),
             KeyCode::Enter => "Enter".into(),
             KeyCode::Esc => "Esc".into(),
             KeyCode::Tab | KeyCode::BackTab => "Tab".into(),
