@@ -33,35 +33,32 @@ pub fn mark_setup_done() -> std::io::Result<()> {
 /// If first-time setup hasn't run yet, show a brief setup note in the chat
 /// container. Returns `true` if anything was shown.
 pub fn maybe_first_time_setup(chat: &Arc<Container>) -> bool {
-    use ice_tui::Component;
     use ice_tui::{DynamicBorder, Spacer, Text};
     if setup_done() {
         return false;
     }
     let accent = ice_tui::theme().colors.accent;
     let muted = ice_tui::theme().colors.muted;
-    let border = DynamicBorder::with_color(accent);
-    let mut lines: Vec<String> = Vec::new();
-    lines.extend(border.render(80));
-    lines.push(format!(
-        " {} Welcome to icers!",
-        accent.fg(&bold("Welcome to icers!"))
-    ));
-    lines.push(format!(
-        " {} Pick a theme with /theme (dark/light/monochrome).",
-        muted.fg("Pick a theme with /theme (dark/light/monochrome).")
-    ));
-    lines.push(format!(
-        " {} Type /help for commands.",
-        muted.fg("Type /help for commands.")
-    ));
-    lines.extend(border.render(80));
-    for line in lines {
+    // Borders are components so they fit the real width; each line used to
+    // print its text twice (" {colored} {plain}") between fixed 80-column
+    // borders.
+    chat.add_child(Arc::new(DynamicBorder::with_color(accent)));
+    for line in welcome_lines(&accent, &muted) {
         chat.add_child(Arc::new(Text::new(line, 1, 0)));
     }
+    chat.add_child(Arc::new(DynamicBorder::with_color(accent)));
     chat.add_child(Arc::new(Spacer::new(1)));
     let _ = mark_setup_done();
     true
+}
+
+/// The first-run welcome text, one styled line each.
+fn welcome_lines(accent: &ice_tui::Color, muted: &ice_tui::Color) -> Vec<String> {
+    vec![
+        accent.fg(&bold("Welcome to icers!")),
+        muted.fg("Pick a theme with /theme (dark/light/monochrome)."),
+        muted.fg("Type /help for commands."),
+    ]
 }
 
 fn bold(s: &str) -> String {
@@ -71,6 +68,27 @@ fn bold(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Each welcome line used to print its text twice ("Welcome to icers!
+    /// Welcome to icers!").
+    #[test]
+    fn welcome_lines_say_each_thing_once() {
+        let theme = ice_tui::theme();
+        for line in welcome_lines(&theme.colors.accent, &theme.colors.muted) {
+            let plain = ice_tui::strip_ansi(&line);
+            let half = plain
+                .char_indices()
+                .nth(plain.chars().count() / 2)
+                .map_or(plain.len(), |(i, _)| i);
+            assert!(
+                !plain[half..].contains(plain[..half].trim()),
+                "duplicated: {plain:?}"
+            );
+        }
+        let first =
+            ice_tui::strip_ansi(&welcome_lines(&theme.colors.accent, &theme.colors.muted)[0]);
+        assert_eq!(first, "Welcome to icers!");
+    }
 
     #[test]
     fn test_sentinel_paths_under_agent_dir() {
