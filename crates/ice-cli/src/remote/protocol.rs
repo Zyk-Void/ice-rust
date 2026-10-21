@@ -53,6 +53,9 @@ pub enum RemoteEvent {
         delay_ms: u64,
         error: String,
     },
+    RetryRefused {
+        error: String,
+    },
     TurnStart,
     TurnEnd {
         message: Value,
@@ -127,6 +130,7 @@ impl RemoteEvent {
             RemoteEvent::AgentStart => "agent_start",
             RemoteEvent::AgentEnd { .. } => "agent_end",
             RemoteEvent::RetryScheduled { .. } => "retry_scheduled",
+            RemoteEvent::RetryRefused { .. } => "retry_refused",
             RemoteEvent::TurnStart => "turn_start",
             RemoteEvent::TurnEnd { .. } => "turn_end",
             RemoteEvent::MessageStart { .. } => "message_start",
@@ -161,6 +165,9 @@ impl RemoteEvent {
                 attempt: *attempt,
                 max_retries: *max_retries,
                 delay_ms: *delay_ms,
+                error: error.clone(),
+            },
+            AgentEvent::RetryRefused { error } => RemoteEvent::RetryRefused {
                 error: error.clone(),
             },
             AgentEvent::TurnStart => RemoteEvent::TurnStart,
@@ -286,7 +293,9 @@ pub enum RemoteCommand {
         #[serde(default)]
         cancelled: bool,
     },
-    /// Run a prompt on the remote `main` lane; events stream until `agent_end`.
+    /// Run a text-only prompt on the remote `main` lane; events stream until
+    /// `agent_end`. Image attachments and a second concurrent prompt are not
+    /// supported by this RPC command.
     Prompt { content: String },
     /// Abort the in-flight run.
     Abort,

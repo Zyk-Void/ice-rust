@@ -2,6 +2,65 @@
 
 use super::*;
 
+pub(super) async fn apply_model_selection(
+    lane: &Arc<dyn AgentLane>,
+    state: &Arc<TuiState>,
+    chat: &Arc<Container>,
+    model: ice_ai::Model,
+    save_default: bool,
+) {
+    if let Err(error) = lane.set_model(model.clone()).await {
+        add_error_message(chat, &format!("Could not change model: {error}"));
+        return;
+    }
+    state.set_current_model(&model);
+    let saved = if save_default {
+        match set_default_model(&model.provider, &model.id) {
+            Ok(_) => " Default saved.".to_string(),
+            Err(error) => format!(" Changed for this session, but could not save default: {error}"),
+        }
+    } else {
+        String::new()
+    };
+    add_note_message(
+        chat,
+        &format!(
+            "Model set to {} — applies to the next message.{saved}",
+            short_model_name(&model.id)
+        ),
+    );
+}
+
+pub(super) async fn apply_thinking_selection(
+    lane: &Arc<dyn AgentLane>,
+    state: &Arc<TuiState>,
+    chat: &Arc<Container>,
+    level: ice_ai::types::ThinkingLevel,
+    save_default: bool,
+) {
+    if let Err(error) = lane.set_thinking_level(level).await {
+        add_error_message(chat, &format!("Could not change thinking level: {error}"));
+        return;
+    }
+    let name = thinking_level_name(level);
+    state.footer.set_thinking_level(Some(name));
+    let saved = if save_default {
+        let result = crate::settings::load_settings()
+            .map_err(|error| error.to_string())
+            .and_then(|mut settings| {
+                settings.default_thinking_level = Some(name.to_string());
+                crate::settings::save_settings(&settings)
+            });
+        match result {
+            Ok(_) => " Default saved.".to_string(),
+            Err(error) => format!(" Changed for this session, but could not save default: {error}"),
+        }
+    } else {
+        String::new()
+    };
+    add_note_message(chat, &format!("Thinking set to {name}.{saved}"));
+}
+
 // ===========================================================================
 // Selectors — editor-container swap (TS showSelector pattern)
 // ===========================================================================
@@ -150,7 +209,6 @@ pub(super) fn open_model_selector(
     let tui_sel = tui.clone();
     let chat_sel = chat.clone();
     let lane_sel = lane.clone();
-    let lane_model_sel = lane_model_id.to_string();
     list.on_select(Arc::new(move |item| {
         let Some(model) = find_model_selector_match(&catalog_arc, &item.value) else {
             add_note_message(
@@ -161,32 +219,14 @@ pub(super) fn open_model_selector(
             return;
         };
 
-        // The harness now registers every authenticated provider runtime, so
-        // picking a model from ANOTHER provider hot-switches it (no restart).
-        // Persist the choice as the saved default so the next launch keeps it.
-        let current_provider = catalog_arc
-            .iter()
-            .find(|m| m.id.eq_ignore_ascii_case(&lane_model_sel))
-            .map(|m| m.provider.clone());
-        if current_provider
-            .as_deref()
-            .map_or(true, |cur| !model.provider.eq_ignore_ascii_case(cur))
-        {
-            let _ = set_default_model(&model.provider, &model.id);
-        }
-
-        state_sel.set_current_model(&model);
         let lane = lane_sel.clone();
+        let state = state_sel.clone();
+        let chat = chat_sel.clone();
+        let tui = tui_sel.clone();
         tokio::spawn(async move {
-            let _ = lane.set_model(model).await;
+            apply_model_selection(&lane, &state, &chat, model, false).await;
+            tui.request_render(false);
         });
-        add_note_message(
-            &chat_sel,
-            &format!(
-                "Model set to {} — applies to the next message.",
-                short_model_name(&item.value)
-            ),
-        );
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();
@@ -270,9 +310,23 @@ pub(super) fn open_session_selector(
     cwd: &std::path::Path,
     tx: &mpsc::UnboundedSender<TuiMessage>,
 ) {
-    let dir = crate::session::default_session_dir(cwd);
+    let dir = crate::session::session_dir(cwd);
+    if let Err(error) = std::fs::read_dir(&dir) {
+        if error.kind() != std::io::ErrorKind::NotFound {
+            add_note_message(
+                &state.chat_container,
+                &format!("Cannot read session directory {}: {error}", dir.display()),
+            );
+            tui.request_render(false);
+            return;
+        }
+    }
+    let (files, skipped) = crate::session::discover_session_files_sync(&dir);
+    if let Some(warning) = crate::session::session_discovery_warning(&skipped) {
+        add_note_message(&state.chat_container, &warning);
+    }
     let mut items: Vec<SelectItem> = Vec::new();
-    for path in crate::session::list_session_files_sync(&dir) {
+    for path in files {
         let summary = crate::session::summarize_session_file(&path);
         if summary.empty {
             continue;
@@ -846,15 +900,13 @@ pub(super) fn open_thinking_selector(
             return;
         };
         let lane = lane_sel.clone();
-        let footer_sel = state_sel.footer.clone();
+        let state = state_sel.clone();
+        let chat = chat_sel.clone();
+        let tui = tui_sel.clone();
         tokio::spawn(async move {
-            let _ = lane.set_thinking_level(level).await;
+            apply_thinking_selection(&lane, &state, &chat, level, false).await;
+            tui.request_render(false);
         });
-        // Reflect the chosen level in the footer's model suffix (pi parity:
-        // `model • thinking off` / `model • medium`). The shown text for the
-        // Off level is "off", matching the TS `thinkingLevel === "off"` branch.
-        footer_sel.set_thinking_level(Some(thinking_level_name(level)));
-        add_note_message(&chat_sel, &format!("Thinking set to {}.", item.label));
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();

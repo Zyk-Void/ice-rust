@@ -31,7 +31,7 @@ pub fn event_tag_for(event: &AgentEvent) -> Option<EventTag> {
     match event {
         AgentEvent::AgentStart => Some(EventTag::AgentStart),
         AgentEvent::AgentEnd { .. } => Some(EventTag::AgentEnd),
-        AgentEvent::RetryScheduled { .. } => None,
+        AgentEvent::RetryScheduled { .. } | AgentEvent::RetryRefused { .. } => None,
         AgentEvent::TurnStart => Some(EventTag::TurnStart),
         AgentEvent::TurnEnd { .. } => Some(EventTag::TurnEnd),
         AgentEvent::MessageStart { .. } => Some(EventTag::MessageStart),
@@ -117,7 +117,7 @@ pub fn translate(event: &AgentEvent) -> Option<StablePluginEvent> {
         | AgentEvent::AgentEnd { .. }
         | AgentEvent::TurnEnd { .. } => Some(StablePluginEvent::empty(tag)),
 
-        AgentEvent::RetryScheduled { .. } => None,
+        AgentEvent::RetryScheduled { .. } | AgentEvent::RetryRefused { .. } => None,
     }
 }
 

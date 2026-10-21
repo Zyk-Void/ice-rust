@@ -24,7 +24,7 @@
 //! "at-most-one" rule is a *reducer-level* corruption check plus a harness-level
 //! precondition, not a state-level hard reject. This port mirrors that exactly.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -47,10 +47,16 @@ pub struct SessionState {
     records: Vec<LaneRecord>,
     open_operations_by_lane: HashMap<String, BTreeMap<u64, OperationStartedRecord>>,
     lanes: BTreeMap<String, Option<String>>,
+    /// Insertion order for lane projections; absent in legacy serialized states.
+    #[serde(default)]
+    lane_order: Vec<String>,
     log: Vec<LogItem>,
     stats: SessionStats,
     name: Option<String>,
     labels: HashMap<String, String>,
+    /// Insertion order for labels, including delete/re-add semantics.
+    #[serde(default)]
+    labels_order: Vec<String>,
 }
 
 impl Default for SessionState {
@@ -73,10 +79,12 @@ impl SessionState {
             records: Vec::new(),
             open_operations_by_lane: HashMap::new(),
             lanes,
+            lane_order: vec!["main".to_string()],
             log: Vec::new(),
             stats: SessionStats::default(),
             name: None,
             labels: HashMap::new(),
+            labels_order: Vec::new(),
         }
     }
 
@@ -101,13 +109,44 @@ impl SessionState {
     }
 
     pub fn get_lanes(&self) -> Vec<LanePointer> {
-        self.lanes
-            .iter()
-            .map(|(lane, leaf_id)| LanePointer {
-                lane: lane.clone(),
-                leaf_id: leaf_id.clone(),
+        Self::ordered_keys(&self.lane_order, self.lanes.keys().cloned())
+            .into_iter()
+            .filter_map(|lane| {
+                self.lanes.get(&lane).map(|leaf_id| LanePointer {
+                    lane,
+                    leaf_id: leaf_id.clone(),
+                })
             })
             .collect()
+    }
+
+    /// Return insertion order where available, with sorted keys as a stable
+    /// fallback for old snapshots that predate the explicit order vectors.
+    fn ordered_keys(order: &[String], keys: impl IntoIterator<Item = String>) -> Vec<String> {
+        let keys: Vec<String> = keys.into_iter().collect();
+        let known: HashSet<String> = keys.iter().cloned().collect();
+        let mut seen = HashSet::new();
+        let mut result = Vec::with_capacity(keys.len());
+        for key in order {
+            if known.contains(key) && seen.insert(key.clone()) {
+                result.push(key.clone());
+            }
+        }
+        let mut fallback: Vec<String> = keys
+            .into_iter()
+            .filter(|key| seen.insert(key.clone()))
+            .collect();
+        fallback.sort_unstable();
+        result.extend(fallback);
+        result
+    }
+
+    fn normalize_lane_order(&mut self) {
+        self.lane_order = Self::ordered_keys(&self.lane_order, self.lanes.keys().cloned());
+    }
+
+    fn normalize_labels_order(&mut self) {
+        self.labels_order = Self::ordered_keys(&self.labels_order, self.labels.keys().cloned());
     }
 
     /// Look up a lane's leaf, or `invalid_lane` if the lane doesn't exist.
@@ -203,7 +242,10 @@ impl SessionState {
                     seq,
                     entry: entry.clone(),
                 });
-                if is_message {
+                // Entries without a lane are imported history (not newly
+                // authored activity), notably on fork replay. Keep their
+                // structural data without charging session accounting.
+                if is_message && lane.is_some() {
                     self.stats.message_count += 1;
                 }
                 Ok(ApplyOutcome::Entry(entry))
@@ -259,8 +301,13 @@ impl SessionState {
                         )));
                     }
                 }
+                self.normalize_lane_order();
+                let is_new_lane = !self.lanes.contains_key(&lane);
                 self.sequence = seq;
                 self.lanes.insert(lane.clone(), leaf_id.clone());
+                if is_new_lane {
+                    self.lane_order.push(lane.clone());
+                }
                 self.log.push(LogItem::Lane { seq, lane, leaf_id });
                 Ok(ApplyOutcome::Lane)
             }
@@ -280,13 +327,18 @@ impl SessionState {
                         "Invalid session mutation: references missing label target {target_id}"
                     )));
                 }
+                self.normalize_labels_order();
                 self.sequence = seq;
                 match &label {
                     Some(l) => {
+                        if !self.labels.contains_key(&target_id) {
+                            self.labels_order.push(target_id.clone());
+                        }
                         self.labels.insert(target_id.clone(), l.clone());
                     }
                     None => {
                         self.labels.remove(&target_id);
+                        self.labels_order.retain(|id| id != &target_id);
                     }
                 }
                 self.log.push(LogItem::FactLabel {
@@ -333,19 +385,25 @@ impl SessionState {
     ) -> SessionResult<Vec<Entry>> {
         validate_limit(query.limit)?;
         let order = query.order.unwrap_or_default();
-        let path = self.walk_to_root_owned(Some(start), bounds)?;
+        let path = match order {
+            // Oldest-first must inspect the complete ancestry before applying
+            // its forward-order boundary; walking backward with bounds here
+            // chooses the wrong segment of the branch.
+            EntryOrder::OldestFirst => self.walk_to_root_owned(start, None)?,
+            EntryOrder::NewestFirst => self.walk_to_root_owned(start, Some(bounds))?,
+        };
         let mut results = Vec::new();
         match order {
             EntryOrder::OldestFirst => {
                 for entry in path.into_iter().rev() {
+                    if self.matches_entry_query(&entry, query) {
+                        results.push(entry.clone());
+                    }
                     let reached_bound = bounds.stop_at_id.as_deref() == Some(entry.id())
                         || bounds
                             .stop_at_type
                             .map(|t| t == entry.entry_type())
                             .unwrap_or(false);
-                    if self.matches_entry_query(&entry, query) {
-                        results.push(entry);
-                    }
                     if reached_bound || query.limit.map(|l| results.len() >= l).unwrap_or(false) {
                         break;
                     }
@@ -435,74 +493,17 @@ impl SessionState {
         &self.stats
     }
 
-    /// Build the fork mutation list. Mirrors TS `createForkMutations`. The
-    /// forked session replays these from `seq=1`. Forked entries keep their
-    /// original `id` + `parent_id` chain and pass `lane: None` so lane-leaf
-    /// chaining is NOT re-checked (invariant §7).
+    /// Build the fork mutation list used by the append-only JSONL format.
+    /// The wire log includes the main-lane pointer mutation for branch forks,
+    /// since replay has no implicit way to restore that pointer.
     pub fn create_fork_mutations(
         &self,
         options: &ForkOptions,
     ) -> SessionResult<Vec<SessionMutation>> {
-        let (copied_entries, fork_lanes): (Vec<Entry>, Vec<LanePointer>) = match options {
-            ForkOptions::Tree => {
-                let entries = self.find_entries(&EntryQuery {
-                    order: Some(EntryOrder::OldestFirst),
-                    ..Default::default()
-                })?;
-                let lanes = self.get_lanes();
-                (entries, lanes)
-            }
-            ForkOptions::Branch { entry_id, position } => {
-                let selected = match entry_id {
-                    Some(id) => Some(id.clone()),
-                    None => self.require_lane("main")?,
-                };
-                let target_id: Option<String> = if let Some(sel) = selected {
-                    let entry = self.get_entry(&sel).ok_or_else(|| {
-                        SessionError::not_found(format!("Entry not found: {sel}"))
-                    })?;
-                    if !matches!(entry, Entry::Message(_)) {
-                        return Err(SessionError::invalid_fork_target(format!(
-                            "Fork target is not a message entry: {sel}"
-                        )));
-                    }
-                    let position = position.unwrap_or(match entry_id {
-                        Some(_) => ForkPosition::Before,
-                        None => ForkPosition::At,
-                    });
-                    match position {
-                        ForkPosition::At => Some(entry.id().to_string()),
-                        ForkPosition::Before => entry.parent_id().map(|s| s.to_string()),
-                    }
-                } else {
-                    None
-                };
-                let copied = if let Some(target) = &target_id {
-                    self.find_entries_on_branch(
-                        &EntryQuery {
-                            order: Some(EntryOrder::OldestFirst),
-                            ..Default::default()
-                        },
-                        &BranchBounds::default(),
-                        target,
-                    )?
-                } else {
-                    Vec::new()
-                };
-                let lanes = vec![LanePointer {
-                    lane: "main".into(),
-                    leaf_id: target_id,
-                }];
-                (copied, lanes)
-            }
-        };
-
+        let contents = self.fork_contents(options)?;
         let mut mutations = Vec::new();
         let mut sequence = 1u64;
-        for source_entry in &copied_entries {
-            // Re-stamp seq (timestamp preserved from source). Fork path: the
-            // entry keeps its original id/parent_id; `lane: None` bypasses the
-            // lane-leaf chaining check.
+        for source_entry in &contents.copied_entries {
             let mut forked = source_entry.clone();
             forked.base_mut().seq = sequence;
             mutations.push(SessionMutation::Entry {
@@ -513,7 +514,7 @@ impl SessionState {
             });
             sequence += 1;
         }
-        for pointer in &fork_lanes {
+        for pointer in &contents.lanes {
             mutations.push(SessionMutation::Lane {
                 seq: sequence,
                 lane: pointer.lane.clone(),
@@ -528,53 +529,193 @@ impl SessionState {
             });
             sequence += 1;
         }
-        for entry in &copied_entries {
-            if let Some(label) = self.labels.get(entry.id()) {
-                mutations.push(SessionMutation::FactLabel {
-                    seq: sequence,
-                    target_id: entry.id().to_string(),
-                    label: Some(label.clone()),
-                });
-                sequence += 1;
-            }
+        for (target_id, label) in self.fork_labels(&contents.copied_entries) {
+            mutations.push(SessionMutation::FactLabel {
+                seq: sequence,
+                target_id,
+                label: Some(label),
+            });
+            sequence += 1;
         }
         Ok(mutations)
+    }
+
+    /// Construct canonical in-memory fork state. Imported entries have no
+    /// activity accounting, and a branch's main pointer is initialized
+    /// directly rather than added as an observable mutation. Tree forks retain
+    /// lane mutations because each lane is part of the copied tree history.
+    pub(crate) fn create_fork_state(&self, options: &ForkOptions) -> SessionResult<Self> {
+        let contents = self.fork_contents(options)?;
+        let mut forked = SessionState::new();
+        let mut sequence = 1u64;
+        for source_entry in &contents.copied_entries {
+            let mut entry = source_entry.clone();
+            entry.base_mut().seq = sequence;
+            forked.apply_mutation(SessionMutation::Entry {
+                seq: sequence,
+                timestamp: source_entry.base().timestamp,
+                lane: None,
+                entry,
+            })?;
+            sequence += 1;
+        }
+        if contents.is_tree {
+            for pointer in &contents.lanes {
+                forked.apply_mutation(SessionMutation::Lane {
+                    seq: sequence,
+                    lane: pointer.lane.clone(),
+                    leaf_id: pointer.leaf_id.clone(),
+                })?;
+                sequence += 1;
+            }
+        } else {
+            let main = contents
+                .lanes
+                .iter()
+                .find(|pointer| pointer.lane == "main")
+                .ok_or_else(|| SessionError::invalid_entry("Fork has no main lane"))?;
+            if let Some(leaf_id) = main.leaf_id.as_deref() {
+                if !forked.entries_by_id.contains_key(leaf_id) {
+                    return Err(SessionError::invalid_entry(format!(
+                        "Fork main lane references missing entry {leaf_id}"
+                    )));
+                }
+            }
+            forked.lanes.insert(main.lane.clone(), main.leaf_id.clone());
+        }
+        if let Some(name) = &self.name {
+            forked.apply_mutation(SessionMutation::FactName {
+                seq: sequence,
+                name: Some(name.clone()),
+            })?;
+            sequence += 1;
+        }
+        for (target_id, label) in self.fork_labels(&contents.copied_entries) {
+            forked.apply_mutation(SessionMutation::FactLabel {
+                seq: sequence,
+                target_id,
+                label: Some(label),
+            })?;
+            sequence += 1;
+        }
+        Ok(forked)
+    }
+
+    fn fork_contents(&self, options: &ForkOptions) -> SessionResult<ForkContents> {
+        match options {
+            ForkOptions::Tree => Ok(ForkContents {
+                copied_entries: self.find_entries(&EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    ..Default::default()
+                })?,
+                lanes: self.get_lanes(),
+                is_tree: true,
+            }),
+            ForkOptions::Branch { entry_id, position } => {
+                let selected = match entry_id {
+                    Some(id) => Some(id.clone()),
+                    None => self.require_lane("main")?,
+                };
+                let target_id = if let Some(selected_id) = selected {
+                    let entry = self.get_entry(&selected_id).ok_or_else(|| {
+                        SessionError::invalid_fork_target(format!(
+                            "Fork target is not a message entry: {selected_id}"
+                        ))
+                    })?;
+                    if !matches!(entry, Entry::Message(_)) {
+                        return Err(SessionError::invalid_fork_target(format!(
+                            "Fork target is not a message entry: {selected_id}"
+                        )));
+                    }
+                    let position = position.unwrap_or(match entry_id {
+                        Some(_) => ForkPosition::Before,
+                        None => ForkPosition::At,
+                    });
+                    match position {
+                        ForkPosition::At => Some(entry.id().to_string()),
+                        ForkPosition::Before => entry.parent_id().map(str::to_string),
+                    }
+                } else {
+                    None
+                };
+                let copied_entries = match target_id.as_deref() {
+                    Some(target) => self.find_entries_on_branch(
+                        &EntryQuery {
+                            order: Some(EntryOrder::OldestFirst),
+                            ..Default::default()
+                        },
+                        &BranchBounds::default(),
+                        target,
+                    )?,
+                    None => Vec::new(),
+                };
+                Ok(ForkContents {
+                    copied_entries,
+                    lanes: vec![LanePointer {
+                        lane: "main".to_string(),
+                        leaf_id: target_id,
+                    }],
+                    is_tree: false,
+                })
+            }
+        }
+    }
+
+    fn fork_labels(&self, copied_entries: &[Entry]) -> Vec<(String, String)> {
+        let copied_ids: HashSet<&str> = copied_entries.iter().map(|entry| entry.id()).collect();
+        Self::ordered_keys(&self.labels_order, self.labels.keys().cloned())
+            .into_iter()
+            .filter_map(|target_id| {
+                if !copied_ids.contains(target_id.as_str()) {
+                    return None;
+                }
+                self.labels
+                    .get(&target_id)
+                    .map(|label| (target_id, label.clone()))
+            })
+            .collect()
     }
 
     // ---- private helpers ----
 
     fn walk_to_root_owned(
         &self,
-        start: Option<&str>,
-        bounds: &BranchBounds,
+        start: &str,
+        bounds: Option<&BranchBounds>,
     ) -> SessionResult<Vec<Entry>> {
         let mut path = Vec::new();
-        let mut next_id = start.map(|s| s.to_string());
-        let mut visited = std::collections::HashSet::new();
+        let mut next_id = Some(start.to_string());
+        let mut visited = HashSet::new();
         while let Some(id) = next_id.take() {
-            let current = self
-                .entries_by_id
-                .get(&id)
-                .ok_or_else(|| SessionError::not_found(format!("Entry not found: {id}")))?
-                .clone();
-            if visited.contains(&current.id().to_string()) {
+            if !visited.insert(id.clone()) {
                 return Err(SessionError::invalid_entry(format!(
-                    "Session branch contains a cycle at {}",
-                    current.id()
+                    "Session branch contains a cycle at {id}"
                 )));
             }
-            visited.insert(current.id().to_string());
-            let reached = bounds.stop_at_id.as_deref() == Some(current.id())
-                || bounds
-                    .stop_at_type
-                    .map(|t| t == current.entry_type())
-                    .unwrap_or(false)
-                || current.parent_id().is_none();
+            let current = self.entries_by_id.get(&id).ok_or_else(|| {
+                if path.is_empty() {
+                    SessionError::not_found(format!("Entry not found: {id}"))
+                } else {
+                    SessionError::invalid_entry(format!(
+                        "Session branch references missing ancestor {id}"
+                    ))
+                }
+            })?;
+            let reached_bound = bounds
+                .map(|bounds| {
+                    bounds.stop_at_id.as_deref() == Some(current.id())
+                        || bounds
+                            .stop_at_type
+                            .map(|t| t == current.entry_type())
+                            .unwrap_or(false)
+                })
+                .unwrap_or(false);
+            let reached_root = current.parent_id().is_none();
             path.push(current.clone());
-            if reached {
+            if reached_bound || reached_root {
                 break;
             }
-            next_id = current.parent_id().map(|s| s.to_string());
+            next_id = current.parent_id().map(str::to_string);
         }
         Ok(path)
     }
@@ -641,6 +782,12 @@ impl SessionState {
     }
 }
 
+struct ForkContents {
+    copied_entries: Vec<Entry>,
+    lanes: Vec<LanePointer>,
+    is_tree: bool,
+}
+
 /// What `apply_mutation` returned — mirrors the TS pattern where each mutation
 /// variant updates different state.
 #[derive(Debug, Clone)]
@@ -679,5 +826,515 @@ impl SessionState {
     }
     pub(crate) fn entries(&self) -> &[Entry] {
         &self.entries
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::session::types::{provisioned_into_entry, ProvisionedEntry, ProvisionedKind};
+    use ice_agent::message::AgentMessage;
+    use ice_ai::types::UserMessage;
+
+    fn message(text: &str) -> AgentMessage {
+        AgentMessage::User(UserMessage::new(text, 1))
+    }
+
+    fn append(state: &mut SessionState, id: &str, kind: ProvisionedKind) {
+        let seq = state.next_sequence();
+        let parent_id = state.require_lane("main").expect("main lane exists");
+        let entry = provisioned_into_entry(
+            ProvisionedEntry {
+                id: id.to_string(),
+                kind,
+            },
+            seq,
+            parent_id,
+            seq as i64,
+        );
+        state
+            .apply_mutation(SessionMutation::Entry {
+                seq,
+                timestamp: seq as i64,
+                lane: Some("main".to_string()),
+                entry,
+            })
+            .expect("entry appends to main");
+    }
+
+    fn branch_fixture() -> SessionState {
+        let mut state = SessionState::new();
+        append(
+            &mut state,
+            "root",
+            ProvisionedKind::Message {
+                message: message("root"),
+                terminate: None,
+            },
+        );
+        append(
+            &mut state,
+            "old-note",
+            ProvisionedKind::Custom {
+                custom_type: "note".to_string(),
+                data: None,
+            },
+        );
+        append(
+            &mut state,
+            "compact",
+            ProvisionedKind::Compaction {
+                summary: "summary".to_string(),
+                retained_tail: Vec::new(),
+                tokens_before: 0,
+                details: None,
+                usage: None,
+            },
+        );
+        append(
+            &mut state,
+            "new-note",
+            ProvisionedKind::Custom {
+                custom_type: "note".to_string(),
+                data: None,
+            },
+        );
+        append(
+            &mut state,
+            "tail",
+            ProvisionedKind::Message {
+                message: message("tail"),
+                terminate: None,
+            },
+        );
+        state
+    }
+
+    fn ids(entries: Vec<Entry>) -> Vec<String> {
+        entries
+            .into_iter()
+            .map(|entry| entry.id().to_string())
+            .collect()
+    }
+
+    #[test]
+    fn oldest_first_branch_bounds_are_applied_during_forward_scan() {
+        let state = branch_fixture();
+        let entries = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds {
+                    stop_at_type: Some("custom"),
+                    ..BranchBounds::default()
+                },
+                "tail",
+            )
+            .expect("branch query succeeds");
+        assert_eq!(ids(entries), ["root", "old-note"]);
+    }
+
+    #[test]
+    fn branch_bounds_filters_cursors_and_limits_are_directional() {
+        let state = branch_fixture();
+
+        let oldest_filtered_bound = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    entry_type: Some("message"),
+                    order: Some(EntryOrder::OldestFirst),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds {
+                    stop_at_id: Some("new-note".to_string()),
+                    ..BranchBounds::default()
+                },
+                "tail",
+            )
+            .expect("oldest filtered query succeeds");
+        assert_eq!(ids(oldest_filtered_bound), ["root"]);
+
+        let newest_filtered_bound = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    custom_type: Some("note".to_string()),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds {
+                    stop_at_id: Some("tail".to_string()),
+                    ..BranchBounds::default()
+                },
+                "tail",
+            )
+            .expect("newest filtered query succeeds");
+        assert!(newest_filtered_bound.is_empty());
+
+        let newest_type_bound = state
+            .find_entries_on_branch(
+                &EntryQuery::default(),
+                &BranchBounds {
+                    stop_at_type: Some("custom"),
+                    ..BranchBounds::default()
+                },
+                "tail",
+            )
+            .expect("newest type-bound query succeeds");
+        assert_eq!(ids(newest_type_bound), ["tail", "new-note"]);
+
+        let oldest_cursor = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    custom_type: Some("note".to_string()),
+                    order: Some(EntryOrder::OldestFirst),
+                    cursor: Some(crate::session::types::EntryCursor { after_seq: 2 }),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds {
+                    stop_at_id: Some("tail".to_string()),
+                    ..BranchBounds::default()
+                },
+                "tail",
+            )
+            .expect("oldest cursor query succeeds");
+        assert_eq!(ids(oldest_cursor), ["new-note"]);
+
+        let newest_cursor = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    custom_type: Some("note".to_string()),
+                    cursor: Some(crate::session::types::EntryCursor { after_seq: 4 }),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds {
+                    stop_at_id: Some("root".to_string()),
+                    ..BranchBounds::default()
+                },
+                "tail",
+            )
+            .expect("newest cursor query succeeds");
+        assert_eq!(ids(newest_cursor), ["old-note"]);
+
+        let oldest_maximum_cursor = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    cursor: Some(crate::session::types::EntryCursor {
+                        after_seq: u64::MAX,
+                    }),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+                "tail",
+            )
+            .expect("oldest maximum cursor is a valid empty page");
+        assert!(oldest_maximum_cursor.is_empty());
+
+        let newest_maximum_cursor = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    order: Some(EntryOrder::NewestFirst),
+                    cursor: Some(crate::session::types::EntryCursor {
+                        after_seq: u64::MAX,
+                    }),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+                "tail",
+            )
+            .expect("newest maximum cursor is valid");
+        assert_eq!(
+            ids(newest_maximum_cursor),
+            ["tail", "new-note", "compact", "old-note", "root"]
+        );
+
+        let limited_oldest = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    custom_type: Some("note".to_string()),
+                    order: Some(EntryOrder::OldestFirst),
+                    limit: Some(1),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+                "tail",
+            )
+            .expect("limited oldest query succeeds");
+        assert_eq!(ids(limited_oldest), ["old-note"]);
+
+        let limited_newest = state
+            .find_entries_on_branch(
+                &EntryQuery {
+                    custom_type: Some("note".to_string()),
+                    limit: Some(1),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+                "tail",
+            )
+            .expect("limited newest query succeeds");
+        assert_eq!(ids(limited_newest), ["new-note"]);
+    }
+
+    #[test]
+    fn branch_start_and_broken_ancestor_errors_remain_distinct() {
+        let mut state = branch_fixture();
+        let missing_start = state.find_entries_on_branch(
+            &EntryQuery::default(),
+            &BranchBounds::default(),
+            "missing",
+        );
+        assert_eq!(
+            missing_start.unwrap_err().code,
+            crate::error::SessionErrorCode::NotFound
+        );
+
+        let mut tail = state.get_entry("tail").expect("tail exists").clone();
+        tail.base_mut().parent_id = Some("missing-ancestor".to_string());
+        state.entries_by_id.insert("tail".to_string(), tail);
+        let missing_parent =
+            state.find_entries_on_branch(&EntryQuery::default(), &BranchBounds::default(), "tail");
+        assert_eq!(
+            missing_parent.unwrap_err().code,
+            crate::error::SessionErrorCode::InvalidEntry
+        );
+
+        let mut tail = state.get_entry("tail").expect("tail exists").clone();
+        tail.base_mut().parent_id = Some("root".to_string());
+        state.entries_by_id.insert("tail".to_string(), tail);
+        let mut root = state.get_entry("root").expect("root exists").clone();
+        root.base_mut().parent_id = Some("tail".to_string());
+        state.entries_by_id.insert("root".to_string(), root);
+        let cycle =
+            state.find_entries_on_branch(&EntryQuery::default(), &BranchBounds::default(), "tail");
+        assert_eq!(
+            cycle.unwrap_err().code,
+            crate::error::SessionErrorCode::InvalidEntry
+        );
+    }
+
+    #[test]
+    fn lanes_keep_creation_order_and_updates_do_not_reorder() {
+        let mut state = SessionState::new();
+        for (seq, lane) in [(1, "zeta"), (2, "alpha")] {
+            state
+                .apply_mutation(SessionMutation::Lane {
+                    seq,
+                    lane: lane.to_string(),
+                    leaf_id: None,
+                })
+                .expect("lane mutation applies");
+        }
+        state
+            .apply_mutation(SessionMutation::Lane {
+                seq: 3,
+                lane: "zeta".to_string(),
+                leaf_id: None,
+            })
+            .expect("existing lane move applies");
+        let lanes: Vec<_> = state.get_lanes().into_iter().map(|p| p.lane).collect();
+        assert_eq!(lanes, ["main", "zeta", "alpha"]);
+    }
+
+    #[test]
+    fn fork_targets_distinguish_implicit_explicit_before_and_at() {
+        let mut state = SessionState::new();
+        for (id, kind) in [
+            (
+                "custom",
+                ProvisionedKind::Custom {
+                    custom_type: "note".to_string(),
+                    data: None,
+                },
+            ),
+            (
+                "message-a",
+                ProvisionedKind::Message {
+                    message: message("a"),
+                    terminate: None,
+                },
+            ),
+            (
+                "message-b",
+                ProvisionedKind::Message {
+                    message: message("b"),
+                    terminate: None,
+                },
+            ),
+        ] {
+            append(&mut state, id, kind);
+        }
+        let fork_entries_and_leaf = |options: ForkOptions| {
+            let mutations = state
+                .create_fork_mutations(&options)
+                .expect("fork mutation list");
+            let entries = mutations
+                .iter()
+                .filter_map(|mutation| match mutation {
+                    SessionMutation::Entry { entry, .. } => Some(entry.id().to_string()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            let leaf = mutations.iter().find_map(|mutation| match mutation {
+                SessionMutation::Lane { lane, leaf_id, .. } if lane == "main" => {
+                    Some(leaf_id.clone())
+                }
+                _ => None,
+            });
+            (entries, leaf)
+        };
+        assert_eq!(
+            fork_entries_and_leaf(ForkOptions::default()),
+            (
+                vec![
+                    "custom".to_string(),
+                    "message-a".to_string(),
+                    "message-b".to_string(),
+                ],
+                Some(Some("message-b".to_string()))
+            )
+        );
+        assert_eq!(
+            fork_entries_and_leaf(ForkOptions::Branch {
+                entry_id: Some("message-b".to_string()),
+                position: None,
+            }),
+            (
+                vec!["custom".to_string(), "message-a".to_string()],
+                Some(Some("message-a".to_string()))
+            )
+        );
+        assert_eq!(
+            fork_entries_and_leaf(ForkOptions::Branch {
+                entry_id: Some("message-b".to_string()),
+                position: Some(ForkPosition::At),
+            }),
+            (
+                vec![
+                    "custom".to_string(),
+                    "message-a".to_string(),
+                    "message-b".to_string(),
+                ],
+                Some(Some("message-b".to_string()))
+            )
+        );
+        let missing = state
+            .create_fork_mutations(&ForkOptions::Branch {
+                entry_id: Some("missing".to_string()),
+                position: None,
+            })
+            .expect_err("missing target is rejected");
+        assert_eq!(
+            missing.code,
+            crate::error::SessionErrorCode::InvalidForkTarget
+        );
+        let non_message = state
+            .create_fork_mutations(&ForkOptions::Branch {
+                entry_id: Some("custom".to_string()),
+                position: None,
+            })
+            .expect_err("non-message target is rejected");
+        assert_eq!(
+            non_message.code,
+            crate::error::SessionErrorCode::InvalidForkTarget
+        );
+    }
+
+    #[test]
+    fn legacy_state_order_fallback_is_deterministic() {
+        let mut state = SessionState::new();
+        for (seq, lane) in [(1, "zeta"), (2, "alpha")] {
+            state
+                .apply_mutation(SessionMutation::Lane {
+                    seq,
+                    lane: lane.to_string(),
+                    leaf_id: None,
+                })
+                .expect("lane mutation applies");
+        }
+        for id in ["entry-z", "entry-a"] {
+            append(
+                &mut state,
+                id,
+                ProvisionedKind::Message {
+                    message: message(id),
+                    terminate: None,
+                },
+            );
+        }
+        for target_id in ["entry-z", "entry-a"] {
+            let seq = state.next_sequence();
+            state
+                .apply_mutation(SessionMutation::FactLabel {
+                    seq,
+                    target_id: target_id.to_string(),
+                    label: Some(target_id.to_string()),
+                })
+                .expect("label mutation applies");
+        }
+        let mut json = serde_json::to_value(state).expect("serialize state");
+        if let serde_json::Value::Object(object) = &mut json {
+            object.remove("lane_order");
+            object.remove("labels_order");
+        }
+        let restored: SessionState = serde_json::from_value(json).expect("legacy state decodes");
+        let lanes: Vec<_> = restored.get_lanes().into_iter().map(|p| p.lane).collect();
+        assert_eq!(lanes, ["alpha", "main", "zeta"]);
+        let labels: Vec<_> = restored
+            .create_fork_mutations(&ForkOptions::default())
+            .expect("legacy fork mutations")
+            .into_iter()
+            .filter_map(|mutation| match mutation {
+                SessionMutation::FactLabel { target_id, .. } => Some(target_id),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(labels, ["entry-a", "entry-z"]);
+    }
+
+    #[test]
+    fn fork_label_facts_keep_source_insertion_order_and_reinsert_moves_to_end() {
+        let mut state = SessionState::new();
+        for id in ["entry-a", "entry-b", "entry-c"] {
+            append(
+                &mut state,
+                id,
+                ProvisionedKind::Message {
+                    message: message(id),
+                    terminate: None,
+                },
+            );
+        }
+        fn set_label(state: &mut SessionState, target_id: &str, label: Option<&str>) {
+            let seq = state.next_sequence();
+            state
+                .apply_mutation(SessionMutation::FactLabel {
+                    seq,
+                    target_id: target_id.to_string(),
+                    label: label.map(str::to_string),
+                })
+                .expect("label mutation applies");
+        }
+        set_label(&mut state, "entry-c", Some("c"));
+        set_label(&mut state, "entry-a", Some("a"));
+        set_label(&mut state, "entry-c", Some("updated-c"));
+
+        let labels = |state: &SessionState| {
+            state
+                .create_fork_mutations(&ForkOptions::default())
+                .expect("fork mutations build")
+                .into_iter()
+                .filter_map(|mutation| match mutation {
+                    SessionMutation::FactLabel { target_id, .. } => Some(target_id),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(labels(&state), ["entry-c", "entry-a"]);
+
+        set_label(&mut state, "entry-c", None);
+        set_label(&mut state, "entry-c", Some("readded-c"));
+        assert_eq!(labels(&state), ["entry-a", "entry-c"]);
     }
 }

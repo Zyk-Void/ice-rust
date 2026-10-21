@@ -51,6 +51,8 @@ mod panels;
 mod pet;
 mod side_questions;
 
+#[cfg(all(test, unix))]
+mod closeout_tui_smoke;
 #[cfg(test)]
 mod tests;
 
@@ -69,7 +71,7 @@ use tokio_util::sync::CancellationToken;
 
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_ai::types::{AssistantMessage, Content, UserMessage};
-use ice_harness::agent_harness::{AgentHarness, AgentLane, HarnessRunOutcome};
+use ice_harness::agent_harness::{AgentHarness, AgentLane, CompactionOutcome, HarnessRunOutcome};
 use ice_harness::session::types::{Entry, EntryOrder, EntryQuery};
 use ice_tui::scroll_view::{OverscrollMode, ScrollbarMode};
 #[cfg(test)]
@@ -579,6 +581,7 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
     let tx = ctx.tx.clone();
     let cwd = ctx.cwd.clone();
     let command_owned = command.to_string();
+    let storage = ctx.session.harness().session().storage();
 
     tokio::spawn(async move {
         let comp_chunk = comp.clone();
@@ -635,6 +638,7 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
         tui.render_now(false);
 
         let _ = tx.send(TuiMessage::UserBashFinished(UserBashReport {
+            storage,
             command: command_owned,
             output,
             exit_code,
@@ -668,6 +672,8 @@ enum TuiMessage {
     Exit,
     /// Clear the transcript (from `/clear`).
     ClearChat,
+    /// Replace the durable session, keeping the current model and tools.
+    NewSession,
     /// Compact the conversation (from `/compact`).
     Compact,
     /// Copy the last assistant reply to the clipboard (from `/copy`).
@@ -679,6 +685,8 @@ enum TuiMessage {
     ExportSession,
     /// Export session with specific format
     ExportSessionWithFormat(crate::export::ExportFormat),
+    /// Export the active branch as a reopenable native v4 session (`/export native`).
+    ExportNativeSession,
     /// Show live usage/context stats (from `/usage` and `/context`).
     ShowUsage,
     /// Fork the current session into a new one and switch to it (from `/fork`).
@@ -727,11 +735,18 @@ enum TuiMessage {
     UserBashFinished(UserBashReport),
 }
 
+/// A shell result waiting for its originating session's prompt boundary.
+struct BufferedBashMessage {
+    storage: Arc<dyn ice_harness::session::types::SessionStorage>,
+    message: AgentMessage,
+}
+
 /// Terminal result of a user-initiated `!command` shell run.
 ///
 /// Carries everything needed to build the persisted `bashExecution` message
 /// plus the `!!` context-exclusion flag. See `start_user_bash`.
 struct UserBashReport {
+    storage: Arc<dyn ice_harness::session::types::SessionStorage>,
     command: String,
     output: String,
     exit_code: Option<i32>,
@@ -1377,6 +1392,7 @@ pub async fn interactive_tui(
         scoped_models,
         cwd.clone(),
     ));
+    record_context_usage(&state.footer, &harness).await;
     let ctx = CommandContext {
         chat: chat_container.clone(),
         tui: tui.clone(),
@@ -1525,9 +1541,9 @@ pub async fn interactive_tui(
         let tui_drain = tui.clone();
         let state_drain = state.clone();
         let chat_drain = chat_container.clone();
-        let lane_drain = lane.clone();
+        let harness_drain = harness.clone();
         Some(tokio::spawn(async move {
-            drain_agent_events(rx, tui_drain, state_drain, chat_drain, lane_drain).await;
+            drain_agent_events(rx, tui_drain, state_drain, chat_drain, harness_drain).await;
         }))
     } else {
         None
@@ -2339,12 +2355,14 @@ pub async fn interactive_tui(
                 );
                 let scope = same_provider_catalog(&scope, &current);
                 if let Some(next) = cycle_next_model(&scope, &current) {
-                    state_for_key.set_current_model(&next);
                     let lane = lane_for_key.clone();
+                    let state = state_for_key.clone();
+                    let chat = ctx_for_key.chat.clone();
+                    let tui = tui_for_key.clone();
                     tokio::spawn(async move {
-                        let _ = lane.set_model(next).await;
+                        apply_model_selection(&lane, &state, &chat, next, false).await;
+                        tui.request_render(false);
                     });
-                    tui_for_key.request_render_reusing_scroll_content();
                 }
                 continue;
             }
@@ -2366,12 +2384,14 @@ pub async fn interactive_tui(
                 );
                 let scope = same_provider_catalog(&scope, &current);
                 if let Some(prev) = cycle_prev_model(&scope, &current) {
-                    state_for_key.set_current_model(&prev);
                     let lane = lane_for_key.clone();
+                    let state = state_for_key.clone();
+                    let chat = ctx_for_key.chat.clone();
+                    let tui = tui_for_key.clone();
                     tokio::spawn(async move {
-                        let _ = lane.set_model(prev).await;
+                        apply_model_selection(&lane, &state, &chat, prev, false).await;
+                        tui.request_render(false);
                     });
-                    tui_for_key.request_render_reusing_scroll_content();
                 }
                 continue;
             }
@@ -2412,12 +2432,16 @@ pub async fn interactive_tui(
                         .position(|level| *level == current)
                         .map(|index| levels[(index + 1) % levels.len()])
                         .unwrap_or(levels[0]);
-                    if lane.set_thinking_level(next).await.is_ok() {
-                        state
+                    match lane.set_thinking_level(next).await {
+                        Ok(_) => state
                             .footer
-                            .set_thinking_level(Some(thinking_level_name(next)));
-                        state.tui.as_ref().map(|tui| tui.request_render(false));
+                            .set_thinking_level(Some(thinking_level_name(next))),
+                        Err(error) => add_error_message(
+                            &state.chat_container,
+                            &format!("Could not change thinking level: {error}"),
+                        ),
                     }
+                    state.tui.as_ref().map(|tui| tui.request_render(false));
                 });
                 continue;
             }
@@ -2803,7 +2827,7 @@ pub async fn interactive_tui(
     // startup is never blocked by a run the user cannot see.
     if prompts.is_empty() && lane.has_pending_resume().await {
         run_prompt_streaming(
-            &lane,
+            &harness,
             "",
             true,
             &tui,
@@ -2814,28 +2838,16 @@ pub async fn interactive_tui(
         .await;
     }
 
-    let mut images = initial_images;
-    for prompt in prompts {
-        if !*running.lock().unwrap() {
-            break;
-        }
-        // The harness emits no user `message_start` for a directly-sent prompt
-        // (it drives the loop with an empty prompts vec), so the initial
-        // `-p` / `--prompt` bubbles are rendered here.
-        add_user_message(&chat_container, &prompt);
-        add_image_previews(&chat_container, &images, show_images);
-        tui.request_render(false);
-        run_prompt_streaming(
-            &lane,
-            &prompt,
-            false,
-            &tui,
-            &state,
-            drain_handle.is_some(),
-            std::mem::take(&mut images),
-        )
-        .await;
-    }
+    run_initial_prompts(
+        &harness,
+        prompts,
+        initial_images,
+        &tui,
+        &state,
+        drain_handle.is_some(),
+        &running,
+    )
+    .await;
 
     // ---- Main loop: process submitted input + lifecycle messages ----
     loop {
@@ -2888,7 +2900,7 @@ pub async fn interactive_tui(
                     );
                 }
                 run_prompt_streaming(
-                    &lane,
+                    &harness,
                     &prompt,
                     false,
                     &tui,
@@ -2911,33 +2923,8 @@ pub async fn interactive_tui(
                 tui.request_render(false);
             }
             Some(TuiMessage::UserBashFinished(report)) => {
-                // Free the run slot first: the guard and the Esc router both
-                // read it, so a finished command must never block the next one.
-                state.finish_user_bash();
-                let message = ice_harness::messages::bash_execution_message(
-                    report.command,
-                    report.output,
-                    report.exit_code,
-                    report.cancelled,
-                    report.truncated,
-                    report.full_output_path,
-                    Some(report.exclude_from_context),
-                    now_ms(),
-                );
-                // While a run is in flight the message is deferred so it is not
-                // spliced into the middle of a turn's tool sequence; it is
-                // flushed at `AgentEnd` (upstream `_pendingBashMessages`).
-                if *state.status.lock().unwrap() == RunStatus::Idle {
-                    if let Err(error) = lane.append_message(message).await {
-                        add_error_message(
-                            &chat_container,
-                            &format!("Could not record bash result: {error}"),
-                        );
-                        tui.request_render(false);
-                    }
-                } else {
-                    state.pending_bash_messages.lock().unwrap().push(message);
-                }
+                finish_user_bash(&harness, &state, report).await;
+                tui.request_render(false);
             }
             Some(TuiMessage::OpenTree) => {
                 if *state.status.lock().unwrap() != RunStatus::Idle {
@@ -2993,13 +2980,37 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
+            Some(TuiMessage::NewSession) => {
+                match crate::session::start_new_session(
+                    &harness,
+                    &cwd,
+                    Some(&reload_context.tool_context),
+                )
+                .await
+                {
+                    Ok(id) => {
+                        chat_container.clear();
+                        add_welcome_message(&chat_container);
+                        state.set_status(RunStatus::Idle);
+                        add_note_message(&chat_container, &format!("Started session {id}."));
+                    }
+                    Err(error) => {
+                        state.set_status(RunStatus::Idle);
+                        add_error_message(
+                            &chat_container,
+                            &format!("Could not start session: {error}"),
+                        );
+                    }
+                }
+                tui.request_render(false);
+            }
             Some(TuiMessage::ClearChat) => {
                 chat_container.clear();
                 add_welcome_message(&chat_container);
                 tui.request_render(false);
             }
             Some(TuiMessage::Compact) => {
-                run_compact(&lane, &tui, &state).await;
+                run_compact(&harness, &tui, &state).await;
             }
             Some(TuiMessage::Copy) => {
                 copy_last_assistant(&state, &chat_container);
@@ -3083,6 +3094,26 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
+            Some(TuiMessage::ExportNativeSession) => {
+                let file_name = agent_session
+                    .default_export_file_name(crate::export::ExportFormat::Jsonl)
+                    .await
+                    .replace(".jsonl", ".native.jsonl");
+                let path = cwd.join(&file_name);
+                match crate::export::export_native_branch_jsonl(&harness, &cwd, &path) {
+                    Ok(()) => add_note_message(
+                        &chat_container,
+                        &format!(
+                            "Exported active branch as a native session to {}",
+                            path.display()
+                        ),
+                    ),
+                    Err(e) => {
+                        add_error_message(&chat_container, &format!("Could not write export: {e}"))
+                    }
+                }
+                tui.request_render(false);
+            }
             Some(TuiMessage::ShowUsage) => {
                 let stats = agent_session.usage_stats().await.ok();
                 let total = agent_session.total_usage().await.ok();
@@ -3110,6 +3141,35 @@ pub async fn interactive_tui(
                                 "- last cumulative input/output: {} / {}",
                                 total.input, total.output
                             ));
+                        }
+                        if let Ok(coding) = agent_session.coding_session_stats().await {
+                            lines.push(String::new());
+                            lines.push("All history, including abandoned branches:".to_string());
+                            lines.push(format!(
+                                "- tokens: {} (in {}, out {}, cache read {}, cache write {})",
+                                coding.usage.total_tokens,
+                                coding.usage.input,
+                                coding.usage.output,
+                                coding.usage.cache_read,
+                                coding.usage.cache_write
+                            ));
+                            lines.push(format!(
+                                "- cost (provider-reported, not a local estimate): ${:.4}",
+                                coding.usage.cost
+                            ));
+                            match coding.context_usage {
+                                Some(usage) => match (usage.tokens, usage.percent) {
+                                    (Some(tokens), Some(percent)) => lines.push(format!(
+                                        "- active context (estimated): {tokens} / {} tokens ({percent:.1}%)",
+                                        usage.context_window
+                                    )),
+                                    _ => lines.push(format!(
+                                        "- active context: unknown until the model replies after compaction (window {})",
+                                        usage.context_window
+                                    )),
+                                },
+                                None => {}
+                            }
                         }
                         if let Some(snapshot) = snapshot {
                             lines.push(String::new());
@@ -3347,6 +3407,8 @@ pub async fn interactive_tui(
             }
             None => break,
         }
+        record_context_usage(&state.footer, &harness).await;
+        tui.request_render(false);
     }
 
     // ---- Shutdown ----

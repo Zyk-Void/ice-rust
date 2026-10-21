@@ -267,6 +267,11 @@ impl RemoteSession {
                     "retry {attempt}/{max_retries} in {delay_ms}ms: {error}"
                 ));
             }
+            RemoteEvent::RetryRefused { error } => {
+                self.transcript.push_notice(format!(
+                    "not retrying: the failed response may have started a tool effect: {error}"
+                ));
+            }
             RemoteEvent::TurnStart | RemoteEvent::TurnEnd { .. } => {}
             RemoteEvent::MessageStart { message } => {
                 match message_role(message) {

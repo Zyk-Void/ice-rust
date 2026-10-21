@@ -141,6 +141,13 @@ pub trait FileSystem: Send + Sync {
     /// The environment's working directory (absolute).
     fn cwd(&self) -> &Path;
 
+    /// Local OS path when this backend directly addresses the host filesystem.
+    /// Used for native session advisory ownership, not for tool I/O. Virtual or
+    /// remote backends return `None` and must supply their own writer policy.
+    fn native_path(&self, _path: &str) -> Option<PathBuf> {
+        None
+    }
+
     /// Resolve `path` (relative-to-cwd, `~`, `file://`, absolute) to an absolute
     /// addressed path. Pure — no FS access, no abort. Mirrors TS `absolutePath`.
     async fn absolute_path(

@@ -6,44 +6,44 @@ use super::*;
 /// PATH, create a gist of the exported markdown; otherwise fall back to the
 /// clipboard (best-effort) and note the local path.
 pub(super) async fn share_session(harness: &AgentHarness, chat: &Arc<Container>) {
-    use std::process::Stdio;
+    share_session_with_transports(harness, chat, create_session_gist, copy_to_clipboard).await;
+}
 
-    // Reuse the export builder for the transcript text.
-    let tree = harness.session().view("main");
-    let entries = match tree
-        .find_entries(&EntryQuery {
-            entry_type: None,
-            custom_type: None,
-            // Exports append entries top-to-bottom, so use chronological order
-            // instead of the session query default (newest-first).
-            order: Some(EntryOrder::OldestFirst),
-            limit: None,
-            cursor: None,
-        })
-        .await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            add_error_message(chat, &format!("Could not read session: {e}"));
+// Keep process/clipboard effects at the boundary so scope and fallback tests
+// never depend on gh credentials, PATH, a display server or a real clipboard.
+async fn share_session_with_transports(
+    harness: &AgentHarness,
+    chat: &Arc<Container>,
+    gist: impl FnOnce(&str) -> Result<String, &'static str>,
+    clipboard: impl FnOnce(&str) -> bool,
+) {
+    let md = match crate::export::active_branch_markdown(harness).await {
+        Ok(markdown) => markdown,
+        Err(error) => {
+            add_error_message(chat, &error);
             return;
         }
     };
-    let mut md = String::from("# Session\n\n");
-    for e in entries {
-        let Entry::Message(me) = e else { continue };
-        match &me.message {
-            AgentMessage::User(u) => {
-                md.push_str(&format!("## User\n\n{}\n\n", user_message_text(u)));
-            }
-            AgentMessage::Assistant(a) => {
-                let text = assistant_text(a);
-                if !text.is_empty() {
-                    md.push_str(&format!("## Assistant\n\n{}\n\n", text));
-                }
-            }
-            _ => {}
+
+    match gist(&md) {
+        Ok(url) => {
+            add_note_message(chat, &format!("Shared session: {url}"));
+            return;
         }
+        Err(note) => add_note_message(chat, note),
     }
+    if clipboard(&md) {
+        add_note_message(chat, "Session transcript copied to the clipboard.");
+    } else {
+        add_note_message(
+            chat,
+            "Clipboard unavailable — use /export to write the transcript to a file.",
+        );
+    }
+}
+
+fn create_session_gist(md: &str) -> Result<String, &'static str> {
+    use std::process::Stdio;
 
     // `gh gist create` — stdin-piped, best-effort; only when gh exists.
     let gh = std::process::Command::new("gh")
@@ -65,23 +65,12 @@ pub(super) async fn share_session(harness: &AgentHarness, chat: &Arc<Container>)
         let out = child.wait_with_output().ok();
         if let Some(out) = out {
             if out.status.success() {
-                let url = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                add_note_message(chat, &format!("Shared session: {url}"));
-                return;
+                return Ok(String::from_utf8_lossy(&out.stdout).trim().to_string());
             }
         }
-        add_note_message(chat, "gh gist failed — falling back to the clipboard.");
+        Err("gh gist failed — falling back to the clipboard.")
     } else {
-        add_note_message(chat, "gh CLI not found — falling back to the clipboard.");
-    }
-    // Clipboard fallback (or transcript echo when the clipboard feature is off).
-    if copy_to_clipboard(&md) {
-        add_note_message(chat, "Session transcript copied to the clipboard.");
-    } else {
-        add_note_message(
-            chat,
-            "Clipboard unavailable — use /export to write the transcript to a file.",
-        );
+        Err("gh CLI not found — falling back to the clipboard.")
     }
 }
 
@@ -139,6 +128,7 @@ pub(super) async fn switch_to_session(
                 state.images_visible(),
             )
             .await;
+            record_context_usage(&state.footer, harness).await;
             state.set_status(RunStatus::Idle);
             add_note_message(chat, &format!("Switched to session {id}."));
             true
@@ -151,9 +141,8 @@ pub(super) async fn switch_to_session(
     }
 }
 
-/// `/import <path>`: copy a JSONL session file into the default session dir,
-/// then hot-switch to it (the file name becomes its id — matching the
-/// selector/`open_session_by_id` containment rules).
+/// `/import <path>`: validate and exclusively publish a native JSONL session,
+/// then hot-switch using its header ID, never its untrusted source filename.
 pub(super) async fn import_session(
     harness: &AgentHarness,
     lane: &Arc<dyn AgentLane>,
@@ -178,20 +167,13 @@ pub(super) async fn import_session(
         add_error_message(chat, "Import source must be a .jsonl session file.");
         return;
     }
-    let dir = crate::session::default_session_dir(cwd);
-    if let Err(e) = std::fs::create_dir_all(&dir) {
-        add_error_message(chat, &format!("Could not create session dir: {e}"));
-        return;
-    }
-    let dest = dir.join(fname);
-    match std::fs::copy(src, &dest) {
-        Ok(_) => {
-            let id = fname.strip_suffix(".jsonl").unwrap_or(fname).to_string();
+    match crate::session_import::import_session_file(src, cwd).await {
+        Ok(id) => {
             if switch_to_session(harness, lane, &id, cwd, chat, state, tool_context).await {
                 add_note_message(chat, &format!("Imported session from {path}"));
             }
         }
-        Err(e) => add_error_message(chat, &format!("Could not copy import: {e}")),
+        Err(error) => add_error_message(chat, &format!("Could not import session: {error}")),
     }
 }
 
@@ -206,7 +188,7 @@ pub(super) async fn fork_session(
     use ice_tools::FileSystem;
 
     let cwd_str = cwd.to_string_lossy().to_string();
-    let dir = crate::session::default_session_dir(cwd);
+    let dir = crate::session::session_dir(cwd);
     let env = Arc::new(ice_tools::OsExecutionEnv::with_cwd(cwd.to_path_buf()));
     let fs: Arc<dyn FileSystem> = env.clone();
     let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
@@ -215,26 +197,17 @@ pub(super) async fn fork_session(
         clock: Arc::new(ice_harness::session::memory::SystemClock),
         ids: Arc::new(ice_harness::session::session::DefaultIdGenerator::new()),
     });
-    // The fork needs the rich JSONL metadata (with the on-disk path); resolve
-    // it from the session list by the current session's id.
-    let id = harness.session().storage().metadata().id.clone();
-    let metas = match crate::session::list_session_metadata(&cwd_str).await {
-        Ok(m) => m,
-        Err(e) => {
-            add_error_message(chat, &format!("Could not list sessions: {e}"));
-            return;
-        }
-    };
-    let Some(source) = metas.iter().find(|m| m.id == id) else {
-        add_error_message(chat, &format!("Current session {id} not found on disk."));
+    if let Err(error) = harness.lane("main").wait_for_idle().await {
+        add_error_message(chat, &format!("Could not fork session: {error}"));
         return;
-    };
+    }
+    let source = harness.session().storage();
     let fork_storage = match repo
-        .fork_typed(
-            source,
+        .fork_from_storage(
+            source.as_ref(),
             &ice_harness::session::jsonl::JsonlSessionCreateOptions {
                 id: None,
-                parent_session_id: Some(source.id.clone()),
+                parent_session_id: Some(source.metadata().id),
                 cwd: cwd_str.clone(),
                 metadata: None,
             },
@@ -265,6 +238,7 @@ pub(super) async fn fork_session(
         state.images_visible(),
     )
     .await;
+    record_context_usage(&state.footer, harness).await;
     state.set_status(RunStatus::Idle);
     add_note_message(chat, "Forked into a new session.");
 }
@@ -675,4 +649,135 @@ pub(super) fn short_model_name(id: &str) -> String {
         .filter(|s| !s.is_empty())
         .unwrap_or(id)
         .to_string()
+}
+
+#[cfg(test)]
+mod share_tests {
+    use super::*;
+    use ice_harness::session::types::{ProvisionedEntry, ProvisionedKind};
+
+    async fn branched_harness() -> AgentHarness {
+        let harness = AgentHarness::create(Default::default()).await.unwrap();
+        let session = harness.session();
+        let root = session
+            .append_message(ice_agent::AgentMessage::User(
+                ice_ai::types::UserMessage::new("SHARED_ROOT", 1),
+            ))
+            .await
+            .unwrap();
+        session
+            .append_message(ice_agent::AgentMessage::User(
+                ice_ai::types::UserMessage::new("ABANDONED_SECRET_SENTINEL", 2),
+            ))
+            .await
+            .unwrap();
+        session.move_lane("main", Some(&root)).await.unwrap();
+        session
+            .append_entry(
+                ProvisionedEntry {
+                    id: "checkpoint".into(),
+                    kind: ProvisionedKind::Compaction {
+                        summary: "ACTIVE_CHECKPOINT".into(),
+                        retained_tail: Vec::new(),
+                        tokens_before: 100,
+                        details: None,
+                        usage: None,
+                    },
+                },
+                "main",
+            )
+            .await
+            .unwrap();
+        session
+            .append_message(ice_agent::AgentMessage::User(
+                ice_ai::types::UserMessage::new("ACTIVE_TAIL", 3),
+            ))
+            .await
+            .unwrap();
+        harness
+    }
+
+    #[tokio::test]
+    async fn gist_receives_only_active_branch_and_success_skips_clipboard() {
+        let harness = branched_harness().await;
+        let chat = Arc::new(Container::new());
+        let before = harness
+            .session()
+            .find_entries(&Default::default())
+            .await
+            .unwrap();
+        let expected = crate::export::active_branch_markdown(&harness)
+            .await
+            .unwrap();
+        share_session_with_transports(
+            &harness,
+            &chat,
+            |payload| {
+                assert_eq!(payload, expected);
+                for marker in ["SHARED_ROOT", "ACTIVE_CHECKPOINT", "ACTIVE_TAIL"] {
+                    assert!(payload.contains(marker), "missing {marker}");
+                }
+                assert!(!payload.contains("ABANDONED_SECRET_SENTINEL"));
+                Ok("https://example.invalid/stub-gist".into())
+            },
+            |_| panic!("clipboard must not run after successful gist"),
+        )
+        .await;
+        let rendered = chat.render(160).join("\n");
+        assert!(
+            rendered.contains("Shared session: https://example.invalid/stub-gist"),
+            "{rendered}"
+        );
+        assert_eq!(
+            harness
+                .session()
+                .find_entries(&Default::default())
+                .await
+                .unwrap(),
+            before
+        );
+    }
+
+    #[tokio::test]
+    async fn gist_failure_copies_identical_scoped_payload_or_reports_unavailable() {
+        let harness = branched_harness().await;
+        let expected = crate::export::active_branch_markdown(&harness)
+            .await
+            .unwrap();
+        for available in [true, false] {
+            let chat = Arc::new(Container::new());
+            let gist_called = std::cell::Cell::new(false);
+            let clipboard_called = std::cell::Cell::new(false);
+            share_session_with_transports(
+                &harness,
+                &chat,
+                |payload| {
+                    assert_eq!(payload, expected);
+                    assert!(!payload.contains("ABANDONED_SECRET_SENTINEL"));
+                    gist_called.set(true);
+                    Err("stub gist failed — falling back to the clipboard.")
+                },
+                |payload| {
+                    assert!(gist_called.get());
+                    assert_eq!(payload, expected);
+                    clipboard_called.set(true);
+                    available
+                },
+            )
+            .await;
+            assert!(gist_called.get() && clipboard_called.get());
+            let rendered = chat.render(160).join("\n");
+            assert!(rendered.contains("stub gist failed"), "{rendered}");
+            assert!(!rendered.contains("Shared session:"), "{rendered}");
+            if available {
+                assert!(rendered.contains("Session transcript copied"), "{rendered}");
+            } else {
+                assert!(rendered.contains("Clipboard unavailable"), "{rendered}");
+                assert!(
+                    !rendered.contains("Session transcript copied"),
+                    "{rendered}"
+                );
+            }
+        }
+    }
 }

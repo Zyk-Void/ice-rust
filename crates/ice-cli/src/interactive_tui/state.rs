@@ -203,10 +203,9 @@ pub(super) struct TuiState {
     /// run. `Some` while the command executes; Esc/Ctrl+C cancels it. `None`
     /// when no user bash is running.
     pub(super) user_bash_cancel: std::sync::Mutex<Option<CancellationToken>>,
-    /// `bashExecution` messages produced by `!command` while an agent run was
-    /// in flight. Flushed to the lane on `AgentEnd` so transcript order matches
-    /// upstream's `_pendingBashMessages` (never spliced mid-turn).
-    pub(super) pending_bash_messages: std::sync::Mutex<Vec<AgentMessage>>,
+    /// Shell results and their originating storage, deferred until prompt
+    /// settlement so they cannot split tool pairs or follow a session replacement.
+    pub(super) pending_bash_messages: std::sync::Mutex<Vec<BufferedBashMessage>>,
     /// The footer, updated live by the drain task.
     pub(super) footer: Arc<FooterComponent>,
     /// The status-container (status slot in the dock) — cleared/filled with a

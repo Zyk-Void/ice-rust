@@ -21,6 +21,7 @@ mod image_tool;
 pub mod messages;
 pub mod prompt_templates;
 pub mod result;
+pub(crate) mod retry_safety;
 pub mod run_budget;
 pub mod runtime;
 pub mod session;

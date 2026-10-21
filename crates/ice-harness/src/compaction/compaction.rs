@@ -5,35 +5,33 @@
 //! summary request, `CacheRetention::None` + fresh `session_id`), the
 //! summarization prompts, `combine_usage`, and the `CompactionError` type.
 //!
-//! v1 divergences from TS (recorded for review):
-//! - **`complete_simple` source.** TS `Models.completeSimple` is a higher-level
-//!   helper; pi-ai has only `Provider::stream_simple`. `complete_simple_with_ret
-//!   ries` is built over `Provider::stream_simple` + `stream.result()` — the
-//!   faithful equivalent, one provider per call. The harness (M5f) resolves
-//!   which provider serves the summarization model and passes it in.
-//! - **`retry_assistant_call`.** pi-ai has only HTTP-level
-//!   `retry_provider_request` (anthropic). This module ports a compaction-local
-//!   AssistantMessage-level retry mirroring `retryAssistantCall`'s shape
-//!   (abort-terminal, success-fast, exponential backoff, sleep honors the
-//!   cancellation token, abort-during-sleep normalized to an aborted message).
-//!   The retryability classifier is a conservative *substring* port of the TS
-//!   regex table (not full regex), because the workspace has no `regex` dep and
-//!   the compaction retry policy defaults to disabled — faux tests never retry,
-//!   so the classifier is off the hot path.
-//! - **Retry callbacks** (`onRetryScheduled`/`onRetryAttemptStart`/
-//!   `onRetryFinished`) are omitted in v1 (telemetry-only in TS); the harness
-//!   can add a trait-hook sink later without changing the call shape.
+//! Implementation notes:
+//! - The generic harness summarizes through its configured `Provider` because
+//!   this Rust API has no `Models.completeSimple` runtime abstraction. The
+//!   callback-aware `complete_simple_with_retry_options` is additive; existing
+//!   generic helpers remain permissive about non-error stop reasons.
+//! - Assistant-level classifier/backoff/callback behavior is shared with
+//!   `ice-ai::retry`, distinct from provider HTTP retries.
+//! - `complete_validated_coding_summary` supplies the stricter coding-agent
+//!   validation boundary. `SimpleStreamOptions` currently has no `tool_choice`
+//!   or per-call `env` field, so this adapter can only clear context tools and
+//!   forward the options the Rust provider API actually supports.
 //! - **`build_session_context`** is a minimal port (in `tokens.rs`) pulled
 //!   forward from M5f; M5f's Session facade will own/expand it.
 
 use std::sync::Arc;
-use std::time::Duration;
 
+use futures::future::BoxFuture;
 use ice_agent::message::AgentMessage;
+pub use ice_ai::is_retryable_assistant_error;
 use ice_ai::types::{
     AssistantMessage, Content, Context, Message, StopReason, Usage, UserContent, UserMessage,
 };
-use ice_ai::{CacheRetention, Model, Provider, SimpleStreamOptions, ThinkingLevel};
+use ice_ai::{
+    retry_assistant_call_with_options, AssistantRetryCallbacks, AssistantRetryOptions,
+    AssistantRetryPolicy, CacheRetention, Model, Provider, RetryCallbackFailure,
+    SimpleStreamOptions, ThinkingLevel,
+};
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
@@ -384,34 +382,117 @@ pub fn prepare_compaction(
 }
 
 // ---------------------------------------------------------------------------
-// completeSimpleWithRetries + retryAssistantCall
+// completeSimpleWithRetries + shared retry integration
 // ---------------------------------------------------------------------------
 
 /// `completeSimpleWithRetries`. Summaries are standalone requests: force
-/// `CacheRetention::None` and a fresh `session_id` (so a summary never writes a
-/// reusable cache entry), then run the call through AssistantMessage-level
-/// retry.
+/// `CacheRetention::None` and a fresh `session_id`, then retry the complete
+/// assistant operation using the shared `ice-ai` retry policy.
 pub async fn complete_simple_with_retries(
     provider: Arc<dyn Provider>,
     model: Model,
     context: Context,
-    mut options: SimpleStreamOptions,
+    options: SimpleStreamOptions,
     retry: Option<RetryPolicy>,
 ) -> AssistantMessage {
-    // Isolate routing + avoid cache writes that cannot be reused.
+    let retry_policy = retry.map(|policy| AssistantRetryPolicy {
+        enabled: policy.enabled,
+        max_retries: policy.max_retries,
+        base_delay_ms: policy.base_delay_ms,
+        max_delay_ms: Some(policy.max_agent_delay_ms),
+    });
+    let retry_options = AssistantRetryOptions::new(retry_policy, options.signal.clone());
+    complete_simple_with_retry_options(provider, model, context, options, retry_options)
+        .await
+        .expect("the legacy summary helper installs no fallible retry callbacks")
+}
+
+/// Callback-aware additive counterpart to [`complete_simple_with_retries`].
+/// Callback failures are returned in lifecycle order instead of being hidden in
+/// an assistant error message.
+pub async fn complete_simple_with_retry_options(
+    provider: Arc<dyn Provider>,
+    model: Model,
+    context: Context,
+    mut options: SimpleStreamOptions,
+    mut retry: AssistantRetryOptions,
+) -> Result<AssistantMessage, RetryCallbackFailure> {
     options.cache_retention = CacheRetention::None;
     options.session_id = Some(Uuid::now_v7().to_string());
-    let signal = options.signal.clone();
-    retry_assistant_call(
-        move || {
-            let provider = Arc::clone(&provider);
-            let model = model.clone();
-            let context = context.clone();
-            let options = options.clone();
-            async move {
-                let stream = provider.stream_simple(&model, &context, &options).await;
+    retry.signal = options.signal.clone();
+    retry_assistant_call_with_options(
+        || async {
+            let stream = provider.stream_simple(&model, &context, &options).await;
+            match stream.result().await {
+                Ok(message) => message,
+                Err(_) => AssistantMessage::terminal(
+                    model.api.clone(),
+                    provider.id().to_string(),
+                    model.id.clone(),
+                    StopReason::Error,
+                    "Summarization stream ended without a terminal event",
+                    0,
+                ),
+            }
+        },
+        retry,
+    )
+    .await
+}
+
+/// Injected coding-agent stream seam. The callback receives immutable request
+/// values; it must return an owned future so it cannot mutate or borrow them.
+pub type SummarizationStreamFn = Arc<
+    dyn Fn(&Model, &Context, &SimpleStreamOptions) -> BoxFuture<'static, AssistantMessage>
+        + Send
+        + Sync,
+>;
+
+/// Optional coding-summary request injection and retry lifecycle callbacks.
+///
+/// The generic compaction APIs do not use these options; callers opt into the
+/// stricter coding-agent completion contract through [`compact_coding`].
+#[derive(Clone, Default)]
+pub struct CodingSummaryCompletionOptions {
+    /// Inject a stream response for testing or caller-managed completion.
+    pub stream_fn: Option<SummarizationStreamFn>,
+    /// Awaited callbacks for whole-assistant retry lifecycle events.
+    pub callbacks: AssistantRetryCallbacks,
+}
+
+/// Coding-agent completion contract layered beside the intentionally
+/// permissive generic compaction helpers. It strips context tools, disables
+/// cache retention and assigns one UUID per request (reused for every retry),
+/// then retries provider failures before applying terminal validation.
+///
+/// This Rust version can pass an explicit Model/Provider and the available
+/// `SimpleStreamOptions`; it has no `tool_choice` or per-request `env` field.
+pub async fn complete_validated_coding_summary(
+    provider: Arc<dyn Provider>,
+    model: &Model,
+    context: &Context,
+    options: &SimpleStreamOptions,
+    stream_fn: Option<SummarizationStreamFn>,
+    mut retry: AssistantRetryOptions,
+) -> Result<AssistantMessage, RetryCallbackFailure> {
+    let model = model.clone();
+    let mut request_context = context.clone();
+    request_context.tools.clear();
+    let mut request_options = options.clone();
+    request_options.cache_retention = CacheRetention::None;
+    request_options.session_id = Some(Uuid::now_v7().to_string());
+    retry.signal = request_options.signal.clone();
+
+    let response = retry_assistant_call_with_options(
+        || async {
+            if let Some(stream_fn) = &stream_fn {
+                stream_fn(&model, &request_context, &request_options).await
+            } else {
+                let stream = provider
+                    .stream_simple(&model, &request_context, &request_options)
+                    .await;
                 match stream.result().await {
-                    Ok(msg) => msg,
+                    Ok(message) => message,
                     Err(_) => AssistantMessage::terminal(
                         model.api.clone(),
                         provider.id().to_string(),
@@ -424,9 +505,57 @@ pub async fn complete_simple_with_retries(
             }
         },
         retry,
-        &signal,
     )
-    .await
+    .await?;
+
+    Ok(validate_coding_summary_response(
+        response,
+        request_options.signal.is_cancelled(),
+    ))
+}
+
+fn validate_coding_summary_response(
+    mut response: AssistantMessage,
+    signal_cancelled: bool,
+) -> AssistantMessage {
+    if signal_cancelled || response.stop_reason == StopReason::Aborted {
+        response.stop_reason = StopReason::Aborted;
+        response.error_message = Some("Summarization aborted".to_string());
+        return response;
+    }
+    if response.stop_reason == StopReason::Error {
+        return response;
+    }
+    if response.stop_reason != StopReason::Stop {
+        let stop_reason = response.stop_reason.as_str();
+        response.stop_reason = StopReason::Error;
+        response.error_message = Some(format!(
+            "Incomplete summarization (stop reason: {stop_reason})"
+        ));
+        return response;
+    }
+    if response
+        .content
+        .iter()
+        .any(|block| matches!(block, Content::ToolCall(_)))
+    {
+        response.stop_reason = StopReason::Error;
+        response.error_message = Some("Summarization returned tool calls".to_string());
+        return response;
+    }
+    let text: String = response
+        .content
+        .iter()
+        .filter_map(|block| match block {
+            Content::Text(text) => Some(text.text.as_str()),
+            _ => None,
+        })
+        .collect();
+    if text.trim().is_empty() {
+        response.stop_reason = StopReason::Error;
+        response.error_message = Some("Summarization returned no text".to_string());
+    }
+    response
 }
 
 /// `combineUsage(first, second)`. `Usage::add` already sums every field
@@ -436,131 +565,6 @@ pub fn combine_usage(first: &Usage, second: &Usage) -> Usage {
     let mut u = first.clone();
     u.add(second);
     u
-}
-
-/// Run a single assistant-producing call with bounded retry on transient
-/// errors. Mirrors `retryAssistantCall`: aborts are terminal (never retried);
-/// success returns; non-retryable or exhausted returns the final error;
-/// otherwise exponential backoff `base_delay_ms * 2^(attempt-1)`, with the
-/// sleep honoring `signal` — an abort during sleep is normalized to an aborted
-/// `AssistantMessage` (matching TS's `stopReason:"aborted"` normalization).
-async fn retry_assistant_call<F, Fut>(
-    produce: F,
-    retry: Option<RetryPolicy>,
-    signal: &CancellationToken,
-) -> AssistantMessage
-where
-    F: Fn() -> Fut,
-    Fut: std::future::Future<Output = AssistantMessage>,
-{
-    let policy = retry.filter(|p| p.enabled);
-    let max_attempts: u32 = policy.as_ref().map(|p| p.max_retries).unwrap_or(0);
-    let base_delay_ms: u64 = policy.as_ref().map(|p| p.base_delay_ms).unwrap_or(1000);
-    let max_agent_delay_ms: u64 = policy
-        .as_ref()
-        .map(|p| p.max_agent_delay_ms)
-        .unwrap_or(60_000);
-
-    let mut attempt: u32 = 0;
-    loop {
-        let response = produce().await;
-
-        // Abort: terminal but not successful; never retry.
-        if response.stop_reason == StopReason::Aborted {
-            return response;
-        }
-        // Success: non-error, non-abort.
-        if response.stop_reason != StopReason::Error {
-            return response;
-        }
-        // Non-retryable or budget exhausted: return the final error.
-        if attempt >= max_attempts || !is_retryable_assistant_error(&response) {
-            return response;
-        }
-        attempt += 1;
-        let delay_ms = base_delay_ms
-            .saturating_mul(1u64 << (attempt - 1))
-            .min(max_agent_delay_ms);
-        // Sleep honoring cancellation → normalize to aborted.
-        tokio::select! {
-            _ = tokio::time::sleep(Duration::from_millis(delay_ms)) => {}
-            _ = signal.cancelled() => {
-                let mut aborted = response;
-                aborted.stop_reason = StopReason::Aborted;
-                aborted.error_message = None;
-                return aborted;
-            }
-        }
-    }
-}
-
-/// Conservative substring port of `isRetryableAssistantError`. Returns false
-/// for quota/billing errors (non-retryable) and true only for clearly-transient
-/// transport/server text. See module doc for the divergence note.
-pub fn is_retryable_assistant_error(message: &AssistantMessage) -> bool {
-    if message.stop_reason != StopReason::Error {
-        return false;
-    }
-    let Some(msg) = &message.error_message else {
-        return false;
-    };
-    let lower = msg.to_lowercase();
-    const NON_RETRYABLE: &[&str] = &[
-        "gousagelimiterror",
-        "freeusagelimiterror",
-        "monthly usage limit reached",
-        "available balance",
-        "insufficient_quota",
-        "out of budget",
-        "quota exceeded",
-        "billing",
-    ];
-    if NON_RETRYABLE.iter().any(|p| lower.contains(p)) {
-        return false;
-    }
-    const RETRYABLE: &[&str] = &[
-        "overloaded",
-        "rate limit",
-        "too many requests",
-        "429",
-        "500",
-        "502",
-        "503",
-        "504",
-        "524",
-        "service unavailable",
-        "server error",
-        "internal error",
-        "provider returned error",
-        "exceeded request buffer limit while retrying upstream",
-        "network error",
-        "connection error",
-        "connection refused",
-        "connection lost",
-        "other side closed",
-        "fetch failed",
-        "getaddrinfo",
-        "enotfound",
-        "eai_again",
-        "upstream connect",
-        "reset before headers",
-        "socket hang up",
-        "socket connection was closed",
-        "timed out",
-        "timeout",
-        "websocket closed",
-        "websocket error",
-        "ended without",
-        "stream ended before message_stop",
-        "stream ended before a terminal response event",
-        "http2 request did not get a response",
-        "retry delay",
-        "you can retry your request",
-        "try your request again",
-        "please retry your request",
-        "resourceexhausted",
-    ];
-    RETRYABLE.iter().any(|p| lower.contains(p))
 }
 
 // ---------------------------------------------------------------------------
@@ -614,6 +618,47 @@ fn build_summary_options(opts: &CompactionLlmOptions, max_tokens: u64) -> Simple
     o
 }
 
+async fn complete_summary_request(
+    opts: &CompactionLlmOptions,
+    context: &Context,
+    stream_options: &SimpleStreamOptions,
+    coding_options: Option<&CodingSummaryCompletionOptions>,
+) -> Result<AssistantMessage, CompactionError> {
+    let Some(coding_options) = coding_options else {
+        return Ok(complete_simple_with_retries(
+            opts.provider.clone(),
+            opts.model.clone(),
+            context.clone(),
+            stream_options.clone(),
+            opts.retry.clone(),
+        )
+        .await);
+    };
+
+    let retry_policy = opts.retry.as_ref().map(|policy| AssistantRetryPolicy {
+        enabled: policy.enabled,
+        max_retries: policy.max_retries,
+        base_delay_ms: policy.base_delay_ms,
+        max_delay_ms: Some(policy.max_agent_delay_ms),
+    });
+    let retry_options = AssistantRetryOptions::new(retry_policy, stream_options.signal.clone())
+        .with_callbacks(coding_options.callbacks.clone());
+    complete_validated_coding_summary(
+        opts.provider.clone(),
+        &opts.model,
+        context,
+        stream_options,
+        coding_options.stream_fn.clone(),
+        retry_options,
+    )
+    .await
+    .map_err(|error| {
+        CompactionError::summarization_failed(format!(
+            "Summarization retry callback failed: {error}"
+        ))
+    })
+}
+
 /// `generateSummaryWithUsage`. Builds the conversation+prompt user message,
 /// calls `complete_simple_with_retries`, maps `aborted`/`error` stop reasons to
 /// `CompactionError`. Returns `(text, usage)`.
@@ -623,16 +668,38 @@ pub async fn generate_summary_with_usage(
     previous_summary: Option<&str>,
     opts: &CompactionLlmOptions,
 ) -> Result<(String, Usage), CompactionError> {
+    generate_summary_with_usage_impl(
+        current_messages,
+        reserve_tokens,
+        previous_summary,
+        opts,
+        None,
+    )
+    .await
+}
+
+async fn generate_summary_with_usage_impl(
+    current_messages: &[AgentMessage],
+    reserve_tokens: i64,
+    previous_summary: Option<&str>,
+    opts: &CompactionLlmOptions,
+    coding_options: Option<&CodingSummaryCompletionOptions>,
+) -> Result<(String, Usage), CompactionError> {
     let max_tokens = summary_max_tokens(reserve_tokens, opts.model.max_tokens);
 
+    let previous_summary = previous_summary.filter(|summary| !summary.is_empty());
+    let custom_instructions = opts
+        .custom_instructions
+        .as_deref()
+        .filter(|instructions| !instructions.is_empty());
     let mut base_prompt = if previous_summary.is_some() {
         UPDATE_SUMMARIZATION_PROMPT
     } else {
         SUMMARIZATION_PROMPT
     }
     .to_string();
-    if let Some(ci) = &opts.custom_instructions {
-        base_prompt += &format!("\n\nAdditional focus: {ci}");
+    if let Some(instructions) = custom_instructions {
+        base_prompt += &format!("\n\nAdditional focus: {instructions}");
     }
 
     let llm_messages = convert_to_llm(current_messages.to_vec());
@@ -654,31 +721,40 @@ pub async fn generate_summary_with_usage(
     };
     let options = build_summary_options(opts, max_tokens);
 
-    let response = complete_simple_with_retries(
-        opts.provider.clone(),
-        opts.model.clone(),
-        context,
-        options,
-        opts.retry.clone(),
-    )
-    .await;
+    let response = complete_summary_request(opts, &context, &options, coding_options).await?;
 
     if response.stop_reason == StopReason::Aborted {
         return Err(CompactionError::aborted(
             response
                 .error_message
                 .as_deref()
+                .filter(|message| !message.is_empty())
                 .unwrap_or("Summarization aborted"),
         ));
     }
     if response.stop_reason == StopReason::Error {
         return Err(CompactionError::summarization_failed(format!(
             "Summarization failed: {}",
-            response.error_message.as_deref().unwrap_or("Unknown error")
+            response
+                .error_message
+                .as_deref()
+                .filter(|message| !message.is_empty())
+                .unwrap_or("Unknown error")
         )));
     }
 
-    let text = Content::text_only(&response.content, "\n");
+    let text = if coding_options.is_some() {
+        response
+            .content
+            .iter()
+            .filter_map(|block| match block {
+                Content::Text(text) => Some(text.text.as_str()),
+                _ => None,
+            })
+            .collect()
+    } else {
+        Content::text_only(&response.content, "\n")
+    };
     Ok((text, response.usage.clone()))
 }
 
@@ -689,6 +765,15 @@ pub async fn generate_turn_prefix_summary(
     messages: &[AgentMessage],
     reserve_tokens: i64,
     opts: &CompactionLlmOptions,
+) -> Result<(String, Usage), CompactionError> {
+    generate_turn_prefix_summary_impl(messages, reserve_tokens, opts, None).await
+}
+
+async fn generate_turn_prefix_summary_impl(
+    messages: &[AgentMessage],
+    reserve_tokens: i64,
+    opts: &CompactionLlmOptions,
+    coding_options: Option<&CodingSummaryCompletionOptions>,
 ) -> Result<(String, Usage), CompactionError> {
     let max_tokens = turn_prefix_max_tokens(reserve_tokens, opts.model.max_tokens);
 
@@ -709,31 +794,40 @@ pub async fn generate_turn_prefix_summary(
     };
     let options = build_summary_options(opts, max_tokens);
 
-    let response = complete_simple_with_retries(
-        opts.provider.clone(),
-        opts.model.clone(),
-        context,
-        options,
-        opts.retry.clone(),
-    )
-    .await;
+    let response = complete_summary_request(opts, &context, &options, coding_options).await?;
 
     if response.stop_reason == StopReason::Aborted {
         return Err(CompactionError::aborted(
             response
                 .error_message
                 .as_deref()
+                .filter(|message| !message.is_empty())
                 .unwrap_or("Turn prefix summarization aborted"),
         ));
     }
     if response.stop_reason == StopReason::Error {
         return Err(CompactionError::summarization_failed(format!(
             "Turn prefix summarization failed: {}",
-            response.error_message.as_deref().unwrap_or("Unknown error")
+            response
+                .error_message
+                .as_deref()
+                .filter(|message| !message.is_empty())
+                .unwrap_or("Unknown error")
         )));
     }
 
-    let text = Content::text_only(&response.content, "\n");
+    let text = if coding_options.is_some() {
+        response
+            .content
+            .iter()
+            .filter_map(|block| match block {
+                Content::Text(text) => Some(text.text.as_str()),
+                _ => None,
+            })
+            .collect()
+    } else {
+        Content::text_only(&response.content, "\n")
+    };
     Ok((text, response.usage.clone()))
 }
 
@@ -750,24 +844,50 @@ pub async fn compact(
     preparation: &CompactionPreparation,
     opts: &CompactionLlmOptions,
 ) -> Result<CompactResult, CompactionError> {
+    compact_impl(preparation, opts, None).await
+}
+
+/// Coding-agent compaction with strict summary validation and retry callbacks.
+/// Unlike [`compact`], this rejects a preparation with no history or turn-prefix
+/// messages before making a completion request.
+pub async fn compact_coding(
+    preparation: &CompactionPreparation,
+    opts: &CompactionLlmOptions,
+    completion_options: &CodingSummaryCompletionOptions,
+) -> Result<CompactResult, CompactionError> {
+    if preparation.messages_to_summarize.is_empty() && preparation.turn_prefix_messages.is_empty() {
+        return Err(CompactionError::summarization_failed(
+            "No messages available to summarize",
+        ));
+    }
+    compact_impl(preparation, opts, Some(completion_options)).await
+}
+
+async fn compact_impl(
+    preparation: &CompactionPreparation,
+    opts: &CompactionLlmOptions,
+    coding_options: Option<&CodingSummaryCompletionOptions>,
+) -> Result<CompactResult, CompactionError> {
     let (summary, usage) =
         if preparation.is_split_turn && !preparation.turn_prefix_messages.is_empty() {
             let (history_text, history_usage) = if preparation.messages_to_summarize.is_empty() {
                 ("No prior history.".to_string(), None)
             } else {
-                let (t, u) = generate_summary_with_usage(
+                let (t, u) = generate_summary_with_usage_impl(
                     &preparation.messages_to_summarize,
                     preparation.settings.reserve_tokens,
                     preparation.previous_summary.as_deref(),
                     opts,
+                    coding_options,
                 )
                 .await?;
                 (t, Some(u))
             };
-            let (turn_text, turn_usage) = generate_turn_prefix_summary(
+            let (turn_text, turn_usage) = generate_turn_prefix_summary_impl(
                 &preparation.turn_prefix_messages,
                 preparation.settings.reserve_tokens,
                 opts,
+                coding_options,
             )
             .await?;
             let combined =
@@ -778,11 +898,12 @@ pub async fn compact(
             };
             (combined, combined_usage)
         } else {
-            let (t, u) = generate_summary_with_usage(
+            let (t, u) = generate_summary_with_usage_impl(
                 &preparation.messages_to_summarize,
                 preparation.settings.reserve_tokens,
                 preparation.previous_summary.as_deref(),
                 opts,
+                coding_options,
             )
             .await?;
             (t, Some(u))
@@ -824,6 +945,102 @@ mod tests {
             )),
             terminate: None,
         })
+    }
+
+    fn agent_user_msg(text: &str) -> AgentMessage {
+        AgentMessage::User(UserMessage::new(text, 1))
+    }
+
+    fn test_preparation(
+        messages_to_summarize: Vec<AgentMessage>,
+        turn_prefix_messages: Vec<AgentMessage>,
+        is_split_turn: bool,
+    ) -> CompactionPreparation {
+        CompactionPreparation {
+            messages_to_summarize,
+            turn_prefix_messages,
+            retained_tail: Vec::new(),
+            is_split_turn,
+            tokens_before: 77,
+            previous_summary: None,
+            file_ops: create_file_ops(),
+            settings: CompactionSettings {
+                enabled: true,
+                reserve_tokens: 1000,
+                keep_recent_tokens: 0,
+            },
+        }
+    }
+
+    #[tokio::test]
+    async fn empty_summary_instructions_and_previous_summary_use_falsy_semantics() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
+        use std::sync::Mutex;
+
+        let observed_prompt = Arc::new(Mutex::new(None::<String>));
+        let prompt = Arc::clone(&observed_prompt);
+        let script = FauxScript::new();
+        script.set_responses(vec![FauxStep::factory(move |context| {
+            let text = match context.messages.first() {
+                Some(Message::User(user)) => match &user.content {
+                    UserContent::Text(text) => text.clone(),
+                    UserContent::Blocks(blocks) => Content::text_only(blocks, ""),
+                },
+                _ => String::new(),
+            };
+            *prompt.lock().unwrap() = Some(text);
+            ice_ai::providers::faux::faux_assistant_message("summary", StopReason::Stop)
+        })]);
+        let provider = FauxProvider::new(script);
+        let model = provider.default_model().clone();
+        let options = CompactionLlmOptions {
+            provider,
+            model,
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: None,
+            custom_instructions: Some(String::new()),
+        };
+        let messages = [AgentMessage::User(UserMessage::new("history", 1))];
+        generate_summary_with_usage(&messages, 2048, Some(""), &options)
+            .await
+            .unwrap();
+        let prompt = observed_prompt.lock().unwrap().clone().unwrap();
+        assert!(prompt.contains(SUMMARIZATION_PROMPT));
+        assert!(!prompt.contains(UPDATE_SUMMARIZATION_PROMPT));
+        assert!(!prompt.contains("<previous-summary>"));
+        assert!(!prompt.contains("Additional focus:"));
+    }
+
+    #[tokio::test]
+    async fn empty_error_message_uses_generic_summary_fallback() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
+
+        let script = FauxScript::new();
+        script.set_responses(vec![FauxStep::Message(AssistantMessage::terminal(
+            ice_ai::types::Api::Faux,
+            "faux",
+            "faux-1",
+            StopReason::Error,
+            "",
+            1,
+        ))]);
+        let provider = FauxProvider::new(script);
+        let options = CompactionLlmOptions {
+            provider: provider.clone(),
+            model: provider.default_model().clone(),
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: None,
+            custom_instructions: None,
+        };
+        let messages = [AgentMessage::User(UserMessage::new("history", 1))];
+        let error = generate_summary_with_usage(&messages, 2048, None, &options)
+            .await
+            .unwrap_err();
+        assert_eq!(error.message, "Summarization failed: Unknown error");
     }
 
     #[test]
@@ -916,6 +1133,577 @@ mod tests {
         assert_eq!(c.reasoning, Some(4));
         assert_eq!(c.total_tokens, 20);
         assert!((c.cost.total - 4.05).abs() < 1e-9);
+    }
+
+    #[tokio::test]
+    async fn coding_compact_validates_response_and_preserves_text_and_usage() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use std::sync::Mutex;
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let model = provider.default_model().clone();
+        let observations = Arc::new(Mutex::new(Vec::new()));
+        let recorded = Arc::clone(&observations);
+        let stream_fn: SummarizationStreamFn = Arc::new(move |model, context, options| {
+            let prompt = match context.messages.first() {
+                Some(Message::User(user)) => match &user.content {
+                    UserContent::Text(text) => text.clone(),
+                    UserContent::Blocks(blocks) => Content::text_only(blocks, ""),
+                },
+                _ => String::new(),
+            };
+            recorded.lock().unwrap().push((
+                model.id.clone(),
+                context.system_prompt.clone().unwrap_or_default(),
+                context.tools.len(),
+                prompt,
+                options.api_key.clone(),
+                options.max_tokens,
+                options.cache_retention,
+                options.session_id.clone(),
+            ));
+            let mut response =
+                AssistantMessage::empty(model.api.clone(), "faux", model.id.clone(), 1);
+            response.stop_reason = StopReason::Stop;
+            response.content = vec![Content::text("  First "), Content::text("Second\n ")];
+            response.usage.input = 19;
+            response.usage.output = 3;
+            response.usage.total_tokens = 22;
+            Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+        });
+        let llm_options = CompactionLlmOptions {
+            provider,
+            model: model.clone(),
+            api_key: Some("test-api-key".into()),
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: None,
+            custom_instructions: Some("focus decisions".into()),
+        };
+        let mut preparation =
+            test_preparation(vec![agent_user_msg("user request")], Vec::new(), false);
+        preparation.previous_summary = Some("prior checkpoint".into());
+        let completion_options = CodingSummaryCompletionOptions {
+            stream_fn: Some(stream_fn),
+            ..CodingSummaryCompletionOptions::default()
+        };
+
+        let result = compact_coding(&preparation, &llm_options, &completion_options)
+            .await
+            .unwrap();
+
+        assert_eq!(result.summary, "  First Second\n ");
+        assert_eq!(result.usage.as_ref().unwrap().input, 19);
+        assert_eq!(result.usage.as_ref().unwrap().output, 3);
+        assert_eq!(result.tokens_before, 77);
+        let observations = observations.lock().unwrap();
+        assert_eq!(observations.len(), 1);
+        let (
+            model_id,
+            system_prompt,
+            tool_count,
+            prompt,
+            api_key,
+            max_tokens,
+            cache_retention,
+            session_id,
+        ) = &observations[0];
+        assert_eq!(model_id, &model.id);
+        assert_eq!(system_prompt, SUMMARIZATION_SYSTEM_PROMPT);
+        assert_eq!(*tool_count, 0);
+        assert!(prompt.contains("user request"));
+        assert!(prompt.contains("prior checkpoint"));
+        assert!(prompt.contains("Additional focus: focus decisions"));
+        assert_eq!(api_key.as_deref(), Some("test-api-key"));
+        assert_eq!(
+            *max_tokens,
+            Some(summary_max_tokens(1000, model.max_tokens))
+        );
+        assert_eq!(*cache_retention, CacheRetention::None);
+        assert!(Uuid::parse_str(session_id.as_deref().unwrap()).is_ok());
+    }
+
+    #[tokio::test]
+    async fn coding_compact_rejects_invalid_responses_without_retrying_validation_failures() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let mut length = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        length.stop_reason = StopReason::Length;
+        length.content.push(Content::text("partial"));
+        let mut tool_use = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        tool_use.stop_reason = StopReason::ToolUse;
+        let mut tool_call = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        tool_call.stop_reason = StopReason::Stop;
+        tool_call
+            .content
+            .push(Content::tool_call("call", "read", serde_json::json!({})));
+        let mut blank = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        blank.stop_reason = StopReason::Stop;
+        blank.content.push(Content::text("  \n\t"));
+        let invalid_responses = [
+            (length, "Incomplete summarization (stop reason: length)"),
+            (tool_use, "Incomplete summarization (stop reason: toolUse)"),
+            (tool_call, "Summarization returned tool calls"),
+            (blank, "Summarization returned no text"),
+        ];
+
+        for (response, expected_message) in invalid_responses {
+            let provider = FauxProvider::new(FauxScript::new());
+            let model = provider.default_model().clone();
+            let calls = Arc::new(AtomicUsize::new(0));
+            let stream_calls = Arc::clone(&calls);
+            let stream_fn: SummarizationStreamFn = Arc::new(move |_model, _context, _options| {
+                stream_calls.fetch_add(1, Ordering::SeqCst);
+                let response = response.clone();
+                Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+            });
+            let llm_options = CompactionLlmOptions {
+                provider,
+                model,
+                api_key: None,
+                signal: CancellationToken::new(),
+                thinking_level: None,
+                retry: Some(RetryPolicy {
+                    enabled: true,
+                    max_retries: 3,
+                    base_delay_ms: 0,
+                    max_agent_delay_ms: 0,
+                }),
+                custom_instructions: None,
+            };
+            let completion_options = CodingSummaryCompletionOptions {
+                stream_fn: Some(stream_fn),
+                ..CodingSummaryCompletionOptions::default()
+            };
+            let preparation =
+                test_preparation(vec![agent_user_msg("summarize me")], Vec::new(), false);
+
+            let error = compact_coding(&preparation, &llm_options, &completion_options)
+                .await
+                .unwrap_err();
+            assert_eq!(error.code, CompactionErrorCode::SummarizationFailed);
+            assert!(error.message.contains(expected_message), "{error}");
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+        }
+    }
+
+    #[tokio::test]
+    async fn coding_compact_rejects_empty_summary_spans_before_request() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let model = provider.default_model().clone();
+        let calls = Arc::new(AtomicUsize::new(0));
+        let stream_calls = Arc::clone(&calls);
+        let stream_fn: SummarizationStreamFn = Arc::new(move |_model, _context, _options| {
+            stream_calls.fetch_add(1, Ordering::SeqCst);
+            Box::pin(async {
+                ice_ai::providers::faux::faux_assistant_message("unexpected", StopReason::Stop)
+            }) as BoxFuture<'static, AssistantMessage>
+        });
+        let llm_options = CompactionLlmOptions {
+            provider,
+            model,
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: None,
+            custom_instructions: None,
+        };
+        let completion_options = CodingSummaryCompletionOptions {
+            stream_fn: Some(stream_fn),
+            ..CodingSummaryCompletionOptions::default()
+        };
+        let preparation = test_preparation(Vec::new(), Vec::new(), false);
+
+        let error = compact_coding(&preparation, &llm_options, &completion_options)
+            .await
+            .unwrap_err();
+        assert!(error.message.contains("No messages available to summarize"));
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+    }
+
+    #[tokio::test]
+    async fn coding_compact_assigns_fresh_ids_per_split_request_and_reuses_each_on_retry() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Mutex;
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let model = provider.default_model().clone();
+        let ids = Arc::new(Mutex::new(Vec::new()));
+        let observed_ids = Arc::clone(&ids);
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let stream_attempts = Arc::clone(&attempts);
+        let stream_fn: SummarizationStreamFn = Arc::new(move |_model, _context, options| {
+            observed_ids
+                .lock()
+                .unwrap()
+                .push(options.session_id.clone().unwrap());
+            let attempt = stream_attempts.fetch_add(1, Ordering::SeqCst);
+            let response = if attempt == 0 {
+                AssistantMessage::terminal(
+                    ice_ai::types::Api::Faux,
+                    "faux",
+                    "faux-1",
+                    StopReason::Error,
+                    "terminated",
+                    1,
+                )
+            } else {
+                let mut response =
+                    AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+                response.stop_reason = StopReason::Stop;
+                response.content.push(Content::text("summary"));
+                response
+            };
+            Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+        });
+        let llm_options = CompactionLlmOptions {
+            provider,
+            model,
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: Some(RetryPolicy {
+                enabled: true,
+                max_retries: 1,
+                base_delay_ms: 0,
+                max_agent_delay_ms: 0,
+            }),
+            custom_instructions: None,
+        };
+        let completion_options = CodingSummaryCompletionOptions {
+            stream_fn: Some(stream_fn),
+            ..CodingSummaryCompletionOptions::default()
+        };
+        let preparation = test_preparation(
+            vec![agent_user_msg("history")],
+            vec![agent_user_msg("large turn prefix")],
+            true,
+        );
+
+        compact_coding(&preparation, &llm_options, &completion_options)
+            .await
+            .unwrap();
+
+        let ids = ids.lock().unwrap();
+        assert_eq!(ids.len(), 3);
+        assert_eq!(ids[0], ids[1]);
+        assert_ne!(ids[1], ids[2]);
+        assert!(ids.iter().all(|id| Uuid::parse_str(id).is_ok()));
+    }
+
+    #[tokio::test]
+    async fn coding_compact_surfaces_retry_callback_failures_as_compaction_errors() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let model = provider.default_model().clone();
+        let stream_fn: SummarizationStreamFn = Arc::new(|_model, _context, _options| {
+            let response = AssistantMessage::terminal(
+                ice_ai::types::Api::Faux,
+                "faux",
+                "faux-1",
+                StopReason::Error,
+                "terminated",
+                1,
+            );
+            Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+        });
+        let llm_options = CompactionLlmOptions {
+            provider,
+            model,
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: Some(RetryPolicy {
+                enabled: true,
+                max_retries: 1,
+                base_delay_ms: 0,
+                max_agent_delay_ms: 0,
+            }),
+            custom_instructions: None,
+        };
+        let callbacks = AssistantRetryCallbacks::default()
+            .on_retry_scheduled(|_| async { Err("observer failed".to_string()) });
+        let completion_options = CodingSummaryCompletionOptions {
+            stream_fn: Some(stream_fn),
+            callbacks,
+        };
+        let preparation = test_preparation(vec![agent_user_msg("summarize me")], Vec::new(), false);
+
+        let error = compact_coding(&preparation, &llm_options, &completion_options)
+            .await
+            .unwrap_err();
+        assert_eq!(error.code, CompactionErrorCode::SummarizationFailed);
+        assert!(error
+            .message
+            .contains("on_retry_scheduled failed: observer failed"));
+    }
+
+    #[tokio::test]
+    async fn generic_compact_remains_permissive_for_empty_spans_and_length_responses() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
+
+        let script = FauxScript::new();
+        let mut response = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        response.stop_reason = StopReason::Length;
+        response.content.push(Content::text("partial summary"));
+        response.usage.input = 17;
+        script.set_responses(vec![FauxStep::Message(response)]);
+        let provider = FauxProvider::new(script);
+        let llm_options = CompactionLlmOptions {
+            provider: provider.clone(),
+            model: provider.default_model().clone(),
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: Some(RetryPolicy {
+                enabled: true,
+                max_retries: 3,
+                base_delay_ms: 0,
+                max_agent_delay_ms: 0,
+            }),
+            custom_instructions: None,
+        };
+        let preparation = test_preparation(Vec::new(), Vec::new(), false);
+
+        let result = compact(&preparation, &llm_options).await.unwrap();
+        assert_eq!(result.summary, "partial summary");
+        assert!(result.usage.unwrap().input > 0);
+    }
+
+    #[test]
+    fn coding_summary_validation_preserves_ordered_failure_precedence_and_payload() {
+        let mut length = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        length.stop_reason = StopReason::Length;
+        length.content.push(Content::text("partial"));
+        let length = validate_coding_summary_response(length, false);
+        assert_eq!(length.stop_reason, StopReason::Error);
+        assert_eq!(
+            length.error_message.as_deref(),
+            Some("Incomplete summarization (stop reason: length)")
+        );
+
+        let mut tool_use = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        tool_use.stop_reason = StopReason::ToolUse;
+        tool_use.content.push(Content::text("partial"));
+        assert_eq!(
+            validate_coding_summary_response(tool_use, false)
+                .error_message
+                .as_deref(),
+            Some("Incomplete summarization (stop reason: toolUse)")
+        );
+
+        let mut tool_call = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        tool_call.stop_reason = StopReason::Stop;
+        tool_call
+            .content
+            .push(Content::tool_call("call", "read", serde_json::json!({})));
+        let tool_call = validate_coding_summary_response(tool_call, false);
+        assert_eq!(tool_call.stop_reason, StopReason::Error);
+        assert_eq!(
+            tool_call.error_message.as_deref(),
+            Some("Summarization returned tool calls")
+        );
+
+        let mut blank = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        blank.stop_reason = StopReason::Stop;
+        blank.content.push(Content::text("  \n\t"));
+        assert_eq!(
+            validate_coding_summary_response(blank, false)
+                .error_message
+                .as_deref(),
+            Some("Summarization returned no text")
+        );
+
+        let mut provider_error =
+            AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        provider_error.stop_reason = StopReason::Error;
+        provider_error.error_message = Some("provider error".into());
+        provider_error
+            .content
+            .push(Content::tool_call("call", "read", serde_json::json!({})));
+        assert_eq!(
+            validate_coding_summary_response(provider_error.clone(), false),
+            provider_error
+        );
+
+        let aborted = validate_coding_summary_response(provider_error, true);
+        assert_eq!(aborted.stop_reason, StopReason::Aborted);
+        assert_eq!(
+            aborted.error_message.as_deref(),
+            Some("Summarization aborted")
+        );
+
+        let mut success = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+        success.stop_reason = StopReason::Stop;
+        success.content.push(Content::text("  summary \n"));
+        success.usage.input = 29;
+        let original = success.clone();
+        assert_eq!(validate_coding_summary_response(success, false), original);
+    }
+
+    #[tokio::test]
+    async fn coding_summary_validation_failure_is_not_retried_and_post_response_cancel_wins() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let model = provider.default_model().clone();
+        let calls = Arc::new(AtomicUsize::new(0));
+        let stream_calls = Arc::clone(&calls);
+        let invalid_stream: SummarizationStreamFn = Arc::new(move |_model, _context, _options| {
+            stream_calls.fetch_add(1, Ordering::SeqCst);
+            let mut response =
+                AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+            response.stop_reason = StopReason::Length;
+            response.content.push(Content::text("partial"));
+            Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+        });
+        let mut retry_options = AssistantRetryOptions::new(
+            Some(AssistantRetryPolicy {
+                enabled: true,
+                max_retries: 3,
+                base_delay_ms: 0,
+                max_delay_ms: None,
+            }),
+            CancellationToken::new(),
+        );
+        let response = complete_validated_coding_summary(
+            provider.clone(),
+            &model,
+            &Context::default(),
+            &SimpleStreamOptions::default(),
+            Some(invalid_stream),
+            retry_options.clone(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(response.stop_reason, StopReason::Error);
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+
+        let signal = CancellationToken::new();
+        let stream_signal = signal.clone();
+        let success_stream: SummarizationStreamFn = Arc::new(move |_model, _context, _options| {
+            stream_signal.cancel();
+            let mut response =
+                AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 1);
+            response.stop_reason = StopReason::Stop;
+            response.content.push(Content::text("completed"));
+            Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+        });
+        retry_options.signal = signal;
+        let response = complete_validated_coding_summary(
+            provider,
+            &model,
+            &Context::default(),
+            &SimpleStreamOptions {
+                signal: retry_options.signal.clone(),
+                ..SimpleStreamOptions::default()
+            },
+            Some(success_stream),
+            retry_options,
+        )
+        .await
+        .unwrap();
+        assert_eq!(response.stop_reason, StopReason::Aborted);
+        assert_eq!(
+            response.error_message.as_deref(),
+            Some("Summarization aborted")
+        );
+    }
+
+    #[tokio::test]
+    async fn injected_coding_summary_stream_is_immutable_and_reuses_request_id_on_retry() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use ice_ai::types::{Schema, Tool};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Mutex;
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let model = provider.default_model().clone();
+        let mut context = Context::default();
+        context.tools.push(Tool {
+            name: "read".into(),
+            description: "read a file".into(),
+            parameters: Schema::empty_object(),
+            constrained_sampling: None,
+        });
+        let mut options = SimpleStreamOptions::default();
+        options.cache_retention = CacheRetention::Long;
+        options.session_id = Some("caller-session".into());
+        let observations = Arc::new(Mutex::new(
+            Vec::<(usize, CacheRetention, Option<String>)>::new(),
+        ));
+        let seen = Arc::clone(&observations);
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let produce_attempts = Arc::clone(&attempts);
+        let stream_fn: SummarizationStreamFn =
+            Arc::new(move |_model, request_context, request_options| {
+                seen.lock().unwrap().push((
+                    request_context.tools.len(),
+                    request_options.cache_retention,
+                    request_options.session_id.clone(),
+                ));
+                let attempt = produce_attempts.fetch_add(1, Ordering::SeqCst);
+                let response = if attempt == 0 {
+                    AssistantMessage::terminal(
+                        ice_ai::types::Api::Faux,
+                        "faux",
+                        "faux-1",
+                        StopReason::Error,
+                        "terminated",
+                        1,
+                    )
+                } else {
+                    let mut response =
+                        AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux-1", 2);
+                    response.stop_reason = StopReason::Stop;
+                    response.content.push(Content::text("  summary \n"));
+                    response.usage.input = 29;
+                    response
+                };
+                Box::pin(async move { response }) as BoxFuture<'static, AssistantMessage>
+            });
+        let retry = AssistantRetryOptions::new(
+            Some(AssistantRetryPolicy {
+                enabled: true,
+                max_retries: 1,
+                base_delay_ms: 0,
+                max_delay_ms: None,
+            }),
+            options.signal.clone(),
+        );
+
+        let response = complete_validated_coding_summary(
+            provider,
+            &model,
+            &context,
+            &options,
+            Some(stream_fn),
+            retry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(response.stop_reason, StopReason::Stop);
+        assert_eq!(response.content, vec![Content::text("  summary \n")]);
+        assert_eq!(response.usage.input, 29);
+        let observations = observations.lock().unwrap();
+        assert_eq!(observations.len(), 2);
+        assert_eq!(observations[0].0, 0);
+        assert_eq!(observations[1].0, 0);
+        assert_eq!(observations[0].1, CacheRetention::None);
+        assert_eq!(observations[1].1, CacheRetention::None);
+        assert_eq!(observations[0].2, observations[1].2);
+        assert_ne!(observations[0].2.as_deref(), Some("caller-session"));
+        assert!(Uuid::parse_str(observations[0].2.as_deref().unwrap()).is_ok());
+        assert_eq!(context.tools.len(), 1);
+        assert_eq!(options.cache_retention, CacheRetention::Long);
+        assert_eq!(options.session_id.as_deref(), Some("caller-session"));
     }
 
     #[test]

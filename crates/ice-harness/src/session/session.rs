@@ -65,22 +65,9 @@ fn assert_valid_limit(limit: Option<usize>) -> SessionResult<()> {
     Ok(())
 }
 
-/// `assertValidCursor` — `None` is allowed; `Some(seq)` must be non-negative.
-fn assert_valid_cursor(after_seq: Option<u64>) -> SessionResult<()> {
-    if let Some(seq) = after_seq {
-        if seq == u64::MAX {
-            // `u64` is always a non-negative integer by construction; this arm
-            // mirrors the TS `!Number.isInteger` guard which cannot fire for a
-            // `u64`. Kept as a defensive sentinel for parity shape only.
-            return Err(SessionError::new(
-                SessionErrorCode::InvalidQuery,
-                "cursor sequence must be a non-negative integer",
-            ));
-        }
-        let _ = seq;
-    }
-    Ok(())
-}
+// Cursor sequence fields are `u64`: non-negative integer validity is enforced
+// by the type and serde. Every representable value, including u64::MAX, is a
+// valid exclusive cursor; there is no reserved out-of-range sentinel.
 
 // ---------------------------------------------------------------------------
 // assertJsonSerializable — mirrors TS `assertJsonSerializable(value)`.
@@ -380,9 +367,6 @@ impl Session {
         result_limit: Option<usize>,
     ) -> SessionResult<Vec<Entry>> {
         assert_valid_limit(query.limit)?;
-        if let Some(cursor) = &query.cursor {
-            assert_valid_cursor(Some(cursor.after_seq))?;
-        }
         if result_limit == query.limit {
             self.storage_arc().find_entries(query).await
         } else {
@@ -403,9 +387,6 @@ impl Session {
         result_limit: Option<usize>,
     ) -> SessionResult<Vec<Entry>> {
         assert_valid_limit(query.limit)?;
-        if let Some(cursor) = &query.cursor {
-            assert_valid_cursor(Some(cursor.after_seq))?;
-        }
         let start = match &bounds.start {
             Some(s) => s.clone(),
             None => match self.get_leaf_id_for_lane(default_lane).await? {
@@ -439,7 +420,6 @@ impl Session {
     /// `Session.queryRecords`.
     async fn query_records(&self, query: &RecordQuery) -> SessionResult<Vec<LaneRecord>> {
         assert_valid_limit(query.limit)?;
-        assert_valid_cursor(query.after_seq)?;
         if query.operation_kind.is_some() && query.record_type != Some("operation_started") {
             return Err(SessionError::new(
                 SessionErrorCode::InvalidQuery,
@@ -453,7 +433,6 @@ impl Session {
     /// `Session.queryLog`.
     async fn query_log(&self, options: &LogOptions) -> SessionResult<Vec<LogItem>> {
         assert_valid_limit(options.limit)?;
-        assert_valid_cursor(options.after_seq)?;
         self.storage_arc().get_log(options).await
     }
 
@@ -805,6 +784,108 @@ mod tests {
         };
         let err = session.find_entries(&q).await.unwrap_err();
         assert_eq!(err.code, SessionErrorCode::InvalidQuery);
+    }
+
+    #[tokio::test]
+    async fn branch_query_validates_before_empty_lane_and_find_entry_override() {
+        let session = fixture_session();
+        let empty_lane_limit = session
+            .find_entries_on_branch(
+                &EntryQuery {
+                    limit: Some(0),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+            )
+            .await
+            .expect_err("invalid limit must not be hidden by empty lane");
+        assert_eq!(empty_lane_limit.code, SessionErrorCode::InvalidQuery);
+
+        let empty_lane_cursor = session
+            .find_entries_on_branch(
+                &EntryQuery {
+                    cursor: Some(crate::session::types::EntryCursor {
+                        after_seq: u64::MAX,
+                    }),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+            )
+            .await
+            .expect("all u64 cursors are valid on an empty lane");
+        assert!(empty_lane_cursor.is_empty());
+
+        session.append_message(user("one")).await.unwrap();
+        let find_one_limit = session
+            .find_entry_on_branch(
+                &EntryQuery {
+                    limit: Some(0),
+                    ..EntryQuery::default()
+                },
+                &BranchBounds::default(),
+            )
+            .await
+            .expect_err("findEntry limit override must not hide invalid input limit");
+        assert_eq!(find_one_limit.code, SessionErrorCode::InvalidQuery);
+
+        session.append_message(user("two")).await.unwrap();
+        let query = EntryQuery {
+            order: Some(crate::session::types::EntryOrder::OldestFirst),
+            limit: Some(2),
+            ..EntryQuery::default()
+        };
+        let all = session
+            .find_entries_on_branch(&query, &BranchBounds::default())
+            .await
+            .expect("findEntriesOnBranch succeeds");
+        let one = session
+            .find_entry_on_branch(&query, &BranchBounds::default())
+            .await
+            .expect("findEntryOnBranch succeeds")
+            .expect("first branch match");
+        assert_eq!(one.id(), all[0].id());
+    }
+
+    #[tokio::test]
+    async fn maximum_u64_is_a_valid_exclusive_cursor() {
+        let session = fixture_session();
+        session.append_message(user("one")).await.unwrap();
+        let newest = EntryQuery {
+            cursor: Some(crate::session::types::EntryCursor {
+                after_seq: u64::MAX,
+            }),
+            ..EntryQuery::default()
+        };
+        assert_eq!(session.find_entries(&newest).await.unwrap().len(), 1);
+        assert_eq!(
+            session
+                .find_entries_on_branch(&newest, &BranchBounds::default())
+                .await
+                .unwrap()
+                .len(),
+            1
+        );
+        let oldest = EntryQuery {
+            order: Some(crate::session::types::EntryOrder::OldestFirst),
+            ..newest
+        };
+        assert!(session.find_entries(&oldest).await.unwrap().is_empty());
+        assert!(session
+            .find_records(&RecordQuery {
+                after_seq: Some(u64::MAX),
+                ..Default::default()
+            })
+            .await
+            .unwrap()
+            .is_empty());
+        assert!(session
+            .get_log(&LogOptions {
+                after_seq: Some(u64::MAX),
+                ..Default::default()
+            })
+            .await
+            .unwrap()
+            .is_empty());
     }
 
     #[tokio::test]

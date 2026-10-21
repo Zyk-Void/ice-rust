@@ -1188,6 +1188,7 @@ name = "ice-harness"
 version = "0.6.1"
 dependencies = [
  "async-trait",
+ "fs2",
  "futures",
  "ice-agent",
  "ice-ai",

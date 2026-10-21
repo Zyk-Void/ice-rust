@@ -1,6 +1,774 @@
 use super::*;
 use ice_tui::Component;
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn buffered_shell_result_cannot_follow_a_later_prompt_into_a_new_session() {
+    let provider = ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new().with_text("new response"),
+    );
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let state = test_tui_state();
+    // The key thread can reserve Working before the prompt mailbox is handled.
+    state.set_status(RunStatus::Working);
+    finish_user_bash(
+        &harness,
+        &state,
+        UserBashReport {
+            storage: harness.session().storage(),
+            command: "old command".into(),
+            output: "OLD_BUFFERED_RESULT".into(),
+            exit_code: Some(0),
+            cancelled: false,
+            truncated: false,
+            full_output_path: None,
+            exclude_from_context: false,
+        },
+    )
+    .await;
+    assert_eq!(state.pending_bash_messages.lock().unwrap().len(), 1);
+    let replacement = AgentHarness::create(Default::default()).await.unwrap();
+    harness
+        .set_session(ice_harness::session::session::Session::new(
+            replacement.session().storage(),
+            None,
+        ))
+        .await
+        .unwrap();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    run_prompt_streaming(
+        &harness,
+        "new prompt",
+        false,
+        &tui,
+        &state,
+        false,
+        Vec::new(),
+    )
+    .await;
+    let entries = harness
+        .session()
+        .find_entries(&Default::default())
+        .await
+        .unwrap();
+    assert!(!serde_json::to_string(&entries)
+        .unwrap()
+        .contains("OLD_BUFFERED_RESULT"));
+    assert!(state.pending_bash_messages.lock().unwrap().is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn explicit_retry_abort_settles_before_session_replacement() {
+    let provider = ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new()
+            .with_text("retry response")
+            .with_tokens_per_second(1.0),
+    );
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider.clone()],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    harness
+        .append_message(AgentMessage::User(UserMessage::new("explicit retry", 1)))
+        .await
+        .unwrap();
+    let session = crate::agent_session::AgentSession::new(
+        harness.clone(),
+        Vec::new(),
+        Vec::new(),
+        std::path::PathBuf::new(),
+    );
+    let aborting = harness.clone();
+    let abort = tokio::spawn(async move {
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == 0
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        aborting.abort().await.unwrap();
+    });
+    let result = session.retry().await.unwrap().unwrap();
+    abort.await.unwrap();
+    assert!(matches!(result.outcome, HarnessRunOutcome::Aborted { .. }));
+    assert!(harness
+        .session()
+        .find_open_operations("main", None)
+        .await
+        .unwrap()
+        .is_empty());
+    let old = ice_harness::session::session::Session::new(harness.session().storage(), None);
+    let old_count = old.find_entries(&Default::default()).await.unwrap().len();
+    let replacement = AgentHarness::create(Default::default()).await.unwrap();
+    harness
+        .set_session(ice_harness::session::session::Session::new(
+            replacement.session().storage(),
+            None,
+        ))
+        .await
+        .unwrap();
+    harness
+        .append_message(AgentMessage::User(UserMessage::new("replacement", 2)))
+        .await
+        .unwrap();
+    assert_eq!(
+        old.find_entries(&Default::default()).await.unwrap().len(),
+        old_count
+    );
+    assert_eq!(
+        harness
+            .session()
+            .find_entries(&Default::default())
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn tui_abort_does_not_start_extra_initial_prompts() {
+    let provider = ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new()
+            .with_text("streaming response")
+            .with_tokens_per_second(1.0),
+    );
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider.clone()],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let aborting = harness.clone();
+    let calls = provider.clone();
+    let abort = tokio::spawn(async move {
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while calls
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == 0
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        aborting.lane("main").abort().await.unwrap();
+    });
+    let state = test_tui_state();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    run_initial_prompts(
+        &harness,
+        vec!["first prompt".into(), "must not start extra prompt".into()],
+        Vec::new(),
+        &tui,
+        &state,
+        false,
+        &Arc::new(Mutex::new(true)),
+    )
+    .await;
+    abort.await.unwrap();
+    assert_eq!(
+        provider
+            .state()
+            .call_count
+            .load(std::sync::atomic::Ordering::SeqCst),
+        1
+    );
+    let entries = harness
+        .session()
+        .find_entries(&Default::default())
+        .await
+        .unwrap();
+    assert!(!serde_json::to_string(&entries)
+        .unwrap()
+        .contains("must not start extra prompt"));
+    assert!(harness
+        .session()
+        .find_open_operations("main", None)
+        .await
+        .unwrap()
+        .is_empty());
+}
+
+#[tokio::test]
+async fn delayed_user_bash_result_cannot_write_into_a_replacement_session() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let old_storage = harness.session().storage();
+    let replacement = AgentHarness::create(Default::default()).await.unwrap();
+    harness
+        .set_session(ice_harness::session::session::Session::new(
+            replacement.session().storage(),
+            None,
+        ))
+        .await
+        .unwrap();
+    let state = test_tui_state();
+    let make_report = |storage, output: &str| UserBashReport {
+        storage,
+        command: "command".into(),
+        output: output.into(),
+        exit_code: Some(0),
+        cancelled: false,
+        truncated: false,
+        full_output_path: None,
+        exclude_from_context: false,
+    };
+    state.begin_user_bash();
+    finish_user_bash(
+        &harness,
+        &state,
+        make_report(old_storage, "OLD_BASH_RESULT"),
+    )
+    .await;
+    assert!(!state.user_bash_running());
+    assert!(harness
+        .session()
+        .find_entries(&Default::default())
+        .await
+        .unwrap()
+        .is_empty());
+
+    state.begin_user_bash();
+    finish_user_bash(
+        &harness,
+        &state,
+        make_report(harness.session().storage(), "CURRENT_BASH_RESULT"),
+    )
+    .await;
+    assert!(!state.user_bash_running());
+    let entries = harness
+        .session()
+        .find_entries(&Default::default())
+        .await
+        .unwrap();
+    assert_eq!(entries.len(), 1);
+    assert!(serde_json::to_string(&entries)
+        .unwrap()
+        .contains("CURRENT_BASH_RESULT"));
+}
+
+#[test]
+fn import_session_uses_custom_root_and_settles_the_old_run() {
+    const CHILD: &str = "ICERS_IMPORT_SWITCH_CHILD";
+    if std::env::var_os(CHILD).is_none() {
+        let dir = tempfile::tempdir().unwrap();
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "interactive_tui::tests::import_session_uses_custom_root_and_settles_the_old_run",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .env(crate::config::CONFIG_DIR_ENV, dir.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let dir = tempfile::tempdir().unwrap();
+            let cwd = dir.path().join("work");
+            std::fs::create_dir_all(&cwd).unwrap();
+            let custom = dir.path().join("custom-sessions");
+            crate::session::configure_session_dir(&Args {
+                session_dir: Some(custom.clone()),
+                ..Default::default()
+            });
+            let provider = ice_ai::providers::faux::FauxProvider::new(
+                ice_ai::providers::faux::FauxScript::new()
+                    .with_text("old response still streaming")
+                    .with_tokens_per_second(1.0),
+            );
+            let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                model: provider.default_model().clone(),
+                models: vec![provider.clone()],
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+            let old =
+                ice_harness::session::session::Session::new(harness.session().storage(), None);
+            let running = harness.clone();
+            let task =
+                tokio::spawn(async move { running.prompt_text("old prompt", Vec::new()).await });
+            tokio::time::timeout(std::time::Duration::from_secs(3), async {
+                while provider
+                    .state()
+                    .call_count
+                    .load(std::sync::atomic::Ordering::SeqCst)
+                    == 0
+                {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
+            let source = dir.path().join("source.jsonl");
+            let header = ice_harness::session::jsonl::encode_header(
+                &ice_harness::session::jsonl::JsonlV4Header::new(
+                    "imported-session".into(),
+                    1,
+                    cwd.to_string_lossy().into_owned(),
+                    None,
+                    None,
+                    None,
+                ),
+            );
+            std::fs::write(&source, &header).unwrap();
+            let state = test_tui_state();
+            state.set_status(RunStatus::Working);
+            let context = ice_extensions::ToolCallContext::new(cwd.to_string_lossy().into_owned());
+            import_session(
+                &harness,
+                &harness.lane("main"),
+                &source.to_string_lossy(),
+                &cwd,
+                &state.chat_container,
+                &state,
+                &context,
+            )
+            .await;
+            assert_eq!(
+                harness.session().storage().metadata().id,
+                "imported-session",
+                "{}",
+                strip_ansi(&state.chat_container.render(120).join("\n"))
+            );
+            let result = task.await.unwrap().unwrap();
+            assert!(matches!(result.outcome, HarnessRunOutcome::Aborted { .. }));
+            assert!(old
+                .find_open_operations("main", None)
+                .await
+                .unwrap()
+                .is_empty());
+            assert!(harness
+                .session()
+                .find_entries(&Default::default())
+                .await
+                .unwrap()
+                .is_empty());
+            assert!(custom.join("import-imported-session.jsonl").is_file());
+            assert!(!crate::session::default_session_dir(&cwd).exists());
+            assert_eq!(std::fs::read_to_string(&source).unwrap(), header);
+            let old_count = old.get_stats().await.unwrap().message_count;
+            harness
+                .append_message(AgentMessage::User(UserMessage::new("new history", 2)))
+                .await
+                .unwrap();
+            assert_eq!(old.get_stats().await.unwrap().message_count, old_count);
+        });
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn prompt_settlement_flushes_bash_results_before_idle() {
+    let provider = ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new().with_text("done"),
+    );
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let state = test_tui_state();
+    state
+        .pending_bash_messages
+        .lock()
+        .unwrap()
+        .push(BufferedBashMessage {
+            storage: harness.session().storage(),
+            message: ice_harness::messages::bash_execution_message(
+                "command",
+                "BASH_SETTLEMENT_RESULT",
+                Some(0),
+                false,
+                false,
+                None,
+                Some(false),
+                1,
+            ),
+        });
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    run_prompt_streaming(&harness, "test", false, &tui, &state, false, Vec::new()).await;
+    assert!(state.pending_bash_messages.lock().unwrap().is_empty());
+    assert!(matches!(*state.status.lock().unwrap(), RunStatus::Idle));
+    let entries = harness
+        .session()
+        .find_entries(&EntryQuery {
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    assert_eq!(entries.len(), 3);
+    assert!(serde_json::to_string(entries.last().unwrap())
+        .unwrap()
+        .contains("BASH_SETTLEMENT_RESULT"));
+}
+
+#[tokio::test]
+async fn delayed_agent_end_cannot_write_into_a_replacement_session() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let lane = harness.lane("main");
+    let state = test_tui_state();
+    state
+        .pending_bash_messages
+        .lock()
+        .unwrap()
+        .push(BufferedBashMessage {
+            storage: harness.session().storage(),
+            message: ice_harness::messages::bash_execution_message(
+                "old command",
+                "OLD_SESSION_RESULT",
+                Some(0),
+                false,
+                false,
+                None,
+                Some(false),
+                1,
+            ),
+        });
+    let replacement = AgentHarness::create(Default::default()).await.unwrap();
+    harness
+        .set_session(ice_harness::session::session::Session::new(
+            replacement.session().storage(),
+            None,
+        ))
+        .await
+        .unwrap();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    handle_agent_event(
+        AgentEvent::AgentEnd {
+            messages: Vec::new(),
+        },
+        &tui,
+        &state,
+        &state.chat_container,
+        &lane,
+    )
+    .await;
+    assert!(replacement
+        .session()
+        .find_entries(&Default::default())
+        .await
+        .unwrap()
+        .is_empty());
+}
+
+#[tokio::test]
+async fn unqueue_restores_only_selected_messages_images_after_durable_cancel() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let lane = harness.lane("main");
+    let mut bytes = Vec::new();
+    {
+        let mut encoder = png::Encoder::new(&mut bytes, 1, 1);
+        encoder.set_color(png::ColorType::Rgba);
+        encoder
+            .write_header()
+            .unwrap()
+            .write_image_data(&[255, 0, 0, 255])
+            .unwrap();
+    }
+    let image = ice_ai::types::ImageContent {
+        kind: ice_ai::types::ImageContentType,
+        data: base64::engine::general_purpose::STANDARD.encode(bytes),
+        mime_type: "image/png".into(),
+    };
+    let selected = lane
+        .follow_up(user_message_with_images("selected", vec![image.clone()]))
+        .await
+        .unwrap();
+    lane.follow_up(user_message_with_images("keep queued", vec![image.clone()]))
+        .await
+        .unwrap();
+    let state = test_tui_state();
+    state.editor.set_text("draft");
+    state.queue_image(image.clone());
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    unqueue_message(
+        harness.clone(),
+        state.editor.clone(),
+        state.clone(),
+        tui,
+        Some(1),
+    )
+    .await;
+    assert_eq!(state.editor.get_expanded_text(), "selected\n\ndraft");
+    assert_eq!(state.take_pending_images(), vec![image.clone(), image]);
+    assert_eq!(
+        lane.queued_messages().await.unwrap().follow_up,
+        vec!["keep queued"]
+    );
+    assert_eq!(
+        lane.cancel_queued(&selected.entry_id)
+            .await
+            .unwrap()
+            .outcome,
+        ice_harness::agent_harness::CancelQueuedOutcome::AlreadyConsumed
+    );
+}
+
+#[test]
+fn footer_context_follows_fork_navigation_switch_and_compaction() {
+    const CHILD: &str = "ICERS_FOOTER_CONTEXT_CHILD";
+    if std::env::var_os(CHILD).is_none() {
+        let dir = tempfile::tempdir().unwrap();
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "interactive_tui::tests::footer_context_follows_fork_navigation_switch_and_compaction",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .env(crate::config::CONFIG_DIR_ENV, dir.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let dir = tempfile::tempdir().unwrap();
+            let mut model = ice_ai::Model::new("m", "m", ice_ai::Api::Faux, "faux", "");
+            model.context_window = 100_000;
+            let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                model,
+                models: vec![ice_ai::providers::faux::FauxProvider::new(
+                    ice_ai::providers::faux::FauxScript::new(),
+                )],
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+            let mut answer = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+            answer.stop_reason = ice_ai::StopReason::Stop;
+            answer.content = vec![Content::text("retained answer")];
+            answer.usage.input = 25_000;
+            answer.usage.total_tokens = 25_000;
+            let branch_point = harness
+                .session()
+                .append_message(AgentMessage::Assistant(Box::new(answer)))
+                .await
+                .unwrap();
+
+            let state = test_tui_state();
+            state.footer.set_context_window(100_000);
+            state.footer.set_context_tokens(Some(90_000));
+            let context =
+                ice_extensions::ToolCallContext::new(dir.path().to_string_lossy().into_owned());
+            let before = harness.session().get_metadata().await.unwrap().id;
+            fork_session(
+                &harness,
+                dir.path(),
+                &state.chat_container,
+                &state,
+                &context,
+            )
+            .await;
+            assert_ne!(harness.session().get_metadata().await.unwrap().id, before);
+            let rendered = strip_ansi(&state.footer.render(120).join("\n"));
+            assert!(rendered.contains("~25.0%/100k"), "{rendered}");
+            let fork_id = harness.session().get_metadata().await.unwrap().id;
+
+            let mut abandoned = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 1);
+            abandoned.stop_reason = ice_ai::StopReason::Stop;
+            abandoned.usage.input = 75_000;
+            abandoned.usage.total_tokens = 75_000;
+            harness
+                .session()
+                .append_message(AgentMessage::Assistant(Box::new(abandoned)))
+                .await
+                .unwrap();
+            record_context_usage(&state.footer, &harness).await;
+            assert!(strip_ansi(&state.footer.render(120).join("\n")).contains("~75.0%/100k"));
+            let lane = harness.lane("main");
+            lane.navigate_tree(Some(&branch_point), false, None, None)
+                .await
+                .unwrap();
+            record_context_usage(&state.footer, &harness).await;
+            assert!(strip_ansi(&state.footer.render(120).join("\n")).contains("~25.0%/100k"));
+
+            fork_session(
+                &harness,
+                dir.path(),
+                &state.chat_container,
+                &state,
+                &context,
+            )
+            .await;
+            state.footer.set_context_tokens(Some(90_000));
+            assert!(
+                switch_to_session(
+                    &harness,
+                    &lane,
+                    &fork_id,
+                    dir.path(),
+                    &state.chat_container,
+                    &state,
+                    &context
+                )
+                .await
+            );
+            assert!(strip_ansi(&state.footer.render(120).join("\n")).contains("~25.0%/100k"));
+
+            use ice_harness::session::types::{ProvisionedEntry, ProvisionedKind};
+            harness
+                .session()
+                .append_entry(
+                    ProvisionedEntry {
+                        id: "footer-checkpoint".into(),
+                        kind: ProvisionedKind::Compaction {
+                            summary: "Saved summary".into(),
+                            retained_tail: Vec::new(),
+                            tokens_before: 25_000,
+                            details: None,
+                            usage: None,
+                        },
+                    },
+                    "main",
+                )
+                .await
+                .unwrap();
+            record_context_usage(&state.footer, &harness).await;
+            let rendered = strip_ansi(&state.footer.render(120).join("\n"));
+            assert!(rendered.contains("?/100k"), "{rendered}");
+            assert!(!rendered.contains("0.0%"), "{rendered}");
+        });
+}
+
+#[test]
+fn compact_outcome_feedback_does_not_report_non_success_as_completed() {
+    use ice_harness::agent_harness::CompactionOutcome;
+    use ice_harness::session::types::OperationError;
+
+    assert!(
+        super::run::compact_outcome_message(CompactionOutcome::Completed {
+            leaf_id: "leaf".into(),
+            entry: ice_harness::session::types::provisioned_into_entry(
+                ice_harness::session::types::ProvisionedEntry {
+                    id: "checkpoint".into(),
+                    kind: ice_harness::session::types::ProvisionedKind::Compaction {
+                        summary: "summary".into(),
+                        retained_tail: Vec::new(),
+                        tokens_before: 0,
+                        details: None,
+                        usage: None,
+                    },
+                },
+                1,
+                None,
+                0,
+            ),
+        })
+        .is_ok()
+    );
+    assert_eq!(
+        super::run::compact_outcome_message(CompactionOutcome::Declined {
+            leaf_id: "leaf".into(),
+        }),
+        Err("Nothing to compact.".into())
+    );
+    assert_eq!(
+        super::run::compact_outcome_message(CompactionOutcome::Aborted {
+            leaf_id: "leaf".into(),
+        }),
+        Err("Compaction cancelled.".into())
+    );
+    assert_eq!(
+        super::run::compact_outcome_message(CompactionOutcome::Failed {
+            leaf_id: "leaf".into(),
+            error: OperationError {
+                code: "compaction_failed".into(),
+                message: "summary unavailable".into(),
+            },
+        }),
+        Err("Compact failed: summary unavailable".into())
+    );
+}
+
+#[tokio::test]
+async fn agent_end_does_not_mark_the_ui_idle_before_run_settlement() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let lane = harness.lane("main");
+    let state = test_tui_state();
+    let chat = state.chat_container.clone();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    state.set_status(RunStatus::Working);
+
+    handle_agent_event(
+        AgentEvent::AgentEnd {
+            messages: Vec::new(),
+        },
+        &tui,
+        &state,
+        &chat,
+        &lane,
+    )
+    .await;
+
+    assert!(matches!(*state.status.lock().unwrap(), RunStatus::Working));
+}
+
 #[test]
 fn changelog_command_shows_current_release_and_all_is_explicit() {
     let entries = crate::changelog::bundled_entries();
@@ -496,6 +1264,149 @@ fn test_tui_state() -> Arc<TuiState> {
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
     })
+}
+
+#[tokio::test]
+async fn rejected_selections_keep_display_state_and_report_errors() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let lane = harness.lane("main");
+    let state = test_tui_state();
+    let chat = Arc::new(Container::new());
+    let initial = lane.get_model().await.unwrap();
+    state.set_current_model(&initial);
+    state.footer.set_thinking_level(Some("off"));
+    let before_model = state.current_model_id();
+    let before_footer = state.footer.render(120);
+    let missing = ice_ai::Model::new(
+        "unavailable",
+        "unavailable",
+        ice_ai::Api::Faux,
+        "missing",
+        "http://unused",
+    );
+    apply_model_selection(&lane, &state, &chat, missing, false).await;
+    assert_eq!(state.current_model_id(), before_model);
+    assert_eq!(state.footer.render(120), before_footer);
+    apply_thinking_selection(
+        &lane,
+        &state,
+        &chat,
+        ice_ai::types::ThinkingLevel::Max,
+        false,
+    )
+    .await;
+    assert_eq!(state.footer.render(120), before_footer);
+    let text = strip_ansi(&chat.render(160).join("\n"));
+    assert!(text.contains("Could not change model"), "{text}");
+    assert!(text.contains("Could not change thinking level"), "{text}");
+    assert!(!text.contains("Model set to"), "{text}");
+    assert!(!text.contains("Thinking set to"), "{text}");
+}
+
+#[test]
+fn selection_defaults_are_explicit_and_save_failure_preserves_live_choice() {
+    const CHILD: &str = "ICERS_SELECTION_DEFAULTS_TEST";
+    if std::env::var_os(CHILD).is_none() {
+        let dir = tempfile::tempdir().unwrap();
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "interactive_tui::tests::selection_defaults_are_explicit_and_save_failure_preserves_live_choice", "--nocapture"])
+            .env(CHILD, "1").env(crate::config::CONFIG_DIR_ENV, dir.path()).output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let faux = ice_ai::providers::faux::FauxProvider::new(
+                ice_ai::providers::faux::FauxScript::new(),
+            );
+            let initial = faux.default_model().clone();
+            let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                model: initial.clone(),
+                models: vec![faux],
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+            let lane = harness.lane("main");
+            let state = test_tui_state();
+            let chat = Arc::new(Container::new());
+            let mut settings = crate::settings::Settings::default();
+            settings.default_provider = Some("saved-provider".into());
+            settings.default_model = Some("saved-model".into());
+            crate::settings::save_settings(&settings).unwrap();
+            let path = crate::config::settings_path().unwrap();
+            let original = std::fs::read(&path).unwrap();
+            let mut temporary = initial.clone();
+            temporary.id = "temporary".into();
+            apply_model_selection(&lane, &state, &chat, temporary.clone(), false).await;
+            apply_thinking_selection(
+                &lane,
+                &state,
+                &chat,
+                ice_ai::types::ThinkingLevel::Low,
+                false,
+            )
+            .await;
+            assert_eq!(lane.get_model().await.unwrap().id, "temporary");
+            assert_eq!(std::fs::read(&path).unwrap(), original);
+            apply_model_selection(&lane, &state, &chat, temporary, true).await;
+            assert_eq!(
+                crate::settings::load_settings()
+                    .unwrap()
+                    .default_model
+                    .as_deref(),
+                Some("temporary")
+            );
+            apply_thinking_selection(
+                &lane,
+                &state,
+                &chat,
+                ice_ai::types::ThinkingLevel::Medium,
+                true,
+            )
+            .await;
+            assert_eq!(
+                crate::settings::load_settings()
+                    .unwrap()
+                    .default_thinking_level
+                    .as_deref(),
+                Some("medium")
+            );
+            std::fs::remove_file(&path).unwrap();
+            std::fs::create_dir(&path).unwrap();
+            let mut next = initial;
+            next.id = "live-despite-save-failure".into();
+            apply_model_selection(&lane, &state, &chat, next, true).await;
+            apply_thinking_selection(
+                &lane,
+                &state,
+                &chat,
+                ice_ai::types::ThinkingLevel::High,
+                true,
+            )
+            .await;
+            assert_eq!(
+                lane.get_model().await.unwrap().id,
+                "live-despite-save-failure"
+            );
+            assert!(state
+                .current_model_id()
+                .contains("live-despite-save-failure"));
+            assert_eq!(
+                lane.get_thinking_level().await.unwrap(),
+                ice_ai::types::ThinkingLevel::High
+            );
+            let text = strip_ansi(&chat.render(200).join("\n"));
+            assert!(text.contains("could not save default"), "{text}");
+        });
 }
 
 /// A `SetEditorText` injection — and the host's own auto-send clear — must be
@@ -1463,7 +2374,7 @@ fn test_slash_command_dispatch() {
     resolves_to("/help", "/help");
     resolves_to("/?", "/help"); // alias → canonical
     resolves_to("/clear", "/clear");
-    resolves_to("/new", "/clear"); // alias
+    resolves_to("/new", "/new"); // Creates a durable session; not a visual clear.
     resolves_to("/q", "/exit"); // alias
     resolves_to("/quit", "/exit"); // alias
     resolves_to("/version", "/version");
@@ -1763,45 +2674,41 @@ fn fresh_launch_does_not_restore_old_history() {
     assert!(launch_restores_history(&selected));
 }
 
-#[test]
-fn context_badge_ignores_aborted_and_error_turns() {
+#[tokio::test]
+async fn context_badge_ignores_aborted_and_error_turns() {
     use ice_ai::types::{Api, StopReason, Usage};
 
+    let mut model = ice_ai::Model::new("m", "m", Api::Faux, "faux", "");
+    model.context_window = 100_000;
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model,
+        ..Default::default()
+    })
+    .await
+    .unwrap();
     let footer = Arc::new(FooterComponent::new());
-    footer.set_context_window(100_000);
 
-    // A real response fills in the percent (`?` -> `25.0%/100k`).
-    let mut ok = ice_ai::AssistantMessage::empty(Api::AnthropicMessages, "anthropic", "m", 0);
-    ok.stop_reason = StopReason::Stop;
-    ok.usage = Usage {
-        input: 25_000,
-        ..Usage::zero()
-    };
-    record_context_usage(&footer, &ok);
-    let stats = strip_ansi(&footer.render(120).join("\n"));
-    assert!(stats.contains("25.0%/100k"), "stats: {stats}");
-
-    // An aborted turn must not clobber the last good value.
-    let mut aborted = ice_ai::AssistantMessage::empty(Api::AnthropicMessages, "anthropic", "m", 0);
-    aborted.stop_reason = StopReason::Aborted;
-    aborted.usage = Usage {
-        input: 90_000,
-        ..Usage::zero()
-    };
-    record_context_usage(&footer, &aborted);
-    let stats = strip_ansi(&footer.render(120).join("\n"));
-    assert!(stats.contains("25.0%/100k"), "stats: {stats}");
-
-    // An errored turn likewise (its usage is not a real measurement).
-    let mut errored = ice_ai::AssistantMessage::empty(Api::AnthropicMessages, "anthropic", "m", 0);
-    errored.stop_reason = StopReason::Error;
-    errored.usage = Usage {
-        input: 90_000,
-        ..Usage::zero()
-    };
-    record_context_usage(&footer, &errored);
-    let stats = strip_ansi(&footer.render(120).join("\n"));
-    assert!(stats.contains("25.0%/100k"), "stats: {stats}");
+    for (reason, input) in [
+        (StopReason::Stop, 25_000),
+        (StopReason::Aborted, 90_000),
+        (StopReason::Error, 90_000),
+    ] {
+        let mut message = AssistantMessage::empty(Api::Faux, "faux", "m", 0);
+        message.stop_reason = reason;
+        message.usage = Usage {
+            input,
+            total_tokens: input,
+            ..Usage::zero()
+        };
+        harness
+            .session()
+            .append_message(AgentMessage::Assistant(Box::new(message)))
+            .await
+            .unwrap();
+        record_context_usage(&footer, &harness).await;
+        let stats = strip_ansi(&footer.render(120).join("\n"));
+        assert!(stats.contains("~25.0%/100k"), "stats: {stats}");
+    }
 }
 
 #[test]
@@ -2141,8 +3048,54 @@ fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
     result
 }
 
+struct SelectionTestProvider {
+    id: String,
+    inner: Arc<ice_ai::providers::faux::FauxProvider>,
+}
+
+#[async_trait::async_trait]
+impl ice_ai::Provider for SelectionTestProvider {
+    fn id(&self) -> &str {
+        &self.id
+    }
+    fn models(&self) -> &[ice_ai::Model] {
+        ice_ai::Provider::models(self.inner.as_ref())
+    }
+    async fn stream_simple(
+        &self,
+        model: &ice_ai::Model,
+        context: &ice_ai::types::Context,
+        options: &ice_ai::SimpleStreamOptions,
+    ) -> ice_ai::AssistantMessageEventStream {
+        ice_ai::Provider::stream_simple(self.inner.as_ref(), model, context, options).await
+    }
+}
+
+async fn selection_test_harness(catalog: &[ice_ai::Model]) -> AgentHarness {
+    let mut ids = std::collections::HashSet::new();
+    let models = catalog
+        .iter()
+        .filter_map(|model| {
+            ids.insert(model.provider.clone()).then(|| {
+                Arc::new(SelectionTestProvider {
+                    id: model.provider.clone(),
+                    inner: ice_ai::providers::faux::FauxProvider::new(
+                        ice_ai::providers::faux::FauxScript::new(),
+                    ),
+                }) as Arc<dyn ice_ai::Provider>
+            })
+        })
+        .collect();
+    AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        models,
+        ..Default::default()
+    })
+    .await
+    .unwrap()
+}
+
 // Existing catalog/persistence cases use a real lane and an explicitly supplied
-// available catalog. Separate cases below exercise missing auth and lane failure.
+// offline provider registry. Separate cases below exercise missing auth and lane failure.
 fn switch_provider_for_test(
     input: &str,
     manifests: &[ice_extensions::ProviderManifest],
@@ -2152,9 +3105,9 @@ fn switch_provider_for_test(
         .build()
         .unwrap()
         .block_on(async {
-            let harness = AgentHarness::create(Default::default()).await.unwrap();
-            let lane = harness.lane("main");
             let available = crate::provider::catalog_with_manifests(manifests).unwrap();
+            let harness = selection_test_harness(&available).await;
+            let lane = harness.lane("main");
             let result = switch_provider(input, manifests, &available, &lane).await;
             if let Ok((model, _)) = &result {
                 assert_eq!(lane.get_model().await.unwrap(), *model);
@@ -2229,7 +3182,7 @@ fn provider_switch_applies_live_and_keeps_configured_protocol_for_duplicate_mode
             .build()
             .unwrap()
             .block_on(async {
-                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let harness = selection_test_harness(&available).await;
                 let lane = harness.lane("main");
                 let (model, note) = switch_provider("DEEPSEEK", &[manifest], &available, &lane)
                     .await

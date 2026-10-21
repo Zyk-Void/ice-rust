@@ -615,6 +615,7 @@ fn prepare_dev_extension(
 }
 
 async fn resolve_resume(parsed: &mut Args, cwd: &Path) -> Option<i32> {
+    crate::session::configure_session_dir(parsed);
     if !parsed.resume {
         return None;
     }

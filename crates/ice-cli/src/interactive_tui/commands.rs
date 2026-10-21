@@ -26,18 +26,24 @@ impl SlashCommand for ClearChatCommand {
     fn name(&self) -> &'static str {
         "/clear"
     }
-    fn aliases(&self) -> &'static [&'static str] {
-        &["/new"]
-    }
-    // `/new` carries its own weight as a discoverable entry, so surface it.
-    fn alias_visible(&self) -> &'static [&'static str] {
-        &["/new"]
-    }
     fn description(&self) -> &'static str {
-        "Clear the conversation"
+        "Clear the visible transcript without changing sessions"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
         let _ = ctx.tx.send(TuiMessage::ClearChat);
+    }
+}
+
+pub(super) struct NewSessionCommand;
+impl SlashCommand for NewSessionCommand {
+    fn name(&self) -> &'static str {
+        "/new"
+    }
+    fn description(&self) -> &'static str {
+        "Start a new conversation in a fresh session"
+    }
+    fn execute(&self, ctx: &CommandContext, _args: &str) {
+        let _ = ctx.tx.send(TuiMessage::NewSession);
     }
 }
 
@@ -139,19 +145,14 @@ impl SlashCommand for ModelCommand {
                     .unwrap_or_else(|error| error.into_inner()),
                 term,
             ) {
-                let model_id = model.id.clone();
-                ctx.state.set_current_model(&model);
                 let lane = ctx.lane.clone();
+                let state = ctx.state.clone();
+                let chat = ctx.chat.clone();
+                let tui = ctx.tui.clone();
                 tokio::spawn(async move {
-                    let _ = lane.set_model(model).await;
+                    apply_model_selection(&lane, &state, &chat, model, false).await;
+                    tui.request_render(false);
                 });
-                add_note_message(
-                    &ctx.chat,
-                    &format!(
-                        "Model set to {} — applies to the next message.",
-                        short_model_name(&model_id)
-                    ),
-                );
                 ctx.tui.request_render(false);
                 return;
             }
@@ -230,12 +231,13 @@ impl SlashCommand for ThinkingCommand {
                 return;
             };
             let lane = ctx.lane.clone();
-            let footer = ctx.state.footer.clone();
+            let state = ctx.state.clone();
+            let chat = ctx.chat.clone();
+            let tui = ctx.tui.clone();
             tokio::spawn(async move {
-                let _ = lane.set_thinking_level(level).await;
+                apply_thinking_selection(&lane, &state, &chat, level, false).await;
+                tui.request_render(false);
             });
-            footer.set_thinking_level(Some(thinking_level_name(level)));
-            add_note_message(&ctx.chat, &format!("Thinking set to {level_name}."));
             ctx.tui.request_render(false);
             return;
         }
@@ -387,7 +389,7 @@ impl SlashCommand for ExportCommand {
         "/export"
     }
     fn description(&self) -> &'static str {
-        "Export session (supports: md, html, jsonl)"
+        "Export session (supports: md, html, jsonl, native)"
     }
     fn execute(&self, ctx: &CommandContext, args: &str) {
         let format = args.trim().to_lowercase();
@@ -401,17 +403,52 @@ impl SlashCommand for ExportCommand {
             let _ = ctx.tx.send(TuiMessage::ExportSessionWithFormat(
                 crate::export::ExportFormat::Jsonl,
             ));
+        } else if format == "native" {
+            let _ = ctx.tx.send(TuiMessage::ExportNativeSession);
         } else {
             // Invalid format, show error
             add_error_message(
                 &ctx.chat,
                 &format!(
-                    "Unknown export format: {}. Supported: md, html, jsonl",
+                    "Unknown export format: {}. Supported: md, html, jsonl, native",
                     args.trim()
                 ),
             );
             ctx.tui.request_render(false);
         }
+    }
+}
+
+/// `/unqueue [n]` — take one queued steering/follow-up message back into the
+/// editor (1-based, in dock order; the newest when omitted). Unlike Alt+Q this
+/// leaves the other queued messages in place.
+pub(super) struct UnqueueCommand;
+impl SlashCommand for UnqueueCommand {
+    fn name(&self) -> &'static str {
+        "/unqueue"
+    }
+    fn description(&self) -> &'static str {
+        "Move one queued message back into the editor (/unqueue [n])"
+    }
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let position = match args.trim() {
+            "" => None,
+            text => match text.parse::<usize>() {
+                Ok(n) if n >= 1 => Some(n),
+                _ => {
+                    add_error_message(&ctx.chat, "Usage: /unqueue [n] (n starts at 1)");
+                    ctx.tui.request_render(false);
+                    return;
+                }
+            },
+        };
+        tokio::spawn(unqueue_message(
+            ctx.session.harness().clone(),
+            ctx.editor.clone(),
+            ctx.state.clone(),
+            ctx.tui.clone(),
+            position,
+        ));
     }
 }
 
@@ -722,16 +759,24 @@ impl SlashCommand for ScopedModelsCommand {
     }
 }
 
+/// Shown instead of sharing until the user re-runs `/share confirm`.
+const SHARE_CONFIRMATION_NOTE: &str = "/share sends the active main branch transcript (including compaction summaries) to an external service (a gh gist, else the clipboard). Abandoned branches are not included. Review the transcript for secrets or sensitive text first; sharing does not redact anything. Run `/share confirm` to proceed.";
+
 pub(super) struct ShareCommand;
 impl SlashCommand for ShareCommand {
     fn name(&self) -> &'static str {
         "/share"
     }
     fn description(&self) -> &'static str {
-        "Share session (gist via gh, or clipboard)"
+        "Share session (gist via gh, or clipboard); `/share confirm` to proceed"
     }
-    fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::ShareSession);
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        if args.trim() == "confirm" {
+            let _ = ctx.tx.send(TuiMessage::ShareSession);
+        } else {
+            add_note_message(&ctx.chat, SHARE_CONFIRMATION_NOTE);
+            ctx.tui.request_render(false);
+        }
     }
 }
 
@@ -808,6 +853,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     let mut r = CommandRegistry::new();
     r.register(Arc::new(HelpCommand));
     r.register(Arc::new(ClearChatCommand));
+    r.register(Arc::new(NewSessionCommand));
     r.register(Arc::new(ExitCommand));
     r.register(Arc::new(VersionCommand));
     r.register(Arc::new(ChangelogCommand));
@@ -832,6 +878,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     r.register(Arc::new(ExportCommand));
     r.register(Arc::new(ImportCommand));
     r.register(Arc::new(ShareCommand));
+    r.register(Arc::new(UnqueueCommand));
     r.register(Arc::new(ForkCommand));
     r.register(Arc::new(CloneCommand));
     r.register(Arc::new(TreeCommand));

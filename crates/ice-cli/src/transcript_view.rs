@@ -50,6 +50,9 @@ pub enum UiEvent {
         delay_ms: u64,
         error: String,
     },
+    /// A transient failure was not retried because replay could repeat a tool
+    /// effect — renders as a notice line.
+    RetryRefused { error: String },
     /// An assistant message began (carries any blocks already present).
     AssistantStart { blocks: Vec<AssistantBlock> },
     /// A streaming assistant snapshot: content blocks plus the finalized tool
@@ -182,6 +185,11 @@ impl TranscriptView {
             } => {
                 self.add_notice(&format!(
                     "retry {attempt}/{max_retries} in {delay_ms}ms: {error}"
+                ));
+            }
+            UiEvent::RetryRefused { error } => {
+                self.add_notice(&format!(
+                    "not retrying: the failed response may have started a tool effect: {error}"
                 ));
             }
             UiEvent::AssistantStart { blocks } => {

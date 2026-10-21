@@ -32,7 +32,7 @@
 //! rejections are `Result<T, HarnessError>`.
 
 use std::collections::{BTreeMap, VecDeque};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use futures::future::BoxFuture;
@@ -49,8 +49,9 @@ use ice_ai::types::{
     AssistantMessage, Content, DeferredHandle, StopReason, ThinkingLevel, Usage, UserContent,
     UserMessage,
 };
-use ice_ai::{Model, Provider as AiProvider};
+use ice_ai::{CacheRetention, Model, Provider as AiProvider};
 
+use crate::compaction::settings::{CodingAgentCompactionPolicy, MidRunCompactionMode};
 use crate::compaction::{
     compact, estimate_context_tokens, prepare_compaction, should_compact, CompactionLlmOptions,
 };
@@ -227,6 +228,10 @@ pub struct CancelQueuedResult {
 pub struct QueuedMessages {
     pub steering: Vec<String>,
     pub follow_up: Vec<String>,
+    /// Entry ids of `steering` / `follow_up`, in the same order, for
+    /// `cancel_queued`. Empty when the snapshot came from `clear_queue`.
+    pub steering_ids: Vec<String>,
+    pub follow_up_ids: Vec<String>,
     /// Image attachments returned by `clear_queue` for draft restoration.
     pub images: Vec<ice_ai::types::ImageContent>,
 }
@@ -256,6 +261,13 @@ fn queued_message_text(message: &AgentMessage) -> String {
         },
         _ => String::new(),
     }
+}
+
+fn queue_clear_error(total: usize, cancelled: usize, error: HarnessError) -> HarnessError {
+    let remaining = total - cancelled;
+    HarnessError::io(format!(
+        "Queue clear failed after persisting cancellation records for {cancelled} of {total} queued items; {remaining} unpersisted item(s) remain queued: {error}"
+    ))
 }
 
 // ===========================================================================
@@ -288,6 +300,24 @@ pub struct ActiveOperationSnapshot {
     pub run_id: String,
     pub lane: String,
     pub kind: OperationKind,
+}
+
+/// The configured provider context on the active branch, before asynchronous
+/// per-request hooks. Entry projectors/transforms and skill/read gating match
+/// the run path; this accessor does not invoke provider hooks or perform I/O for
+/// resource files that were already folded into the configured base prompt.
+#[derive(Debug, Clone)]
+pub struct HarnessContextSnapshot {
+    pub model: Model,
+    pub base_system_prompt: Option<String>,
+    pub system_prompt: String,
+    pub tools: Vec<ice_ai::types::Tool>,
+    pub context: crate::session::context::SessionContext,
+    pub compaction: CompactionSettings,
+    /// Effective enabled trigger: percentage for coding sessions, otherwise the
+    /// generic window-minus-reserve threshold. The reserve is not the product
+    /// trigger, even when it is resolved against the selected model.
+    pub compact_at_tokens: Option<i64>,
 }
 
 /// A point-in-time read model of one lane. Mirrors the TS lane snapshot the
@@ -518,27 +548,34 @@ impl MessageQueue {
         items
     }
 
-    /// Remove and return every queued item for `lane`, regardless of
-    /// [`QueueMode`]. Used by the `app.message.dequeue` action (restore all
-    /// queued messages into the editor), which also cancels them durably.
-    fn take_items_for_lane(&mut self, lane: &str) -> Vec<QueuedMessage> {
-        let mut selected = Vec::new();
-        let mut retained = VecDeque::new();
-        for item in self.pending.drain(..) {
-            if item.lane == lane {
-                selected.push(item);
-            } else {
-                retained.push_back(item);
-            }
-        }
-        self.pending = retained;
-        selected
+    fn find_for_lane(&self, lane: &str, entry_id: &str) -> Option<&QueuedMessage> {
+        self.pending
+            .iter()
+            .find(|item| item.lane == lane && item.entry_id == entry_id)
     }
 
-    fn remove(&mut self, entry_id: &str) -> bool {
+    fn items_for_lane(&self, lane: &str) -> Vec<QueuedMessage> {
+        self.pending
+            .iter()
+            .filter(|item| item.lane == lane)
+            .cloned()
+            .collect()
+    }
+
+    fn remove_for_lane(&mut self, lane: &str, entry_id: &str) -> bool {
         let before = self.pending.len();
-        self.pending.retain(|item| item.entry_id != entry_id);
+        self.pending
+            .retain(|item| item.lane != lane || item.entry_id != entry_id);
         self.pending.len() != before
+    }
+
+    /// The entry ids matching [`peek_for_lane`](Self::peek_for_lane).
+    fn peek_ids_for_lane(&self, lane: &str) -> Vec<String> {
+        self.pending
+            .iter()
+            .filter(|item| item.lane == lane)
+            .map(|item| item.entry_id.clone())
+            .collect()
     }
 
     /// The queued message texts for `lane`, in queue order, without touching
@@ -610,6 +647,7 @@ struct HarnessInner {
     stream_options: AgentHarnessStreamOptions,
     retry: RetryPolicy,
     compaction: CompactionSettings,
+    coding_compaction_policy: Option<CodingAgentCompactionPolicy>,
     /// v1 leaves the harness in `Automatic` driving mode; the field is kept so
     /// the contract mirrors TS `AgentHarnessOptions.drive`.
     #[allow(dead_code)]
@@ -643,6 +681,38 @@ struct HarnessInner {
     next_run_queue: SharedMessageQueue,
     /// Fast path only; durable context enqueue records remain authoritative.
     pending_context_lanes: std::collections::HashSet<String>,
+}
+
+impl HarnessInner {
+    fn apply_model(&mut self, model: Model) -> HarnessResult<()> {
+        if self.active_run.is_some() {
+            return Err(HarnessError::agent(
+                "Cannot change model during an active operation; cancel or wait for idle first",
+            ));
+        }
+        AgentHarness::resolve_provider(&self.models, &model)?;
+        if !model
+            .supported_thinking_levels()
+            .contains(&self.thinking_level)
+        {
+            return Err(HarnessError::agent("Selected model does not support the current thinking level; select a supported level first"));
+        }
+        self.model = model;
+        Ok(())
+    }
+
+    fn apply_thinking_level(&mut self, level: ThinkingLevel) -> HarnessResult<()> {
+        if self.active_run.is_some() {
+            return Err(HarnessError::agent("Cannot change thinking level during an active operation; cancel or wait for idle first"));
+        }
+        if !self.model.supported_thinking_levels().contains(&level) {
+            return Err(HarnessError::agent(
+                "Thinking level is not supported by the selected model",
+            ));
+        }
+        self.thinking_level = level;
+        Ok(())
+    }
 }
 
 // ===========================================================================
@@ -761,6 +831,7 @@ impl AgentHarness {
             stream_options: options.stream_options,
             retry: options.retry,
             compaction: options.compaction,
+            coding_compaction_policy: None,
             driving: options.drive,
             tool_execution: options.tool_execution,
             system_prompt: options.system_prompt,
@@ -2132,6 +2203,52 @@ impl AgentHarness {
         Ok(inner.resources.clone())
     }
 
+    /// Project the current active branch with the configured entry projectors
+    /// and transforms. The configuration is cloned under one short mutex guard;
+    /// no mutex is held across session reads or user-supplied projection code.
+    /// Per-request asynchronous hooks are intentionally not executed by reads.
+    pub async fn context_snapshot(&self) -> HarnessResult<HarnessContextSnapshot> {
+        let snapshot = self.snapshot_config()?;
+        let entries = self.branch_path_oldest_first().await?;
+        let options = Self::build_opts(&snapshot.entry_projectors, &snapshot.entry_transforms);
+        let context = build_session_context(&entries, &options);
+        let system_prompt = Self::compose_prompt(
+            snapshot.system_prompt.as_deref(),
+            &snapshot.resources,
+            &snapshot.active_tool_names,
+        );
+        let tools: Vec<_> = Self::active_tools(&snapshot.tools, &snapshot.active_tool_names)
+            .iter()
+            .map(|tool| tool.schema().clone())
+            .collect();
+        let compact_at_tokens = if let Some(policy) = snapshot.coding_compaction_policy {
+            policy.enabled.then(|| {
+                Self::coding_input_ceiling(
+                    &snapshot,
+                    &context.messages,
+                    &system_prompt,
+                    &tools,
+                    policy.normalized_threshold_percent(),
+                )
+            })
+        } else {
+            snapshot.compaction.enabled.then(|| {
+                (i128::from(snapshot.model.context_window)
+                    - i128::from(snapshot.compaction.reserve_tokens))
+                .clamp(i128::from(i64::MIN), i128::from(i64::MAX)) as i64
+            })
+        };
+        Ok(HarnessContextSnapshot {
+            model: snapshot.model,
+            base_system_prompt: snapshot.system_prompt,
+            system_prompt,
+            tools,
+            context,
+            compaction: snapshot.compaction,
+            compact_at_tokens,
+        })
+    }
+
     /// `getSystemPrompt()`. Mirrors TS `AgentHarness.getSystemPrompt` — a
     /// defensive clone of the composed base system prompt the harness was built
     /// with (base + append + context; the `<available_skills>` listing is added
@@ -2172,6 +2289,34 @@ impl AgentHarness {
         }
         inner.system_prompt = prompt;
         Ok(())
+    }
+
+    /// Replace the optional coding-agent compaction policy. `None` keeps the
+    /// harness's existing generic reserve-based compaction behavior unchanged.
+    /// The next operation snapshots the policy and resolves its implicit
+    /// summary reserve against that operation's selected model.
+    pub async fn set_coding_compaction_policy(
+        &self,
+        policy: Option<CodingAgentCompactionPolicy>,
+    ) -> HarnessResult<()> {
+        let mut inner = self.inner.lock().unwrap();
+        if inner.closed {
+            return Err(HarnessError::closed());
+        }
+        inner.coding_compaction_policy = policy;
+        Ok(())
+    }
+
+    /// Return the optional coding-agent compaction policy as configured. An
+    /// implicit reserve remains `None` here; it is model-resolved per operation.
+    pub async fn get_coding_compaction_policy(
+        &self,
+    ) -> HarnessResult<Option<CodingAgentCompactionPolicy>> {
+        let inner = self.inner.lock().unwrap();
+        if inner.closed {
+            return Err(HarnessError::closed());
+        }
+        Ok(inner.coding_compaction_policy)
     }
 
     /// `setResources(resources)`. Replace the skills + prompt-templates the
@@ -2443,7 +2588,7 @@ impl AgentHarness {
     /// A cancellation is only written when the enqueue exists: writing one
     /// without it is exactly the "cancellation has no pending matching enqueue"
     /// corruption the reducer checks for.
-    async fn find_enqueue(&self, entry_id: &str) -> Option<QueueEnqueuedRecord> {
+    async fn find_enqueue(&self, entry_id: &str) -> HarnessResult<Option<QueueEnqueuedRecord>> {
         let records = self
             .session
             .find_records(&RecordQuery {
@@ -2453,15 +2598,15 @@ impl AgentHarness {
                 ..Default::default()
             })
             .await
-            .ok()?;
-        records.into_iter().find_map(|record| match record {
+            .map_err(session_to_harness_err)?;
+        Ok(records.into_iter().find_map(|record| match record {
             LaneRecord::QueueEnqueued(enqueued)
                 if Self::target_entry_id(&enqueued.target) == Some(entry_id) =>
             {
                 Some(enqueued)
             }
             _ => None,
-        })
+        }))
     }
 
     /// Take every queued item for this lane the way the loop's injection
@@ -3055,12 +3200,99 @@ impl AgentHarness {
             .map_err(session_to_harness_err)
     }
 
+    /// Build an async, product-summary-only completion callback. Unlike the
+    /// agent-loop bridge this does not use `block_in_place`, so it is safe on
+    /// current-thread runtimes. Coding-summary validation still owns the stable
+    /// session UUID and retries; this callback preserves that UUID while
+    /// applying the harness's pinned request options and provider hooks.
+    fn build_coding_summary_stream_fn(
+        models: Vec<Arc<dyn AiProvider>>,
+        provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
+        stream_options: AgentHarnessStreamOptions,
+    ) -> crate::compaction::SummarizationStreamFn {
+        Arc::new(
+            move |model: &Model,
+                  context: &ice_ai::types::Context,
+                  request_options: &ice_ai::SimpleStreamOptions| {
+                let models = models.clone();
+                let provider_hooks = provider_hooks.clone();
+                let model = model.clone();
+                let mut context = context.clone();
+                let mut options = stream_options.merge_into(request_options.clone());
+                let session_id = request_options.session_id.clone();
+                Box::pin(async move {
+                    if let Some(hooks) = &provider_hooks {
+                        if let Some(patch) = hooks.transform_context(&model, &context) {
+                            patch.apply(&mut context);
+                        }
+                        if let Some(patch) = hooks.before_request(&model, &context, &options) {
+                            patch.apply(&mut options);
+                        }
+                    }
+
+                    // Coding summaries must remain standalone even if pinned options
+                    // or a request hook attempts to enable tools or cache retention.
+                    // The Rust SimpleStreamOptions contract has no toolChoice field.
+                    context.tools.clear();
+                    options.cache_retention = CacheRetention::None;
+                    options.session_id = session_id;
+
+                    let response = match models
+                        .iter()
+                        .find(|provider| provider.id() == model.provider)
+                    {
+                        Some(provider) => match provider
+                            .stream_simple(&model, &context, &options)
+                            .await
+                            .result()
+                            .await
+                        {
+                            Ok(response) => response,
+                            Err(error) => AssistantMessage::terminal(
+                                model.api.clone(),
+                                model.provider.clone(),
+                                model.id.clone(),
+                                StopReason::Error,
+                                format!(
+                                    "Summarization stream ended without a terminal event: {error}"
+                                ),
+                                now_ms(),
+                            ),
+                        },
+                        None => AssistantMessage::terminal(
+                            model.api.clone(),
+                            model.provider.clone(),
+                            model.id.clone(),
+                            StopReason::Error,
+                            format!("No provider registered for '{}'", model.provider),
+                            now_ms(),
+                        ),
+                    };
+                    if let Some(hooks) = &provider_hooks {
+                        hooks.after_response(&model, &response);
+                    }
+                    response
+                }) as BoxFuture<'static, AssistantMessage>
+            },
+        )
+    }
+
     /// Snapshot the inner config fields needed to build an `AgentLoopConfig`.
     fn snapshot_config(&self) -> HarnessResult<ConfigSnapshot> {
         let inner = self.inner.lock().unwrap();
         if inner.closed {
             return Err(HarnessError::closed());
         }
+        let coding_compaction_policy = inner.coding_compaction_policy;
+        let compaction =
+            coding_compaction_policy.map_or(inner.compaction, |policy| CompactionSettings {
+                enabled: policy.enabled,
+                reserve_tokens: policy.resolve_reserve_tokens(
+                    Some(inner.model.max_tokens),
+                    Some(inner.model.context_window),
+                ),
+                keep_recent_tokens: policy.keep_recent_tokens,
+            });
         Ok(ConfigSnapshot {
             child_scope: inner.active_run.as_ref().map_or_else(
                 || self.child_scope.lock().unwrap().child_token(),
@@ -3075,7 +3307,8 @@ impl AgentHarness {
             resources: inner.resources.clone(),
             stream_options: inner.stream_options.clone(),
             retry: inner.retry.clone(),
-            compaction: inner.compaction,
+            compaction,
+            coding_compaction_policy,
             tool_execution: inner.tool_execution,
             driving: inner.driving,
             models: inner.models.clone(),
@@ -3132,6 +3365,68 @@ impl AgentHarness {
             &[]
         };
         compose_system_prompt(base, skills, None, None)
+    }
+
+    /// Input ceiling for the known coding request. Keep the configured trigger,
+    /// but never place it above the selected provider's shared output allowance.
+    /// Hooks/custom converters can still change a request; this is an estimate,
+    /// not authority over their payload or an exact tokenizer.
+    fn coding_input_ceiling(
+        snap: &ConfigSnapshot,
+        messages: &[AgentMessage],
+        system_prompt: &str,
+        tools: &[ice_ai::types::Tool],
+        percent: f64,
+    ) -> i64 {
+        let window = snap.model.context_window.min(i64::MAX as u64) as i64;
+        if window == 0 {
+            return 0;
+        }
+        let context = ice_ai::types::Context {
+            system_prompt: (!system_prompt.is_empty()).then(|| system_prompt.to_string()),
+            messages: harness_convert_to_llm(messages.to_vec()),
+            tools: tools.to_vec(),
+        };
+        let options = snap
+            .stream_options
+            .merge_into(ice_ai::SimpleStreamOptions::default());
+        let output = ice_ai::simple_options::request_max_tokens(&snap.model, &context, &options)
+            .unwrap_or(snap.model.max_tokens)
+            .min(i64::MAX as u64) as i64;
+        // Hooks and custom converters run later and can grow the request; hold
+        // a bounded estimate for them instead of replaying them while budgeting.
+        let transform_reserve = if snap.provider_hooks.is_some()
+            || snap.transform_context.is_some()
+            || snap.to_provider_messages.is_some()
+        {
+            (window / 10).min(16_384)
+        } else {
+            0
+        };
+        ((window as f64 * percent / 100.0).floor() as i64)
+            .min(window.saturating_sub(output))
+            .saturating_sub(transform_reserve)
+            .max(0)
+    }
+
+    fn coding_request_budget(
+        snap: &ConfigSnapshot,
+        messages: &[AgentMessage],
+        percent: f64,
+    ) -> (i64, i64) {
+        let system_prompt = Self::compose_prompt(
+            snap.system_prompt.as_deref(),
+            &snap.resources,
+            &snap.active_tool_names,
+        );
+        let tools: Vec<_> = Self::active_tools(&snap.tools, &snap.active_tool_names)
+            .iter()
+            .map(|tool| tool.schema().clone())
+            .collect();
+        (
+            crate::compaction::tokens::estimate_request_tokens(messages, &system_prompt, &tools),
+            Self::coding_input_ceiling(snap, messages, &system_prompt, &tools, percent),
+        )
     }
 
     /// Reserve an entry id. Exposed so a settle observer can name an entry in a
@@ -3201,6 +3496,137 @@ impl AgentHarness {
     ) -> HarnessResult<()> {
         self.write_step_attempt(run_id, step, attempt, result_entry_id, compaction_reason)
             .await
+    }
+
+    fn record_product_midrun_compaction_error(
+        error_state: &Arc<Mutex<Option<crate::compaction::CompactionError>>>,
+        error: crate::compaction::CompactionError,
+    ) {
+        let mut current = error_state.lock().unwrap();
+        if current.is_none() {
+            *current = Some(error);
+        }
+    }
+
+    /// Run product-format compaction with the enclosing operation's complete
+    /// model/provider, stream-option, hook, thinking and retry snapshot.
+    async fn compact_coding_preparation(
+        preparation: &crate::compaction::CompactionPreparation,
+        snap: &ConfigSnapshot,
+        signal: CancellationToken,
+        custom_instructions: Option<String>,
+    ) -> Result<crate::compaction::CompactResult, crate::compaction::CompactionError> {
+        let provider = Self::resolve_provider(&snap.models, &snap.model).map_err(|error| {
+            crate::compaction::CompactionError::summarization_failed(error.to_string())
+        })?;
+        let options = CompactionLlmOptions {
+            provider,
+            model: snap.model.clone(),
+            api_key: None,
+            signal,
+            thinking_level: Some(snap.thinking_level),
+            retry: if snap.retry.enabled {
+                Some(snap.retry.clone())
+            } else {
+                None
+            },
+            custom_instructions,
+        };
+        let completion_options = crate::compaction::CodingSummaryCompletionOptions {
+            stream_fn: Some(Self::build_coding_summary_stream_fn(
+                snap.models.clone(),
+                snap.provider_hooks.clone(),
+                snap.stream_options.clone(),
+            )),
+            ..crate::compaction::CodingSummaryCompletionOptions::default()
+        };
+        crate::compaction::compact_coding(preparation, &options, &completion_options).await
+    }
+
+    async fn finish_product_compaction_failure(
+        &self,
+        run_id: String,
+        snap: &ConfigSnapshot,
+        signal: &CancellationToken,
+        error: crate::compaction::CompactionError,
+        prompts: &[AgentMessage],
+        queued_ids: &[String],
+    ) -> HarnessResult<RunResult> {
+        // The history summary must precede new input, but failure must not
+        // erase accepted input. Preserve it without requesting a continuation.
+        for (index, message) in prompts.iter().enumerate() {
+            let id = queued_ids
+                .get(index)
+                .cloned()
+                .unwrap_or_else(|| self.next_entry_id());
+            self.append_provisioned(ProvisionedEntry {
+                id,
+                kind: ProvisionedKind::Message {
+                    message: message.clone(),
+                    terminate: None,
+                },
+            })
+            .await?;
+        }
+        self.emit_appended_messages(prompts.iter().take(queued_ids.len()).cloned().collect())
+            .await;
+        let aborted = signal.is_cancelled() || error.code.as_str() == "aborted";
+        let current_leaf = self
+            .session
+            .view(&self.lane)
+            .get_leaf_id()
+            .await
+            .map_err(session_to_harness_err)?
+            .unwrap_or_default();
+        let outcome = if aborted {
+            let message = AssistantMessage::terminal(
+                snap.model.api.clone(),
+                snap.model.provider.clone(),
+                snap.model.id.clone(),
+                StopReason::Aborted,
+                error.message,
+                now_ms(),
+            );
+            let final_entry_id = self
+                .session
+                .view(&self.lane)
+                .append_message(AgentMessage::Assistant(Box::new(message.clone())))
+                .await
+                .map_err(session_to_harness_err)?;
+            self.write_operation_finished(&run_id, OperationOutcome::Aborted, None)
+                .await?;
+            let leaf_id = self
+                .finish_context_writes(&run_id, Some(RunEndOutcome::Aborted))
+                .await?
+                .unwrap_or(final_entry_id.clone());
+            HarnessRunOutcome::Aborted {
+                leaf_id,
+                final_entry_id,
+                final_message: message,
+            }
+        } else {
+            let operation_error = OperationError {
+                code: "compaction_failed".into(),
+                message: error.message,
+            };
+            self.write_operation_finished(
+                &run_id,
+                OperationOutcome::Failed,
+                Some(operation_error.clone()),
+            )
+            .await?;
+            let leaf_id = self
+                .finish_context_writes(&run_id, Some(RunEndOutcome::Failed))
+                .await?
+                .unwrap_or(current_leaf);
+            HarnessRunOutcome::Failed {
+                leaf_id,
+                error: operation_error,
+                final_entry_id: None,
+                final_message: None,
+            }
+        };
+        Ok(RunResult { run_id, outcome })
     }
 
     /// Persist a `Compaction` entry and return the stamped `Entry`.
@@ -3637,6 +4063,101 @@ impl AgentHarness {
         self.write_operation_started(&run_id, source_leaf.clone(), intent)
             .await?;
 
+        // Snapshot once for this run before accepting its new prompt. Coding
+        // policy compaction summarizes only the durable history that predates
+        // this operation's incoming messages; generic policy remains on its
+        // historical after-prompt path below.
+        let snap = self.snapshot_config()?;
+
+        if let Some(policy) = snap
+            .coding_compaction_policy
+            .filter(|_| !snap.models.is_empty())
+        {
+            let path = self.branch_path_oldest_first().await?;
+            let context = build_session_context(
+                &path,
+                &Self::build_opts(&snap.entry_projectors, &snap.entry_transforms),
+            );
+            let (tokens, ceiling) = Self::coding_request_budget(
+                &snap,
+                &context.messages,
+                policy.normalized_threshold_percent(),
+            );
+            if policy.enabled && snap.model.context_window > 0 && tokens > ceiling {
+                match prepare_compaction(&path, snap.compaction) {
+                    Ok(Some(preparation))
+                        if !preparation.messages_to_summarize.is_empty()
+                            || !preparation.turn_prefix_messages.is_empty() =>
+                    {
+                        let compacted = {
+                            let _progress = crate::events::CompactionProgressGuard::new(
+                                &self.bus, &self.lane, false,
+                            );
+                            Self::compact_coding_preparation(
+                                &preparation,
+                                &snap,
+                                signal.clone(),
+                                None,
+                            )
+                            .await
+                        };
+                        match compacted {
+                            Ok(_) if signal.is_cancelled() => {
+                                return self
+                                    .finish_product_compaction_failure(
+                                        run_id,
+                                        &snap,
+                                        &signal,
+                                        crate::compaction::CompactionError::aborted(
+                                            "Coding summary cancelled before checkpoint persistence",
+                                        ),
+                                        &prompts,
+                                        &queued_ids,
+                                    )
+                                    .await;
+                            }
+                            Ok(result) => {
+                                self.persist_compaction_entry(
+                                    &run_id,
+                                    &result,
+                                    CompactionReason::Threshold,
+                                )
+                                .await?;
+                            }
+                            Err(error) => {
+                                return self
+                                    .finish_product_compaction_failure(
+                                        run_id,
+                                        &snap,
+                                        &signal,
+                                        error,
+                                        &prompts,
+                                        &queued_ids,
+                                    )
+                                    .await;
+                            }
+                        }
+                    }
+                    Ok(Some(_)) | Ok(None) => {}
+                    Err(error) => {
+                        let error = crate::compaction::CompactionError::summarization_failed(
+                            error.to_string(),
+                        );
+                        return self
+                            .finish_product_compaction_failure(
+                                run_id,
+                                &snap,
+                                &signal,
+                                error,
+                                &prompts,
+                                &queued_ids,
+                            )
+                            .await;
+                    }
+                }
+            }
+        }
+
         // Persist prompts (the user's input) BEFORE the run so they're durable.
         for (index, msg) in prompts.iter().enumerate() {
             if let Some(entry_id) = queued_ids.get(index) {
@@ -3659,19 +4180,16 @@ impl AgentHarness {
         self.emit_appended_messages(prompts.iter().take(queued_ids.len()).cloned().collect())
             .await;
 
-        // Snapshot config.
-        let snap = self.snapshot_config()?;
         if snap.models.is_empty() {
-            let _ = self
-                .write_operation_finished(
-                    &run_id,
-                    OperationOutcome::Failed,
-                    Some(OperationError {
-                        code: "no_provider".into(),
-                        message: "No models/providers configured".into(),
-                    }),
-                )
-                .await;
+            self.write_operation_finished(
+                &run_id,
+                OperationOutcome::Failed,
+                Some(OperationError {
+                    code: "no_provider".into(),
+                    message: "No models/providers configured".into(),
+                }),
+            )
+            .await?;
             let leaf = self
                 .finish_context_writes(&run_id, Some(RunEndOutcome::Failed))
                 .await?
@@ -3695,7 +4213,10 @@ impl AgentHarness {
         let build_opts = Self::build_opts(&snap.entry_projectors, &snap.entry_transforms);
 
         // Pre-run compaction evaluation.
-        if snap.compaction.enabled && snap.model.context_window > 0 {
+        if snap.coding_compaction_policy.is_none()
+            && snap.compaction.enabled
+            && snap.model.context_window > 0
+        {
             let ctx = build_session_context(&path, &build_opts);
             let ctx_tokens = estimate_context_tokens(&ctx.messages).tokens;
             let window = snap.model.context_window as i64;
@@ -3757,13 +4278,12 @@ impl AgentHarness {
                                     code: "compaction_failed".into(),
                                     message: e.message.clone(),
                                 };
-                                let _ = self
-                                    .write_operation_finished(
-                                        &run_id,
-                                        OperationOutcome::Failed,
-                                        Some(err.clone()),
-                                    )
-                                    .await;
+                                self.write_operation_finished(
+                                    &run_id,
+                                    OperationOutcome::Failed,
+                                    Some(err.clone()),
+                                )
+                                .await?;
                                 let leaf = self
                                     .finish_context_writes(&run_id, Some(RunEndOutcome::Failed))
                                     .await?
@@ -3802,13 +4322,18 @@ impl AgentHarness {
         };
 
         // Build the config.
-        let convert = Self::build_convert_to_llm(snap.to_provider_messages);
+        let convert = Self::build_convert_to_llm(snap.to_provider_messages.clone());
         let stream_fn = Self::build_stream_fn(
             snap.models.clone(),
             snap.provider_hooks.clone(),
             snap.stream_options.clone(),
         )?;
         let post_compaction_cut = Arc::new(AtomicUsize::new(0));
+        // This stops the current loop after a checkpoint; the public outcome
+        // type does not yet expose a durable, resumable Paused state.
+        let pause_after_product_compaction = Arc::new(AtomicBool::new(false));
+        let midrun_compaction_error =
+            Arc::new(Mutex::new(None::<crate::compaction::CompactionError>));
         // Run-level turn ceiling shared with the post-loop notice below. The
         // loop's only other exit is "the model stopped asking for tools", which
         // nothing bounds — one observed session ran 112 turns / 867s in a single
@@ -3820,12 +4345,22 @@ impl AgentHarness {
             None => crate::run_budget::RunBudget::from_env(),
         }));
         let should_stop_after_turn: Option<ice_agent::ShouldStopAfterTurn> =
-            if run_budget.lock().unwrap().is_enabled() {
+            if run_budget.lock().unwrap().is_enabled() || snap.coding_compaction_policy.is_some() {
                 let budget = Arc::clone(&run_budget);
+                let product_pause = Arc::clone(&pause_after_product_compaction);
+                let compaction_error = Arc::clone(&midrun_compaction_error);
                 Some(Arc::new(
                     move |_ctx: ShouldStopAfterTurnContext<'_>| -> BoxFuture<'static, bool> {
                         let budget = Arc::clone(&budget);
-                        Box::pin(async move { budget.lock().unwrap().observe_turn().is_some() })
+                        let product_pause = Arc::clone(&product_pause);
+                        let compaction_error = Arc::clone(&compaction_error);
+                        Box::pin(async move {
+                            let product_failed = compaction_error.lock().unwrap().is_some();
+                            product_pause.load(Ordering::Acquire) || product_failed || {
+                                let mut budget = budget.lock().unwrap();
+                                budget.is_enabled() && budget.observe_turn().is_some()
+                            }
+                        })
                     },
                 ))
             } else {
@@ -3866,47 +4401,205 @@ impl AgentHarness {
             prepare_next_turn: None,
             after_tool_results: {
                 let harness = self.clone();
-                let enabled = snap.compaction.enabled;
                 let settings = snap.compaction;
                 let model = snap.model.clone();
-                let provider = snap
-                    .models
-                    .iter()
-                    .find(|p| p.id() == model.provider)
-                    .cloned();
+                let coding_policy = snap.coding_compaction_policy;
+                let coding_snapshot = snap.clone();
+                let provider = Self::resolve_provider(&snap.models, &model).ok();
                 let compaction_signal = signal.clone();
                 let compaction_run_id = run_id.clone();
-                if enabled && model.context_window > 0 && provider.is_some() {
+                let compaction_error = Arc::clone(&midrun_compaction_error);
+                if settings.enabled
+                    && model.context_window > 0
+                    && (provider.is_some() || coding_policy.is_some())
+                {
                     let cut_for_hook = Arc::clone(&post_compaction_cut);
+                    let pause_for_hook = Arc::clone(&pause_after_product_compaction);
                     Some(Arc::new(move |ctx: ShouldStopAfterTurnContext<'_>| -> BoxFuture<'static, Option<ice_agent::AgentLoopTurnUpdate>> {
                         let harness = harness.clone();
                         let model = model.clone();
-                        let provider = provider.clone().expect("checked above");
+                        let provider = provider.clone();
                         let cut = Arc::clone(&cut_for_hook);
+                        let pause = Arc::clone(&pause_for_hook);
+                        let compaction_error = Arc::clone(&compaction_error);
                         let compaction_signal = compaction_signal.clone();
                         let compaction_run_id = compaction_run_id.clone();
+                        let coding_policy = coding_policy;
+                        let coding_snapshot = coding_snapshot.clone();
+                        let settings = settings;
                         let context = ctx.context.clone();
                         let new_messages_len = ctx.new_messages.len();
                         Box::pin(async move {
+                            let coding_policy_enabled = coding_policy.is_some();
                             let tokens = estimate_context_tokens(&context.messages).tokens;
-                            if !should_compact(tokens, model.context_window as i64, &settings) {
+                            let should_compact_now = match coding_policy {
+                                Some(policy) => {
+                                    let percent = match policy.mid_run_compaction {
+                                        MidRunCompactionMode::Off => 95.0,
+                                        MidRunCompactionMode::Pause | MidRunCompactionMode::Resume => policy.normalized_threshold_percent(),
+                                    };
+                                    let tools: Vec<_> = context.tools.iter().map(|tool| tool.schema().clone()).collect();
+                                    let input = crate::compaction::tokens::estimate_request_tokens(&context.messages, &context.system_prompt, &tools);
+                                    let ceiling = AgentHarness::coding_input_ceiling(&coding_snapshot, &context.messages, &context.system_prompt, &tools, percent);
+                                    policy.enabled && input > ceiling
+                                },
+                                None => should_compact(
+                                    tokens,
+                                    model.context_window as i64,
+                                    &settings,
+                                ),
+                            };
+                            if !should_compact_now {
                                 return None;
                             }
-                            let entries: Vec<Entry> = context.messages.iter().enumerate().map(|(i, message)| Entry::Message(crate::session::types::MessageEntry {
-                                base: crate::session::types::EntryBase { entry_type: "message".into(), id: format!("runtime-{i}"), seq: i as u64 + 1, parent_id: None, timestamp: i as i64 },
-                                message: message.clone(), terminate: None,
-                            })).collect();
-                            let prep = match prepare_compaction(&entries, settings) { Ok(Some(p)) => p, _ => return None };
-                            let opts = CompactionLlmOptions { provider, model: model.clone(), api_key: None, signal: compaction_signal, thinking_level: None, retry: None, custom_instructions: None };
-                            let result = match { let _progress = crate::events::CompactionProgressGuard::new(&harness.bus, &harness.lane, false); compact(&prep, &opts).await } { Ok(r) => r, Err(_) => return None };
-                            // Mid-loop compaction fires because the turn pushed the
-                            // context over the threshold.
-                            if harness.persist_compaction_entry(&compaction_run_id, &result, CompactionReason::Threshold).await.is_err() { return None; }
+
+                            let entries: Vec<Entry> = context
+                                .messages
+                                .iter()
+                                .enumerate()
+                                .map(|(index, message)| {
+                                    Entry::Message(crate::session::types::MessageEntry {
+                                        base: crate::session::types::EntryBase {
+                                            entry_type: "message".into(),
+                                            id: format!("runtime-{index}"),
+                                            seq: index as u64 + 1,
+                                            parent_id: None,
+                                            timestamp: index as i64,
+                                        },
+                                        message: message.clone(),
+                                        terminate: None,
+                                    })
+                                })
+                                .collect();
+                            let preparation = match prepare_compaction(&entries, settings) {
+                                Ok(Some(preparation)) => preparation,
+                                Ok(None) => return None,
+                                Err(error) if coding_policy_enabled => {
+                                    AgentHarness::record_product_midrun_compaction_error(
+                                        &compaction_error,
+                                        crate::compaction::CompactionError::summarization_failed(
+                                            error.to_string(),
+                                        ),
+                                    );
+                                    return None;
+                                }
+                                Err(_) => return None,
+                            };
+                            if coding_policy_enabled
+                                && preparation.messages_to_summarize.is_empty()
+                                && preparation.turn_prefix_messages.is_empty()
+                            {
+                                return None;
+                            }
+
+                            let compacted = {
+                                let _progress = crate::events::CompactionProgressGuard::new(
+                                    &harness.bus,
+                                    &harness.lane,
+                                    false,
+                                );
+                                if coding_policy_enabled {
+                                    AgentHarness::compact_coding_preparation(
+                                        &preparation,
+                                        &coding_snapshot,
+                                        compaction_signal.clone(),
+                                        None,
+                                    )
+                                    .await
+                                } else {
+                                    let Some(provider) = provider else {
+                                        return None;
+                                    };
+                                    let options = CompactionLlmOptions {
+                                        provider,
+                                        model: model.clone(),
+                                        api_key: None,
+                                        signal: compaction_signal.clone(),
+                                        thinking_level: None,
+                                        retry: None,
+                                        custom_instructions: None,
+                                    };
+                                    compact(&preparation, &options).await
+                                }
+                            };
+                            let result = match compacted {
+                                Ok(result) => result,
+                                Err(error) if coding_policy_enabled => {
+                                    AgentHarness::record_product_midrun_compaction_error(
+                                        &compaction_error,
+                                        error,
+                                    );
+                                    return None;
+                                }
+                                Err(_) => return None,
+                            };
+
+                            if coding_policy_enabled && compaction_signal.is_cancelled() {
+                                AgentHarness::record_product_midrun_compaction_error(
+                                    &compaction_error,
+                                    crate::compaction::CompactionError::aborted(
+                                        "Coding summary cancelled before checkpoint persistence",
+                                    ),
+                                );
+                                return None;
+                            }
+                            if let Err(error) = harness
+                                .persist_compaction_entry(
+                                    &compaction_run_id,
+                                    &result,
+                                    CompactionReason::Threshold,
+                                )
+                                .await
+                            {
+                                if coding_policy_enabled {
+                                    AgentHarness::record_product_midrun_compaction_error(
+                                        &compaction_error,
+                                        crate::compaction::CompactionError::summarization_failed(
+                                            format!("Could not persist coding checkpoint: {error}"),
+                                        ),
+                                    );
+                                }
+                                return None;
+                            }
+                            // A cancellation can arrive while the durable
+                            // checkpoint append is completing. Keep the
+                            // acknowledged checkpoint, but prevent the loop
+                            // from treating this turn as a normal continuation.
+                            if compaction_signal.is_cancelled() {
+                                AgentHarness::record_product_midrun_compaction_error(
+                                    &compaction_error,
+                                    crate::compaction::CompactionError::aborted(
+                                        "Summary was cancelled after checkpoint persistence",
+                                    ),
+                                );
+                                return None;
+                            }
+                            if let Some(policy) = coding_policy {
+                                let pause_after_compaction = match policy.mid_run_compaction {
+                                    MidRunCompactionMode::Pause => true,
+                                    MidRunCompactionMode::Off | MidRunCompactionMode::Resume => false,
+                                };
+                                if pause_after_compaction {
+                                    pause.store(true, Ordering::Release);
+                                }
+                            }
                             cut.store(new_messages_len, Ordering::Release);
                             let mut messages = Vec::with_capacity(result.retained_tail.len() + 1);
-                            messages.push(create_compaction_summary_message(&result.summary, result.tokens_before, 0));
+                            messages.push(create_compaction_summary_message(
+                                &result.summary,
+                                result.tokens_before,
+                                0,
+                            ));
                             messages.extend(result.retained_tail);
-                            Some(ice_agent::AgentLoopTurnUpdate { context: Some(AgentContext { system_prompt: context.system_prompt.clone(), messages, tools: context.tools.clone() }), model: None, thinking_level: None })
+                            Some(ice_agent::AgentLoopTurnUpdate {
+                                context: Some(AgentContext {
+                                    system_prompt: context.system_prompt.clone(),
+                                    messages,
+                                    tools: context.tools.clone(),
+                                }),
+                                model: None,
+                                thinking_level: None,
+                            })
                         })
                     }) as AfterToolResults)
                 } else {
@@ -4003,12 +4696,18 @@ impl AgentHarness {
         // therefore persist ALL of them (skip 0). The old `skip(prompts_len)`
         // was a leftover from a design that passed `prompts` in; it wrongly
         // dropped the first real assistant message.
-        let emitter: Arc<dyn AgentEmitter> = Arc::new(crate::settle::SettlingEmitter::new(
-            Arc::clone(&emitter),
-            Arc::clone(&frame_recorder),
-            Arc::clone(&settle_state),
-            self.clone(),
-        ));
+        let retry_safety = Arc::new(crate::retry_safety::RetrySafetyState::default());
+        let emitter: Arc<dyn AgentEmitter> =
+            Arc::new(crate::retry_safety::RetrySafetyEmitter::new(
+                Arc::new(crate::settle::SettlingEmitter::new(
+                    Arc::clone(&emitter),
+                    Arc::clone(&frame_recorder),
+                    Arc::clone(&settle_state),
+                    self.clone(),
+                )),
+                Arc::clone(&retry_safety),
+            ));
+        let mut overflow_recovered = false;
         let result = loop {
             // Entering from an assistant runs that message's tools as its very
             // first action, which is exactly why it is never retried (see below).
@@ -4031,6 +4730,130 @@ impl AgentHarness {
                 .await
             };
 
+            // The emitter resets this bit at every assistant generation start,
+            // so a prior completed tool turn cannot suppress this failure's retry.
+            let possible_tool_effect = retry_safety.possible_tool_effect();
+            let overflow = attempt_result
+                .as_ref()
+                .ok()
+                .and_then(|messages| {
+                    messages.iter().rev().find_map(|message| match message {
+                        AgentMessage::Assistant(assistant) => Some(assistant.as_ref()),
+                        _ => None,
+                    })
+                })
+                .is_some_and(|assistant| {
+                    assistant.stop_reason == StopReason::Error
+                        && crate::retry_safety::is_context_overflow_error(
+                            assistant.error_message.as_deref().unwrap_or_default(),
+                        )
+                        && !assistant
+                            .content
+                            .iter()
+                            .any(|block| matches!(block, Content::ToolCall(_)))
+                });
+            if overflow
+                && snap
+                    .coding_compaction_policy
+                    .is_some_and(|policy| policy.enabled)
+                && !possible_tool_effect
+                && !from_assistant
+            {
+                let recovery = async {
+                    if overflow_recovered {
+                        return Err(crate::compaction::CompactionError::summarization_failed(
+                            "Context limit still exceeded after one recovery. Shorten the prompt, select a larger-context model, or start a new session.",
+                        ));
+                    }
+                    if signal.is_cancelled() {
+                        return Err(crate::compaction::CompactionError::aborted("Context recovery cancelled"));
+                    }
+                    let path = self.branch_path_oldest_first().await.map_err(|error| {
+                        crate::compaction::CompactionError::summarization_failed(error.to_string())
+                    })?;
+                    // Never summarize away the user's latest request or split its
+                    // tool call/result sequence. Completed older turns are durable.
+                    let latest_user = path.iter().rposition(|entry| matches!(
+                        entry, Entry::Message(message) if matches!(message.message, AgentMessage::User(_))
+                    )).ok_or_else(|| crate::compaction::CompactionError::summarization_failed(
+                        "No compactable prior history. Shorten the prompt or select a larger-context model.",
+                    ))?;
+                    let tail = build_session_context(&path[latest_user..], &build_opts).messages;
+                    let (tail_tokens, input_ceiling) = Self::coding_request_budget(&snap, &tail, 100.0);
+                    let window = snap.model.context_window.min(i64::MAX as u64) as i64;
+                    if latest_user == 0 || (window > 0 && tail_tokens >= input_ceiling) {
+                        return Err(crate::compaction::CompactionError::summarization_failed(
+                            "The latest user turn cannot be reduced safely. Shorten the prompt, select a larger-context model, or start a new session.",
+                        ));
+                    }
+                    let mut settings = snap.compaction;
+                    settings.keep_recent_tokens = 0;
+                    let mut preparation = prepare_compaction(&path[..latest_user], settings)?
+                        .ok_or_else(|| crate::compaction::CompactionError::summarization_failed(
+                            "No older history can be compacted. Shorten the prompt or select a larger-context model.",
+                        ))?;
+                    // Recovery has an explicit whole-turn boundary. Summarize
+                    // the complete older prefix in one request rather than the
+                    // generic split-turn preparation's two-request path.
+                    preparation.messages_to_summarize =
+                        build_session_context(&path[..latest_user], &build_opts).messages;
+                    preparation.turn_prefix_messages.clear();
+                    preparation.is_split_turn = false;
+                    preparation.previous_summary = None;
+                    preparation.retained_tail = tail;
+                    let compacted = Self::compact_coding_preparation(
+                        &preparation, &snap, signal.clone(), None,
+                    ).await?;
+                    if signal.is_cancelled() {
+                        return Err(crate::compaction::CompactionError::aborted(
+                            "Context recovery cancelled before checkpoint persistence",
+                        ));
+                    }
+                    self.persist_compaction_entry(&run_id, &compacted, CompactionReason::Overflow)
+                        .await.map_err(|error| crate::compaction::CompactionError::summarization_failed(error.to_string()))?;
+                    Ok(())
+                }.await;
+                if let Err(error) = recovery {
+                    Self::record_product_midrun_compaction_error(&midrun_compaction_error, error);
+                    break attempt_result;
+                }
+                // The checkpoint append is the commit boundary. If cancellation
+                // was acknowledged while storage was completing that write,
+                // keep the durable checkpoint and settle as aborted instead of
+                // issuing the post-compaction provider request.
+                if signal.is_cancelled() {
+                    Self::record_product_midrun_compaction_error(
+                        &midrun_compaction_error,
+                        crate::compaction::CompactionError::aborted(
+                            "Context recovery was cancelled after checkpoint persistence",
+                        ),
+                    );
+                    break attempt_result;
+                }
+                overflow_recovered = true;
+                // Retire only the rejected generation. Prior tools remain durable
+                // and the next invocation starts from the checkpoint, not from the
+                // original loop context (which could replay their effects).
+                if let Some(stream_index) = attempt_result.as_ref().ok().and_then(|messages| {
+                    messages
+                        .iter()
+                        .enumerate()
+                        .rev()
+                        .find_map(|(index, message)| {
+                            matches!(message, AgentMessage::Assistant(_))
+                                .then(|| settle_state.stream_at(index))
+                                .flatten()
+                        })
+                }) {
+                    frame_recorder.clear_stream(stream_index).await?;
+                }
+                settle_state.set_attempt(retry_attempt);
+                post_compaction_cut.store(0, Ordering::Release);
+                let path = self.branch_path_oldest_first().await?;
+                agent_context.messages = build_session_context(&path, &build_opts).messages;
+                continue;
+            }
+            let mut retry_refused: Option<String> = None;
             let retry_error = attempt_result
                 .as_ref()
                 .ok()
@@ -4040,16 +4863,42 @@ impl AgentHarness {
                         _ => None,
                     })
                 })
+                // Admit only safe generations before applying the shared transient
+                // classifier: tool calls/effects and context overflow are terminal.
                 .filter(|assistant| {
-                    assistant.stop_reason == StopReason::Error
+                    let safe = crate::retry_safety::can_retry_failed_generation(
+                        assistant,
+                        possible_tool_effect,
+                    );
+                    let tool_effect_risk = possible_tool_effect
+                        || assistant
+                            .content
+                            .iter()
+                            .any(|block| matches!(block, Content::ToolCall(_)));
+                    if !safe
+                        && tool_effect_risk
+                        && assistant.stop_reason == StopReason::Error
                         && crate::compaction::is_retryable_assistant_error(assistant)
+                    {
+                        retry_refused = Some(
+                            assistant
+                                .error_message
+                                .clone()
+                                .unwrap_or_else(|| "Provider request failed.".to_string()),
+                        );
+                    }
+                    safe
                 })
+                .filter(|assistant| crate::compaction::is_retryable_assistant_error(assistant))
                 .map(|assistant| {
                     assistant
                         .error_message
                         .clone()
                         .unwrap_or_else(|| "Provider request failed.".to_string())
                 });
+            if let Some(error) = retry_refused.filter(|_| retry_policy.enabled) {
+                emitter.emit(AgentEvent::RetryRefused { error }).await;
+            }
             if !retry_policy.enabled
                 || retry_attempt >= retry_policy.max_retries
                 || retry_error.is_none()
@@ -4089,10 +4938,11 @@ impl AgentHarness {
                     tracing::warn!(%error, "could not retire the failed retry generation");
                 }
             }
-            let delay_ms = retry_policy
-                .base_delay_ms
-                .saturating_mul(1u64 << retry_attempt.saturating_sub(1))
-                .min(retry_policy.max_agent_delay_ms);
+            let delay_ms = ice_ai::get_retry_delay_ms(
+                retry_policy.base_delay_ms,
+                retry_attempt,
+                Some(retry_policy.max_agent_delay_ms),
+            );
             emitter
                 .emit(AgentEvent::RetryScheduled {
                     attempt: retry_attempt,
@@ -4125,8 +4975,13 @@ impl AgentHarness {
             return Err(HarnessError::io(error));
         }
 
+        let midrun_compaction_error = {
+            let mut error = midrun_compaction_error.lock().unwrap();
+            error.take()
+        };
+
         // Persist new messages + derive outcome.
-        let (_leaf_id, _final_entry_id, mut outcome, op_outcome, op_error) = match result {
+        let (_leaf_id, _final_entry_id, mut outcome, mut op_outcome, mut op_error) = match result {
             Ok(new_messages) => {
                 let cut = post_compaction_cut.load(Ordering::Acquire);
                 let start = cut.min(new_messages.len());
@@ -4250,13 +5105,82 @@ impl AgentHarness {
             }
         };
 
+        if pause_after_product_compaction.load(Ordering::Acquire)
+            && midrun_compaction_error.is_none()
+        {
+            let error = OperationError {
+                code: "compaction_paused".into(),
+                message: "A context checkpoint was saved and the run stopped because compaction pause mode is enabled. Continue explicitly or choose resume mode; the task is not complete.".into(),
+            };
+            let leaf_id = self
+                .view()
+                .get_leaf_id()
+                .await
+                .map_err(session_to_harness_err)?
+                .unwrap_or_default();
+            outcome = HarnessRunOutcome::Failed {
+                leaf_id,
+                error: error.clone(),
+                final_entry_id: None,
+                final_message: None,
+            };
+            op_outcome = OperationOutcome::Failed;
+            op_error = Some(error);
+        }
+
+        if let Some(error) = midrun_compaction_error {
+            let aborted = signal.is_cancelled() || error.code.as_str() == "aborted";
+            let current_leaf = self
+                .session
+                .view(&self.lane)
+                .get_leaf_id()
+                .await
+                .map_err(session_to_harness_err)?
+                .unwrap_or_default();
+            if aborted {
+                let message = AssistantMessage::terminal(
+                    snap.model.api.clone(),
+                    snap.model.provider.clone(),
+                    snap.model.id.clone(),
+                    StopReason::Aborted,
+                    error.message,
+                    now_ms(),
+                );
+                let final_entry_id = self
+                    .session
+                    .view(&self.lane)
+                    .append_message(AgentMessage::Assistant(Box::new(message.clone())))
+                    .await
+                    .map_err(session_to_harness_err)?;
+                outcome = HarnessRunOutcome::Aborted {
+                    leaf_id: final_entry_id.clone(),
+                    final_entry_id,
+                    final_message: message,
+                };
+                op_outcome = OperationOutcome::Aborted;
+                op_error = None;
+            } else {
+                let error = OperationError {
+                    code: "compaction_failed".into(),
+                    message: error.message,
+                };
+                outcome = HarnessRunOutcome::Failed {
+                    leaf_id: current_leaf,
+                    error: error.clone(),
+                    final_entry_id: None,
+                    final_message: None,
+                };
+                op_outcome = OperationOutcome::Failed;
+                op_error = Some(error);
+            }
+        }
+
         let is_suspended = matches!(outcome, HarnessRunOutcome::Suspended { .. });
 
         // Write operation_finished (skip for Suspended - operation stays open).
         if !is_suspended {
-            let _ = self
-                .write_operation_finished(&run_id, op_outcome, op_error)
-                .await;
+            self.write_operation_finished(&run_id, op_outcome, op_error)
+                .await?;
             let end_outcome = match &outcome {
                 HarnessRunOutcome::Completed { .. } => RunEndOutcome::Completed,
                 HarnessRunOutcome::Aborted { .. } => RunEndOutcome::Aborted,
@@ -4329,29 +5253,57 @@ impl AgentHarness {
                 Ok(None) => CompactionOutcome::Declined {
                     leaf_id: source_leaf.unwrap_or_default(),
                 },
+                Ok(Some(prep))
+                    if snap.coding_compaction_policy.is_some()
+                        && prep.messages_to_summarize.is_empty()
+                        && prep.turn_prefix_messages.is_empty() =>
+                {
+                    CompactionOutcome::Declined {
+                        leaf_id: source_leaf.unwrap_or_default(),
+                    }
+                }
                 Ok(Some(prep)) => {
                     let provider = match Self::resolve_provider(&snap.models, &snap.model) {
-                        Ok(p) => p,
+                        Ok(provider) => provider,
+                        Err(error) if snap.coding_compaction_policy.is_some() => {
+                            let error = OperationError {
+                                code: "no_provider".into(),
+                                message: error.to_string(),
+                            };
+                            self.write_operation_finished(
+                                &run_id,
+                                OperationOutcome::Failed,
+                                Some(error.clone()),
+                            )
+                            .await?;
+                            self.finish_context_writes(&run_id, None).await?;
+                            return Ok(CompactionResult {
+                                run_id,
+                                outcome: CompactionOutcome::Failed {
+                                    leaf_id: source_leaf.unwrap_or_default(),
+                                    error,
+                                },
+                            });
+                        }
                         Err(_) => match snap.models.first() {
-                            Some(p) => Arc::clone(p),
+                            Some(provider) => Arc::clone(provider),
                             None => {
-                                let err = OperationError {
+                                let error = OperationError {
                                     code: "no_provider".into(),
                                     message: "No provider for compaction".into(),
                                 };
-                                let _ = self
-                                    .write_operation_finished(
-                                        &run_id,
-                                        OperationOutcome::Failed,
-                                        Some(err.clone()),
-                                    )
-                                    .await;
+                                self.write_operation_finished(
+                                    &run_id,
+                                    OperationOutcome::Failed,
+                                    Some(error.clone()),
+                                )
+                                .await?;
                                 self.finish_context_writes(&run_id, None).await?;
                                 return Ok(CompactionResult {
                                     run_id,
                                     outcome: CompactionOutcome::Failed {
                                         leaf_id: source_leaf.unwrap_or_default(),
-                                        error: err,
+                                        error,
                                     },
                                 });
                             }
@@ -4370,12 +5322,36 @@ impl AgentHarness {
                         },
                         custom_instructions: custom_instructions.clone(),
                     };
-                    match {
+                    let compacted = {
                         let _progress = crate::events::CompactionProgressGuard::new(
                             &self.bus, &self.lane, true,
                         );
-                        compact(&prep, &llm_opts).await
-                    } {
+                        if snap.coding_compaction_policy.is_some() {
+                            Self::compact_coding_preparation(
+                                &prep,
+                                &snap,
+                                signal.clone(),
+                                custom_instructions.clone(),
+                            )
+                            .await
+                        } else {
+                            compact(&prep, &llm_opts).await
+                        }
+                    };
+                    match compacted {
+                        Ok(_)
+                            if snap.coding_compaction_policy.is_some() && signal.is_cancelled() =>
+                        {
+                            self.write_operation_finished(&run_id, OperationOutcome::Aborted, None)
+                                .await?;
+                            self.finish_context_writes(&run_id, None).await?;
+                            return Ok(CompactionResult {
+                                run_id,
+                                outcome: CompactionOutcome::Aborted {
+                                    leaf_id: source_leaf.unwrap_or_default(),
+                                },
+                            });
+                        }
                         Ok(result) => {
                             let entry = self
                                 .persist_compaction_entry(
@@ -4387,16 +5363,38 @@ impl AgentHarness {
                                 )
                                 .await?;
                             let leaf = entry.base().id.clone();
-                            let _ = self
-                                .write_operation_finished(
+                            if signal.is_cancelled() {
+                                // The append was acknowledged, so the checkpoint
+                                // remains durable; cancellation still means the
+                                // requested manual operation did not complete.
+                                self.write_operation_finished(
+                                    &run_id,
+                                    OperationOutcome::Aborted,
+                                    None,
+                                )
+                                .await?;
+                                CompactionOutcome::Aborted { leaf_id: leaf }
+                            } else {
+                                self.write_operation_finished(
                                     &run_id,
                                     OperationOutcome::Completed,
                                     None,
                                 )
-                                .await;
-                            CompactionOutcome::Completed {
-                                leaf_id: leaf,
-                                entry,
+                                .await?;
+                                CompactionOutcome::Completed {
+                                    leaf_id: leaf,
+                                    entry,
+                                }
+                            }
+                        }
+                        Err(e)
+                            if snap.coding_compaction_policy.is_some()
+                                && (signal.is_cancelled() || e.code.as_str() == "aborted") =>
+                        {
+                            self.write_operation_finished(&run_id, OperationOutcome::Aborted, None)
+                                .await?;
+                            CompactionOutcome::Aborted {
+                                leaf_id: source_leaf.unwrap_or_default(),
                             }
                         }
                         Err(e) => {
@@ -4404,13 +5402,12 @@ impl AgentHarness {
                                 code: "compaction_failed".into(),
                                 message: e.message.clone(),
                             };
-                            let _ = self
-                                .write_operation_finished(
-                                    &run_id,
-                                    OperationOutcome::Failed,
-                                    Some(err.clone()),
-                                )
-                                .await;
+                            self.write_operation_finished(
+                                &run_id,
+                                OperationOutcome::Failed,
+                                Some(err.clone()),
+                            )
+                            .await?;
                             CompactionOutcome::Failed {
                                 leaf_id: source_leaf.unwrap_or_default(),
                                 error: err,
@@ -4423,13 +5420,12 @@ impl AgentHarness {
                         code: "prepare_failed".into(),
                         message: e.message.clone(),
                     };
-                    let _ = self
-                        .write_operation_finished(
-                            &run_id,
-                            OperationOutcome::Failed,
-                            Some(err.clone()),
-                        )
-                        .await;
+                    self.write_operation_finished(
+                        &run_id,
+                        OperationOutcome::Failed,
+                        Some(err.clone()),
+                    )
+                    .await?;
                     CompactionOutcome::Failed {
                         leaf_id: source_leaf.unwrap_or_default(),
                         error: err,
@@ -4438,12 +5434,19 @@ impl AgentHarness {
             }
         };
 
+        if matches!(outcome, CompactionOutcome::Declined { .. }) {
+            // Declining is not a checkpoint save, but the accepted operation
+            // still needs a durable end before another operation is admitted.
+            self.write_operation_finished(&run_id, OperationOutcome::Completed, None)
+                .await?;
+        }
         self.finish_context_writes(&run_id, None).await?;
         Ok(CompactionResult { run_id, outcome })
     }
 }
 
 /// Config snapshot cloned out of `HarnessInner` at the start of an operation.
+#[derive(Clone)]
 struct ConfigSnapshot {
     child_scope: CancellationToken,
     parent_signal: Option<CancellationToken>,
@@ -4456,6 +5459,7 @@ struct ConfigSnapshot {
     stream_options: AgentHarnessStreamOptions,
     retry: RetryPolicy,
     compaction: CompactionSettings,
+    coding_compaction_policy: Option<CodingAgentCompactionPolicy>,
     tool_execution: HarnessToolExecution,
     driving: DrivingMode,
     models: Vec<Arc<dyn AiProvider>>,
@@ -4690,47 +5694,54 @@ impl AgentLane for AgentHarness {
 
     async fn cancel_queued(&self, entry_id: &str) -> HarnessResult<CancelQueuedResult> {
         let _gate = self.message_writes.lock().await;
-        // Scoped: the guard must not live into the awaits below (it is not
-        // `Send`, and holding it across one makes the whole run future non-Send).
-        let removed = {
+        let queues = {
             let inner = self.inner.lock().unwrap();
             if inner.closed {
                 return Err(HarnessError::closed());
             }
-            inner.steering_queue.lock().unwrap().remove(entry_id)
-                || inner.follow_up_queue.lock().unwrap().remove(entry_id)
-                || inner.next_run_queue.lock().unwrap().remove(entry_id)
+            [
+                Arc::clone(&inner.steering_queue),
+                Arc::clone(&inner.follow_up_queue),
+                Arc::clone(&inner.next_run_queue),
+            ]
         };
-        if removed {
-            // Record it, or the item would come back on the next start. The run id
-            // comes from the enqueue, not from the current state: the reducer
-            // matches them, and an item queued during a run is often cancelled
-            // after that run has ended.
-            match self.find_enqueue(entry_id).await {
-                Some(enqueued) => {
-                    if let Err(error) = self
-                        .write_queue_cancelled(entry_id, enqueued.run_id.as_deref())
-                        .await
-                    {
-                        tracing::warn!(
-                            entry_id,
-                            %error,
-                            "could not record a queue cancellation"
-                        );
-                    }
-                }
-                None => tracing::warn!(
-                    entry_id,
-                    "not recording a queue cancellation: the item has no enqueue record"
-                ),
-            }
+        let queued = queues.into_iter().find_map(|queue| {
+            let item = queue
+                .lock()
+                .unwrap()
+                .find_for_lane(&self.lane, entry_id)
+                .cloned();
+            item.map(|item| (queue, item))
+        });
+        let Some((queue, item)) = queued else {
+            return Ok(CancelQueuedResult {
+                outcome: CancelQueuedOutcome::AlreadyConsumed,
+            });
+        };
+
+        // A live item must have a durable enqueue. Preserve it in memory if
+        // lookup or cancellation persistence fails; the gate excludes drainers
+        // until the durable record and in-memory removal are both complete.
+        let enqueued = self.find_enqueue(entry_id).await?.ok_or_else(|| {
+            HarnessError::io(format!(
+                "queued item {entry_id} on lane {} has no enqueue record",
+                self.lane
+            ))
+        })?;
+        self.write_queue_cancelled(entry_id, enqueued.run_id.as_deref())
+            .await?;
+
+        if !queue
+            .lock()
+            .unwrap()
+            .remove_for_lane(&self.lane, &item.entry_id)
+        {
+            return Err(HarnessError::io(format!(
+                "queue item {entry_id} disappeared after its cancellation was persisted"
+            )));
         }
         Ok(CancelQueuedResult {
-            outcome: if removed {
-                CancelQueuedOutcome::Cancelled
-            } else {
-                CancelQueuedOutcome::AlreadyConsumed
-            },
+            outcome: CancelQueuedOutcome::Cancelled,
         })
     }
 
@@ -4749,67 +5760,105 @@ impl AgentLane for AgentHarness {
             .lock()
             .unwrap()
             .peek_for_lane(&self.lane);
+        let steering_ids = inner
+            .steering_queue
+            .lock()
+            .unwrap()
+            .peek_ids_for_lane(&self.lane);
+        let follow_up_ids = inner
+            .follow_up_queue
+            .lock()
+            .unwrap()
+            .peek_ids_for_lane(&self.lane);
         Ok(QueuedMessages {
             steering,
             follow_up,
+            steering_ids,
+            follow_up_ids,
             images: Vec::new(),
         })
     }
 
     async fn clear_queue(&self) -> HarnessResult<QueuedMessages> {
         let _gate = self.message_writes.lock().await;
-        let (steering_items, follow_up_items) = {
+        let (steering_queue, follow_up_queue, steering_items, follow_up_items) = {
             let inner = self.inner.lock().unwrap();
             if inner.closed {
                 return Err(HarnessError::closed());
             }
-            // Bound to locals: the guards are temporaries of the tuple
-            // expression otherwise, and they must not outlive this block.
-            let steering = inner
-                .steering_queue
-                .lock()
-                .unwrap()
-                .take_items_for_lane(&self.lane);
-            let follow_up = inner
-                .follow_up_queue
-                .lock()
-                .unwrap()
-                .take_items_for_lane(&self.lane);
-            (steering, follow_up)
+            let steering_queue = Arc::clone(&inner.steering_queue);
+            let follow_up_queue = Arc::clone(&inner.follow_up_queue);
+            let steering_items = steering_queue.lock().unwrap().items_for_lane(&self.lane);
+            let follow_up_items = follow_up_queue.lock().unwrap().items_for_lane(&self.lane);
+            (
+                steering_queue,
+                follow_up_queue,
+                steering_items,
+                follow_up_items,
+            )
         };
-        let mut steering = Vec::with_capacity(steering_items.len());
-        let mut follow_up = Vec::with_capacity(follow_up_items.len());
+        let total = steering_items.len() + follow_up_items.len();
+        let mut pending = Vec::with_capacity(total);
+        pending.extend(
+            steering_items
+                .into_iter()
+                .map(|item| (Arc::clone(&steering_queue), false, item)),
+        );
+        pending.extend(
+            follow_up_items
+                .into_iter()
+                .map(|item| (Arc::clone(&follow_up_queue), true, item)),
+        );
+
+        let mut steering = Vec::with_capacity(total);
+        let mut follow_up = Vec::with_capacity(total);
         let mut images = Vec::new();
-        // Un-queuing is a cancellation: without the record these messages would
-        // come back on the next start, even though they are in the editor now.
-        for (items, out) in [
-            (steering_items, &mut steering),
-            (follow_up_items, &mut follow_up),
-        ] {
-            for item in items {
-                if let Some(enqueued) = self.find_enqueue(&item.entry_id).await {
-                    if let Err(error) = self
-                        .write_queue_cancelled(&item.entry_id, enqueued.run_id.as_deref())
-                        .await
-                    {
-                        tracing::warn!(
-                            entry_id = %item.entry_id,
-                            %error,
-                            "could not record a queue clear"
-                        );
-                    }
+        let mut cancelled_count = 0;
+        for (queue, is_follow_up, item) in pending {
+            let enqueued = match self.find_enqueue(&item.entry_id).await {
+                Ok(Some(enqueued)) => enqueued,
+                Ok(None) => {
+                    let error = HarnessError::io(format!(
+                        "queued item {} on lane {} has no enqueue record",
+                        item.entry_id, self.lane
+                    ));
+                    return Err(queue_clear_error(total, cancelled_count, error));
                 }
-                out.push(queued_message_text(&item.message));
-                if let AgentMessage::User(user) = &item.message {
-                    if let UserContent::Blocks(blocks) = &user.content {
-                        images.extend(blocks.iter().filter_map(|block| {
-                            if let Content::Image(image) = block {
-                                Some(image.clone())
-                            } else {
-                                None
-                            }
-                        }));
-                    }
+                Err(error) => return Err(queue_clear_error(total, cancelled_count, error)),
+            };
+            if let Err(error) = self
+                .write_queue_cancelled(&item.entry_id, enqueued.run_id.as_deref())
+                .await
+            {
+                return Err(queue_clear_error(total, cancelled_count, error));
+            }
+            cancelled_count += 1;
+            if !queue
+                .lock()
+                .unwrap()
+                .remove_for_lane(&self.lane, &item.entry_id)
+            {
+                return Err(HarnessError::io(format!(
+                    "queue clear persisted {cancelled_count} of {total} cancellations, but item {} disappeared from memory",
+                    item.entry_id
+                )));
+            }
+
+            let output = if is_follow_up {
+                &mut follow_up
+            } else {
+                &mut steering
+            };
+            output.push(queued_message_text(&item.message));
+            if let AgentMessage::User(user) = &item.message {
+                if let UserContent::Blocks(blocks) = &user.content {
+                    images.extend(blocks.iter().filter_map(|block| {
+                        if let Content::Image(image) = block {
+                            Some(image.clone())
+                        } else {
+                            None
+                        }
+                    }));
                 }
             }
         }
@@ -4817,6 +5866,7 @@ impl AgentLane for AgentHarness {
             steering,
             follow_up,
             images,
+            ..Default::default()
         })
     }
 
@@ -4946,8 +5996,7 @@ impl AgentLane for AgentHarness {
         if inner.closed {
             return Err(HarnessError::closed());
         }
-        inner.model = model;
-        Ok(())
+        inner.apply_model(model)
     }
 
     async fn get_thinking_level(&self) -> HarnessResult<ThinkingLevel> {
@@ -4963,8 +6012,7 @@ impl AgentLane for AgentHarness {
         if inner.closed {
             return Err(HarnessError::closed());
         }
-        inner.thinking_level = level;
-        Ok(())
+        inner.apply_thinking_level(level)
     }
 
     async fn get_active_tools(&self) -> HarnessResult<Vec<String>> {
@@ -5280,8 +6328,7 @@ impl AgentLane for LaneHandle {
         if inner.closed {
             return Err(HarnessError::closed());
         }
-        inner.model = model;
-        Ok(())
+        inner.apply_model(model)
     }
 
     async fn get_thinking_level(&self) -> HarnessResult<ThinkingLevel> {
@@ -5297,8 +6344,7 @@ impl AgentLane for LaneHandle {
         if inner.closed {
             return Err(HarnessError::closed());
         }
-        inner.thinking_level = level;
-        Ok(())
+        inner.apply_thinking_level(level)
     }
 
     async fn get_active_tools(&self) -> HarnessResult<Vec<String>> {
@@ -5468,12 +6514,30 @@ mod queue_tests {
             lane: "main".into(),
             message: user("second"),
         });
-        assert!(queue.remove("a"));
-        assert!(!queue.remove("missing"));
+        assert!(queue.remove_for_lane("main", "a"));
+        assert!(!queue.remove_for_lane("main", "missing"));
         assert_eq!(
             queue.pending.front().map(|item| item.entry_id.as_str()),
             Some("b")
         );
+    }
+
+    #[test]
+    fn queue_peek_ids_match_message_order_and_lane() {
+        let mut queue = MessageQueue::new(QueueMode::All);
+        for (id, lane, text) in [
+            ("a", "main", "one"),
+            ("x", "side", "other"),
+            ("b", "main", "two"),
+        ] {
+            queue.pending.push_back(QueuedMessage {
+                entry_id: id.into(),
+                lane: lane.into(),
+                message: user(text),
+            });
+        }
+        assert_eq!(queue.peek_for_lane("main"), vec!["one", "two"]);
+        assert_eq!(queue.peek_ids_for_lane("main"), vec!["a", "b"]);
     }
 
     #[test]
@@ -5522,7 +6586,7 @@ mod queue_tests {
     }
 
     #[test]
-    fn queue_take_for_lane_drains_every_lane_entry() {
+    fn queue_snapshot_and_removal_are_scoped_to_lane() {
         let mut queue = MessageQueue::new(QueueMode::OneAtATime);
         queue.pending.push_back(QueuedMessage {
             entry_id: "a".into(),
@@ -5539,15 +6603,15 @@ mod queue_tests {
             lane: "main".into(),
             message: user("second"),
         });
-        // Unlike `drain_for_lane` (which honours `QueueMode`), the dequeue
-        // action clears the lane completely regardless of mode. It returns items
-        // (ids included) so the caller can record each cancellation.
-        let taken: Vec<String> = queue
-            .take_items_for_lane("main")
-            .into_iter()
+        let snapshot: Vec<String> = queue
+            .items_for_lane("main")
+            .iter()
             .map(|item| queued_message_text(&item.message))
             .collect();
-        assert_eq!(taken, vec!["first", "second"]);
+        assert_eq!(snapshot, vec!["first", "second"]);
+        assert_eq!(queue.pending.len(), 3, "snapshot must not dequeue");
+        assert!(queue.remove_for_lane("main", "a"));
+        assert!(queue.remove_for_lane("main", "c"));
         assert_eq!(queue.pending.len(), 1);
         assert_eq!(queue.pending[0].entry_id, "b");
     }
@@ -5624,6 +6688,84 @@ mod session_switch_tests {
             entry_transforms: Vec::new(),
             provider_hooks: None,
         }
+    }
+
+    #[tokio::test]
+    async fn declined_compaction_durably_settles_before_next_operation() {
+        let harness = AgentHarness::create(opts()).await.unwrap();
+        for _ in 0..2 {
+            let result = harness.compact(None).await.unwrap();
+            assert!(matches!(result.outcome, CompactionOutcome::Declined { .. }));
+            assert!(harness
+                .session()
+                .find_open_operations("main", None)
+                .await
+                .unwrap()
+                .is_empty());
+            assert!(harness.snapshot().await.unwrap().active.is_none());
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn active_run_rejects_configuration_changes_until_settlement() {
+        let provider = ice_ai::providers::faux::FauxProvider::new(
+            ice_ai::providers::faux::FauxScript::new()
+                .with_text("delayed response")
+                .with_tokens_per_second(1.0),
+        );
+        let mut options = opts();
+        options.model = provider.default_model().clone();
+        options.models = vec![provider];
+        let harness = AgentHarness::create(options).await.unwrap();
+        let current = harness.get_model().await.unwrap();
+        let runner = harness.clone();
+        let task = tokio::spawn(async move { runner.prompt_text("hold the run", vec![]).await });
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+        while harness.snapshot().await.unwrap().active.is_none() {
+            assert!(tokio::time::Instant::now() < deadline);
+            tokio::task::yield_now().await;
+        }
+        assert!(harness.set_model(current.clone()).await.is_err());
+        assert!(harness
+            .lane("main")
+            .set_thinking_level(ThinkingLevel::Low)
+            .await
+            .is_err());
+        assert_eq!(harness.get_model().await.unwrap().id, current.id);
+        harness.abort().await.unwrap();
+        harness.wait_for_idle().await.unwrap();
+        task.await.unwrap().unwrap();
+        harness.set_model(current).await.unwrap();
+        harness
+            .set_thinking_level(ThinkingLevel::Low)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn unavailable_model_selection_preserves_effective_configuration() {
+        let harness = AgentHarness::create(opts()).await.unwrap();
+        let before = harness.get_model().await.unwrap();
+        let missing = Model::new("missing", "missing", Api::Faux, "unregistered", "http://x");
+        assert!(harness.set_model(missing.clone()).await.is_err());
+        assert_eq!(harness.get_model().await.unwrap().id, before.id);
+        let lane = harness.lane("main");
+        assert!(lane.set_model(missing).await.is_err());
+        assert_eq!(lane.get_model().await.unwrap().id, before.id);
+    }
+
+    #[tokio::test]
+    async fn unsupported_thinking_selection_preserves_effective_configuration() {
+        let harness = AgentHarness::create(opts()).await.unwrap();
+        let before = harness.get_thinking_level().await.unwrap();
+        assert!(harness
+            .set_thinking_level(ThinkingLevel::Max)
+            .await
+            .is_err());
+        assert_eq!(harness.get_thinking_level().await.unwrap(), before);
+        let lane = harness.lane("main");
+        assert!(lane.set_thinking_level(ThinkingLevel::Max).await.is_err());
+        assert_eq!(lane.get_thinking_level().await.unwrap(), before);
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
