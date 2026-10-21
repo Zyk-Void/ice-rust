@@ -512,6 +512,24 @@ passes to `main()` so global settings win over project ones.
 
 **Phase 0 TUI parity landed 2026-10-21** (PRs [#1](https://github.com/Zyk-Void/ice-rust/pull/1), [#2](https://github.com/Zyk-Void/ice-rust/pull/2), [#27](https://github.com/Zyk-Void/ice-rust/pull/27), [#28](https://github.com/Zyk-Void/ice-rust/pull/28), [#29](https://github.com/Zyk-Void/ice-rust/pull/29)). This covers the reachable defects from TUI-226/244/248/254, grapheme width and wrapping (TUI-201/202), grapheme-cell slicing and OSC 8 handling (TUI-203/204), and Text/TruncatedText/Box/Spacer contracts (TUI-205). PR #29 changes the public `ice-tui` component API and rendering behavior. The detailed `docs/ice-gap/tui.md` audit is not present on this branch; this note records only the landed Phase 0 scope, not completion of the broader TUI parity audit.
 
+**Selected `goal.md` follow-up (local branch, not yet delivered):** the combined
+implementation now includes cancellable, durable tree navigation summaries and
+its three-way/custom-prompt chooser (TUI-067), a category grid and largest-entry
+context projection (TUI-058), an acknowledged old-event drain before shared
+session replacement, and run summaries driven by authoritative completed
+outcomes rather than UI/message heuristics (TUI-043). Tree replay follows the
+active branch instead of all session entries. `branchSummary.reserveTokens` is
+wired through CLI startup; the harness exposes additive reserve getter/setter
+methods without changing required options, plugin ABI, or persistence schemas.
+The public agent-event enum adds an ordered `RunSettled { run_id }` marker;
+downstream exhaustive matches must handle it. It is not a persisted record.
+Storage finalization failures after a committed navigation are recovered without
+repeating the provider request; see `docs/guides/branch-summaries.md`. Final
+combined test evidence and remaining physical-terminal/publication boundaries
+are recorded in `docs/ice-gap/tui-goal-followup.md`. Local implementation is not
+a claim that these changes have merged into `main` or that every parity-audit
+entry above/below is complete.
+
 From `CA/modes/interactive/components/`:
 - **Appearance:** `appearance-customizer.ts` (3110 lines) edits semantic theme-token
   groups, one group per editor screen. `appearance-preview.ts` adds live preview
