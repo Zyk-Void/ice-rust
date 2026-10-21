@@ -677,8 +677,10 @@ enum TuiMessage {
     OpenTree,
     NavigateTree(String),
     Exit,
-    /// Clear the transcript (from `/clear`).
-    ClearChat,
+    /// Start a new session (from `/new` and its `/clear` alias).
+    NewSession,
+    /// A background `@` file search finished; refresh the completion menu.
+    AutocompleteReady,
     /// Compact the conversation (from `/compact`).
     Compact,
     /// Copy the last assistant reply to the clipboard (from `/copy`).
@@ -730,7 +732,7 @@ enum TuiMessage {
     LogoutProvider(String),
     /// editor. Handling it on the async loop keeps editor mutation single-
     /// threaded with the rest of the TUI state.
-    ExternalEditorResult(Result<String, String>),
+    ExternalEditorResult(Result<Option<String>, String>),
     /// A user-initiated `!command` / `!!command` shell run finished. Routed to
     /// the main loop so the `bashExecution` transcript record is persisted in
     /// order relative to agent runs (upstream's `recordBashResult` /
@@ -1193,6 +1195,12 @@ pub async fn interactive_tui(
         &registry,
         &resources_arc.lock().unwrap(),
         &cwd,
+        Some(Arc::new({
+            let tx_ready = tx.clone();
+            move || {
+                let _ = tx_ready.send(TuiMessage::AutocompleteReady);
+            }
+        })),
     ));
     let autocomplete_container = Arc::new(Container::new());
 
@@ -1756,6 +1764,8 @@ pub async fn interactive_tui(
             // Windows they carry the console buffer size, not the window).
             if let Event::Resize(..) = ev {
                 sync_editor_viewport(&editor_for_key);
+                *state_for_key.selection_start.lock().unwrap() = None;
+                *state_for_key.selection_end.lock().unwrap() = None;
                 tui_for_key.note_resize();
                 continue;
             }
@@ -1808,7 +1818,12 @@ pub async fn interactive_tui(
                         // Start selection tracking. `selection_end` doubles as the
                         // "a real drag happened" marker: a plain tap never sets
                         // it, so it can never overwrite the clipboard.
-                        *state_for_key.selection_start.lock().unwrap() = Some((m.column, m.row));
+                        *state_for_key.selection_start.lock().unwrap() =
+                            tui_for_key.transcript_snapshot().and_then(|snapshot| {
+                                snapshot
+                                    .content_position(m.column as usize, m.row as usize, false)
+                                    .map(|(column, row)| (column, row, snapshot.content_width))
+                            });
                         *state_for_key.selection_end.lock().unwrap() = None;
                     }
                     MouseEventKind::Drag(crossterm::event::MouseButton::Left) => {
@@ -1842,9 +1857,12 @@ pub async fn interactive_tui(
                                 .unwrap_or(true);
 
                             if auto_copy && is_drag {
-                                // Try to extract selected text from chat container
+                                // Preserve the logical start even if the viewport
+                                // moved while dragging, and exclude the dock.
                                 if let Some(selected_text) =
-                                    extract_selected_text(&state_for_key.chat_container, start, end)
+                                    tui_for_key.transcript_snapshot().and_then(|snapshot| {
+                                        extract_transcript_selection(&snapshot, start, end)
+                                    })
                                 {
                                     if !selected_text.trim().is_empty() {
                                         let _ = copy_to_clipboard(&selected_text);
@@ -2279,13 +2297,17 @@ pub async fn interactive_tui(
             }
 
             // 2c. Ctrl+G: edit the current draft in the user's external
-            // editor, matching upstream's VISUAL/EDITOR fallback chain.
+            // editor. Blocks this thread until the editor exits.
             if keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::EXTERNAL_EDITOR,
             ) {
-                launch_external_editor(editor_for_key.get_expanded_text(), tx_for_key.clone());
+                run_external_editor(
+                    &tui_for_key,
+                    editor_for_key.get_expanded_text(),
+                    &tx_for_key,
+                );
                 continue;
             }
 
@@ -2912,12 +2934,13 @@ pub async fn interactive_tui(
             }
             Some(TuiMessage::ExternalEditorResult(result)) => {
                 match result {
-                    Ok(text) => {
-                        let cursor = text.chars().count();
+                    Ok(Some(text)) => {
+                        let (row, col) = end_of_text_cursor(&text);
                         editor.set_text(&text);
-                        editor.set_cursor(0, cursor);
+                        editor.set_cursor(row, col);
                         add_note_message(&chat_container, "Draft updated from external editor.");
                     }
+                    Ok(None) => {}
                     Err(error) => add_error_message(&chat_container, &error),
                 }
                 tui.request_render(false);
@@ -3006,10 +3029,20 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
-            Some(TuiMessage::ClearChat) => {
-                state.new_message_count.reset();
-                chat_container.clear();
-                add_welcome_message(&chat_container);
+            Some(TuiMessage::NewSession) => {
+                start_new_session(
+                    &harness,
+                    &lane,
+                    &cwd,
+                    &chat_container,
+                    &state,
+                    &reload_context.tool_context,
+                )
+                .await;
+                tui.request_render(false);
+            }
+            Some(TuiMessage::AutocompleteReady) => {
+                refresh_autocomplete(&state, &editor);
                 tui.request_render(false);
             }
             Some(TuiMessage::Compact) => {
@@ -3326,9 +3359,17 @@ pub async fn interactive_tui(
                             reload_ctx.extension_session.clone(),
                         );
                         registry.replace(fresh_registry);
-                        state
-                            .autocomplete
-                            .set_provider(build_autocomplete_provider(&registry, &resources, &cwd));
+                        state.autocomplete.set_provider(build_autocomplete_provider(
+                            &registry,
+                            &resources,
+                            &cwd,
+                            Some(Arc::new({
+                                let tx_ready = tx.clone();
+                                move || {
+                                    let _ = tx_ready.send(TuiMessage::AutocompleteReady);
+                                }
+                            })),
+                        ));
                         update_resource_listing(
                             &ctx.resources,
                             ctx.startup_context.as_ref(),

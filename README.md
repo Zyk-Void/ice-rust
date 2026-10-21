@@ -124,6 +124,13 @@ last committed frame rather than replaying the turn. Custom Anthropic or
 OpenAI-compatible gateways are declared in `~/.icers/agent/models.json` and
 selected with `--model <provider>/<model>`.
 
+In the interactive TUI, `/new` (also `/clear`) starts a fresh conversation in a
+new session file. It settles any running response before switching, keeps the
+previous JSONL conversation available for `/resume`, and resets the footer to
+the new session's usage. After resuming, importing, or forking a conversation,
+the footer reports that session's stored usage rather than carrying totals over
+from the conversation you left.
+
 ### The SDK
 
 Build an agent against a deterministic in-process provider — no API key, no

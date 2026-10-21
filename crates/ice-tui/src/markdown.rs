@@ -13,9 +13,7 @@ use super::component::Component;
 use super::mermaid::Mermaid;
 use crate::ansi::{bold, italic, underline};
 use crate::theme::theme;
-use crate::utils::{
-    apply_background_to_line, truncate_to_width, visible_width, wrap_text_with_ansi,
-};
+use crate::utils::{apply_background_to_line, visible_width, wrap_text_with_ansi};
 
 /// Markdown rendering options.
 #[derive(Debug, Clone)]
@@ -410,6 +408,9 @@ impl Markdown {
 
     /// Render inline CommonMark/GFM with terminal-specific ANSI styling.
     fn render_inline(&self, text: &str) -> String {
+        if text.is_empty() {
+            return String::new();
+        }
         let colors = theme().colors;
         let mut options = Options::empty();
         options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -767,44 +768,36 @@ where
         return;
     }
 
-    // Compute column visible widths from header + body.
-    let mut col_w: Vec<usize> = (0..ncols)
-        .map(|c| {
-            std::iter::once(&header)
-                .chain(body.iter())
-                .map(|r| r.get(c).map(|s| visible_width(s)).unwrap_or(0))
-                .max()
-                .unwrap_or(0)
-        })
-        .collect();
-
-    // Account for " | " separators + leading/trailing border usage.
-    // We cap the total so the table fits within `cwidth`.
-    let overhead = 3 * (ncols - 1) + 4; // approximate: "| " + " | "*n + " |"
-    let budget = cwidth.saturating_sub(overhead);
-    let total: usize = col_w.iter().sum();
-    if total > budget {
-        // Shrink proportionally (floor of 1 per column).
-        let scale = budget as f64 / total as f64;
-        for w in col_w.iter_mut() {
-            *w = (*w as f64 * scale).round() as usize;
-            if *w < 1 {
-                *w = 1;
+    // Compact grid: one `│` before, between and after the cells.
+    let overhead = ncols + 1;
+    let Some(col_w) = table_column_widths(&header, &body, cwidth.saturating_sub(overhead)) else {
+        // Too narrow for each column's widest grapheme: show the source rows wrapped
+        // (ice falls back to the raw Markdown too).
+        for row in rows {
+            for line in wrap_text_with_ansi(row, cwidth.max(1)) {
+                out.push(format!("{pad}{line}"));
             }
         }
-    }
+        return;
+    };
 
-    let join = |cells: &[String]| {
-        cells
-            .iter()
-            .enumerate()
-            .map(|(i, c)| {
-                let w = col_w.get(i).copied().unwrap_or(0);
-                let cell = truncate_to_width(c, w, "…");
-                pad_cell(&cell, w)
+    // Each cell wraps inside its column; a row is as tall as its tallest cell.
+    let push_row = |out: &mut Vec<String>, cells: &[String]| {
+        let wrapped: Vec<Vec<String>> = (0..ncols)
+            .map(|c| {
+                let cell = cells.get(c).map(String::as_str).unwrap_or("");
+                wrap_text_with_ansi(cell, col_w[c].max(1))
             })
-            .collect::<Vec<_>>()
-            .join("│")
+            .collect();
+        let height = wrapped.iter().map(Vec::len).max().unwrap_or(1).max(1);
+        for line in 0..height {
+            let parts: Vec<String> = wrapped
+                .iter()
+                .enumerate()
+                .map(|(c, lines)| pad_cell(lines.get(line).map_or("", String::as_str), col_w[c]))
+                .collect();
+            out.push(format!("{pad}│{}│", parts.join("│")));
+        }
     };
 
     let border = |left: &str, mid: &str, joiner: &str, right: &str| -> String {
@@ -813,13 +806,10 @@ where
     };
 
     out.push(format!("{pad}{}", border("┌", "─", "┬", "┐")));
-    out.push(format!("{pad}│{}│", join(&header)));
+    push_row(out, &header);
     out.push(format!("{pad}{}", border("├", "─", "┼", "┤")));
     for (row_index, row) in body.iter().enumerate() {
-        let cells: Vec<String> = (0..ncols)
-            .map(|c| row.get(c).cloned().unwrap_or_default())
-            .collect();
-        out.push(format!("{pad}│{}│", join(&cells)));
+        push_row(out, row);
         // Keep the table grid visible between body rows as well as between the
         // header and the first row. This is especially useful for narrow
         // terminals where adjacent wrapped-looking rows are otherwise hard
@@ -834,7 +824,9 @@ where
 /// Split a table row without treating escaped pipes or pipes inside code spans
 /// as column separators.
 fn split_table_cells(row: &str) -> Vec<String> {
-    let inner = row.trim().trim_matches('|');
+    let trimmed = row.trim();
+    let inner = trimmed.strip_prefix('|').unwrap_or(trimmed);
+    let inner = inner.strip_suffix('|').unwrap_or(inner);
     let mut cells = vec![String::new()];
     let mut escaped = false;
     let mut code_ticks = 0usize;
@@ -856,6 +848,118 @@ fn split_table_cells(row: &str) -> Vec<String> {
         }
     }
     cells
+}
+
+/// Column widths that fit `available` cells (ice `renderTable`). Columns get
+/// their natural width when everything fits. Otherwise each starts at its
+/// longest word (capped at 30 cells, or shared out proportionally when even
+/// those do not fit) and grows toward its natural width in proportion to how
+/// much it is missing; rounding leftovers go to columns still short of
+/// natural. Cells wrap to these widths, so no text is cut.
+fn table_column_widths(
+    header: &[String],
+    body: &[Vec<String>],
+    available: usize,
+) -> Option<Vec<usize>> {
+    use unicode_segmentation::UnicodeSegmentation;
+    const MAX_UNBROKEN_WORD_WIDTH: usize = 30;
+    // `part * total / whole` without overflowing `usize` (`whole` > 0).
+    let share = |part: usize, total: usize, whole: usize| {
+        (part as u128 * total as u128 / whole as u128) as usize
+    };
+    let ncols = header.len();
+    // Empty columns still need a cell. Wide graphemes may need more than one;
+    // assigning them a one-cell column would overflow when they wrap.
+    let mut natural = vec![1usize; ncols];
+    let mut min_cell = vec![1usize; ncols];
+    let mut min_word = vec![1usize; ncols];
+    for row in std::iter::once(header).chain(body.iter().map(Vec::as_slice)) {
+        for (c, cell) in row.iter().enumerate().take(ncols) {
+            natural[c] = natural[c].max(visible_width(cell));
+            let plain = crate::strip_ansi(cell);
+            min_cell[c] = min_cell[c].max(
+                plain
+                    .graphemes(true)
+                    .map(crate::ansi::grapheme_width)
+                    .max()
+                    .unwrap_or(1),
+            );
+            let longest = cell
+                .split_whitespace()
+                .map(visible_width)
+                .max()
+                .unwrap_or(0);
+            min_word[c] = min_word[c]
+                .max(longest.min(MAX_UNBROKEN_WORD_WIDTH))
+                .max(min_cell[c]);
+        }
+    }
+
+    let cell_sum: usize = min_cell.iter().sum();
+    if cell_sum > available {
+        return None;
+    }
+    if natural.iter().sum::<usize>() <= available {
+        return Some(natural);
+    }
+    let mut min_cols = min_word.clone();
+    if min_cols.iter().sum::<usize>() > available {
+        min_cols = min_cell.clone();
+        let remaining = available - cell_sum;
+        let total_weight: usize = min_word
+            .iter()
+            .zip(&min_cell)
+            .map(|(w, floor)| w - floor)
+            .sum();
+        if remaining > 0 && total_weight > 0 {
+            for (c, w) in min_word.iter().enumerate() {
+                min_cols[c] += share(w - min_cell[c], remaining, total_weight);
+            }
+        }
+        let mut leftover = available - min_cols.iter().sum::<usize>();
+        for width in min_cols.iter_mut() {
+            if leftover == 0 {
+                break;
+            }
+            *width += 1;
+            leftover -= 1;
+        }
+    }
+
+    let min_sum: usize = min_cols.iter().sum();
+    let extra = available.saturating_sub(min_sum);
+    let grow_potential: usize = natural
+        .iter()
+        .zip(&min_cols)
+        .map(|(n, m)| n.saturating_sub(*m))
+        .sum();
+    let mut widths: Vec<usize> = natural
+        .iter()
+        .zip(&min_cols)
+        .map(|(n, m)| {
+            let grow = if grow_potential > 0 {
+                share(n.saturating_sub(*m), extra, grow_potential)
+            } else {
+                0
+            };
+            m + grow
+        })
+        .collect();
+    let mut remaining = available.saturating_sub(widths.iter().sum::<usize>());
+    while remaining > 0 {
+        let mut grew = false;
+        for (width, n) in widths.iter_mut().zip(&natural) {
+            if remaining > 0 && *width < *n {
+                *width += 1;
+                remaining -= 1;
+                grew = true;
+            }
+        }
+        if !grew {
+            break;
+        }
+    }
+    Some(widths)
 }
 
 /// Left-pad/content a cell string to `w` columns (ANSI-aware).
@@ -1150,6 +1254,182 @@ mod tests {
         assert!(
             streaming.iter().any(|l| l.contains("echo a")),
             "{streaming:?}"
+        );
+    }
+
+    /// Plain rows of a rendered table; asserts no row is wider than `width`.
+    fn plain_table(md: &str, width: usize) -> Vec<String> {
+        let lines: Vec<String> = Markdown::new(md, 0, 0)
+            .render(width)
+            .iter()
+            .map(|line| crate::strip_ansi(line))
+            .collect();
+        for line in &lines {
+            assert!(
+                visible_width(line) <= width,
+                "row wider than {width}: {line:?}"
+            );
+        }
+        lines
+    }
+
+    /// Words of a table's cells, with the grid removed.
+    fn table_words(lines: &[String]) -> Vec<String> {
+        lines
+            .iter()
+            .flat_map(|line| {
+                line.split(|c: char| "│┌┐└┘├┤┬┴┼─".contains(c))
+                    .flat_map(str::split_whitespace)
+                    .map(str::to_string)
+                    .collect::<Vec<_>>()
+            })
+            .collect()
+    }
+
+    /// Regression: cells were cut to one line with `…`, so table answers
+    /// lost text, and rounded column shrinking could overflow the width.
+    /// ice `markdown.test.ts` "should wrap long cell content to multiple
+    /// lines" / "should wrap table cells when table exceeds available width".
+    #[test]
+    fn table_cells_wrap_instead_of_truncating() {
+        let md = "| Command | Description |\n|---|---|\n| npm install | Install all the project dependencies listed in package.json |\n| npm test | Run the test suite |";
+        for width in 20..=160 {
+            let lines = plain_table(md, width);
+            assert!(
+                !lines.iter().any(|l| l.contains('…')),
+                "width {width}: {lines:?}"
+            );
+            // Rebuild each column's text; a word too long for its column
+            // breaks across rows, as in ice.
+            let mut columns = vec![String::new(); 2];
+            for line in lines.iter().filter(|l| l.starts_with('│')) {
+                for (c, part) in line.split('│').skip(1).take(2).enumerate() {
+                    columns[c].push_str(&part.split_whitespace().collect::<String>());
+                }
+            }
+            let expected = [
+                "Commandnpminstallnpmtest",
+                "DescriptionInstallalltheprojectdependencieslistedinpackage.jsonRunthetestsuite",
+            ];
+            assert_eq!(columns, expected, "width {width}: {lines:?}");
+        }
+        let narrow = plain_table(md, 40);
+        let data_rows = narrow.iter().filter(|l| l.starts_with('│')).count();
+        assert!(data_rows > 3, "expected wrapped rows: {narrow:?}");
+    }
+
+    /// ice "should keep column width at least the longest word".
+    #[test]
+    fn table_column_keeps_its_longest_word_whole() {
+        let lines = plain_table(
+            "| Key | Value |\n|---|---|\n| internationalization | x y z |",
+            40,
+        );
+        assert!(
+            lines.iter().any(|l| l.contains("internationalization")),
+            "{lines:?}"
+        );
+    }
+
+    /// ice "should wrap long unbroken tokens inside table cells": every row
+    /// keeps its borders and the token survives across rows.
+    #[test]
+    fn table_wraps_unbroken_tokens_and_keeps_borders() {
+        let url = "https://example.com/a/very/long/path/that/does/not/fit/anywhere";
+        let md = format!("| Link |\n|---|\n| prefix {url} |");
+        let lines = plain_table(&md, 30);
+        for line in lines.iter().filter(|l| l.starts_with('│')) {
+            assert_eq!(line.matches('│').count(), 2, "{line:?}");
+        }
+        let joined: String = table_words(&lines).concat();
+        assert!(
+            joined.contains("prefix") && joined.contains(url),
+            "{lines:?}"
+        );
+    }
+
+    /// ice "should handle extremely narrow width gracefully": fall back to the
+    /// source rows instead of a grid that cannot fit.
+    #[test]
+    fn table_falls_back_to_source_rows_when_too_narrow() {
+        let lines = plain_table("| a | b | c | d |\n|---|---|---|---|\n| 1 | 2 | 3 | 4 |", 8);
+        assert!(!lines.iter().any(|l| l.contains('┌')), "{lines:?}");
+        assert!(lines.iter().any(|l| l.contains('1')), "{lines:?}");
+    }
+
+    /// Port the table fixtures from ice markdown.test.ts:418-677, sweeping
+    /// every width and checking reconstructed columns, not selected keywords.
+    #[test]
+    fn table_width_sweep_preserves_styled_unicode_and_empty_cells() {
+        let fixtures = [
+            ("| Left | Center | Right |\n|:---|:---:|---:|\n| A | B | C |\n| Long text | Middle | End |",
+                vec!["LeftALongtext", "CenterBMiddle", "RightCEnd"]),
+            ("| Short | Very long column header |\n|---|---|\n| A | This is a much longer cell content |\n| B | Short |",
+                vec!["ShortAB", "VerylongcolumnheaderThisisamuchlongercellcontentShort"]),
+            ("| Code |\n|---|\n| `averyveryveryverylongidentifier` |\n| **bold words** and *italic words* |",
+                vec!["Codeaveryveryveryverylongidentifierboldwordsanditalicwords"]),
+            ("| Glyphs | Text |\n|---|---|\n| e\u{301}👩‍💻你好🇮🇳 | words around `styledcode` |",
+                vec!["Glyphse\u{301}👩‍💻你好🇮🇳", "Textwordsaroundstyledcode"]),
+            ("|abcdefghijklmn|||||\n|---|---|---|---|---|\n||||||",
+                vec!["abcdefghijklmn", "", "", "", ""]),
+            ("|甲|乙|丙|丁|戊|己|庚|\n|---|---|---|---|---|---|---|\n|一|二|三|四|五|六|七|",
+                vec!["甲一", "乙二", "丙三", "丁四", "戊五", "己六", "庚七"]),
+        ];
+        for (source, expected) in fixtures {
+            for padding in [0, 2] {
+                for width in 20..=160 {
+                    let lines = Markdown::new(source, padding, 0)
+                        .render(width)
+                        .iter()
+                        .map(|line| crate::strip_ansi(line))
+                        .collect::<Vec<_>>();
+                    assert!(
+                        lines.iter().all(|line| visible_width(line) <= width),
+                        "width={width}, padding={padding}, source={source:?}, lines={lines:?}"
+                    );
+                    let rows = lines
+                        .iter()
+                        .filter(|line| line.trim_start().starts_with('│'))
+                        .collect::<Vec<_>>();
+                    if rows.is_empty() {
+                        // Extremely narrow multi-column tables use raw source
+                        // rows; wrapping must preserve every source character.
+                        assert_eq!(
+                            lines.concat().split_whitespace().collect::<String>(),
+                            source.split_whitespace().collect::<String>()
+                        );
+                        continue;
+                    }
+                    let mut columns = vec![String::new(); expected.len()];
+                    for line in rows {
+                        assert!(line.starts_with(&" ".repeat(padding)));
+                        let parts = line
+                            .trim()
+                            .split('│')
+                            .skip(1)
+                            .take(expected.len())
+                            .collect::<Vec<_>>();
+                        assert_eq!(line.matches('│').count(), expected.len() + 1, "{line:?}");
+                        for (column, part) in columns.iter_mut().zip(parts) {
+                            column.push_str(&part.split_whitespace().collect::<String>());
+                        }
+                    }
+                    assert_eq!(
+                        columns, expected,
+                        "width={width}, padding={padding}, source={source:?}"
+                    );
+                }
+            }
+        }
+        let styled = Markdown::new(
+            "| Code |\n|---|\n| `averyveryveryverylongidentifier` |",
+            0,
+            0,
+        )
+        .render(20);
+        assert!(
+            styled.join("\n").contains('\x1b'),
+            "inline code styling must survive wrapping"
         );
     }
 

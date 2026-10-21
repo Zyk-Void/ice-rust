@@ -100,9 +100,10 @@ impl ScrollViewState {
 }
 
 #[derive(Clone)]
-struct ScrollRenderCache {
-    content_width: usize,
-    lines: Arc<Vec<String>>,
+pub(crate) struct ScrollRenderCache {
+    pub(crate) content_width: usize,
+    pub(crate) scroll_top: usize,
+    pub(crate) lines: Arc<Vec<String>>,
 }
 
 /// ScrollView - A scrollable container.
@@ -376,6 +377,10 @@ impl ScrollView {
         self.render_with_viewport_impl(width, height, true)
     }
 
+    pub(crate) fn rendered_content(&self) -> Option<ScrollRenderCache> {
+        self.render_cache.lock().ok()?.clone()
+    }
+
     fn render_with_viewport_impl(
         &self,
         width: usize,
@@ -392,22 +397,22 @@ impl ScrollView {
         } else {
             None
         };
-        let all_lines = cached.map(|cache| cache.lines).unwrap_or_else(|| {
-            let lines = Arc::new(self.child.render(content_width));
-            if let Ok(mut cache) = self.render_cache.lock() {
-                *cache = Some(ScrollRenderCache {
-                    content_width,
-                    lines: lines.clone(),
-                });
-            }
-            lines
-        });
+        let all_lines = cached
+            .map(|cache| cache.lines)
+            .unwrap_or_else(|| Arc::new(self.child.render(content_width)));
         let content_height = all_lines.len();
 
         // Update state
         self.update_layout(content_height, height, None);
 
         let scroll_top = self.scroll_top();
+        if let Ok(mut cache) = self.render_cache.lock() {
+            *cache = Some(ScrollRenderCache {
+                content_width,
+                scroll_top,
+                lines: all_lines.clone(),
+            });
+        }
 
         // Extract visible portion
         let visible: Vec<String> = all_lines

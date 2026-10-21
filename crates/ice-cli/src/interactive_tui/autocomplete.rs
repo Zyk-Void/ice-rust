@@ -14,6 +14,7 @@ pub(super) fn build_autocomplete_provider(
     registry: &CommandRegistry,
     resources: &ice_harness::types::AgentHarnessResources,
     cwd: &std::path::Path,
+    on_ready: Option<Arc<dyn Fn() + Send + Sync>>,
 ) -> Arc<dyn ice_tui::AutocompleteProvider> {
     let mut commands = registry.visible_entries();
     commands.extend(
@@ -32,6 +33,15 @@ pub(super) fn build_autocomplete_provider(
     );
     let mut combined = CombinedAutocompleteProvider::new();
     combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
+    // Reinstall recursive completion on reload as well as startup. Its callback
+    // wakes the same TUI queue after a background search finishes.
+    if let Some(on_ready) = on_ready {
+        if let Some(recursive) =
+            ice_tui::RecursiveFileAutocompleteProvider::with_fd(cwd.to_path_buf(), on_ready)
+        {
+            combined.add_provider(Arc::new(recursive));
+        }
+    }
     combined.add_provider(Arc::new(FilePathAutocompleteProvider::with_root(
         cwd.to_path_buf(),
     )));
@@ -169,23 +179,24 @@ pub(super) fn accept_top_suggestion(state: &Arc<TuiState>, editor: &Arc<Editor>)
     let mut replaced = String::with_capacity(text.len() + top.text.len());
     replaced.push_str(&text[..start]);
     replaced.push_str(&top.text);
-    // Keep the text AFTER the replaced span (mid-line completion: replacing
-    // `[start, end)` must not drop the rest of the line).
-    replaced.push_str(&text[end..]);
-    if top.insert_space && !replaced.ends_with('/') {
-        replaced.push(' ');
+    let suffix = &text[end..];
+    let mut new_cursor = replaced.len();
+    if top.is_directory && top.text.ends_with('"') {
+        // Keep typing inside a quoted directory path after accepting it.
+        new_cursor -= 1;
+    } else if top.insert_space && !top.is_directory {
+        match suffix.chars().next() {
+            Some(' ' | '\t') => new_cursor += 1,
+            Some(ch) if ch.is_whitespace() => {}
+            _ => {
+                replaced.push(' ');
+                new_cursor += 1;
+            }
+        }
     }
-    // New caret position: after the inserted text (byte offset; the editor
-    // snaps `set_cursor` to a char boundary as a safety net).
-    let new_cursor = replaced.len().min(
-        start
-            + top.text.len()
-            + if top.insert_space && !top.text.ends_with('/') {
-                1
-            } else {
-                0
-            },
-    );
+    // Preserve the suffix exactly, placing a new separator at the insertion
+    // point instead of at the end of the user's remaining draft.
+    replaced.push_str(suffix);
     editor.set_text(&replaced);
     set_editor_cursor_offset(editor, &replaced, new_cursor);
     state.autocomplete_container.clear();

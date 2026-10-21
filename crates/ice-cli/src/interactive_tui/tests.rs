@@ -1464,8 +1464,8 @@ fn test_slash_command_dispatch() {
 
     resolves_to("/help", "/help");
     resolves_to("/?", "/help"); // alias → canonical
-    resolves_to("/clear", "/clear");
-    resolves_to("/new", "/clear"); // alias
+    resolves_to("/new", "/new");
+    resolves_to("/clear", "/new"); // alias
     resolves_to("/q", "/exit"); // alias
     resolves_to("/quit", "/exit"); // alias
     resolves_to("/version", "/version");
@@ -3049,6 +3049,71 @@ fn test_accept_top_suggestion_replaces_prefix() {
     );
 }
 
+#[test]
+fn autocomplete_accepts_quoted_paths_without_changing_the_suffix() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("my folder")).unwrap();
+    std::fs::write(dir.path().join("my folder/test file.txt"), "").unwrap();
+    std::fs::write(dir.path().join("test file.txt"), "").unwrap();
+    let state = autocomplete_test_state(5);
+    state
+        .autocomplete
+        .set_provider(Arc::new(ice_tui::FilePathAutocompleteProvider::with_root(
+            dir.path().to_path_buf(),
+        )));
+    let editor = Arc::new(Editor::simple());
+    for (input, prefix, expected, caret_prefix) in [
+        (
+            "查看 @\"my folder/te\" suffix",
+            "查看 @\"my folder/te",
+            "查看 @\"my folder/test file.txt\" suffix",
+            "查看 @\"my folder/test file.txt\" ",
+        ),
+        (
+            "查看 @tes! suffix",
+            "查看 @tes",
+            "查看 @\"test file.txt\" ! suffix",
+            "查看 @\"test file.txt\" ",
+        ),
+    ] {
+        editor.set_text(input);
+        editor.set_cursor(0, prefix.len());
+        assert!(accept_top_suggestion(&state, &editor));
+        assert_eq!(editor.get_text(), expected);
+        assert_eq!(editor_cursor_offset(&editor, expected), caret_prefix.len());
+    }
+}
+
+#[test]
+fn autocomplete_keeps_the_caret_inside_a_quoted_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("my folder")).unwrap();
+    std::fs::write(dir.path().join("my folder/test.txt"), "").unwrap();
+    let state = autocomplete_test_state(5);
+    state
+        .autocomplete
+        .set_provider(Arc::new(ice_tui::FilePathAutocompleteProvider::with_root(
+            dir.path().to_path_buf(),
+        )));
+    let editor = Arc::new(Editor::simple());
+    editor.set_text("@my");
+    editor.set_cursor(0, 3);
+    assert!(accept_top_suggestion(&state, &editor));
+    assert_eq!(editor.get_text(), "@\"my folder/\"");
+    assert_eq!(
+        editor_cursor_offset(&editor, &editor.get_text()),
+        "@\"my folder/".len()
+    );
+    editor.set_text("@\"my folder/te\"");
+    editor.set_cursor(0, "@\"my folder/te".len());
+    assert!(accept_top_suggestion(&state, &editor));
+    assert_eq!(editor.get_text(), "@\"my folder/test.txt\" ");
+    assert_eq!(
+        editor_cursor_offset(&editor, &editor.get_text()),
+        editor.get_text().len()
+    );
+}
+
 /// Build a `TuiState` for autocomplete tests (autocomplete providers are
 /// installed by each test).
 fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
@@ -3568,6 +3633,7 @@ fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
         &registry,
         &ice_harness::types::AgentHarnessResources::default(),
         std::path::Path::new("."),
+        None,
     );
     let names = |provider: &Arc<dyn AutocompleteProvider>| -> Vec<String> {
         provider
@@ -3585,7 +3651,7 @@ fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
         }]),
         ..Default::default()
     };
-    let after = build_autocomplete_provider(&registry, &resources, std::path::Path::new("."));
+    let after = build_autocomplete_provider(&registry, &resources, std::path::Path::new("."), None);
     assert!(
         names(&after).iter().any(|n| n == "/review-pr"),
         "{:?}",
@@ -3637,6 +3703,484 @@ fn run_summary_aborting_then_idle_does_not_report_a_cancelled_tool_run() {
     );
 }
 
+/// Exercise the provider boundary as well as storage: resetting only the
+/// transcript or only the JSONL backing must not preserve the old lane context.
+#[test]
+fn new_session_sends_only_new_prompt_and_preserves_old_jsonl_bytes() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                use ice_ai::providers::faux::{
+                    faux_assistant_message, FauxProvider, FauxScript, FauxStep,
+                };
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let custom_sessions = tempfile::tempdir().unwrap();
+                let dir = custom_sessions.path().to_path_buf();
+                std::fs::create_dir_all(&dir).unwrap();
+                let contexts = Arc::new(Mutex::new(Vec::new()));
+                let script = FauxScript::new();
+                script.set_responses(
+                    ["old answer", "new answer"]
+                        .into_iter()
+                        .map(|answer| {
+                            let contexts = contexts.clone();
+                            FauxStep::factory(move |context| {
+                                contexts.lock().unwrap().push(context.messages.clone());
+                                faux_assistant_message(answer, ice_ai::types::StopReason::Stop)
+                            })
+                        })
+                        .collect(),
+                );
+                let provider = FauxProvider::new(script);
+                let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                    model: provider.default_model().clone(),
+                    models: vec![provider],
+                    session: crate::session::create_jsonl_session(&dir, &cwd_str)
+                        .await
+                        .unwrap(),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+                harness.prompt_text("old secret", vec![]).await.unwrap();
+                let old_id = harness.session().storage().metadata().id.clone();
+                let old_path = harness.session().storage().persistence_path().unwrap();
+                let old_bytes = std::fs::read(&old_path).unwrap();
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                let lane = harness.lane("main");
+                let tool_context = ice_extensions::ToolCallContext::new(cwd_str);
+                assert!(
+                    start_new_session(&harness, &lane, cwd.path(), &chat, &state, &tool_context)
+                        .await
+                );
+                assert_ne!(harness.session().storage().metadata().id, old_id);
+                let new_path = harness.session().storage().persistence_path().unwrap();
+                assert_eq!(
+                    std::path::Path::new(&new_path).parent(),
+                    std::path::Path::new(&old_path).parent(),
+                    "new sessions must be siblings of the exact active file"
+                );
+                assert_ne!(new_path, old_path);
+                assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                harness.prompt_text("new question", vec![]).await.unwrap();
+                assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                {
+                    let contexts = contexts.lock().unwrap();
+                    assert_eq!(
+                        contexts.len(),
+                        2,
+                        "both prompts must reach the faux provider"
+                    );
+                    assert_eq!(
+                        contexts[1].len(),
+                        1,
+                        "new requests must have no old messages"
+                    );
+                    let encoded = serde_json::to_value(&contexts[1]).unwrap();
+                    assert_eq!(encoded[0]["role"], "user");
+                    assert_eq!(encoded[0]["content"], "new question");
+                }
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+/// `/new` used to clear only the screen: the agent kept the whole history and
+/// the footer kept the old totals. It must swap in an empty session, leave
+/// the old one intact, and reset the footer; switching back must restore the
+/// old session's totals and `/copy` text.
+#[test]
+fn new_session_replaces_backing_and_footer_totals_follow_the_session() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let dir = crate::session::default_session_dir(cwd.path());
+                std::fs::create_dir_all(&dir).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let tool_context = ice_extensions::ToolCallContext::new(cwd_str.clone());
+                let old = crate::session::create_jsonl_session(&dir, &cwd_str)
+                    .await
+                    .unwrap();
+                crate::session::set_active_session(&harness, old, Some(&tool_context))
+                    .await
+                    .unwrap();
+                let old_id = harness.session().storage().metadata().id.clone();
+                let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+                reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                    kind: ice_ai::types::TextContentType,
+                    text: "old reply".into(),
+                    text_signature: None,
+                })];
+                reply.usage.input = 100;
+                reply.usage.output = 20;
+                reply.usage.cost.total = 0.5;
+                harness
+                    .session()
+                    .append_message(AgentMessage::Assistant(Box::new(reply)))
+                    .await
+                    .unwrap();
+
+                let state = test_tui_state();
+                state.footer.add_usage(100, 20, 0, 0, 0.5);
+                *state.last_assistant_text.lock().unwrap() = "old reply".into();
+                let chat = Arc::new(Container::new());
+                let lane = harness.lane("main");
+
+                assert!(
+                    start_new_session(&harness, &lane, cwd.path(), &chat, &state, &tool_context)
+                        .await
+                );
+                let new_id = harness.session().storage().metadata().id.clone();
+                assert_ne!(new_id, old_id);
+                let new_entries = harness
+                    .session()
+                    .view("main")
+                    .find_entries(&EntryQuery::default())
+                    .await
+                    .unwrap();
+                assert!(
+                    !new_entries.iter().any(|e| matches!(e, Entry::Message(_))),
+                    "the new session must start without the old conversation"
+                );
+                assert_eq!(
+                    state.footer.usage(),
+                    ice_tui::footer::UsageTotals::default()
+                );
+                assert!(state.last_assistant_text.lock().unwrap().is_empty());
+
+                assert!(
+                    switch_to_session(
+                        &harness,
+                        &lane,
+                        &old_id,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &tool_context
+                    )
+                    .await
+                );
+                let usage = state.footer.usage();
+                assert_eq!((usage.input, usage.output), (100, 20));
+                assert!((usage.cost - 0.5).abs() < f64::EPSILON);
+                assert_eq!(*state.last_assistant_text.lock().unwrap(), "old reply");
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+/// A fake editor: a shell script that runs `body` with the draft path as its
+/// last argument (ice `test/fixtures/fake-external-editor.mjs`).
+#[cfg(unix)]
+fn fake_editor(dir: &std::path::Path, body: &str) -> String {
+    let path = dir.join("fake-editor");
+    std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+    // Interpret the fixture rather than exec'ing a newly written inode.
+    // Parallel process-spawning tests can briefly inherit a writer and cause
+    // Linux ETXTBSY even after this thread has closed its file handle.
+    format!("/bin/sh {}", path.display())
+}
+
+/// `$EDITOR` with arguments (`code --wait`) used to be run as one program
+/// name and failed to launch. ice splits it on spaces.
+#[cfg(unix)]
+#[test]
+fn external_editor_command_arguments_are_split() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), r#"printf 'args:%s' "$1" > "$2""#);
+    let result = edit_in_external_editor(&format!("{editor} --wait"), "draft");
+    assert_eq!(result.unwrap().as_deref(), Some("args:--wait"));
+}
+
+#[cfg(unix)]
+#[test]
+fn external_editor_existing_path_with_spaces_launches() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = dir.path().join("editor with spaces");
+    // A system executable avoids parallel-test ETXTBSY races on a newly
+    // written script while exercising Command::status with the whole path.
+    std::os::unix::fs::symlink("/bin/true", &editor).unwrap();
+    assert_eq!(
+        edit_in_external_editor(editor.to_str().unwrap(), "unchanged draft").unwrap(),
+        Some("unchanged draft".to_string())
+    );
+}
+
+/// The saved file comes back with one trailing newline removed, and the
+/// editor sees the current draft.
+#[cfg(unix)]
+#[test]
+fn external_editor_returns_saved_text_without_trailing_newline() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), r#"printf '%s!\n' "$(cat "$1")" > "$1""#);
+    let result = edit_in_external_editor(&editor, "héllo\nwörld");
+    assert_eq!(result.unwrap().as_deref(), Some("héllo\nwörld!"));
+}
+
+/// A failed editor is cancellation: the host only replaces a Some draft.
+#[cfg(unix)]
+#[test]
+fn external_editor_nonzero_exit_cancels_and_cleans_up() {
+    let dir = tempfile::tempdir().unwrap();
+    let capture = dir.path().join("capture");
+    let editor = fake_editor(
+        dir.path(),
+        r#"printf '%s' "$2" > "$1"
+printf 'cancelled edit' > "$2"
+exit 3"#,
+    );
+    let result = edit_in_external_editor(&format!("{editor} {}", capture.display()), "draft");
+    assert_eq!(result.unwrap(), None);
+    let path = std::path::PathBuf::from(std::fs::read_to_string(capture).unwrap());
+    assert!(!path.exists());
+    assert!(!path.parent().unwrap().exists());
+}
+
+/// An empty successful save clears the draft; it is different from cancel.
+/// The private temporary directory is removed after success as well.
+#[cfg(unix)]
+#[test]
+fn external_editor_empty_save_is_applied_and_cleans_up() {
+    let dir = tempfile::tempdir().unwrap();
+    let capture = dir.path().join("capture");
+    let editor = fake_editor(
+        dir.path(),
+        r#"printf '%s' "$2" > "$1"
+: > "$2""#,
+    );
+    let result = edit_in_external_editor(&format!("{editor} {}", capture.display()), "draft");
+    assert_eq!(result.unwrap().as_deref(), Some(""));
+    let path = std::path::PathBuf::from(std::fs::read_to_string(capture).unwrap());
+    assert_eq!(path.file_name().unwrap(), "prompt.md");
+    assert!(!path.parent().unwrap().exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn external_editor_launch_failure_is_reported() {
+    let error = edit_in_external_editor("icers-missing-editor-fixture", "draft").unwrap_err();
+    assert!(error.contains("Could not launch external editor"));
+}
+
+/// The caret after an external edit used to be `(0, char count)`, a char
+/// count passed as a byte column on the first row.
+#[test]
+fn external_editor_caret_lands_at_the_end_in_bytes() {
+    assert_eq!(end_of_text_cursor("one\n你好"), (1, "你好".len()));
+    assert_eq!(end_of_text_cursor("abc"), (0, 3));
+    assert_eq!(end_of_text_cursor("a\n"), (1, 0));
+    assert_eq!(end_of_text_cursor(""), (0, 0));
+}
+
+/// A bare `/trust` used to mean "yes" and silently overrode a saved "no".
+/// It must only report the saved decision; explicit arguments change it.
+#[test]
+fn bare_trust_command_reports_and_never_changes_trust() {
+    with_isolated_config_dir(|| {
+        let project = tempfile::tempdir().unwrap();
+        let cwd = project.path();
+        crate::config::set_project_trust(cwd, Some(false)).unwrap();
+
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+
+        let note = run_trust_command(cwd, "yes", false).unwrap();
+        assert!(
+            note.contains("marked trusted") && note.contains("Restart"),
+            "{note}"
+        );
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(true)
+        );
+
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("trusted (saved)"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+
+        run_trust_command(cwd, "no", true).unwrap();
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+        let note = run_trust_command(cwd, "", true).unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert!(note.contains("Current session: trusted"), "{note}");
+
+        run_trust_command(cwd, "clear", true).unwrap();
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("no saved decision"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+
+        let note = run_trust_command(cwd, "maybe", false).unwrap();
+        assert!(note.starts_with("Usage:"), "{note}");
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+    })
+}
+
+/// The footer used to keep only the last `/` segment of a branch and to
+/// skip a worktree's `.git` file, showing an outer repository's branch.
+#[test]
+fn footer_git_branch_follows_worktrees_and_keeps_full_names() {
+    let root = tempfile::tempdir().unwrap();
+    // Isolate fixture discovery when TMPDIR itself is inside a checkout.
+    std::fs::create_dir(root.path().join(".git")).unwrap();
+    let write = |path: std::path::PathBuf, text: &str| {
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    };
+
+    // Normal checkout on a nested branch, queried from a subdirectory.
+    let repo = root.path().join("repo");
+    write(repo.join(".git/HEAD"), "ref: refs/heads/feat/tui-widths\n");
+    std::fs::create_dir_all(repo.join("src/deep")).unwrap();
+    assert_eq!(
+        git_branch_for(&repo.join("src/deep")).as_deref(),
+        Some("feat/tui-widths")
+    );
+    assert_eq!(find_git_head_path(&repo).unwrap(), repo.join(".git/HEAD"));
+
+    // Linked worktree nested inside that checkout, with a relative gitdir.
+    let worktree = repo.join(".worktrees/wt");
+    write(
+        repo.join(".git/worktrees/wt/HEAD"),
+        "ref: refs/heads/fix/footer\n",
+    );
+    write(worktree.join(".git"), "gitdir: ../../.git/worktrees/wt\n");
+    assert_eq!(git_branch_for(&worktree).as_deref(), Some("fix/footer"));
+    assert_eq!(
+        find_git_head_path(&worktree).unwrap(),
+        worktree.join("../../.git/worktrees/wt/HEAD")
+    );
+
+    // Absolute gitdir and a detached HEAD.
+    let detached = root.path().join("detached");
+    let gitdir = root.path().join("store/wt2");
+    write(
+        gitdir.join("HEAD"),
+        "0123456789abcdef0123456789abcdef01234567\n",
+    );
+    write(
+        detached.join(".git"),
+        &format!("gitdir: {}\n", gitdir.display()),
+    );
+    assert_eq!(git_branch_for(&detached).as_deref(), Some("0123456"));
+
+    // Not a repository.
+    let plain = root.path().join("plain");
+    std::fs::create_dir_all(&plain).unwrap();
+    assert_eq!(git_branch_for(&plain), None);
+
+    // A broken nested checkout must not silently report the outer branch.
+    let broken = repo.join("broken");
+    write(broken.join(".git"), "gitdir: ../missing\n");
+    assert_eq!(find_git_head_path(&broken), None);
+    assert_eq!(git_branch_for(&broken), None);
+    write(broken.join(".git"), "not a gitdir\n");
+    assert_eq!(git_branch_for(&broken), None);
+}
+
+/// Drag-copy uses cached transcript rows at the rendered width and slices
+/// cell columns without leaking styles or splitting graphemes.
+#[test]
+fn selection_copies_the_painted_cells_as_plain_text() {
+    let wide = format!("{}tail-past-80", "x".repeat(90));
+    let rows = vec![
+        "\x1b[1mheader row\x1b[0m".to_string(),
+        "first \x1b[31mred\x1b[0m line   ".to_string(),
+        wide.clone(),
+        "你好 world".to_string(),
+    ];
+    // Mid-line start and end across rows; styles dropped, padding trimmed.
+    assert_eq!(
+        extract_selected_text(&rows, (6, 1), (3, 3)).as_deref(),
+        Some(format!("red line\n{wide}\n你好").as_str())
+    );
+    // Reversed drag gives the same text; a single row keeps only its columns.
+    assert_eq!(
+        extract_selected_text(&rows, (3, 3), (6, 1)),
+        extract_selected_text(&rows, (6, 1), (3, 3))
+    );
+    assert_eq!(
+        extract_selected_text(&rows, (90, 2), (93, 2)).as_deref(),
+        Some("tail")
+    );
+    // A wide grapheme starting inside the range is copied whole.
+    assert_eq!(
+        extract_selected_text(&rows, (2, 3), (2, 3)).as_deref(),
+        Some("好")
+    );
+    // Rows past the frame are clamped; a start below it copies nothing.
+    assert_eq!(
+        extract_selected_text(&rows, (0, 3), (5, 40)).as_deref(),
+        Some("你好 world")
+    );
+    assert_eq!(extract_selected_text(&rows, (0, 9), (5, 9)), None);
+}
+
+#[test]
+fn selection_keeps_a_logical_anchor_across_viewport_movement() {
+    let mut rows = vec!["not selected".to_string(); 5];
+    rows.extend([
+        format!("{}FIRST", "x".repeat(90)),
+        "MIDDLE \x1b[31mred\x1b[0m".into(),
+        "last boundary".into(),
+    ]);
+    let mut snapshot = ice_tui::TranscriptSnapshot {
+        lines: Arc::new(rows),
+        viewport: ice_tui::LayoutRect::new(0, 2, 119, 4),
+        viewport_top: 4,
+        content_left: 0,
+        content_width: 119,
+    };
+    let (column, row) = snapshot.content_position(90, 3, false).unwrap();
+    let start = (column, row, snapshot.content_width);
+    snapshot.viewport_top = 6;
+    assert_eq!(
+        extract_transcript_selection(&snapshot, start, (3, 3)).as_deref(),
+        Some("FIRST\nMIDDLE red\nlast")
+    );
+    assert_eq!(
+        extract_transcript_selection(&snapshot, start, (3, 99)).as_deref(),
+        Some("FIRST\nMIDDLE red\nlast boundary")
+    );
+    snapshot.content_width = 79;
+    assert_eq!(extract_transcript_selection(&snapshot, start, (3, 3)), None);
+}
+
+#[test]
+fn selection_into_blank_viewport_rows_copies_the_complete_tail() {
+    let snapshot = ice_tui::TranscriptSnapshot {
+        lines: Arc::new(vec!["first row".into(), "last complete row".into()]),
+        viewport: ice_tui::LayoutRect::new(0, 2, 120, 6),
+        viewport_top: 0,
+        content_left: 0,
+        content_width: 120,
+    };
+    assert_eq!(snapshot.content_position(3, 6, false), None);
+    assert_eq!(
+        extract_transcript_selection(&snapshot, (6, 0, 120), (3, 6)).as_deref(),
+        Some("row\nlast complete row")
+    );
+}
+
 #[test]
 fn run_summary_line_marks_finished_runs_only() {
     use ice_ai::types::StopReason;
@@ -3660,4 +4204,17 @@ fn run_summary_line_marks_finished_runs_only() {
     assert_eq!(run_summary_line(&[reply(StopReason::Aborted)], at(5)), None);
     assert_eq!(run_summary_line(&[reply(StopReason::Error)], at(5)), None);
     assert_eq!(run_summary_line(&[], at(5)), None);
+}
+
+#[test]
+fn selection_preserves_combining_and_emoji_graphemes_at_the_edge() {
+    let rows = vec!["\x1b[1me\u{301}👩‍💻好\x1b[0m".to_string()];
+    assert_eq!(
+        extract_selected_text(&rows, (0, 0), (1, 0)).as_deref(),
+        Some("e\u{301}👩‍💻")
+    );
+    assert_eq!(
+        extract_selected_text(&rows, (1, 0), (1, 0)).as_deref(),
+        Some("👩‍💻")
+    );
 }

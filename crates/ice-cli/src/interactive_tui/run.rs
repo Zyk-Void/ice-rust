@@ -69,52 +69,98 @@ pub(super) async fn maybe_add_startup_changelog(
 // Run a single prompt (streaming or blocking)
 // ===========================================================================
 
-pub(super) fn launch_external_editor(draft: String, tx: mpsc::UnboundedSender<TuiMessage>) {
-    std::thread::spawn(move || {
-        let file = match tempfile::Builder::new()
-            .prefix("ice-draft-")
-            .suffix(".md")
-            .tempfile()
-        {
-            Ok(file) => file,
-            Err(error) => {
-                let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(
-                    "Could not create editor file: {error}"
-                ))));
-                return;
+/// Ctrl+G: hand the terminal to the user's editor for the current draft, then
+/// take it back (ice `handleOpenExternalEditor`: `ui.stop()`, edit,
+/// `ui.start()`). Runs on the key-dispatch thread, like Ctrl+Z, so nothing
+/// reads stdin or paints while the editor owns the terminal.
+pub(super) fn run_external_editor(
+    tui: &Arc<TuiAltScreen>,
+    draft: String,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+) {
+    let command = external_editor_command();
+    tui.suspend();
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::Show);
+    let result = edit_in_external_editor(&command, &draft);
+    tui.resume();
+    let _ = tx.send(TuiMessage::ExternalEditorResult(result));
+}
+
+/// `ICERS_EXTERNAL_EDITOR` (nonblank), then `VISUAL`, `EDITOR`, then the
+/// platform default.
+fn external_editor_command() -> String {
+    std::env::var("ICERS_EXTERNAL_EDITOR")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| std::env::var("VISUAL").ok())
+        .or_else(|| std::env::var("EDITOR").ok())
+        .unwrap_or_else(|| {
+            if cfg!(windows) {
+                "notepad".to_string()
+            } else {
+                "nano".to_string()
             }
-        };
-        if let Err(error) = std::fs::write(file.path(), draft.as_bytes()) {
-            let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(
-                "Could not write editor file: {error}"
-            ))));
-            return;
-        }
-        let editor = std::env::var("ICERS_EXTERNAL_EDITOR")
-            .ok()
-            .filter(|value| !value.trim().is_empty())
-            .or_else(|| std::env::var("VISUAL").ok())
-            .or_else(|| std::env::var("EDITOR").ok())
-            .unwrap_or_else(|| {
-                if cfg!(windows) {
-                    "notepad".to_string()
-                } else {
-                    "nano".to_string()
-                }
-            });
-        let status = std::process::Command::new(&editor)
-            .arg(file.path())
-            .status();
-        let result = match status {
-            Ok(status) if status.success() => std::fs::read_to_string(file.path())
-                .map_err(|error| format!("Could not read editor file: {error}")),
-            Ok(status) => Err(format!("External editor exited with {status}")),
-            Err(error) => Err(format!(
-                "Could not launch external editor `{editor}`: {error}"
-            )),
-        };
-        let _ = tx.send(TuiMessage::ExternalEditorResult(result));
-    });
+        })
+}
+
+/// Edit `content` in `command` and return the saved text (ice
+/// `editInExternalEditor`). An existing executable path is kept whole, including
+/// spaces. Otherwise split on whitespace into a program and its arguments
+/// (`code --wait`), then append the draft path. Remove one trailing newline,
+/// which most editors add on save.
+pub(super) fn edit_in_external_editor(
+    command: &str,
+    content: &str,
+) -> Result<Option<String>, String> {
+    // Editors commonly replace the file atomically. Keep no open file handle
+    // and protect the draft with its own private directory (also on Windows).
+    let directory = tempfile::Builder::new()
+        .prefix("icers-editor-")
+        .tempdir()
+        .map_err(|error| format!("Could not create editor directory: {error}"))?;
+    let path = directory.path().join("prompt.md");
+    std::fs::write(&path, content.as_bytes())
+        .map_err(|error| format!("Could not write editor file: {error}"))?;
+    let (program, args) = if std::path::Path::new(command).is_file() {
+        (command, Vec::new())
+    } else {
+        let mut parts = command.split_whitespace();
+        let program = parts
+            .next()
+            .ok_or_else(|| "No external editor is configured.".to_string())?;
+        (program, parts.collect::<Vec<_>>())
+    };
+    // ice spawns with `shell: true` on Windows so `.cmd`/`.bat` editors resolve.
+    let mut child = if cfg!(windows) {
+        let mut cmd = std::process::Command::new("cmd");
+        cmd.arg("/C").arg(program);
+        cmd
+    } else {
+        std::process::Command::new(program)
+    };
+    let status = child
+        .args(args)
+        .arg(&path)
+        .status()
+        .map_err(|error| format!("Could not launch external editor `{command}`: {error}"))?;
+    if !status.success() {
+        // A nonzero editor exit is cancellation: keep the original draft.
+        return Ok(None);
+    }
+    let text = std::fs::read_to_string(&path)
+        .map_err(|error| format!("Could not read editor file: {error}"))?;
+    let text = match text.strip_suffix('\n') {
+        Some(rest) => rest.strip_suffix('\r').unwrap_or(rest).to_string(),
+        None => text,
+    };
+    Ok(Some(text))
+}
+
+/// Editor caret at the end of `text`: the last line and its byte length.
+pub(super) fn end_of_text_cursor(text: &str) -> (usize, usize) {
+    let row = text.matches('\n').count();
+    let col = text.rsplit('\n').next().map_or(0, str::len);
+    (row, col)
 }
 
 /// Apply the authoritative run result when it wins the race with the async
@@ -336,44 +382,62 @@ pub(super) fn copy_last_assistant(state: &Arc<TuiState>, chat: &Arc<Container>) 
     }
 }
 
-/// Extract text from the chat container within the given screen coordinates.
-/// Returns None if the selection is invalid or empty.
-pub(super) fn extract_selected_text(
-    chat_container: &Arc<Container>,
-    start: (u16, u16),
+/// Finish a drag using the current viewport and the original logical anchor.
+/// A changed wrapping width invalidates row coordinates, so cancel that drag.
+pub(super) fn extract_transcript_selection(
+    snapshot: &ice_tui::TranscriptSnapshot,
+    start: (usize, usize, usize),
     end: (u16, u16),
 ) -> Option<String> {
-    use ice_tui::Component;
-
-    // Get the rendered lines from the chat container
-    let lines = chat_container.render(80); // Use a reasonable width
-    if lines.is_empty() {
+    if snapshot.content_width != start.2 {
         return None;
     }
+    let end = snapshot.content_position(end.0 as usize, end.1 as usize, true)?;
+    extract_selected_text(&snapshot.lines, (start.0, start.1), end)
+}
 
-    // Normalize coordinates (ensure start is before end)
-    let (start_row, end_row) = if start.1 <= end.1 {
-        (start.1 as usize, end.1 as usize)
+/// Plain text of a mouse selection over cached logical transcript rows.
+///
+/// `start` and `end` are `(column, row)` content cells, inclusive, in either
+/// order. The first row is taken from the start column, the last row up to
+/// the end column, and rows between in full. Escape sequences are dropped and
+/// trailing padding is trimmed. This used to re-render the chat at a fixed
+/// width of 80 and index it by screen row, which ignored the real width, the
+/// scroll position and the columns, and kept escape codes.
+pub(super) fn extract_selected_text(
+    rows: &[String],
+    start: (usize, usize),
+    end: (usize, usize),
+) -> Option<String> {
+    let key = |(col, row): (usize, usize)| (row, col);
+    let ((first_row, first_col), (last_row, last_col)) = if key(start) <= key(end) {
+        (key(start), key(end))
     } else {
-        (end.1 as usize, start.1 as usize)
+        (key(end), key(start))
     };
-
-    // Clamp to valid range
-    let start_row = start_row.min(lines.len().saturating_sub(1));
-    let end_row = end_row.min(lines.len().saturating_sub(1));
-
-    if start_row > end_row {
+    if first_row >= rows.len() {
         return None;
     }
-
-    // Extract the selected lines
-    let selected_lines: Vec<String> = lines[start_row..=end_row].to_vec();
-
-    if selected_lines.is_empty() {
-        return None;
-    }
-
-    Some(selected_lines.join("\n"))
+    // A drag that ends below the frame takes the last row in full.
+    let (last_row, last_col) = if last_row >= rows.len() {
+        (rows.len() - 1, usize::MAX)
+    } else {
+        (last_row, last_col)
+    };
+    let selected: Vec<String> = (first_row..=last_row)
+        .map(|index| {
+            let from = if index == first_row { first_col } else { 0 };
+            let line = &rows[index];
+            let text = if index == last_row {
+                let width = last_col.saturating_add(1).saturating_sub(from);
+                ice_tui::slice_with_width(line, from, width, false).0
+            } else {
+                ice_tui::slice_with_width(line, from, usize::MAX, false).0
+            };
+            ice_tui::strip_ansi(&text).trim_end().to_string()
+        })
+        .collect();
+    Some(selected.join("\n"))
 }
 
 /// Best-effort clipboard write. Enabled only with the `clipboard` feature

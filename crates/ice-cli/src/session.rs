@@ -2787,6 +2787,24 @@ pub(crate) async fn create_jsonl_session_with_id(
     cwd: &str,
     id: Option<String>,
 ) -> Result<Session, String> {
+    create_jsonl_session_at(dir, cwd, id, false).await
+}
+
+/// Create beside an active JSONL file, preserving its exact directory instead
+/// of treating that directory as a root for another cwd-encoded subdirectory.
+pub(crate) async fn create_jsonl_session_in_directory(
+    dir: &Path,
+    cwd: &str,
+) -> Result<Session, String> {
+    create_jsonl_session_at(dir, cwd, None, true).await
+}
+
+async fn create_jsonl_session_at(
+    dir: &Path,
+    cwd: &str,
+    id: Option<String>,
+    exact_directory: bool,
+) -> Result<Session, String> {
     use ice_harness::session::jsonl::{
         JsonlSessionCreateOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
     };
@@ -2810,10 +2828,13 @@ pub(crate) async fn create_jsonl_session_with_id(
         cwd: cwd.to_string(),
         metadata: None,
     };
-    let storage = repo
-        .create_typed(&opts)
-        .await
-        .map_err(|e| format!("create session: {e}"))?;
+    let storage = if exact_directory {
+        repo.create_in_directory(&dir.to_string_lossy(), &opts)
+            .await
+    } else {
+        repo.create_typed(&opts).await
+    }
+    .map_err(|e| format!("create session: {e}"))?;
     claim_session_lock(&storage.jsonl_metadata().path)
         .map_err(|e| format!("create session: {e}"))?;
     // `JsonlSessionStorage` implements `SessionStorage`; wrap in the facade.

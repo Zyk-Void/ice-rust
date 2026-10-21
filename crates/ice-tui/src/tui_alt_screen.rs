@@ -13,7 +13,7 @@ use super::component::Component;
 use super::container::Container;
 use super::layout::{
     composite_tui_line, extract_cursor_position, render_layout_frame,
-    render_layout_frame_reusing_scroll_content, LayoutFrame,
+    render_layout_frame_reusing_scroll_content, LayoutBox, LayoutFrame, LayoutRect,
 };
 use super::overlay::OverlayManager;
 use super::scroll_view::ScrollView;
@@ -23,6 +23,63 @@ use crate::terminal::{InputEvent, Terminal, TerminalInfo};
 
 /// Symbol for ViewportTUI capability check.
 pub const VIEWPORT_TUI: &[u8] = b"ice-tui/viewport";
+
+/// Transcript content and geometry from one completed fullscreen render.
+/// The content has the actual wrapping width and excludes the scrollbar/dock.
+#[derive(Clone)]
+pub struct TranscriptSnapshot {
+    /// Cached logical rows, before viewport clipping or scrollbar painting.
+    pub lines: Arc<Vec<String>>,
+    /// The visible transcript rectangle in screen cells.
+    pub viewport: LayoutRect,
+    /// Logical row displayed at the top of `viewport`.
+    pub viewport_top: usize,
+    /// Logical column displayed at the left of `viewport`.
+    pub content_left: usize,
+    /// Width at which the transcript was rendered, before ancestor clipping.
+    pub content_width: usize,
+}
+
+impl TranscriptSnapshot {
+    /// Convert a screen cell to a logical transcript cell. A selection may
+    /// start only inside the transcript; its moving end can clamp to the edge.
+    pub fn content_position(
+        &self,
+        column: usize,
+        row: usize,
+        clamp: bool,
+    ) -> Option<(usize, usize)> {
+        let rect = self.viewport;
+        if rect.width == 0
+            || rect.height == 0
+            || self.lines.is_empty()
+            || (!clamp && !rect.contains(column, row))
+        {
+            return None;
+        }
+        let last_column = rect.x.saturating_add(rect.width - 1);
+        let last_row = rect.y.saturating_add(rect.height - 1);
+        let content_row = self
+            .viewport_top
+            .saturating_add(row.clamp(rect.y, last_row) - rect.y);
+        if !clamp && content_row >= self.lines.len() {
+            return None;
+        }
+        let column = if row < rect.y {
+            rect.x
+        } else if row > last_row || content_row >= self.lines.len() {
+            // Blank viewport rows below a short transcript select the whole
+            // last content row, just like dragging below the viewport itself.
+            last_column
+        } else {
+            column.clamp(rect.x, last_column)
+        };
+        Some((
+            self.content_left + column - rect.x,
+            content_row.min(self.lines.len() - 1),
+        ))
+    }
+}
 
 /// Upper bound on the coalesced repaint rate, matching upstream's
 /// `TuiBase.MIN_RENDER_INTERVAL_MS` (16 ms ≈ 60 fps).
@@ -396,6 +453,43 @@ impl TuiAltScreen {
             .lock()
             .map(|value| *value)
             .unwrap_or(false)
+    }
+
+    /// Snapshot the transcript as last painted, for logical mouse selection.
+    /// Never re-renders content or copies through a modal overlay.
+    pub fn transcript_snapshot(&self) -> Option<TranscriptSnapshot> {
+        if self.uses_main_screen() || self.has_overlay() {
+            return None;
+        }
+        let _render_guard = self.render_lock.lock().ok()?;
+        let frame = self.current_frame.lock().ok()?;
+        fn primary(lbox: &LayoutBox) -> Option<&LayoutBox> {
+            if lbox
+                .scroll_view
+                .as_ref()
+                .is_some_and(|view| view.is_primary())
+            {
+                Some(lbox)
+            } else {
+                lbox.children.iter().find_map(primary)
+            }
+        }
+        let lbox = primary(&frame.as_ref()?.root)?;
+        let cached = lbox.scroll_view.as_ref()?.rendered_content()?;
+        let content_rect = LayoutRect::new(
+            lbox.rect.x,
+            lbox.rect.y,
+            cached.content_width,
+            lbox.rect.height,
+        );
+        let viewport = content_rect.intersect(&lbox.clip);
+        Some(TranscriptSnapshot {
+            lines: cached.lines,
+            viewport,
+            viewport_top: cached.scroll_top + viewport.y.saturating_sub(lbox.rect.y),
+            content_left: viewport.x.saturating_sub(lbox.rect.x),
+            content_width: cached.content_width,
+        })
     }
 
     /// Get the current scroll position.
@@ -1538,6 +1632,62 @@ mod tests {
         }
         fn set_progress(&self, _active: bool) {}
         fn flush(&self) {}
+    }
+
+    #[test]
+    fn transcript_snapshot_uses_painted_geometry_and_cached_scroll_position() {
+        use crate::{StackChild, StackEntry, VStack};
+        let tui = TuiAltScreen::new(Box::new(ResizableTerminal::new(120, 8)), false, None);
+        let content = (0..12)
+            .map(|n| format!("row{n}: {}tail", "x".repeat(95)))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let scroll = Arc::new(ScrollView::new(
+            Arc::new(Text::new(content, 0, 0)),
+            crate::ScrollViewOptions {
+                primary: true,
+                scrollbar: crate::scroll_view::ScrollbarMode::Always,
+                ..Default::default()
+            },
+        ));
+        let root = Arc::new(VStack::from_children(vec![
+            StackChild::Entry(StackEntry::new(Arc::new(Text::new("header", 0, 0))).basis(2)),
+            StackChild::Entry(StackEntry::new(scroll.clone()).basis(4)),
+            StackChild::Entry(StackEntry::new(Arc::new(Text::new("dock", 0, 0))).basis(2)),
+        ]));
+        tui.set_layout_root(Some(root));
+        assert!(tui.transcript_snapshot().is_none());
+        tui.start_readerless();
+        scroll.scroll_to(3);
+        tui.request_render_reusing_scroll_content();
+        let snapshot = tui.transcript_snapshot().unwrap();
+        assert_eq!(
+            (
+                snapshot.viewport.x,
+                snapshot.viewport.y,
+                snapshot.viewport.width,
+                snapshot.viewport.height
+            ),
+            (0, 2, 119, 4)
+        );
+        assert_eq!(snapshot.content_width, 119);
+        assert_eq!(snapshot.viewport_top, 3);
+        assert!(crate::strip_ansi(&snapshot.lines[3]).starts_with("row3:"));
+        assert!(crate::visible_width(&snapshot.lines[3]) > 80);
+        assert_eq!(snapshot.content_position(90, 3, false), Some((90, 4)));
+        assert_eq!(snapshot.content_position(0, 1, false), None);
+        assert_eq!(snapshot.content_position(0, 6, false), None);
+        assert_eq!(snapshot.content_position(119, 3, false), None);
+        assert_eq!(snapshot.content_position(0, 99, true), Some((118, 6)));
+
+        // A parked scroll request must not remap the still-visible frame.
+        scroll.scroll_to(5);
+        assert_eq!(tui.transcript_snapshot().unwrap().viewport_top, 3);
+        tui.request_render_reusing_scroll_content();
+        let moved = tui.transcript_snapshot().unwrap();
+        assert_eq!(moved.viewport_top, 5);
+        assert!(Arc::ptr_eq(&snapshot.lines, &moved.lines));
+        assert_eq!(moved.content_position(3, 3, false), Some((3, 6)));
     }
 
     #[test]
