@@ -520,8 +520,9 @@ From `CA/modes/interactive/components/`:
   read/search/list calls into exploration summary rows (`toolStyle: compact`).
   `tool-toggle-link.ts` adds click-to-expand.
 - **Navigation:** `sticky-prompt.ts` pins the current prompt and clicks back to
-  it. `new-messages-pill.ts` scrolls to the end (Rust has `jump_to_end.rs`;
-  verify pill parity).
+  it. `new-messages-pill.ts` scrolls to the end and counts newly visible
+  assistant turns (ignoring blank/tool-only entries); Rust's `jump_to_end.rs`
+  displays that count with the configured bottom-navigation key.
 - **Panels:** `notices-view.ts` (NoticeCenter panel with a filter bar),
   `shells-panel.ts` (§3), `subagent-view-switcher.ts` and the Agent Hub (§1.9).
 - **Status:** `run-summary.ts` (dim "worked for …" line after a run),

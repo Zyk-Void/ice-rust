@@ -129,6 +129,7 @@ pub(super) async fn switch_to_session(
                 state.set_status(RunStatus::Idle);
                 return false;
             }
+            state.new_message_count.reset();
             chat.clear();
             add_welcome_message(chat);
             render_session_history(
@@ -255,6 +256,7 @@ pub(super) async fn fork_session(
         add_error_message(chat, &format!("Could not fork session: {error}"));
         return;
     }
+    state.new_message_count.reset();
     chat.clear();
     add_welcome_message(chat);
     render_session_history(

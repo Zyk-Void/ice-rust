@@ -222,6 +222,8 @@ pub(super) struct TuiState {
     /// The last finalized assistant text (for `/copy`). Updated by the drain
     /// task on `MessageEnd` / `AgentEnd`.
     pub(super) last_assistant_text: std::sync::Mutex<String>,
+    /// Visible assistant turns added while the transcript is scrolled away.
+    pub(super) new_message_count: Arc<crate::transcript_navigation::NewMessageCount>,
     /// The active selector overlay, swapped into the editor slot. `Some` while
     /// a selector is open; the key loop routes to it first and restores the
     /// editor on done/cancel.
@@ -764,6 +766,7 @@ pub(super) fn submit_draft(
     if text.trim().is_empty() || !state.try_start_working() {
         return;
     }
+    state.new_message_count.other_message();
     add_user_message(&state.chat_container, text);
     if let Some(tui) = &state.tui {
         if let Some(scroll) = tui.get_primary_scroll_view() {

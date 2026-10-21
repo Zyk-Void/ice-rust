@@ -238,6 +238,7 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageStart { message } => match message {
             AgentMessage::Assistant(a) => {
+                state.new_message_count.begin_assistant_message();
                 // The shared transcript view renders this through the same
                 // component path as the remote client. It installs the live
                 // markdown transformer + hide-thinking preference itself.
@@ -250,6 +251,7 @@ pub(super) async fn handle_agent_event(
                 tui.request_render(false);
             }
             AgentMessage::Custom(custom) => {
+                state.new_message_count.custom_message();
                 let payload = serde_json::json!({
                     "customType": custom.role,
                     "content": custom.content,
@@ -281,15 +283,16 @@ pub(super) async fn handle_agent_event(
             // so no `message_start` is emitted for it — the submit handler
             // renders that bubble instead.
             AgentMessage::User(user) => {
+                state.new_message_count.other_message();
                 state.transcript_view().add_user(&user_message_text(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
                 refresh_pending_messages(state, lane).await;
                 tui.request_render(false);
             }
-            // ToolResult / other starts are echoed via the tool-execution
-            // components; ignore the dupes.
-            _ => {}
+            // Tool results break adjacent assistant continuations, but their
+            // starts are echoed via tool-execution components.
+            AgentMessage::ToolResult(_) => state.new_message_count.other_message(),
         },
 
         AgentEvent::MessageUpdate {
@@ -299,6 +302,9 @@ pub(super) async fn handle_agent_event(
             let _ = assistant_message_event; // the snapshot is authoritative
             let a: &ice_ai::types::AssistantMessage = &message;
             let text = assistant_text(a);
+            state
+                .new_message_count
+                .assistant_message(!text.trim().is_empty());
             // The shared view creates/updates tool + bash panels from the
             // snapshot's finalized tool calls and streams the block list, so a
             // thinking block renders live exactly as the remote client does.
@@ -317,6 +323,9 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageEnd { message } => {
             if let AgentMessage::Assistant(a) = &message {
+                state
+                    .new_message_count
+                    .assistant_message(!assistant_text(a).trim().is_empty());
                 let text = assistant_text(a);
                 state
                     .transcript_view()

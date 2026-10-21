@@ -1082,7 +1082,12 @@ pub async fn interactive_tui(
     // editor renders full-width `─` top/bottom borders with padding-only lines
     // (see Editor::render). padding_x:1 gives a 1-col inset inside the box.
     let keybindings = configured_keybindings();
-    crate::transcript_navigation::install(&tui, keybindings.clone());
+    let new_message_count = Arc::new(crate::transcript_navigation::NewMessageCount::default());
+    crate::transcript_navigation::install_with_message_count(
+        &tui,
+        keybindings.clone(),
+        Some(new_message_count.clone()),
+    );
     let editor = Arc::new(Editor::new(
         EditorOptions {
             padding_x: editor_padding_x,
@@ -1213,6 +1218,7 @@ pub async fn interactive_tui(
         loader: loader.clone(),
         editor: editor.clone(),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count,
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -2663,6 +2669,7 @@ pub async fn interactive_tui(
                         // Direct send: the harness emits no user `message_start`
                         // for it, so render the bubble here (see the submit
                         // handler in `interactive_tui`).
+                        state_for_key.new_message_count.other_message();
                         add_user_message(&state_for_key.chat_container, &prompt);
                         push_history(&state_for_key, &prompt);
                         let _ = tx_for_key.send(TuiMessage::UserInput(
@@ -2822,6 +2829,7 @@ pub async fn interactive_tui(
         // The harness emits no user `message_start` for a directly-sent prompt
         // (it drives the loop with an empty prompts vec), so the initial
         // `-p` / `--prompt` bubbles are rendered here.
+        state.new_message_count.other_message();
         add_user_message(&chat_container, &prompt);
         add_image_previews(&chat_container, &images, show_images);
         tui.request_render(false);
@@ -2963,6 +2971,7 @@ pub async fn interactive_tui(
                 match lane.navigate_tree(Some(&entry_id), false, None, None).await {
                     Ok(result) => match result.outcome {
                         ice_harness::agent_harness::NavigationOutcome::Completed { .. } => {
+                            state.new_message_count.reset();
                             chat_container.clear();
                             add_welcome_message(&chat_container);
                             render_session_history(
@@ -2994,6 +3003,7 @@ pub async fn interactive_tui(
                 tui.request_render(false);
             }
             Some(TuiMessage::ClearChat) => {
+                state.new_message_count.reset();
                 chat_container.clear();
                 add_welcome_message(&chat_container);
                 tui.request_render(false);
