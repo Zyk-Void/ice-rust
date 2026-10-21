@@ -1249,6 +1249,7 @@ pub async fn interactive_tui(
         ),
         selection_start: std::sync::Mutex::new(None),
         selection_end: std::sync::Mutex::new(None),
+        run_started_at: std::sync::Mutex::new(None),
     });
 
     let _compaction_watcher = harness.watch({
