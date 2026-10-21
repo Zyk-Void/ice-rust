@@ -561,6 +561,13 @@ mod tests {
         ice_agent::message::AgentMessage::User(ice_ai::types::UserMessage::new(text, 1))
     }
 
+    #[test]
+    fn persistence_path_is_absent_for_an_in_memory_session() {
+        let storage = fresh_storage();
+        let storage: &dyn SessionStorage = &storage;
+        assert_eq!(storage.persistence_path(), None);
+    }
+
     #[tokio::test]
     async fn in_memory_roundtrip_entry_and_record() {
         let storage = fresh_storage();
