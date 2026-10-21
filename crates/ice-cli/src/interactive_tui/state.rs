@@ -704,6 +704,27 @@ pub(super) fn emergency_exit(tui: &Arc<TuiAltScreen>) -> ! {
     std::process::exit(130);
 }
 
+/// Inside tmux, check in the background whether its key settings block
+/// Shift+Enter and similar keys, and say how to fix them (ice
+/// `checkTmuxKeyboardSetup`). Never delays startup.
+pub(super) fn spawn_tmux_keyboard_check(chat: &Arc<Container>, tui: &Arc<TuiAltScreen>) {
+    if std::env::var_os("TMUX").map_or(true, |v| v.is_empty()) {
+        return;
+    }
+    let chat = chat.clone();
+    let tui = tui.clone();
+    std::thread::spawn(move || {
+        let keys = crate::extras::tmux_show("extended-keys");
+        let format = crate::extras::tmux_show("extended-keys-format");
+        if let Some(warning) =
+            crate::extras::tmux_keyboard_warning(keys.as_deref(), format.as_deref())
+        {
+            add_note_message(&chat, warning);
+            tui.request_render(false);
+        }
+    });
+}
+
 /// upstream's `handleCtrlZ` (`app.suspend`): hand the terminal back to the
 /// shell and stop the process. `raise(SIGTSTP)` returns once the user resumes
 /// us with `fg`/`bg`, at which point we re-enter the alternate screen.
