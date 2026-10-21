@@ -719,7 +719,7 @@ enum TuiMessage {
     LogoutProvider(String),
     /// editor. Handling it on the async loop keeps editor mutation single-
     /// threaded with the rest of the TUI state.
-    ExternalEditorResult(Result<String, String>),
+    ExternalEditorResult(Result<Option<String>, String>),
     /// A user-initiated `!command` / `!!command` shell run finished. Routed to
     /// the main loop so the `bashExecution` transcript record is persisted in
     /// order relative to agent runs (upstream's `recordBashResult` /
@@ -2269,13 +2269,17 @@ pub async fn interactive_tui(
             }
 
             // 2c. Ctrl+G: edit the current draft in the user's external
-            // editor, matching upstream's VISUAL/EDITOR fallback chain.
+            // editor. Blocks this thread until the editor exits.
             if keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::EXTERNAL_EDITOR,
             ) {
-                launch_external_editor(editor_for_key.get_expanded_text(), tx_for_key.clone());
+                run_external_editor(
+                    &tui_for_key,
+                    editor_for_key.get_expanded_text(),
+                    &tx_for_key,
+                );
                 continue;
             }
 
@@ -2900,12 +2904,13 @@ pub async fn interactive_tui(
             }
             Some(TuiMessage::ExternalEditorResult(result)) => {
                 match result {
-                    Ok(text) => {
-                        let cursor = text.chars().count();
+                    Ok(Some(text)) => {
+                        let (row, col) = end_of_text_cursor(&text);
                         editor.set_text(&text);
-                        editor.set_cursor(0, cursor);
+                        editor.set_cursor(row, col);
                         add_note_message(&chat_container, "Draft updated from external editor.");
                     }
+                    Ok(None) => {}
                     Err(error) => add_error_message(&chat_container, &error),
                 }
                 tui.request_render(false);

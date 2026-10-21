@@ -69,52 +69,92 @@ pub(super) async fn maybe_add_startup_changelog(
 // Run a single prompt (streaming or blocking)
 // ===========================================================================
 
-pub(super) fn launch_external_editor(draft: String, tx: mpsc::UnboundedSender<TuiMessage>) {
-    std::thread::spawn(move || {
-        let file = match tempfile::Builder::new()
-            .prefix("ice-draft-")
-            .suffix(".md")
-            .tempfile()
-        {
-            Ok(file) => file,
-            Err(error) => {
-                let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(
-                    "Could not create editor file: {error}"
-                ))));
-                return;
+/// Ctrl+G: hand the terminal to the user's editor for the current draft, then
+/// take it back (ice `handleOpenExternalEditor`: `ui.stop()`, edit,
+/// `ui.start()`). Runs on the key-dispatch thread, like Ctrl+Z, so nothing
+/// reads stdin or paints while the editor owns the terminal.
+pub(super) fn run_external_editor(
+    tui: &Arc<TuiAltScreen>,
+    draft: String,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+) {
+    let command = external_editor_command();
+    tui.suspend();
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::Show);
+    let result = edit_in_external_editor(&command, &draft);
+    tui.resume();
+    let _ = tx.send(TuiMessage::ExternalEditorResult(result));
+}
+
+/// `ICERS_EXTERNAL_EDITOR` (nonblank), then `VISUAL`, `EDITOR`, then the
+/// platform default.
+fn external_editor_command() -> String {
+    std::env::var("ICERS_EXTERNAL_EDITOR")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| std::env::var("VISUAL").ok())
+        .or_else(|| std::env::var("EDITOR").ok())
+        .unwrap_or_else(|| {
+            if cfg!(windows) {
+                "notepad".to_string()
+            } else {
+                "nano".to_string()
             }
-        };
-        if let Err(error) = std::fs::write(file.path(), draft.as_bytes()) {
-            let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(
-                "Could not write editor file: {error}"
-            ))));
-            return;
-        }
-        let editor = std::env::var("ICERS_EXTERNAL_EDITOR")
-            .ok()
-            .filter(|value| !value.trim().is_empty())
-            .or_else(|| std::env::var("VISUAL").ok())
-            .or_else(|| std::env::var("EDITOR").ok())
-            .unwrap_or_else(|| {
-                if cfg!(windows) {
-                    "notepad".to_string()
-                } else {
-                    "nano".to_string()
-                }
-            });
-        let status = std::process::Command::new(&editor)
-            .arg(file.path())
-            .status();
-        let result = match status {
-            Ok(status) if status.success() => std::fs::read_to_string(file.path())
-                .map_err(|error| format!("Could not read editor file: {error}")),
-            Ok(status) => Err(format!("External editor exited with {status}")),
-            Err(error) => Err(format!(
-                "Could not launch external editor `{editor}`: {error}"
-            )),
-        };
-        let _ = tx.send(TuiMessage::ExternalEditorResult(result));
-    });
+        })
+}
+
+/// Edit `content` in `command` and return the saved text (ice
+/// `editInExternalEditor`). The command is split on whitespace into a program
+/// and its arguments (`code --wait`), and the draft path is appended. One
+/// trailing newline, which most editors add on save, is removed.
+pub(super) fn edit_in_external_editor(
+    command: &str,
+    content: &str,
+) -> Result<Option<String>, String> {
+    // Editors commonly replace the file atomically. Keep no open file handle
+    // and protect the draft with its own private directory (also on Windows).
+    let directory = tempfile::Builder::new()
+        .prefix("icers-editor-")
+        .tempdir()
+        .map_err(|error| format!("Could not create editor directory: {error}"))?;
+    let path = directory.path().join("prompt.md");
+    std::fs::write(&path, content.as_bytes())
+        .map_err(|error| format!("Could not write editor file: {error}"))?;
+    let mut parts = command.split_whitespace();
+    let program = parts
+        .next()
+        .ok_or_else(|| "No external editor is configured.".to_string())?;
+    // ice spawns with `shell: true` on Windows so `.cmd`/`.bat` editors resolve.
+    let mut child = if cfg!(windows) {
+        let mut cmd = std::process::Command::new("cmd");
+        cmd.arg("/C").arg(program);
+        cmd
+    } else {
+        std::process::Command::new(program)
+    };
+    let status = child
+        .args(parts)
+        .arg(&path)
+        .status()
+        .map_err(|error| format!("Could not launch external editor `{command}`: {error}"))?;
+    if !status.success() {
+        // A nonzero editor exit is cancellation: keep the original draft.
+        return Ok(None);
+    }
+    let text = std::fs::read_to_string(&path)
+        .map_err(|error| format!("Could not read editor file: {error}"))?;
+    let text = match text.strip_suffix('\n') {
+        Some(rest) => rest.strip_suffix('\r').unwrap_or(rest).to_string(),
+        None => text,
+    };
+    Ok(Some(text))
+}
+
+/// Editor caret at the end of `text`: the last line and its byte length.
+pub(super) fn end_of_text_cursor(text: &str) -> (usize, usize) {
+    let row = text.matches('\n').count();
+    let col = text.rsplit('\n').next().map_or(0, str::len);
+    (row, col)
 }
 
 /// Apply the authoritative run result when it wins the race with the async
