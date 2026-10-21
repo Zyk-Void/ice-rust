@@ -987,7 +987,14 @@ impl TuiState {
     /// than one operation.
     pub(super) fn try_start_working(&self) -> bool {
         let mut status = self.status.lock().unwrap();
-        if *status != RunStatus::Idle {
+        // A session change rebuilds the transcript while the status is already
+        // Idle; a prompt admitted then would have its echo erased.
+        if *status != RunStatus::Idle
+            || self
+                .event_drain
+                .session_changing
+                .load(std::sync::atomic::Ordering::Acquire)
+        {
             return false;
         }
         *status = RunStatus::Working;

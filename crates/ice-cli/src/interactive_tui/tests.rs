@@ -3673,6 +3673,17 @@ fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
     );
 }
 
+/// Navigation and session replacement leave the status Idle while they rebuild
+/// the transcript; a prompt admitted in that window would have its echo erased.
+#[test]
+fn prompts_are_not_admitted_while_a_session_change_is_in_progress() {
+    let state = test_tui_state();
+    let transition = begin_session_change(&state.chat_container, &state, "test change").unwrap();
+    assert!(!state.try_start_working());
+    drop(transition);
+    assert!(state.try_start_working());
+}
+
 /// A template that shares a name with a built-in must not add a second row.
 #[test]
 fn a_template_named_like_a_builtin_is_not_suggested_twice() {
@@ -3903,6 +3914,17 @@ fn new_session_replaces_backing_and_footer_totals_follow_the_session() {
 /// last argument (ice `test/fixtures/fake-external-editor.mjs`).
 #[cfg(unix)]
 fn fake_editor(dir: &std::path::Path, body: &str) -> String {
+    // The command is split on whitespace, so the script path must not contain
+    // any; fall back to /tmp when TMPDIR does.
+    let holder;
+    let dir = if dir.to_string_lossy().contains(char::is_whitespace) {
+        holder = tempfile::tempdir_in("/tmp").unwrap();
+        let kept = holder.path().to_path_buf();
+        std::mem::forget(holder);
+        kept
+    } else {
+        dir.to_path_buf()
+    };
     let path = dir.join("fake-editor");
     std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
     // Interpret the fixture rather than exec'ing a newly written inode.

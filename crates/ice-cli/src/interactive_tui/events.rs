@@ -263,9 +263,26 @@ pub(super) fn abort_interrupted_run(
             }
         } else {
             let _ =
-                restore_queued_messages_to_editor(lane.clone(), editor, state, tui.clone()).await;
+                restore_queued_messages_to_editor(lane.clone(), editor, state.clone(), tui.clone())
+                    .await;
         }
-        let _ = lane.abort().await;
+        loop {
+            match lane.abort().await {
+                // Navigation can still be waiting to be admitted as a run, so
+                // there is nothing to abort yet. Keep trying until it is, or
+                // until it ends; a lost Esc would let it commit anyway.
+                Err(ice_harness::result::HarnessError::NoActiveRun { .. })
+                    if navigation
+                        && state
+                            .tree_navigation_active
+                            .load(std::sync::atomic::Ordering::Acquire)
+                        && *state.status.lock().unwrap() == RunStatus::Aborting =>
+                {
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                }
+                _ => break,
+            }
+        }
         tui.request_render(false);
     }
 }

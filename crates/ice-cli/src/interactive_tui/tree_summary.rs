@@ -322,11 +322,42 @@ pub(super) fn tree_navigation_target(entry: &Entry) -> (Option<String>, Option<S
     (target, draft)
 }
 
-pub(super) fn restore_tree_draft(state: &TuiState, draft: Option<&str>) {
+/// The images attached to a replayed user prompt, in order.
+pub(super) fn tree_prompt_images(entry: &Entry) -> Vec<ice_ai::types::ImageContent> {
+    match entry {
+        Entry::Message(message) => match &message.message {
+            AgentMessage::User(user) => match &user.content {
+                ice_ai::types::UserContent::Blocks(blocks) => blocks
+                    .iter()
+                    .filter_map(|block| match block {
+                        Content::Image(image) => Some(image.clone()),
+                        _ => None,
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            },
+            _ => Vec::new(),
+        },
+        _ => Vec::new(),
+    }
+}
+
+/// Put a replayed prompt, and its images, back in the editor when the user has
+/// not started a draft of their own.
+pub(super) fn restore_tree_prompt(
+    state: &TuiState,
+    draft: Option<&str>,
+    images: &[ice_ai::types::ImageContent],
+) {
     if let Some(draft) = draft.filter(|_| {
         state.editor.get_text().trim().is_empty() && state.pending_images.lock().unwrap().is_empty()
     }) {
         set_editor_text_caret_at_end(&state.editor, draft);
+        state
+            .pending_images
+            .lock()
+            .unwrap()
+            .extend(images.iter().cloned());
         state
             .programmatic_editor_write
             .store(true, std::sync::atomic::Ordering::SeqCst);
@@ -450,6 +481,7 @@ pub(super) async fn run_tree_navigation(
         }
     };
     let (target, draft) = tree_navigation_target(&entry);
+    let images = tree_prompt_images(&entry);
     let activity = match TreeNavigationActivity::start(state) {
         Some(activity) => activity,
         None => return true,
@@ -461,7 +493,7 @@ pub(super) async fn run_tree_navigation(
         // claiming activity, and never call the provider or mutate history.
         match lane.snapshot().await {
             Ok(snapshot) if snapshot.leaf_id == target && snapshot.active.is_none() => {
-                restore_tree_draft(state, draft.as_deref());
+                restore_tree_prompt(state, draft.as_deref(), &images);
                 add_note_message(&state.chat_container, "Selected prompt is ready to edit.");
                 tui.request_render(false);
                 return false;
@@ -499,7 +531,7 @@ pub(super) async fn run_tree_navigation(
         Ok(result) => match result.outcome {
             NavigationOutcome::Completed { summary_entry, .. } => {
                 replace_session_ui(harness, &state.chat_container, state).await;
-                restore_tree_draft(state, draft.as_deref());
+                restore_tree_prompt(state, draft.as_deref(), &images);
                 add_note_message(
                     &state.chat_container,
                     if summary_entry.is_some() {
@@ -1844,9 +1876,9 @@ mod tests {
     #[test]
     fn tree_summary_draft_restoration_respects_existing_text_and_pending_images() {
         let state = test_tui_state();
-        restore_tree_draft(&state, Some("old prompt\n猫"));
+        restore_tree_prompt(&state, Some("old prompt\n猫"), &[]);
         assert_eq!(state.editor.get_text(), "old prompt\n猫");
-        restore_tree_draft(&state, Some("replacement"));
+        restore_tree_prompt(&state, Some("replacement"), &[]);
         assert_eq!(state.editor.get_text(), "old prompt\n猫");
         state.editor.set_text("");
         state
@@ -1858,7 +1890,7 @@ mod tests {
                 data: "test".into(),
                 mime_type: "image/png".into(),
             });
-        restore_tree_draft(&state, Some("replacement"));
+        restore_tree_prompt(&state, Some("replacement"), &[]);
         assert_eq!(state.editor.get_text(), "");
         assert_eq!(state.pending_images.lock().unwrap().len(), 1);
     }
@@ -1969,6 +2001,37 @@ mod tests {
                 .iter()
                 .all(|line| ice_tui::visible_width(line) <= width));
         }
+    }
+
+    #[test]
+    fn replaying_a_prompt_restores_its_image_attachments() {
+        let image = ice_ai::types::ImageContent {
+            kind: Default::default(),
+            data: "aGk=".into(),
+            mime_type: "image/png".into(),
+        };
+        let user = Entry::Message(MessageEntry {
+            base: EntryBase {
+                entry_type: "message".into(),
+                id: "u".into(),
+                seq: 1,
+                parent_id: Some("p".into()),
+                timestamp: 0,
+            },
+            message: user_message_with_images("look", vec![image.clone()]),
+            terminate: None,
+        });
+        let images = tree_prompt_images(&user);
+        assert_eq!(images.len(), 1);
+        let state = test_tui_state();
+        restore_tree_prompt(&state, Some("look"), &images);
+        assert_eq!(state.editor.get_text(), "look");
+        assert_eq!(state.pending_images.lock().unwrap().len(), 1);
+        // A draft the user already started is never mixed with replayed images.
+        let started = test_tui_state();
+        started.editor.set_text("mine");
+        restore_tree_prompt(&started, Some("look"), &images);
+        assert!(started.pending_images.lock().unwrap().is_empty());
     }
 
     #[test]

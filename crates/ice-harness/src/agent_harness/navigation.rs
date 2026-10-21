@@ -89,6 +89,8 @@ impl AgentHarness {
                 .get_entry(&id)
                 .await
                 .map_err(session_to_harness_err)?;
+            // Same tail as a fresh navigation: commit context queued meanwhile.
+            self.finish_context_writes(&run_id, None).await?;
             return Ok(NavigationResult {
                 run_id,
                 outcome: NavigationOutcome::Completed {

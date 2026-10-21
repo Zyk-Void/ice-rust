@@ -1165,6 +1165,40 @@ fn run_summary_metadata_is_bounded_and_settled_markers_are_consumed_once() {
     });
 }
 
+/// Esc can land while navigation is still waiting to be admitted as a run, when
+/// the lane reports no active run. The abort must keep trying until navigation
+/// is admitted or ends, not be discarded.
+#[test]
+fn navigation_interrupt_retries_while_no_run_is_admitted_yet() {
+    isolated_async(async {
+        let (harness, _events) = scripted_harness(ice_ai::providers::faux::FauxScript::new()).await;
+        let state = test_tui_state();
+        *state.status.lock().unwrap() = RunStatus::Aborting;
+        state
+            .tree_navigation_active
+            .store(true, std::sync::atomic::Ordering::Release);
+        let task = tokio::spawn(abort_interrupted_run(
+            harness.lane("main"),
+            state.editor.clone(),
+            state.clone(),
+            test_terminal(),
+            true,
+        ));
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        assert!(!task.is_finished(), "must keep retrying, not give up");
+        // Navigation ended (TreeNavigationActivity::drop).
+        state
+            .tree_navigation_active
+            .store(false, std::sync::atomic::Ordering::Release);
+        *state.status.lock().unwrap() = RunStatus::Idle;
+        tokio::time::timeout(std::time::Duration::from_secs(3), task)
+            .await
+            .unwrap()
+            .unwrap();
+        harness.close().await.unwrap();
+    });
+}
+
 #[test]
 fn navigation_completion_wins_status_lock_before_interrupt_dispatch() {
     isolated_async(async {

@@ -40,6 +40,9 @@ struct PathToken<'a> {
     start: usize,
     end: usize,
     quoted: bool,
+    /// A closing quote follows the caret but is not consumed by `end`, so the
+    /// replacement must not add one of its own.
+    closed: bool,
     at: bool,
 }
 
@@ -64,6 +67,7 @@ fn path_token(input: &str, cursor: usize) -> PathToken<'_> {
             start,
             end: cursor + usize::from(input[cursor..].starts_with('"')),
             quoted: true,
+            closed: !input[cursor..].starts_with('"') && input[cursor..].contains('"'),
             at,
         };
     }
@@ -75,6 +79,7 @@ fn path_token(input: &str, cursor: usize) -> PathToken<'_> {
         start,
         end: cursor,
         quoted: false,
+        closed: false,
         at,
     }
 }
@@ -86,7 +91,9 @@ fn path_items_for_token(
     items
         .into_iter()
         .map(|mut item| {
-            if token.quoted || item.text.chars().any(char::is_whitespace) {
+            if token.quoted && token.closed {
+                item.text = format!("\"{}", item.text);
+            } else if token.quoted || item.text.chars().any(char::is_whitespace) {
                 item.text = format!("\"{}\"", item.text);
             }
             item
@@ -329,6 +336,8 @@ struct RecursiveSearchState {
     generation: u64,
     /// Whether a background search is running.
     running: bool,
+    /// Identifies the newest worker, so an older one cannot clear `running`.
+    worker: u64,
     /// The last finished query and its ranked items.
     results: Option<(String, Vec<AutocompleteItem>)>,
 }
@@ -368,7 +377,7 @@ impl RecursiveFileAutocompleteProvider {
 
     /// Search for `query` on a background thread, then for whatever query is
     /// wanted by the time it finishes, until the results match it.
-    fn spawn_search(&self, query: String, generation: u64) {
+    fn spawn_search(&self, query: String, generation: u64, worker: u64) {
         let root = self.root.clone();
         let search = self.search.clone();
         let notify = self.notify.clone();
@@ -376,15 +385,17 @@ impl RecursiveFileAutocompleteProvider {
         std::thread::spawn(move || {
             // A panicking search must not leave `running` set, or recursive
             // search would stay off for the rest of the session.
-            struct ClearRunning(Arc<Mutex<RecursiveSearchState>>);
+            struct ClearRunning(Arc<Mutex<RecursiveSearchState>>, u64);
             impl Drop for ClearRunning {
                 fn drop(&mut self) {
                     if let Ok(mut st) = self.0.lock() {
-                        st.running = false;
+                        if st.worker == self.1 {
+                            st.running = false;
+                        }
                     }
                 }
             }
-            let _clear = ClearRunning(state.clone());
+            let _clear = ClearRunning(state.clone(), worker);
             let mut query = query;
             let mut generation = generation;
             loop {
@@ -417,6 +428,9 @@ impl AutocompleteProvider for RecursiveFileAutocompleteProvider {
             if st.wanted.take().is_some() {
                 st.generation = st.generation.wrapping_add(1);
             }
+            // Files change while the user types elsewhere; searching again on
+            // re-entry beats suggesting deleted or missing ones.
+            st.results = None;
             return None;
         }
         let query = token.query;
@@ -436,9 +450,10 @@ impl AutocompleteProvider for RecursiveFileAutocompleteProvider {
         }
         if !st.running {
             st.running = true;
-            let generation = st.generation;
+            st.worker = st.worker.wrapping_add(1);
+            let (generation, worker) = (st.generation, st.worker);
             drop(st);
-            self.spawn_search(query.to_string(), generation);
+            self.spawn_search(query.to_string(), generation, worker);
         }
         None
     }
@@ -978,6 +993,45 @@ mod tests {
         assert_eq!(&input[..found.start], "查看 @");
         assert_eq!(&input[found.end..], " suffix");
         assert!(!found.items[0].is_directory && found.items[0].insert_space);
+    }
+
+    /// A closing quote after the caret stays the only closing quote.
+    #[test]
+    fn recursive_at_search_inside_a_quoted_path_keeps_the_existing_closing_quote() {
+        const ENTRIES: &[(&str, bool)] = &[("my folder/test file.txt", false)];
+        let (provider, ready, _) = recursive_provider(PathBuf::from("/missing-repo"), ENTRIES);
+        let input = "@\"my folder/te\"";
+        // Caret after "my fol" with the rest of the path still ahead of it.
+        let cursor = "@\"my fol".len();
+        assert!(provider.get_suggestions(input, cursor).is_none());
+        ready
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .unwrap();
+        let found = provider.get_suggestions(input, cursor).unwrap();
+        let mut replaced = input.to_string();
+        replaced.replace_range(found.start..found.end, &found.items[0].text);
+        assert_eq!(replaced.matches('"').count() % 2, 0, "{replaced}");
+    }
+
+    /// Leaving the `@` token must forget its results, so files that changed
+    /// meanwhile are found again on return.
+    #[test]
+    fn recursive_at_search_searches_again_after_leaving_the_token() {
+        const ENTRIES: &[(&str, bool)] = &[("src/foo.rs", false)];
+        let (provider, ready, queries) =
+            recursive_provider(PathBuf::from("/missing-repo"), ENTRIES);
+        assert!(provider.get_suggestions("@foo", 4).is_none());
+        ready
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .unwrap();
+        assert!(provider.get_suggestions("@foo", 4).is_some());
+        assert!(provider.get_suggestions("plain", 5).is_none());
+        // Returning to the same query must not reuse the stale cache.
+        assert!(provider.get_suggestions("@foo", 4).is_none());
+        ready
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(queries.lock().unwrap().len(), 2);
     }
 
     #[test]

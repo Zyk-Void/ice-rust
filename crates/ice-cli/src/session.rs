@@ -30,7 +30,6 @@
 //!   The interactive `-c`/`-r`/`--session` paths enable that mode and replay
 //!   the existing branch before appending new messages. See [`SessionSelection`].
 
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -2607,10 +2606,15 @@ pub(crate) async fn set_active_session(
     tool_context: Option<&ice_extensions::ToolCallContext>,
 ) -> Result<(), String> {
     let metadata = session.get_metadata().await.ok();
+    let previous = harness.session().storage().persistence_path();
+    let incoming = session.storage().persistence_path();
     harness
         .set_session(session)
         .await
         .map_err(|e| e.to_string())?;
+    if let Some(previous) = previous.filter(|previous| Some(previous) != incoming.as_ref()) {
+        release_session_lock(&previous);
+    }
     if let Some(metadata) = metadata {
         std::env::set_var(ice_plugin_sdk::SESSION_ID_ENV, &metadata.id);
         if let Some(context) = tool_context {
@@ -2706,11 +2710,15 @@ pub(crate) async fn fork_session_storage_with_options(
     Ok(Session::new(Arc::new(fork_storage), None))
 }
 
-/// Session logs this process has claimed, so re-claiming is a no-op.
-static SESSION_LOCK_PATHS: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
-/// The held lock handles. Kept alive for the process lifetime — dropping the
-/// `File` would release the OS lock, so the guard is parked here.
-static SESSION_LOCKS: OnceLock<Mutex<Vec<std::fs::File>>> = OnceLock::new();
+/// Session logs this process has claimed, with their held lock handles.
+/// Dropping a `File` releases the OS lock, so each guard is parked here until
+/// the session is switched away from ([`release_session_lock`]).
+static SESSION_LOCKS: OnceLock<Mutex<std::collections::HashMap<PathBuf, std::fs::File>>> =
+    OnceLock::new();
+
+fn session_lock_path(session_path: &str) -> PathBuf {
+    PathBuf::from(format!("{session_path}.lock"))
+}
 
 /// Claim the exclusive lock for a session log.
 ///
@@ -2721,13 +2729,12 @@ static SESSION_LOCKS: OnceLock<Mutex<Vec<std::fs::File>>> = OnceLock::new();
 /// exits (no stale-lock cleanup). Re-claiming a path this process already holds
 /// is a no-op, so the TUI's session hot-switch can re-open freely.
 fn claim_session_lock(session_path: &str) -> Result<(), String> {
-    let lock_path = PathBuf::from(format!("{session_path}.lock"));
-    if SESSION_LOCK_PATHS
-        .get_or_init(|| Mutex::new(HashSet::new()))
+    let lock_path = session_lock_path(session_path);
+    let mut held = SESSION_LOCKS
+        .get_or_init(|| Mutex::new(Default::default()))
         .lock()
-        .unwrap()
-        .contains(&lock_path)
-    {
+        .unwrap();
+    if held.contains_key(&lock_path) {
         return Ok(());
     }
     let file = std::fs::OpenOptions::new()
@@ -2740,17 +2747,19 @@ fn claim_session_lock(session_path: &str) -> Result<(), String> {
             "session {session_path} is already open in another icers process"
         ));
     }
-    SESSION_LOCKS
-        .get_or_init(|| Mutex::new(Vec::new()))
-        .lock()
-        .unwrap()
-        .push(file);
-    SESSION_LOCK_PATHS
-        .get_or_init(|| Mutex::new(HashSet::new()))
-        .lock()
-        .unwrap()
-        .insert(lock_path);
+    held.insert(lock_path, file);
     Ok(())
+}
+
+/// Drop this process's claim on a session log it has switched away from, so
+/// the picker and other icers processes can change it. The sidecar file stays
+/// (see `session_actions::perform`).
+pub(crate) fn release_session_lock(session_path: &str) {
+    if let Some(held) = SESSION_LOCKS.get() {
+        held.lock()
+            .unwrap()
+            .remove(&session_lock_path(session_path));
+    }
 }
 
 /// Wrap an opened [`JsonlSessionStorage`] in the `Session` facade (shared by
@@ -2916,6 +2925,24 @@ fn read_prompt_source(path: &Path, sources: &mut Vec<String>) -> Option<String> 
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn releasing_a_session_lock_lets_others_lock_the_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("a.jsonl").to_string_lossy().into_owned();
+        claim_session_lock(&log).unwrap();
+        let probe = || {
+            let file = std::fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .open(format!("{log}.lock"))
+                .unwrap();
+            fs2::FileExt::try_lock_exclusive(&file).map(|_| file)
+        };
+        assert!(probe().is_err(), "claimed lock must exclude others");
+        release_session_lock(&log);
+        assert!(probe().is_ok(), "a released lock must be free");
+    }
+
     use super::*;
 
     #[test]

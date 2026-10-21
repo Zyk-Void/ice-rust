@@ -120,7 +120,9 @@ impl SessionPicker {
         *list = self.make_list(Vec::new());
         self.searching.store(true, Ordering::Release);
         *self.error.lock().unwrap() = None;
-        drop(list);
+        // Send while still holding the lock: requests must reach the worker in
+        // generation order, or it can keep only an obsolete one and the picker
+        // stays on "Searching saved messages…".
         let _ = self.requests.send(SearchRequest {
             generation,
             rows,
@@ -128,6 +130,7 @@ impl SessionPicker {
             all: self.all.load(Ordering::Relaxed),
             query: self.input.get_value(),
         });
+        drop(list);
         (self.redraw)();
     }
 

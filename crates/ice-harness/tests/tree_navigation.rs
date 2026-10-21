@@ -913,6 +913,50 @@ async fn tree_navigation_retry_after_acceptance_failure_recognizes_durable_summa
 }
 
 #[tokio::test]
+async fn tree_navigation_exact_retry_commits_context_queued_after_the_failure() {
+    let repo = jsonl_repo(Arc::new(SummaryAppendFailure {
+        inner: Arc::new(InMemoryExecutionEnv::new()),
+        failures: AtomicUsize::new(0),
+        phase: FailurePhase::Acceptance,
+    }));
+    let storage = repo
+        .create_typed(&JsonlSessionCreateOptions {
+            id: Some("retry-context".into()),
+            cwd: "/project".into(),
+            parent_session_id: None,
+            metadata: None,
+        })
+        .await
+        .unwrap();
+    let session = Session::new(Arc::new(storage), None);
+    let root = session.append_message(user("root")).await.unwrap();
+    session.append_message(user("branch")).await.unwrap();
+    let provider = FauxProvider::new(FauxScript::new().with_text("accepted summary"));
+    let harness = AgentHarness::create(options(&provider, session))
+        .await
+        .unwrap();
+    assert!(harness
+        .navigate_tree(Some(&root), true, None, None)
+        .await
+        .is_err());
+    // The failed attempt left its operation open, so this is queued, not written.
+    let queued = harness.append_message(user("queued")).await.unwrap();
+    harness
+        .navigate_tree(Some(&root), true, None, None)
+        .await
+        .unwrap();
+    assert!(
+        harness
+            .session()
+            .get_entry(&queued)
+            .await
+            .unwrap()
+            .is_some(),
+        "the retry must commit context queued after the failure"
+    );
+}
+
+#[tokio::test]
 async fn tree_navigation_reserve_survives_session_replacement_and_rejects_closed_harness() {
     let (harness, _, _, _) = fixture(FauxScript::new()).await;
     harness
