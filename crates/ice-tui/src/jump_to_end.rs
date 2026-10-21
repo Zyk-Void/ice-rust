@@ -185,8 +185,8 @@ mod tests {
             let mut lines = frame.lines.clone();
             indicator.paint(&frame, &mut lines, false);
             assert_eq!(
-                crate::ansi::slice_by_column(&lines[3], width - 1, 1, true),
-                crate::ansi::slice_by_column(&frame.lines[3], width - 1, 1, true)
+                crate::ansi::slice_by_column(&lines[3], width - 1, 1, false),
+                crate::ansi::slice_by_column(&frame.lines[3], width - 1, 1, false)
             );
             assert!(visible_width(&lines[3]) <= width);
             let rect = indicator.state.lock().unwrap().rect;
