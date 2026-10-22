@@ -1013,6 +1013,11 @@ impl TuiState {
                 // (OSC 2). No-op when `tui` is absent (unit tests).
                 if let Some(tui) = &self.tui {
                     tui.set_title(&crate::brand::window_title("⟳"));
+                    // OSC 9;4 busy marker in the tab/title bar (upstream
+                    // `terminal.setProgress(true)` on `agent_start`).
+                    if self.show_terminal_progress {
+                        tui.set_progress(true);
+                    }
                 }
                 self.status_container.clear();
                 // The working indicator renders inside the editor's top border.
@@ -1039,6 +1044,7 @@ impl TuiState {
                 self.footer.set_status("");
                 if let Some(tui) = &self.tui {
                     tui.set_title(&crate::brand::window_title(""));
+                    tui.set_progress(false);
                 }
                 self.loader.stop();
                 self.status_container.clear();

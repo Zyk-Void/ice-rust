@@ -174,6 +174,10 @@ impl RenderScheduler {
     }
 }
 
+/// How often an active OSC 9;4 progress indicator is re-sent (upstream
+/// `TERMINAL_PROGRESS_KEEPALIVE_MS`).
+const PROGRESS_KEEPALIVE: Duration = Duration::from_millis(1000);
+
 /// Alternate screen TUI with application-owned scrolling.
 pub struct TuiAltScreen {
     /// Serializes the complete diff/render/write transaction. Input, streaming
@@ -228,6 +232,9 @@ pub struct TuiAltScreen {
     /// The scheduler thread, joined by [`TuiAltScreen::stop`] so a parked frame
     /// cannot repaint the terminal after shutdown.
     scheduler_thread: Mutex<Option<JoinHandle<()>>>,
+    /// When the OSC 9;4 progress indicator was last sent; `None` while it is
+    /// cleared. See [`TuiAltScreen::set_progress`].
+    progress_sent_at: Mutex<Option<Instant>>,
 }
 
 impl TuiAltScreen {
@@ -270,6 +277,7 @@ impl TuiAltScreen {
             scheduler: Arc::new(RenderScheduler::new()),
             scheduler_started: AtomicBool::new(false),
             scheduler_thread: Mutex::new(None),
+            progress_sent_at: Mutex::new(None),
         }
     }
 
@@ -621,6 +629,37 @@ impl TuiAltScreen {
         if let Ok(terminal) = self.terminal.lock() {
             terminal.set_title(title);
             terminal.flush();
+        }
+    }
+
+    /// Show or clear the terminal's OSC 9;4 progress indicator (the tab or
+    /// title-bar busy marker). Like `set_title`, this writes to the real
+    /// terminal. Call [`TuiAltScreen::refresh_progress`] periodically while
+    /// active: terminals such as Ghostty drop a report that is not refreshed.
+    pub fn set_progress(&self, active: bool) {
+        let Ok(mut sent_at) = self.progress_sent_at.lock() else {
+            return;
+        };
+        if !active && sent_at.is_none() {
+            return;
+        }
+        *sent_at = active.then(Instant::now);
+        if let Ok(terminal) = self.terminal.lock() {
+            terminal.set_progress(active);
+        }
+    }
+
+    /// Re-send an active progress indicator at most once per
+    /// [`PROGRESS_KEEPALIVE`]. Does nothing while progress is cleared.
+    pub fn refresh_progress(&self) {
+        let due = self
+            .progress_sent_at
+            .lock()
+            .ok()
+            .and_then(|sent_at| *sent_at)
+            .is_some_and(|sent_at| sent_at.elapsed() >= PROGRESS_KEEPALIVE);
+        if due {
+            self.set_progress(true);
         }
     }
 
@@ -1353,6 +1392,7 @@ impl TUI for TuiAltScreen {
             let _ = handle.join();
         }
 
+        self.set_progress(false);
         if self.uses_main_screen() {
             if let Ok(terminal) = self.terminal.lock() {
                 // Leave the shell prompt below the rendered footer while
@@ -1661,8 +1701,38 @@ mod tests {
         fn is_tty(&self) -> bool {
             true
         }
-        fn set_progress(&self, _active: bool) {}
+        fn set_progress(&self, active: bool) {
+            self.write(&format!("<progress:{active}>"));
+        }
         fn flush(&self) {}
+    }
+
+    #[test]
+    fn progress_indicator_is_kept_alive_and_cleared_once() {
+        let terminal = ResizableTerminal::new(80, 8);
+        let output = terminal.output();
+        let tui = TuiAltScreen::new(Box::new(terminal), false, None);
+        let take = || std::mem::take(&mut *output.lock().unwrap());
+
+        // Clearing an inactive indicator and refreshing it are both silent.
+        tui.set_progress(false);
+        tui.refresh_progress();
+        assert_eq!(take(), "");
+
+        tui.set_progress(true);
+        assert_eq!(take(), "<progress:true>");
+        // Not due yet: the keepalive is throttled.
+        tui.refresh_progress();
+        assert_eq!(take(), "");
+        // Once the keepalive interval passes, the report is re-sent.
+        *tui.progress_sent_at.lock().unwrap() = Some(Instant::now() - PROGRESS_KEEPALIVE);
+        tui.refresh_progress();
+        assert_eq!(take(), "<progress:true>");
+
+        tui.set_progress(false);
+        tui.set_progress(false);
+        tui.refresh_progress();
+        assert_eq!(take(), "<progress:false>");
     }
 
     #[test]

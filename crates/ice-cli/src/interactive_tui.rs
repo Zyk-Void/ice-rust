@@ -1371,6 +1371,7 @@ pub async fn interactive_tui(
                 }
                 if event.active {
                     if state.show_terminal_progress {
+                        tui.set_progress(true);
                         state.editor.set_working(Some(WorkingState {
                             frame: 0,
                             started_at: std::time::Instant::now(),
@@ -1710,6 +1711,7 @@ pub async fn interactive_tui(
             // and a lost event would otherwise leave the fullscreen frame at the
             // previous geometry for the rest of the session.
             tui_tick.ensure_size();
+            tui_tick.refresh_progress();
             let side_changed = side_tick.lock().unwrap().sync(
                 &tui_tick,
                 &side_context,
