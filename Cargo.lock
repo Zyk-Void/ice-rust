@@ -2500,6 +2500,202 @@ dependencies = [
 ]
 
 [[package]]
+name = "rpi-agent"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "rpi-ai",
+ "rpi-telemetry",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "rpi-ai"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "eventsource-stream",
+ "futures",
+ "jsonschema",
+ "regex",
+ "reqwest",
+ "rpi-telemetry",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "rpi-cli"
+version = "0.8.0"
+dependencies = [
+ "arboard",
+ "async-trait",
+ "base64",
+ "crossterm",
+ "dirs",
+ "flate2",
+ "fs2",
+ "futures",
+ "globset",
+ "indexmap 2.14.2",
+ "nix",
+ "percent-encoding",
+ "png",
+ "reqwest",
+ "rpassword",
+ "rpi-agent",
+ "rpi-ai",
+ "rpi-extensions",
+ "rpi-harness",
+ "rpi-plugin-sdk",
+ "rpi-telemetry",
+ "rpi-tools",
+ "rpi-tui",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+ "windows-sys 0.59.0",
+ "zip",
+]
+
+[[package]]
+name = "rpi-extensions"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "dirs",
+ "futures",
+ "libloading",
+ "rpi-agent",
+ "rpi-ai",
+ "rpi-plugin-sdk",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "rpi-harness"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "rpi-agent",
+ "rpi-ai",
+ "rpi-telemetry",
+ "rpi-tools",
+ "rusqlite",
+ "schemars",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+ "yaml_serde",
+]
+
+[[package]]
+name = "rpi-plugin-sdk"
+version = "0.8.0"
+dependencies = [
+ "libc",
+ "reqwest",
+ "rpi-ai",
+ "serde",
+ "serde_json",
+ "tokio",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "rpi-telemetry"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "rpi-tools"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "dirs",
+ "futures",
+ "globset",
+ "image",
+ "nix",
+ "regex",
+ "rpi-agent",
+ "rpi-ai",
+ "rpi-plugin-sdk",
+ "schemars",
+ "serde",
+ "serde_json",
+ "similar",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "unicode-normalization",
+ "uuid",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "rpi-tui"
+version = "0.8.0"
+dependencies = [
+ "base64",
+ "crossterm",
+ "pulldown-cmark",
+ "regex",
+ "similar",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "unicode-segmentation",
+ "unicode-width",
+ "winapi",
+]
+
+[[package]]
 name = "rtoolbox"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
