@@ -533,6 +533,28 @@ dialogs, side questions and `ask_user`, own stdio, and run child agents
 passes to `main()` so global settings win over project ones.
 
 ### 7.5 Interactive TUI components missing
+
+**Phase 0 TUI parity landed 2026-10-21** (PRs [#1](https://github.com/Zyk-Void/ice-rust/pull/1), [#2](https://github.com/Zyk-Void/ice-rust/pull/2), [#27](https://github.com/Zyk-Void/ice-rust/pull/27), [#28](https://github.com/Zyk-Void/ice-rust/pull/28), [#29](https://github.com/Zyk-Void/ice-rust/pull/29)). This covers the reachable defects from TUI-226/244/248/254, grapheme width and wrapping (TUI-201/202), grapheme-cell slicing and OSC 8 handling (TUI-203/204), and Text/TruncatedText/Box/Spacer contracts (TUI-205). PR #29 changes the public `ice-tui` component API and rendering behavior. The detailed `docs/ice-gap/tui.md` audit is not present on this branch; this note records only the landed Phase 0 scope, not completion of the broader TUI parity audit.
+
+**Selected `goal.md` items landed 2026-10-21** (PR [#44](https://github.com/Zyk-Void/ice-rust/pull/44),
+squash-merged as `44072f0`, replacing the older stacked PRs #6-#24 and #33-#43).
+It adds cancellable, durable tree navigation summaries with a three-way/custom
+prompt chooser (TUI-067), a category grid and largest-entry context projection
+(TUI-058), an acknowledged old-event drain before shared session replacement,
+and run summaries driven by authoritative completed outcomes (TUI-043). Tree
+replay follows the active branch. `branchSummary.reserveTokens` is wired through
+CLI startup; the harness exposes additive reserve getter/setter methods without
+changing required options, plugin ABI, or persistence schemas. The public
+agent-event enum adds an ordered `RunSettled { run_id }` marker (not persisted;
+filtered from JSON/RPC output); downstream exhaustive matches must handle it.
+See `docs/guides/branch-summaries.md` and `docs/ice-gap/tui-goal-followup.md`.
+
+Known gaps after the merge: resuming a session created in another directory
+keeps tools in the current directory (a note says so); Ctrl+C, Ctrl+D, Esc, Tab
+and Up/Down are fixed keys, not rebindable; real-terminal checks (mouse copy,
+vim and `code --wait`, OSC 52 over SSH, light/dark detection) and Rust 1.78 are
+not run. This is not a claim that every parity-audit entry is complete.
+
 From `CA/modes/interactive/components/`:
 - **Appearance:** `appearance-customizer.ts` (3110 lines) edits semantic theme-token
   groups, one group per editor screen. `appearance-preview.ts` adds live preview
@@ -541,8 +563,9 @@ From `CA/modes/interactive/components/`:
   read/search/list calls into exploration summary rows (`toolStyle: compact`).
   `tool-toggle-link.ts` adds click-to-expand.
 - **Navigation:** `sticky-prompt.ts` pins the current prompt and clicks back to
-  it. `new-messages-pill.ts` scrolls to the end (Rust has `jump_to_end.rs`;
-  verify pill parity).
+  it. `new-messages-pill.ts` scrolls to the end and counts newly visible
+  assistant turns (ignoring blank/tool-only entries); Rust's `jump_to_end.rs`
+  displays that count with the configured bottom-navigation key.
 - **Panels:** `notices-view.ts` (NoticeCenter panel with a filter bar),
   `shells-panel.ts` (§3), `subagent-view-switcher.ts` and the Agent Hub (§1.9).
 - **Status:** `run-summary.ts` (dim "worked for …" line after a run),

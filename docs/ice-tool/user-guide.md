@@ -216,6 +216,14 @@ On macOS, this differs from native terminal scrollback on the main screen: an al
 
 If the scroll wheel cannot scroll through history on macOS, check that `TuiAltScreen::start_readerless` initializes mouse tracking for the alternate screen; do not change the global macOS default directly.
 
+### Local sessions and context
+
+`/new` (alias `/clear`) creates a new persistent session instead of only clearing the screen. Before switching it waits for the old run and UI events to finish; it refuses to switch while a user shell command is still running, so the result is not written to another session.
+
+`/tree` offers three choices: no summary, a branch summary, or a branch summary with custom instructions. Escape in the custom editor returns to the options, and another Escape returns to the tree view. Cancelling keeps the draft and queued prompts. `branchSummary.skipPrompt: true` skips the prompt and produces no summary; `branchSummary.reserveTokens` controls the summary reserve budget (default 16384). If a summary was persisted but a later record write fails, the error says navigation was committed; retrying or reopening the session recovers the records without asking the provider to generate the same summary again.
+
+`/context` shows the current model capacity, a 20×10 category grid, and the five largest estimated items. It reads only the current branch, uses the standard compaction projection, and counts project instructions, the skills listing, and enabled tool schemas from the loaded prompts. The total uses the latest valid provider input and cache usage plus estimated output and following messages. Categories are estimated independently, and private per-request transformations are outside the public API projection, so this is not an exact request token count. `/usage` still shows cumulative billed usage.
+
 ### macOS keyboard and plugin panels
 
 Terminals that support the Kitty keyboard protocol use the same flags 7 as Pi, enabling modifier-key recognition and key-repeat and key-release events for function keys. Regular text retains UTF-8 input so input methods in terminals such as iTerm2 can submit text correctly; flag 8, which converts all text into key events, is not enabled. Key-release events for ordinary character keys (such as Space) are not guaranteed, so plugins that depend on key holds should use function keys for which the terminal supports release events. The protocol is enabled after switching to the active screen and restored before exit or suspension; full-screen mouse scrolling is also re-enabled on resume.
@@ -315,8 +323,7 @@ Sessions are saved to `.icers/sessions/` in the current working directory by def
 
 Interactive session operations:
 
-- `/new`: Wait for the previous operation to finish, then create and activate a new persistent session; the previous session file and history are preserved.
-- `/clear`: Clear only the current chat display; the session ID, persisted history, and model context are not reset. Use `/new` to start a new conversation.
+- `/new` (alias `/clear`): Wait for the previous operation to finish, then create and activate a new persistent session; the previous session file and history are preserved.
 - `/import <path.jsonl>`: Validate the native v4 session header and entire log, then install and switch to the session ID in the header. Existing files are never overwritten and the source file is not modified. Duplicate IDs, corrupt logs, and v3 files produce explicit errors. The target filesystem must support hard links so an incomplete copy cannot appear as an available session.
 - Markdown/HTML exports and `/share` show only the current `main` branch (including compaction summaries). The raw JSONL entry archive still includes all branches, but omits the session header and recovery records, so it cannot be imported as a restorable session file. The SDK’s `ice_cli::export::export_native_branch_jsonl` can export the current branch as a reopenable native v4 session: it uses a new session ID, preserves compacted context, the name, and branch-local labels, and refuses to overwrite any existing target. It does not convert coding v3 format; exports and shares also do not automatically remove secrets or other sensitive text. `/export native` writes this reopenable branch export to `<name>.native.jsonl` in the working directory. `/export md|html|jsonl|native` never overwrites an existing file; choose another name or remove the old file first. `/share` does not send anything until you run `/share confirm`: it first states that the active `main` branch transcript will go to an external service and asks you to review it for secrets.
 - `-r` and `/session` list healthy sessions and also show how many files were skipped for an unreadable or malformed header, with their paths.

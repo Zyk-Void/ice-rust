@@ -387,7 +387,7 @@ mod tests {
         let image = Image::new();
         image.set_inline_visible(false);
         assert_eq!(image.render(80), vec!["[Image]"]);
-        assert_eq!(image.render(3), vec!["[Im"]);
+        assert_eq!(image.render(3), vec!["[Im\x1b[0m"]);
         assert_eq!(image.render(0), vec![""]);
         image.set_inline_visible(true);
         let wide = image.render(80);

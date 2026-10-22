@@ -165,7 +165,13 @@ icers dev-local [options]
 icers package link|list|unlink
 ```
 
-The startup `Context` summary lists the effective `SYSTEM.md`, `APPEND_SYSTEM.md`, `AGENTS.md`, and `CLAUDE.md` resources. `/context` shows the full list and `/reload` refreshes it. `/changelog` displays the release notes embedded in the current binary; `/changelog all` displays the complete history.
+The startup `Context` summary lists the effective `SYSTEM.md`, `APPEND_SYSTEM.md`, `AGENTS.md`, and `CLAUDE.md` resources; `/reload` refreshes these resources. `/changelog` displays the release notes embedded in the current binary; `/changelog all` displays the complete history.
+
+`/context` shows the current model's context capacity, a 20-by-10 category grid (legend beside it on wide terminals, below it on narrow terminals), and the five largest estimated entries. Labels identify roles/tools rather than revealing message contents. Project instructions are attributed from the already loaded prompt, not reread from disk; only the available-skills listing and active tool schemas are counted. Conversation estimates follow the active branch and standard compaction projection, excluding shell records marked out of context and custom roles dropped by model conversion.
+
+The total uses the latest valid provider **input plus cache** usage, with estimated response output and subsequent messages; without valid usage, prompt/tools/messages are estimated. `/usage` still shows cumulative billing totals. Category sizes are separate heuristics (~4 bytes per token) and need not sum to provider usage; the grid scales their shares to the used total. This public-API projection cannot include private per-request transforms, custom entry projectors or prompt overrides, and provider usage may reflect an earlier prompt/tool snapshot. It is not an exact wire-payload token count and does not mutate the session.
+
+`/tree` can navigate without a summary, summarize the abandoned branch, or use custom summary instructions. Escape from the custom editor returns to the choices; Escape again restores the same tree view and selection. Cancellation preserves the existing draft and queued prompts. `branchSummary.skipPrompt: true` skips the chooser and navigates without summarizing; `branchSummary.reserveTokens` controls the summary budget (default 16384). See [Branch summaries](branch-summaries.md) for storage-failure recovery and API details.
 
 ### Headless server and remote client
 

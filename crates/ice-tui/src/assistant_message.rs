@@ -366,6 +366,12 @@ impl AssistantMessageComponent {
         *self.has_tool_calls.lock().unwrap()
     }
 
+    /// Whether this message currently contributes content to the transcript.
+    /// Tool-only snapshots have no content, while error and thinking panels do.
+    pub fn has_visible_content(&self) -> bool {
+        self.content_container.child_count() > 0
+    }
+
     /// The currently installed markdown transformer (B5e), if any. The host
     /// reads this to carry an existing transform into a fresh component (e.g.
     /// after a `/reload`) so the new component renders with the same plugin

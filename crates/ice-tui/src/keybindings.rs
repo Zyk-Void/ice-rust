@@ -75,14 +75,16 @@ impl KeyCombo {
             parts.push("Alt".into());
         }
         // `BackTab` already carries the shift; don't render it twice.
-        if self.modifiers.contains(KeyModifiers::SHIFT) && self.code != KeyCode::BackTab {
+        if self.modifiers.contains(KeyModifiers::SHIFT) || self.code == KeyCode::BackTab {
             parts.push("Shift".into());
         }
         if self.modifiers.contains(KeyModifiers::SUPER) {
             parts.push("Super".into());
         }
         let key = match self.code {
+            KeyCode::Char(' ') => "Space".into(),
             KeyCode::Char(c) => c.to_uppercase().to_string(),
+            KeyCode::F(number) => format!("F{number}"),
             KeyCode::Enter => "Enter".into(),
             KeyCode::Esc => "Esc".into(),
             KeyCode::Tab | KeyCode::BackTab => "Tab".into(),
@@ -527,18 +529,105 @@ impl Keybindings {
             },
         );
 
+        // Session actions that ship unbound (ice `app.session.*`); users bind
+        // them in keybindings.json.
+        for (id, description) in [
+            ("app.session.new", "Start a new session"),
+            ("app.session.tree", "Open session tree"),
+            ("app.session.fork", "Fork from an earlier message"),
+            ("app.session.resume", "Resume a session"),
+        ] {
+            map.insert(
+                id,
+                KeybindingDefinition {
+                    default_keys: Vec::new(),
+                    description: Some(description),
+                },
+            );
+        }
+
+        // Saved-session picker actions.
+        map.insert(
+            "app.session.scope",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Tab, M::NONE)],
+                description: Some("Toggle current/all-project session scope"),
+            },
+        );
+        map.insert(
+            "app.session.rename",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(F(2), M::NONE)],
+                description: Some("Rename the selected saved session"),
+            },
+        );
+        map.insert(
+            "app.session.delete",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('d'), M::CONTROL)],
+                description: Some("Delete the selected saved session after confirmation"),
+            },
+        );
+
+        // Scoped-model working selection; Enter applies, Escape discards.
+        for (id, code, modifiers, description) in [
+            (
+                "app.models.toggle",
+                Char(' '),
+                M::NONE,
+                "Toggle model selection",
+            ),
+            ("app.models.save", Char('s'), M::CONTROL, "Save model scope"),
+            (
+                "app.models.enableAll",
+                Char('a'),
+                M::CONTROL,
+                "Enable matching models",
+            ),
+            (
+                "app.models.clearAll",
+                Char('x'),
+                M::CONTROL,
+                "Clear matching models",
+            ),
+            (
+                "app.models.toggleProvider",
+                Char('p'),
+                M::CONTROL,
+                "Toggle model provider",
+            ),
+            ("app.models.reorderUp", Up, M::ALT, "Move model earlier"),
+            ("app.models.reorderDown", Down, M::ALT, "Move model later"),
+        ] {
+            map.insert(
+                id,
+                KeybindingDefinition {
+                    default_keys: vec![KeyCombo::new(code, modifiers)],
+                    description: Some(description),
+                },
+            );
+        }
+
         // Generic selection actions
         map.insert(
             "tui.select.up",
             KeybindingDefinition {
-                default_keys: vec![KeyCombo::new(Up, M::NONE)],
+                default_keys: vec![
+                    KeyCombo::new(Up, M::NONE),
+                    KeyCombo::new(Char('k'), M::CONTROL),
+                    KeyCombo::new(Char('p'), M::CONTROL),
+                ],
                 description: Some("Move selection up"),
             },
         );
         map.insert(
             "tui.select.down",
             KeybindingDefinition {
-                default_keys: vec![KeyCombo::new(Down, M::NONE)],
+                default_keys: vec![
+                    KeyCombo::new(Down, M::NONE),
+                    KeyCombo::new(Char('j'), M::CONTROL),
+                    KeyCombo::new(Char('n'), M::CONTROL),
+                ],
                 description: Some("Move selection down"),
             },
         );
@@ -571,6 +660,73 @@ impl Keybindings {
                     KeyCombo::new(Char('c'), M::CONTROL),
                 ],
                 description: Some("Cancel selection"),
+            },
+        );
+
+        map.insert(
+            "app.tree.foldOrUp",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Left, M::CONTROL), KeyCombo::new(Left, M::ALT)],
+                description: Some("Fold branch or move to parent segment"),
+            },
+        );
+        map.insert(
+            "app.tree.unfoldOrDown",
+            KeybindingDefinition {
+                default_keys: vec![
+                    KeyCombo::new(Right, M::CONTROL),
+                    KeyCombo::new(Right, M::ALT),
+                ],
+                description: Some("Unfold branch or move to child segment"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.default",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('d'), M::CONTROL)],
+                description: Some("Show default tree entries"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.noTools",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('t'), M::CONTROL)],
+                description: Some("Hide tool results in tree"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.userOnly",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('u'), M::CONTROL)],
+                description: Some("Show user messages in tree"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.labeledOnly",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('l'), M::CONTROL)],
+                description: Some("Show labeled tree entries"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.all",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('a'), M::CONTROL)],
+                description: Some("Show all tree entries"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.cycleForward",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Tab, M::NONE)],
+                description: Some("Cycle tree filter forward"),
+            },
+        );
+        map.insert(
+            "app.tree.filter.cycleBackward",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Tab, M::SHIFT)],
+                description: Some("Cycle tree filter backward"),
             },
         );
 
@@ -686,8 +842,23 @@ impl Keybindings {
     /// Check if a key event matches a keybinding.
     pub fn matches(&self, event: &crossterm::event::KeyEvent, binding_id: KeybindingId) -> bool {
         if let Some(combos) = self.keys_by_id.get(binding_id) {
-            let combo = KeyCombo::new(event.code, event.modifiers);
-            return combos.contains(&combo);
+            let normalize = |mut combo: KeyCombo| {
+                if combo.code == KeyCode::BackTab {
+                    combo.code = KeyCode::Tab;
+                    combo.modifiers |= KeyModifiers::SHIFT;
+                }
+                if combo
+                    .modifiers
+                    .intersects(KeyModifiers::SHIFT | KeyModifiers::CONTROL)
+                {
+                    if let KeyCode::Char(character) = combo.code {
+                        combo.code = KeyCode::Char(character.to_ascii_lowercase());
+                    }
+                }
+                combo
+            };
+            let event = normalize(KeyCombo::new(event.code, event.modifiers));
+            return combos.iter().any(|combo| normalize(*combo) == event);
         }
         false
     }
@@ -706,6 +877,33 @@ impl Keybindings {
     /// Get keys for a keybinding.
     pub fn get_keys(&self, binding_id: KeybindingId) -> Vec<KeyCombo> {
         self.keys_by_id.get(binding_id).cloned().unwrap_or_default()
+    }
+
+    /// Iterate registered action IDs and descriptions for configuration and help.
+    pub fn definitions(&self) -> impl Iterator<Item = (KeybindingId, &KeybindingDefinition)> {
+        self.definitions
+            .iter()
+            .map(|(id, definition)| (*id, definition))
+    }
+
+    /// Translate a configured selection action into the select-list key protocol.
+    pub fn selection_key(
+        &self,
+        event: &crossterm::event::KeyEvent,
+    ) -> Option<crossterm::event::KeyEvent> {
+        for (id, code) in [
+            (keys::SELECT_UP, KeyCode::Up),
+            (keys::SELECT_DOWN, KeyCode::Down),
+            (keys::SELECT_PAGE_UP, KeyCode::PageUp),
+            (keys::SELECT_PAGE_DOWN, KeyCode::PageDown),
+            (keys::SELECT_CONFIRM, KeyCode::Enter),
+            (keys::SELECT_CANCEL, KeyCode::Esc),
+        ] {
+            if self.matches(event, id) {
+                return Some(crossterm::event::KeyEvent::new(code, KeyModifiers::NONE));
+            }
+        }
+        None
     }
 
     /// Get definition for a keybinding.
@@ -797,6 +995,10 @@ pub mod keys {
     pub const CLEAR: KeybindingId = "app.clear";
     pub const EXIT: KeybindingId = "app.exit";
     pub const MODEL_SELECT: KeybindingId = "app.model.select";
+    pub const SESSION_NEW: KeybindingId = "app.session.new";
+    pub const SESSION_TREE: KeybindingId = "app.session.tree";
+    pub const SESSION_FORK: KeybindingId = "app.session.fork";
+    pub const SESSION_RESUME: KeybindingId = "app.session.resume";
     pub const MODEL_CYCLE_FORWARD: KeybindingId = "app.model.cycleForward";
     pub const MODEL_CYCLE_BACKWARD: KeybindingId = "app.model.cycleBackward";
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";

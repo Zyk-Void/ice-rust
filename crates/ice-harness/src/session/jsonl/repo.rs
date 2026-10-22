@@ -264,9 +264,30 @@ impl JsonlSessionRepo {
         &self,
         options: &JsonlSessionCreateOptions,
     ) -> SessionResult<JsonlSessionStorage> {
+        self.create_at_directory(options, None).await
+    }
+
+    /// Create directly in an existing session directory, without adding another
+    /// cwd-encoded subdirectory. Used when starting beside an active file whose
+    /// location may come from a custom directory or a resumed external file.
+    pub async fn create_in_directory(
+        &self,
+        directory: &str,
+        options: &JsonlSessionCreateOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.create_at_directory(options, Some(directory)).await
+    }
+
+    async fn create_at_directory(
+        &self,
+        options: &JsonlSessionCreateOptions,
+        directory: Option<&str>,
+    ) -> SessionResult<JsonlSessionStorage> {
         let destination = self.resolve_create_destination(options).await?;
         self.claim_create_destination(&destination, async {
-            let (header, path) = self.prepare_create(&destination, options).await?;
+            let (header, path) = self
+                .prepare_create(&destination, options, directory)
+                .await?;
             JsonlSessionStorage::create(
                 self.fs.clone(),
                 &path,
@@ -329,6 +350,29 @@ impl JsonlSessionRepo {
         options: &JsonlSessionCreateOptions,
         fork: &ForkOptions,
     ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_at_directory(source, options, fork, None).await
+    }
+
+    /// Fork directly into the supplied session directory. The directory is
+    /// already resolved by the caller, as when continuing beside a resumed file.
+    pub async fn fork_in_directory(
+        &self,
+        source: &JsonlSessionMetadata,
+        directory: &str,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_at_directory(source, options, fork, Some(directory))
+            .await
+    }
+
+    async fn fork_at_directory(
+        &self,
+        source: &JsonlSessionMetadata,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+        directory: Option<&str>,
+    ) -> SessionResult<JsonlSessionStorage> {
         let source_storage = self.open_by_jsonl_metadata(source).await?;
         // TS: parentSessionId ?? source.id.
         let mut create_options = options.clone();
@@ -337,7 +381,9 @@ impl JsonlSessionRepo {
         }
         let destination = self.resolve_create_destination(&create_options).await?;
         self.claim_create_destination(&destination, async {
-            let (header, path) = self.prepare_create(&destination, &create_options).await?;
+            let (header, path) = self
+                .prepare_create(&destination, &create_options, directory)
+                .await?;
             source_storage
                 .fork(&path, header, fork, self.clock.clone(), self.ids.clone())
                 .await
@@ -352,6 +398,28 @@ impl JsonlSessionRepo {
         source: &dyn crate::session::types::SessionStorage,
         options: &JsonlSessionCreateOptions,
         fork: &ForkOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_from_storage_at(source, options, fork, None).await
+    }
+
+    /// [`Self::fork_from_storage`] into an already-resolved session directory.
+    pub async fn fork_from_storage_in_directory(
+        &self,
+        source: &dyn crate::session::types::SessionStorage,
+        directory: &str,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_from_storage_at(source, options, fork, Some(directory))
+            .await
+    }
+
+    async fn fork_from_storage_at(
+        &self,
+        source: &dyn crate::session::types::SessionStorage,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+        directory: Option<&str>,
     ) -> SessionResult<JsonlSessionStorage> {
         use crate::session::types::{EntryOrder, EntryQuery, SessionMutation};
         let entries = source
@@ -397,7 +465,9 @@ impl JsonlSessionRepo {
         }
         let destination = self.resolve_create_destination(&options).await?;
         self.claim_create_destination(&destination, async {
-            let (header, path) = self.prepare_create(&destination, &options).await?;
+            let (header, path) = self
+                .prepare_create(&destination, &options, directory)
+                .await?;
             JsonlSessionStorage::publish_fork(
                 self.fs.clone(),
                 &path,
@@ -475,16 +545,25 @@ impl JsonlSessionRepo {
         &self,
         destination: &CreateDestination,
         options: &JsonlSessionCreateOptions,
+        directory: Option<&str>,
     ) -> SessionResult<(JsonlV4Header, String)> {
         let CreateDestination { id, cwd } = destination.clone();
-        if self.session_id_exists(&id, &cwd).await? {
+        let session_directory = match directory {
+            Some(directory) => file_result(
+                self.fs.absolute_path(directory, None).await,
+                &format!("Failed to resolve sessions directory {directory}"),
+            )?
+            .to_string_lossy()
+            .into_owned(),
+            None => self.session_directory(&cwd).await?,
+        };
+        if self.session_id_exists(&id, &session_directory).await? {
             return Err(SessionError::already_exists(format!(
                 "Session already exists: {id}"
             )));
         }
 
         let created_at = self.clock.now_ms();
-        let session_directory = self.session_directory(&cwd).await?;
         let path = file_result(
             self.fs
                 .join_path(
@@ -515,10 +594,9 @@ impl JsonlSessionRepo {
     }
 
     /// Does a session file with the `_<id>.jsonl` suffix already exist in the
-    /// cwd's directory? Mirrors `sessionIdExists`.
-    async fn session_id_exists(&self, id: &str, cwd: &str) -> SessionResult<bool> {
+    /// selected directory? Mirrors `sessionIdExists`.
+    async fn session_id_exists(&self, id: &str, directory: &str) -> SessionResult<bool> {
         let suffix = format!("_{id}.jsonl");
-        let directory = self.session_directory(cwd).await?;
         if !file_result(
             self.fs.exists(&directory, None).await,
             &format!("Failed to check sessions directory {directory}"),
@@ -1033,6 +1111,38 @@ mod tests {
             .await
             .unwrap();
         assert!(after.is_empty());
+    }
+
+    #[tokio::test]
+    async fn create_in_exact_directory_preserves_layout_and_duplicate_guard() {
+        let env = ice_tools::InMemoryExecutionEnv::with_cwd("/proj".into());
+        let fs: Arc<dyn FileSystem> = Arc::new(env);
+        let r = repo(fs.clone());
+        let opts = JsonlSessionCreateOptions {
+            id: Some("beside-active".into()),
+            parent_session_id: None,
+            cwd: "/proj".into(),
+            metadata: None,
+        };
+        let storage = r
+            .create_in_directory("/custom/sessions", &opts)
+            .await
+            .unwrap();
+        let path = &storage.jsonl_metadata().path;
+        assert_eq!(
+            std::path::Path::new(path).parent().unwrap(),
+            std::path::Path::new("/custom/sessions")
+        );
+        assert_eq!(storage.jsonl_metadata().cwd, "/proj");
+        let before = fs.read_text_file(path, None).await.unwrap();
+        let err = r
+            .create_in_directory("/custom/sessions", &opts)
+            .await
+            .err()
+            .unwrap();
+        assert_eq!(err.code, SessionErrorCode::AlreadyExists);
+        assert_eq!(fs.read_text_file(path, None).await.unwrap(), before);
+        assert!(!fs.exists("/custom/sessions/--proj--", None).await.unwrap());
     }
 
     #[tokio::test]

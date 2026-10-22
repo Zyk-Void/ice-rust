@@ -2,6 +2,113 @@
 
 use super::*;
 
+/// A session barrier is acknowledged only after prior ordered broadcasts,
+/// including the harness's RunSettled completion markers, have been handled.
+pub(super) enum AgentEventDrainRequest {
+    Flush(tokio::sync::oneshot::Sender<()>),
+}
+
+/// RunEnd is derived from HarnessRunOutcome, unlike AgentEnd's message-only
+/// payload. Observe the bus synchronously (including extension-started runs),
+/// then render on the same consumer that owns final message/tool delivery.
+pub(super) fn watch_run_summaries(
+    harness: &AgentHarness,
+    state: &Arc<TuiState>,
+) -> ice_harness::watcher::HarnessWatcher {
+    let state = Arc::downgrade(state);
+    let started = Mutex::new(None);
+    harness.watch(move |event| {
+        use ice_harness::events::HarnessEvent;
+        match event {
+            HarnessEvent::RunStart(event) if event.lane == "main" => {
+                *started.lock().unwrap() = Some((event.run_id.clone(), std::time::Instant::now()));
+            }
+            HarnessEvent::RunEnd(event) if event.lane == "main" => {
+                let at = started
+                    .lock()
+                    .unwrap()
+                    .take()
+                    .filter(|(id, _)| id == &event.run_id)
+                    .map(|(_, at)| at);
+                if let (Some(at), Some(state)) = (at, state.upgrade()) {
+                    state.event_drain.record_run_summary(
+                        event.run_id.clone(),
+                        event.outcome,
+                        at.elapsed(),
+                    );
+                }
+            }
+            _ => {}
+        }
+    })
+}
+
+/// A completed lane can still have display events buffered in its broadcast
+/// receiver. Session changes wait until the UI has consumed those events.
+#[derive(Default)]
+pub(super) struct AgentEventDrain {
+    pub(super) session_changing: std::sync::atomic::AtomicBool,
+    sender: Mutex<Option<mpsc::UnboundedSender<AgentEventDrainRequest>>>,
+    // A lost marker must not retain metadata forever. Dropping the oldest
+    // metadata can suppress a lagged summary, never invent success for a run.
+    summaries: Mutex<
+        std::collections::VecDeque<(
+            String,
+            ice_harness::events::RunEndOutcome,
+            std::time::Duration,
+        )>,
+    >,
+}
+
+impl AgentEventDrain {
+    const MAX_SUMMARIES: usize = 256;
+
+    fn record_run_summary(
+        &self,
+        run_id: String,
+        outcome: ice_harness::events::RunEndOutcome,
+        elapsed: std::time::Duration,
+    ) {
+        let mut summaries = self.summaries.lock().unwrap();
+        if summaries.len() == Self::MAX_SUMMARIES {
+            summaries.pop_front();
+        }
+        summaries.push_back((run_id, outcome, elapsed));
+    }
+
+    fn take_run_summary(
+        &self,
+        run_id: &str,
+    ) -> Option<(ice_harness::events::RunEndOutcome, std::time::Duration)> {
+        let mut summaries = self.summaries.lock().unwrap();
+        let index = summaries.iter().position(|(id, _, _)| id == run_id)?;
+        summaries
+            .remove(index)
+            .map(|(_, outcome, elapsed)| (outcome, elapsed))
+    }
+
+    pub(super) fn install(&self) -> mpsc::UnboundedReceiver<AgentEventDrainRequest> {
+        let (sender, receiver) = mpsc::unbounded_channel();
+        *self.sender.lock().unwrap() = Some(sender);
+        receiver
+    }
+
+    pub(super) async fn flush(&self) -> Result<(), &'static str> {
+        let sender = self.sender.lock().unwrap().clone();
+        let Some(sender) = sender else {
+            return Ok(());
+        };
+        let (acknowledge, completed) = tokio::sync::oneshot::channel();
+        sender
+            .send(AgentEventDrainRequest::Flush(acknowledge))
+            .map_err(|_| "response updates are unavailable")?;
+        tokio::time::timeout(std::time::Duration::from_secs(5), completed)
+            .await
+            .map_err(|_| "the previous response updates did not finish; try again")?
+            .map_err(|_| "response updates are unavailable")
+    }
+}
+
 // ===========================================================================
 // AgentEvent drain task — the streaming core
 // ===========================================================================
@@ -239,17 +346,80 @@ pub(super) async fn unqueue_message(
 /// (`restoreQueuedMessagesToEditor({abort: true})`), so a cancel never silently
 /// swallows messages the user staged while the run was in flight — they land in
 /// the editor to be re-edited or resent.
-pub(super) fn abort_run_restoring_queue(
+/// Ownership is captured under the dispatch status lock and passed explicitly.
+/// Never reclassify a completed navigation as an ordinary queued-message run.
+pub(super) fn abort_interrupted_run(
     lane: Arc<dyn AgentLane>,
     editor: Arc<Editor>,
     state: Arc<TuiState>,
     tui: Arc<TuiAltScreen>,
-) {
-    tokio::spawn(async move {
-        let _ = restore_queued_messages_to_editor(lane.clone(), editor, state, tui.clone()).await;
-        let _ = lane.abort().await;
+    navigation: bool,
+) -> impl std::future::Future<Output = ()> + Send {
+    async move {
+        if navigation {
+            // The source operation may finish before this task gets CPU time.
+            // Do not restore its queue or abort a subsequently admitted prompt.
+            if !state
+                .tree_navigation_active
+                .load(std::sync::atomic::Ordering::Acquire)
+                || *state.status.lock().unwrap() != RunStatus::Aborting
+            {
+                return;
+            }
+        } else {
+            let _ =
+                restore_queued_messages_to_editor(lane.clone(), editor, state.clone(), tui.clone())
+                    .await;
+        }
+        loop {
+            match lane.abort().await {
+                // Navigation can still be waiting to be admitted as a run, so
+                // there is nothing to abort yet. Keep trying until it is, or
+                // until it ends; a lost Esc would let it commit anyway.
+                Err(ice_harness::result::HarnessError::NoActiveRun { .. })
+                    if navigation
+                        && state
+                            .tree_navigation_active
+                            .load(std::sync::atomic::Ordering::Acquire)
+                        && *state.status.lock().unwrap() == RunStatus::Aborting =>
+                {
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                }
+                _ => break,
+            }
+        }
         tui.request_render(false);
-    });
+    }
+}
+
+/// The actual key-loop interrupt seam, also used by navigation cancellation
+/// regressions so effective key routing and queue ownership stay coupled.
+pub(super) fn dispatch_run_interrupt(
+    key: &KeyEvent,
+    bindings: &ice_tui::Keybindings,
+    lane: Arc<dyn AgentLane>,
+    editor: Arc<Editor>,
+    state: Arc<TuiState>,
+    tui: Arc<TuiAltScreen>,
+) -> bool {
+    if !keybinding_matches(bindings, key, ice_tui::keybindings::keys::INTERRUPT) {
+        return false;
+    }
+    // TreeNavigationActivity::drop uses this same lock to clear ownership and
+    // publish Idle. Claim Working, capture ownership, and publish Aborting as
+    // one transaction; completion cannot split those observations.
+    let mut status = state.status.lock().unwrap();
+    if *status != RunStatus::Working {
+        return false;
+    }
+    let navigation = state
+        .tree_navigation_active
+        .load(std::sync::atomic::Ordering::Acquire);
+    *status = RunStatus::Aborting;
+    drop(status);
+    state.apply_status(RunStatus::Aborting);
+    tokio::spawn(abort_interrupted_run(lane, editor, state, tui, navigation));
+    true
 }
 
 pub(super) async fn drain_agent_events(
@@ -257,28 +427,32 @@ pub(super) async fn drain_agent_events(
     tui: Arc<TuiAltScreen>,
     state: Arc<TuiState>,
     chat: Arc<Container>,
-    harness: AgentHarness,
+    lane: Arc<dyn AgentLane>,
+    mut requests: mpsc::UnboundedReceiver<AgentEventDrainRequest>,
 ) {
-    let lane = harness.lane("main");
     loop {
-        match rx.recv().await {
-            Ok(event) => {
-                let refresh = matches!(
-                    event,
-                    AgentEvent::MessageEnd { .. } | AgentEvent::AgentEnd { .. }
-                );
-                handle_agent_event(event, &tui, &state, &chat, &lane).await;
-                if refresh {
-                    record_context_usage(&state.footer, &harness).await;
-                    tui.request_render(false);
+        tokio::select! {
+            request = requests.recv() => {
+                let Some(request) = request else { break };
+                // The caller has settled the lane. Consume everything already
+                // emitted, including AgentEnd's deferred bash writes, before
+                // allowing the durable session backing to change.
+                loop {
+                    match rx.try_recv() {
+                        Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
+                        Err(broadcast::error::TryRecvError::Lagged(_)) => continue,
+                        Err(broadcast::error::TryRecvError::Empty
+                            | broadcast::error::TryRecvError::Closed) => break,
+                    }
                 }
+                let AgentEventDrainRequest::Flush(acknowledge) = request;
+                let _ = acknowledge.send(());
             }
-            Err(broadcast::error::RecvError::Lagged(_)) => {
-                // We dropped some intermediate deltas; the next MessageUpdate/
-                // MessageEnd carries a full partial snapshot so the UI re-syncs.
-                continue;
+            event = rx.recv() => match event {
+                Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
+                Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                Err(broadcast::error::RecvError::Closed) => break,
             }
-            Err(broadcast::error::RecvError::Closed) => break,
         }
     }
 }
@@ -293,6 +467,14 @@ pub(super) async fn handle_agent_event(
     lane: &Arc<dyn AgentLane>,
 ) {
     match event {
+        AgentEvent::RunSettled { run_id } => {
+            if let Some((outcome, elapsed)) = state.event_drain.take_run_summary(&run_id) {
+                if outcome == ice_harness::events::RunEndOutcome::Completed {
+                    add_run_summary(chat, elapsed);
+                    tui.request_render(false);
+                }
+            }
+        }
         AgentEvent::AgentStart => {
             state.set_status(RunStatus::Working);
             tui.request_render(false);
@@ -355,6 +537,7 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageStart { message } => match message {
             AgentMessage::Assistant(a) => {
+                state.new_message_count.begin_assistant_message();
                 // The shared transcript view renders this through the same
                 // component path as the remote client. It installs the live
                 // markdown transformer + hide-thinking preference itself.
@@ -367,6 +550,7 @@ pub(super) async fn handle_agent_event(
                 tui.request_render(false);
             }
             AgentMessage::Custom(custom) => {
+                state.new_message_count.custom_message();
                 let payload = serde_json::json!({
                     "customType": custom.role,
                     "content": custom.content,
@@ -398,15 +582,16 @@ pub(super) async fn handle_agent_event(
             // so no `message_start` is emitted for it — the submit handler
             // renders that bubble instead.
             AgentMessage::User(user) => {
+                state.new_message_count.other_message();
                 state.transcript_view().add_user(&user_message_text(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
                 refresh_pending_messages(state, lane).await;
                 tui.request_render(false);
             }
-            // ToolResult / other starts are echoed via the tool-execution
-            // components; ignore the dupes.
-            _ => {}
+            // Tool results break adjacent assistant continuations, but their
+            // starts are echoed via tool-execution components.
+            AgentMessage::ToolResult(_) => state.new_message_count.other_message(),
         },
 
         AgentEvent::MessageUpdate {
@@ -416,6 +601,9 @@ pub(super) async fn handle_agent_event(
             let _ = assistant_message_event; // the snapshot is authoritative
             let a: &ice_ai::types::AssistantMessage = &message;
             let text = assistant_text(a);
+            state
+                .new_message_count
+                .assistant_message(!text.trim().is_empty());
             // The shared view creates/updates tool + bash panels from the
             // snapshot's finalized tool calls and streams the block list, so a
             // thinking block renders live exactly as the remote client does.
@@ -434,6 +622,9 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageEnd { message } => {
             if let AgentMessage::Assistant(a) = &message {
+                state
+                    .new_message_count
+                    .assistant_message(!assistant_text(a).trim().is_empty());
                 let text = assistant_text(a);
                 state
                     .transcript_view()
@@ -623,4 +814,40 @@ pub(super) fn tool_result_requests_markdown(details: Option<&serde_json::Value>)
         .and_then(|details| details.get("markdown"))
         .and_then(|value| value.as_bool())
         .unwrap_or(false)
+}
+
+/// Verbs for the run-summary line, one picked per run (ice
+/// `RUN_SUMMARY_VERBS`).
+const RUN_SUMMARY_VERBS: [&str; 12] = [
+    "Worked", "Sautéed", "Simmered", "Brewed", "Baked", "Churned", "Cooked", "Crunched", "Whisked",
+    "Forged", "Pondered", "Tinkered",
+];
+
+/// A dim elapsed line, called only after an authoritative completed outcome.
+pub(super) fn add_run_summary(chat: &Arc<Container>, elapsed: std::time::Duration) {
+    let line = run_summary_line(elapsed);
+    chat.add_child(Arc::new(Spacer::new(1)));
+    chat.add_child(Arc::new(Text::new(
+        current_theme().colors.dim.fg(&line),
+        0,
+        0,
+    )));
+}
+
+pub(super) fn run_summary_line(elapsed: std::time::Duration) -> String {
+    let verb = RUN_SUMMARY_VERBS[(elapsed.subsec_nanos() as usize) % RUN_SUMMARY_VERBS.len()];
+    format!("✻ {verb} for {}", format_run_duration(elapsed))
+}
+
+/// `45s`, `3m 17s`, `1h 2m` (ice `formatShellRuntime`).
+fn format_run_duration(elapsed: std::time::Duration) -> String {
+    let seconds = elapsed.as_secs();
+    if seconds < 60 {
+        return format!("{seconds}s");
+    }
+    let minutes = seconds / 60;
+    if minutes < 60 {
+        return format!("{minutes}m {}s", seconds % 60);
+    }
+    format!("{}h {}m", minutes / 60, minutes % 60)
 }

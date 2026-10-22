@@ -418,6 +418,10 @@ impl SessionStorage for JsonlSessionStorage {
         self.metadata.to_base()
     }
 
+    fn persistence_path(&self) -> Option<String> {
+        Some(self.metadata.path.clone())
+    }
+
     async fn get_metadata(&self) -> SessionMetadata {
         self.metadata.to_base()
     }
@@ -703,6 +707,27 @@ mod tests {
             None,
             None,
         )
+    }
+
+    #[tokio::test]
+    async fn persistence_path_preserves_the_exact_jsonl_file_for_duplicate_ids() {
+        let fs: Arc<dyn FileSystem> =
+            Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/".into()));
+        let clock: Arc<dyn Clock> = Arc::new(FakeClock::new());
+        let ids: Arc<dyn IdGenerator> = Arc::new(CounterIdGenerator::new());
+        for path in ["/first.jsonl", "/second.jsonl"] {
+            let created =
+                JsonlSessionStorage::create(fs.clone(), path, header(), clock.clone(), ids.clone())
+                    .await
+                    .unwrap();
+            let storage: &dyn SessionStorage = &created;
+            assert_eq!(storage.persistence_path().as_deref(), Some(path));
+            assert_eq!(storage.metadata().id, "sess-1");
+            let loaded = JsonlSessionStorage::load(fs.clone(), path, clock.clone(), ids.clone())
+                .await
+                .unwrap();
+            assert_eq!(loaded.persistence_path().as_deref(), Some(path));
+        }
     }
 
     #[tokio::test]

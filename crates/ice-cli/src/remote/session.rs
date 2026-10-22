@@ -272,7 +272,9 @@ impl RemoteSession {
                     "not retrying: the failed response may have started a tool effect: {error}"
                 ));
             }
-            RemoteEvent::TurnStart | RemoteEvent::TurnEnd { .. } => {}
+            RemoteEvent::TurnStart
+            | RemoteEvent::TurnEnd { .. }
+            | RemoteEvent::RunSettled { .. } => {}
             RemoteEvent::MessageStart { message } => {
                 match message_role(message) {
                     "assistant" => {

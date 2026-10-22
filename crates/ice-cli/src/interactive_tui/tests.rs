@@ -596,6 +596,22 @@ fn footer_context_follows_fork_navigation_switch_and_compaction() {
             })
             .await
             .unwrap();
+            // Forking needs a saved JSONL session to copy from.
+            let cwd_str = dir.path().to_string_lossy().into_owned();
+            let saved = crate::session::create_jsonl_session_with_id(
+                &crate::session::default_session_dir(dir.path()),
+                &cwd_str,
+                None,
+            )
+            .await
+            .unwrap();
+            crate::session::set_active_session(
+                &harness,
+                saved,
+                Some(&ice_extensions::ToolCallContext::new(cwd_str)),
+            )
+            .await
+            .unwrap();
             let mut answer = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
             answer.stop_reason = ice_ai::StopReason::Stop;
             answer.content = vec![Content::text("retained answer")];
@@ -619,6 +635,7 @@ fn footer_context_follows_fork_navigation_switch_and_compaction() {
                 &state.chat_container,
                 &state,
                 &context,
+                &Default::default(),
             )
             .await;
             assert_ne!(harness.session().get_metadata().await.unwrap().id, before);
@@ -650,6 +667,7 @@ fn footer_context_follows_fork_navigation_switch_and_compaction() {
                 &state.chat_container,
                 &state,
                 &context,
+                &Default::default(),
             )
             .await;
             state.footer.set_context_tokens(Some(90_000));
@@ -768,6 +786,11 @@ async fn agent_end_does_not_mark_the_ui_idle_before_run_settlement() {
 
     assert!(matches!(*state.status.lock().unwrap(), RunStatus::Working));
 }
+#[path = "sessions/reset_tests.rs"]
+mod session_reset;
+
+#[path = "sessions/replay_tests.rs"]
+mod session_replay;
 
 #[test]
 fn changelog_command_shows_current_release_and_all_is_explicit() {
@@ -1201,8 +1224,10 @@ fn markdown_flag_only_comes_from_an_explicit_true() {
 
 /// Minimal `TuiState` for unit tests that only touch state flags. Mirrors
 /// the explicit literals other tests build, but keeps one copy in sync.
-fn test_tui_state() -> Arc<TuiState> {
+pub(super) fn test_tui_state() -> Arc<TuiState> {
     Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -1225,6 +1250,7 @@ fn test_tui_state() -> Arc<TuiState> {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -1248,7 +1274,7 @@ fn test_tui_state() -> Arc<TuiState> {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -1284,7 +1310,16 @@ async fn rejected_selections_keep_display_state_and_report_errors() {
         "missing",
         "http://unused",
     );
-    apply_model_selection(&lane, &state, &chat, missing, false).await;
+    spawn_set_model(
+        &state,
+        &lane,
+        missing,
+        &chat,
+        &session_drain::test_terminal(),
+        ModelSwitchMode::Session,
+    )
+    .await
+    .unwrap();
     assert_eq!(state.current_model_id(), before_model);
     assert_eq!(state.footer.render(120), before_footer);
     apply_thinking_selection(
@@ -1297,7 +1332,7 @@ async fn rejected_selections_keep_display_state_and_report_errors() {
     .await;
     assert_eq!(state.footer.render(120), before_footer);
     let text = strip_ansi(&chat.render(160).join("\n"));
-    assert!(text.contains("Could not change model"), "{text}");
+    assert!(text.contains("Could not switch to"), "{text}");
     assert!(text.contains("Could not change thinking level"), "{text}");
     assert!(!text.contains("Model set to"), "{text}");
     assert!(!text.contains("Thinking set to"), "{text}");
@@ -1346,7 +1381,16 @@ fn selection_defaults_are_explicit_and_save_failure_preserves_live_choice() {
             let original = std::fs::read(&path).unwrap();
             let mut temporary = initial.clone();
             temporary.id = "temporary".into();
-            apply_model_selection(&lane, &state, &chat, temporary.clone(), false).await;
+            spawn_set_model(
+                &state,
+                &lane,
+                temporary.clone(),
+                &chat,
+                &session_drain::test_terminal(),
+                ModelSwitchMode::Session,
+            )
+            .await
+            .unwrap();
             apply_thinking_selection(
                 &lane,
                 &state,
@@ -1357,7 +1401,16 @@ fn selection_defaults_are_explicit_and_save_failure_preserves_live_choice() {
             .await;
             assert_eq!(lane.get_model().await.unwrap().id, "temporary");
             assert_eq!(std::fs::read(&path).unwrap(), original);
-            apply_model_selection(&lane, &state, &chat, temporary, true).await;
+            spawn_set_model(
+                &state,
+                &lane,
+                temporary,
+                &chat,
+                &session_drain::test_terminal(),
+                ModelSwitchMode::PersistDefault,
+            )
+            .await
+            .unwrap();
             assert_eq!(
                 crate::settings::load_settings()
                     .unwrap()
@@ -1384,7 +1437,16 @@ fn selection_defaults_are_explicit_and_save_failure_preserves_live_choice() {
             std::fs::create_dir(&path).unwrap();
             let mut next = initial;
             next.id = "live-despite-save-failure".into();
-            apply_model_selection(&lane, &state, &chat, next, true).await;
+            spawn_set_model(
+                &state,
+                &lane,
+                next,
+                &chat,
+                &session_drain::test_terminal(),
+                ModelSwitchMode::PersistDefault,
+            )
+            .await
+            .unwrap();
             apply_thinking_selection(
                 &lane,
                 &state,
@@ -1954,7 +2016,7 @@ fn parse_user_bash_ignores_bare_bang_and_plain_text() {
 fn user_bash_run_slot_guards_and_cancels() {
     let state = test_tui_state();
     assert!(!state.user_bash_running());
-    let cancel = state.begin_user_bash();
+    let cancel = state.begin_user_bash().unwrap();
     assert!(state.user_bash_running());
     // Esc cancels without freeing the slot; the spawned task clears it when
     // the capture resolves (upstream's `isBashRunning`).
@@ -2373,8 +2435,9 @@ fn test_slash_command_dispatch() {
 
     resolves_to("/help", "/help");
     resolves_to("/?", "/help"); // alias → canonical
-    resolves_to("/clear", "/clear");
     resolves_to("/new", "/new"); // Creates a durable session; not a visual clear.
+    resolves_to("/new", "/new");
+    resolves_to("/clear", "/new"); // alias
     resolves_to("/q", "/exit"); // alias
     resolves_to("/quit", "/exit"); // alias
     resolves_to("/version", "/version");
@@ -2435,6 +2498,8 @@ fn test_registry_visible_entries_cover_dispatch() {
         "/images",
         "/thinking",
         "/usage",
+        "/context",
+        "/resume",
     ] {
         assert!(
             names.contains(&recognized.to_string()),
@@ -2442,12 +2507,73 @@ fn test_registry_visible_entries_cover_dispatch() {
         );
     }
     // Hidden commands stay off the list.
-    for hidden in ["/context", "/q", "/m", "/v", "/think", "/resume", "/?"] {
+    for hidden in ["/q", "/m", "/v", "/think", "/?"] {
         assert!(
             !names.contains(&hidden.to_string()),
             "{hidden} should be hidden from autocomplete"
         );
     }
+}
+
+#[test]
+fn reload_replaces_command_dispatch_and_completion_for_existing_readers() {
+    struct TestCommand(&'static str, &'static str);
+    impl SlashCommand for TestCommand {
+        fn name(&self) -> &str {
+            self.0
+        }
+        fn description(&self) -> &'static str {
+            self.1
+        }
+        fn execute(&self, _: &CommandContext, _: &str) {}
+    }
+
+    let mut initial = build_builtin_registry();
+    initial.register(Arc::new(TestCommand("/removed-test", "Old command")));
+    initial.register(Arc::new(TestCommand("/kept-test", "Old description")));
+    let registry = Arc::new(initial);
+    let submit_reader = registry.clone();
+    let in_flight = submit_reader.find("/removed-test").unwrap();
+
+    let mut replacement = build_builtin_registry();
+    replacement.register(Arc::new(TestCommand("/added-test", "New command")));
+    replacement.register(Arc::new(TestCommand("/kept-test", "New description")));
+    registry.replace(replacement);
+
+    assert!(submit_reader.find("/removed-test").is_none());
+    assert_eq!(
+        submit_reader.find("/added-test").unwrap().name(),
+        "/added-test"
+    );
+    assert_eq!(submit_reader.find("/q").unwrap().name(), "/exit");
+    assert_eq!(in_flight.name(), "/removed-test");
+    assert!(
+        registry.commands.try_lock().is_ok(),
+        "dispatch must not retain the registry lock"
+    );
+    let entries = submit_reader.visible_entries();
+    assert!(!entries.iter().any(|entry| entry.name == "/removed-test"));
+    assert_eq!(
+        entries
+            .iter()
+            .find(|entry| entry.name == "/kept-test")
+            .unwrap()
+            .description,
+        "New description"
+    );
+
+    let provider = build_autocomplete_provider(
+        &registry,
+        &ice_harness::types::AgentHarnessResources::default(),
+        std::path::Path::new("."),
+        None,
+    );
+    let suggestions = provider.get_suggestions("/added-test", 11).unwrap();
+    assert!(suggestions
+        .items
+        .iter()
+        .any(|item| item.text == "/added-test"));
+    assert!(provider.get_suggestions("/removed-test", 13).is_none());
 }
 
 #[test]
@@ -2460,6 +2586,8 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
     };
 
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -2482,6 +2610,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -2505,7 +2634,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3035,7 +3164,7 @@ fn remove_provider_deletes_from_models_json() {
 
 /// Isolate the config dir (and serialize against other env-touching tests)
 /// while `body` runs, then restore the previous value.
-fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
+pub(super) fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
     let _guard = crate::config::test_support::env_lock().lock().unwrap();
     let prev = std::env::var_os(crate::config::CONFIG_DIR_ENV);
     let tmp = tempfile::tempdir().unwrap();
@@ -3561,6 +3690,8 @@ fn test_autocomplete_slash_suggestions_render() {
     // The autocomplete container should render at least one suggestion
     // line when the editor holds a `/` prefix, and clear when it doesn't.
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3583,6 +3714,7 @@ fn test_autocomplete_slash_suggestions_render() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3606,7 +3738,7 @@ fn test_autocomplete_slash_suggestions_render() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3654,6 +3786,8 @@ fn test_select_list_swap_restores_editor() {
     // child; closing restores it. Verify the container child count + the
     // active_selector flag round-trip.
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3676,6 +3810,7 @@ fn test_select_list_swap_restores_editor() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3699,7 +3834,7 @@ fn test_select_list_swap_restores_editor() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3750,6 +3885,8 @@ fn test_message_history_browse_restores_draft() {
     // messages, browse older → newer → back past the newest restores the
     // draft the user was typing.
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3772,6 +3909,7 @@ fn test_message_history_browse_restores_draft() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3795,7 +3933,7 @@ fn test_message_history_browse_restores_draft() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3849,6 +3987,8 @@ fn test_message_history_browse_restores_draft() {
 fn test_accept_top_suggestion_replaces_prefix() {
     // `/he` + Tab → `/help ` (slash command provider inserts a space).
     let state = Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3871,6 +4011,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3894,7 +4035,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -3930,10 +4071,77 @@ fn test_accept_top_suggestion_replaces_prefix() {
     );
 }
 
+#[test]
+fn autocomplete_accepts_quoted_paths_without_changing_the_suffix() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("my folder")).unwrap();
+    std::fs::write(dir.path().join("my folder/test file.txt"), "").unwrap();
+    std::fs::write(dir.path().join("test file.txt"), "").unwrap();
+    let state = autocomplete_test_state(5);
+    state
+        .autocomplete
+        .set_provider(Arc::new(ice_tui::FilePathAutocompleteProvider::with_root(
+            dir.path().to_path_buf(),
+        )));
+    let editor = Arc::new(Editor::simple());
+    for (input, prefix, expected, caret_prefix) in [
+        (
+            "查看 @\"my folder/te\" suffix",
+            "查看 @\"my folder/te",
+            "查看 @\"my folder/test file.txt\" suffix",
+            "查看 @\"my folder/test file.txt\" ",
+        ),
+        (
+            "查看 @tes! suffix",
+            "查看 @tes",
+            "查看 @\"test file.txt\" ! suffix",
+            "查看 @\"test file.txt\" ",
+        ),
+    ] {
+        editor.set_text(input);
+        editor.set_cursor(0, prefix.len());
+        assert!(accept_top_suggestion(&state, &editor));
+        assert_eq!(editor.get_text(), expected);
+        assert_eq!(editor_cursor_offset(&editor, expected), caret_prefix.len());
+    }
+}
+
+#[test]
+fn autocomplete_keeps_the_caret_inside_a_quoted_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("my folder")).unwrap();
+    std::fs::write(dir.path().join("my folder/test.txt"), "").unwrap();
+    let state = autocomplete_test_state(5);
+    state
+        .autocomplete
+        .set_provider(Arc::new(ice_tui::FilePathAutocompleteProvider::with_root(
+            dir.path().to_path_buf(),
+        )));
+    let editor = Arc::new(Editor::simple());
+    editor.set_text("@my");
+    editor.set_cursor(0, 3);
+    assert!(accept_top_suggestion(&state, &editor));
+    assert_eq!(editor.get_text(), "@\"my folder/\"");
+    assert_eq!(
+        editor_cursor_offset(&editor, &editor.get_text()),
+        "@\"my folder/".len()
+    );
+    editor.set_text("@\"my folder/te\"");
+    editor.set_cursor(0, "@\"my folder/te".len());
+    assert!(accept_top_suggestion(&state, &editor));
+    assert_eq!(editor.get_text(), "@\"my folder/test.txt\" ");
+    assert_eq!(
+        editor_cursor_offset(&editor, &editor.get_text()),
+        editor.get_text().len()
+    );
+}
+
 /// Build a `TuiState` for autocomplete tests (autocomplete providers are
 /// installed by each test).
 fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
     Arc::new(TuiState {
+        tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -3956,6 +4164,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         loader: Arc::new(Loader::new()),
         editor: Arc::new(Editor::simple()),
         last_assistant_text: std::sync::Mutex::new(String::new()),
+        new_message_count: Arc::new(crate::transcript_navigation::NewMessageCount::default()),
         active_selector: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
@@ -3979,7 +4188,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         history_index: std::sync::Mutex::new(-1),
         history_draft: std::sync::Mutex::new(None),
         cache_tracker: std::sync::Mutex::new(ice_harness::cache_stats::CacheMissTracker::new()),
-        scoped_edit: std::sync::Mutex::new(None),
+        scoped_models: std::sync::Mutex::new(None),
         markdown_transformer: Arc::new(std::sync::Mutex::new(None)),
         extension_claimed_keys: Mutex::new(Default::default()),
         extension_session: Arc::new(std::sync::Mutex::new(
@@ -4435,3 +4644,1482 @@ fn ask_user_bridge_answers_and_cancels_by_request_id() {
         }))
         .is_err());
 }
+
+/// Completion was built once at startup, so a prompt template added before
+/// `/reload` expanded but was never offered. The builder the reload handler
+/// calls must include the templates it is given, after the built-ins.
+#[test]
+fn rebuilt_autocomplete_offers_templates_from_the_reloaded_resources() {
+    use ice_tui::AutocompleteProvider;
+    let registry = build_builtin_registry();
+    let before = build_autocomplete_provider(
+        &registry,
+        &ice_harness::types::AgentHarnessResources::default(),
+        std::path::Path::new("."),
+        None,
+    );
+    let names = |provider: &Arc<dyn AutocompleteProvider>| -> Vec<String> {
+        provider
+            .get_suggestions("/revi", 5)
+            .map(|s| s.items.into_iter().map(|i| i.text).collect())
+            .unwrap_or_default()
+    };
+    assert!(!names(&before).iter().any(|n| n == "/review-pr"));
+
+    let resources = ice_harness::types::AgentHarnessResources {
+        prompt_templates: Some(vec![ice_harness::types::PromptTemplate {
+            name: "review-pr".into(),
+            description: Some("Review a pull request".into()),
+            content: "Review it".into(),
+        }]),
+        ..Default::default()
+    };
+    let after = build_autocomplete_provider(&registry, &resources, std::path::Path::new("."), None);
+    assert!(
+        names(&after).iter().any(|n| n == "/review-pr"),
+        "{:?}",
+        names(&after)
+    );
+}
+
+/// Navigation and session replacement leave the status Idle while they rebuild
+/// the transcript; a prompt admitted in that window would have its echo erased.
+#[test]
+fn prompts_are_not_admitted_while_a_session_change_is_in_progress() {
+    let state = test_tui_state();
+    let transition = begin_session_change(&state.chat_container, &state, "test change").unwrap();
+    assert!(!state.try_start_working());
+    drop(transition);
+    assert!(state.try_start_working());
+}
+
+/// A template that shares a name with a built-in must not add a second row.
+#[test]
+fn a_template_named_like_a_builtin_is_not_suggested_twice() {
+    let registry = build_builtin_registry();
+    let resources = ice_harness::types::AgentHarnessResources {
+        prompt_templates: Some(vec![ice_harness::types::PromptTemplate {
+            name: "help".into(),
+            description: Some("shadow".into()),
+            content: "x".into(),
+        }]),
+        ..Default::default()
+    };
+    let provider =
+        build_autocomplete_provider(&registry, &resources, std::path::Path::new("."), None);
+    let items = provider
+        .get_suggestions("/hel", 4)
+        .map(|s| s.items)
+        .unwrap_or_default();
+    assert_eq!(
+        items.iter().filter(|i| i.text == "/help").count(),
+        1,
+        "{items:?}"
+    );
+}
+
+/// Over SSH the system clipboard is the remote machine's, so copies never
+/// reached the user. ice also sends OSC 52 then; oversized payloads are
+/// skipped because terminals drop or choke on them.
+#[test]
+fn osc52_copy_encodes_text_and_detects_remote_sessions() {
+    assert_eq!(
+        osc52_sequence("héllo").as_deref(),
+        Some("\x1b]52;c;aMOpbGxv\x07")
+    );
+    assert!(osc52_sequence(&"x".repeat(75_000)).is_some());
+    assert!(osc52_sequence(&"x".repeat(75_001)).is_none());
+    let env = |vars: &'static [(&'static str, &'static str)]| {
+        move |key: &str| {
+            vars.iter()
+                .find(|(k, _)| *k == key)
+                .map(|(_, v)| std::ffi::OsString::from(v))
+        }
+    };
+    assert!(is_remote_session(env(&[("SSH_CONNECTION", "1 2 3 4")])));
+    assert!(is_remote_session(env(&[("MOSH_CONNECTION", "1")])));
+    assert!(!is_remote_session(env(&[("SSH_CLIENT", "")])));
+    assert!(!is_remote_session(env(&[])));
+}
+
+/// Exercise the provider boundary as well as storage: resetting only the
+/// transcript or only the JSONL backing must not preserve the old lane context.
+#[test]
+fn new_session_sends_only_new_prompt_and_preserves_old_jsonl_bytes() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                use ice_ai::providers::faux::{
+                    faux_assistant_message, FauxProvider, FauxScript, FauxStep,
+                };
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let custom_sessions = tempfile::tempdir().unwrap();
+                let dir = custom_sessions.path().to_path_buf();
+                std::fs::create_dir_all(&dir).unwrap();
+                let contexts = Arc::new(Mutex::new(Vec::new()));
+                let script = FauxScript::new();
+                script.set_responses(
+                    ["old answer", "new answer"]
+                        .into_iter()
+                        .map(|answer| {
+                            let contexts = contexts.clone();
+                            FauxStep::factory(move |context| {
+                                contexts.lock().unwrap().push(context.messages.clone());
+                                faux_assistant_message(answer, ice_ai::types::StopReason::Stop)
+                            })
+                        })
+                        .collect(),
+                );
+                let provider = FauxProvider::new(script);
+                let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                    model: provider.default_model().clone(),
+                    models: vec![provider],
+                    session: crate::session::create_jsonl_session(&dir, &cwd_str)
+                        .await
+                        .unwrap(),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+                harness.prompt_text("old secret", vec![]).await.unwrap();
+                let old_id = harness.session().storage().metadata().id.clone();
+                let old_path = harness.session().storage().persistence_path().unwrap();
+                let old_bytes = std::fs::read(&old_path).unwrap();
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                let lane = harness.lane("main");
+                let tool_context = ice_extensions::ToolCallContext::new(cwd_str);
+                assert!(
+                    start_new_session(&harness, &lane, cwd.path(), &chat, &state, &tool_context)
+                        .await
+                );
+                assert_ne!(harness.session().storage().metadata().id, old_id);
+                let new_path = harness.session().storage().persistence_path().unwrap();
+                assert_eq!(
+                    std::path::Path::new(&new_path).parent(),
+                    std::path::Path::new(&old_path).parent(),
+                    "new sessions must be siblings of the exact active file"
+                );
+                assert_ne!(new_path, old_path);
+                assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                harness.prompt_text("new question", vec![]).await.unwrap();
+                assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                {
+                    let contexts = contexts.lock().unwrap();
+                    assert_eq!(
+                        contexts.len(),
+                        2,
+                        "both prompts must reach the faux provider"
+                    );
+                    assert_eq!(
+                        contexts[1].len(),
+                        1,
+                        "new requests must have no old messages"
+                    );
+                    let encoded = serde_json::to_value(&contexts[1]).unwrap();
+                    assert_eq!(encoded[0]["role"], "user");
+                    assert_eq!(encoded[0]["content"], "new question");
+                }
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+/// `/new` used to clear only the screen: the agent kept the whole history and
+/// the footer kept the old totals. It must swap in an empty session, leave
+/// the old one intact, and reset the footer; switching back must restore the
+/// old session's totals and `/copy` text.
+#[test]
+fn new_session_replaces_backing_and_footer_totals_follow_the_session() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let dir = crate::session::default_session_dir(cwd.path());
+                std::fs::create_dir_all(&dir).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let tool_context = ice_extensions::ToolCallContext::new(cwd_str.clone());
+                let old = crate::session::create_jsonl_session(&dir, &cwd_str)
+                    .await
+                    .unwrap();
+                crate::session::set_active_session(&harness, old, Some(&tool_context))
+                    .await
+                    .unwrap();
+                let old_id = harness.session().storage().metadata().id.clone();
+                let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+                reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                    kind: ice_ai::types::TextContentType,
+                    text: "old reply".into(),
+                    text_signature: None,
+                })];
+                reply.usage.input = 100;
+                reply.usage.output = 20;
+                reply.usage.cost.total = 0.5;
+                harness
+                    .session()
+                    .append_message(AgentMessage::Assistant(Box::new(reply)))
+                    .await
+                    .unwrap();
+
+                let state = test_tui_state();
+                state.footer.add_usage(100, 20, 0, 0, 0.5);
+                *state.last_assistant_text.lock().unwrap() = "old reply".into();
+                let chat = Arc::new(Container::new());
+                let lane = harness.lane("main");
+
+                assert!(
+                    start_new_session(&harness, &lane, cwd.path(), &chat, &state, &tool_context)
+                        .await
+                );
+                let new_id = harness.session().storage().metadata().id.clone();
+                assert_ne!(new_id, old_id);
+                let new_entries = harness
+                    .session()
+                    .view("main")
+                    .find_entries(&EntryQuery::default())
+                    .await
+                    .unwrap();
+                assert!(
+                    !new_entries.iter().any(|e| matches!(e, Entry::Message(_))),
+                    "the new session must start without the old conversation"
+                );
+                assert_eq!(
+                    state.footer.usage(),
+                    ice_tui::footer::UsageTotals::default()
+                );
+                assert!(state.last_assistant_text.lock().unwrap().is_empty());
+
+                assert!(
+                    switch_to_session(
+                        &harness,
+                        &lane,
+                        &old_id,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &tool_context
+                    )
+                    .await
+                );
+                let usage = state.footer.usage();
+                assert_eq!((usage.input, usage.output), (100, 20));
+                assert!((usage.cost - 0.5).abs() < f64::EPSILON);
+                assert_eq!(*state.last_assistant_text.lock().unwrap(), "old reply");
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+/// A fake editor: a shell script that runs `body` with the draft path as its
+/// last argument (ice `test/fixtures/fake-external-editor.mjs`).
+#[cfg(unix)]
+fn fake_editor(dir: &std::path::Path, body: &str) -> String {
+    // The command is split on whitespace, so the script path must not contain
+    // any; fall back to /tmp when TMPDIR does.
+    let holder;
+    let dir = if dir.to_string_lossy().contains(char::is_whitespace) {
+        holder = tempfile::tempdir_in("/tmp").unwrap();
+        let kept = holder.path().to_path_buf();
+        std::mem::forget(holder);
+        kept
+    } else {
+        dir.to_path_buf()
+    };
+    let path = dir.join("fake-editor");
+    std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+    // Interpret the fixture rather than exec'ing a newly written inode.
+    // Parallel process-spawning tests can briefly inherit a writer and cause
+    // Linux ETXTBSY even after this thread has closed its file handle.
+    format!("/bin/sh {}", path.display())
+}
+
+/// `$EDITOR` with arguments (`code --wait`) used to be run as one program
+/// name and failed to launch. ice splits it on spaces.
+#[cfg(unix)]
+#[test]
+fn external_editor_command_arguments_are_split() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), r#"printf 'args:%s' "$1" > "$2""#);
+    let result = edit_in_external_editor(&format!("{editor} --wait"), "draft");
+    assert_eq!(result.unwrap().as_deref(), Some("args:--wait"));
+}
+
+#[cfg(unix)]
+#[test]
+fn external_editor_existing_path_with_spaces_launches() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = dir.path().join("editor with spaces");
+    // A system executable avoids parallel-test ETXTBSY races on a newly
+    // written script while exercising Command::status with the whole path.
+    std::os::unix::fs::symlink("/bin/true", &editor).unwrap();
+    assert_eq!(
+        edit_in_external_editor(editor.to_str().unwrap(), "unchanged draft").unwrap(),
+        Some("unchanged draft".to_string())
+    );
+}
+
+/// The saved file comes back with one trailing newline removed, and the
+/// editor sees the current draft.
+#[cfg(unix)]
+#[test]
+fn external_editor_returns_saved_text_without_trailing_newline() {
+    let dir = tempfile::tempdir().unwrap();
+    let editor = fake_editor(dir.path(), r#"printf '%s!\n' "$(cat "$1")" > "$1""#);
+    let result = edit_in_external_editor(&editor, "héllo\nwörld");
+    assert_eq!(result.unwrap().as_deref(), Some("héllo\nwörld!"));
+}
+
+/// A failed editor is cancellation: the host only replaces a Some draft.
+#[cfg(unix)]
+#[test]
+fn external_editor_nonzero_exit_cancels_and_cleans_up() {
+    let dir = tempfile::tempdir().unwrap();
+    let capture = dir.path().join("capture");
+    let editor = fake_editor(
+        dir.path(),
+        r#"printf '%s' "$2" > "$1"
+printf 'cancelled edit' > "$2"
+exit 3"#,
+    );
+    let result = edit_in_external_editor(&format!("{editor} {}", capture.display()), "draft");
+    assert_eq!(result.unwrap(), None);
+    let path = std::path::PathBuf::from(std::fs::read_to_string(capture).unwrap());
+    assert!(!path.exists());
+    assert!(!path.parent().unwrap().exists());
+}
+
+/// An empty successful save clears the draft; it is different from cancel.
+/// The private temporary directory is removed after success as well.
+#[cfg(unix)]
+#[test]
+fn external_editor_empty_save_is_applied_and_cleans_up() {
+    let dir = tempfile::tempdir().unwrap();
+    let capture = dir.path().join("capture");
+    let editor = fake_editor(
+        dir.path(),
+        r#"printf '%s' "$2" > "$1"
+: > "$2""#,
+    );
+    let result = edit_in_external_editor(&format!("{editor} {}", capture.display()), "draft");
+    assert_eq!(result.unwrap().as_deref(), Some(""));
+    let path = std::path::PathBuf::from(std::fs::read_to_string(capture).unwrap());
+    assert_eq!(path.file_name().unwrap(), "prompt.md");
+    assert!(!path.parent().unwrap().exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn external_editor_launch_failure_is_reported() {
+    let error = edit_in_external_editor("icers-missing-editor-fixture", "draft").unwrap_err();
+    assert!(error.contains("Could not launch external editor"));
+}
+
+/// The caret after an external edit used to be `(0, char count)`, a char
+/// count passed as a byte column on the first row.
+#[test]
+fn external_editor_caret_lands_at_the_end_in_bytes() {
+    assert_eq!(end_of_text_cursor("one\n你好"), (1, "你好".len()));
+    assert_eq!(end_of_text_cursor("abc"), (0, 3));
+    assert_eq!(end_of_text_cursor("a\n"), (1, 0));
+    assert_eq!(end_of_text_cursor(""), (0, 0));
+}
+
+/// A bare `/trust` used to mean "yes" and silently overrode a saved "no".
+/// It must only report the saved decision; explicit arguments change it.
+#[test]
+fn bare_trust_command_reports_and_never_changes_trust() {
+    with_isolated_config_dir(|| {
+        let project = tempfile::tempdir().unwrap();
+        let cwd = project.path();
+        crate::config::set_project_trust(cwd, Some(false)).unwrap();
+
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+
+        let note = run_trust_command(cwd, "yes", false).unwrap();
+        assert!(
+            note.contains("marked trusted") && note.contains("Restart"),
+            "{note}"
+        );
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(true)
+        );
+
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("trusted (saved)"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+
+        run_trust_command(cwd, "no", true).unwrap();
+        assert_eq!(
+            crate::config::project_trust_decision(cwd).unwrap(),
+            Some(false)
+        );
+        let note = run_trust_command(cwd, "", true).unwrap();
+        assert!(note.contains("untrusted (saved)"), "{note}");
+        assert!(note.contains("Current session: trusted"), "{note}");
+
+        run_trust_command(cwd, "clear", true).unwrap();
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+        let note = run_trust_command(cwd, "", false).unwrap();
+        assert!(note.contains("no saved decision"), "{note}");
+        assert!(note.contains("Current session: untrusted"), "{note}");
+
+        let note = run_trust_command(cwd, "maybe", false).unwrap();
+        assert!(note.starts_with("Usage:"), "{note}");
+        assert_eq!(crate::config::project_trust_decision(cwd).unwrap(), None);
+    })
+}
+
+/// The footer used to keep only the last `/` segment of a branch and to
+/// skip a worktree's `.git` file, showing an outer repository's branch.
+#[test]
+fn footer_git_branch_follows_worktrees_and_keeps_full_names() {
+    let root = tempfile::tempdir().unwrap();
+    // Isolate fixture discovery when TMPDIR itself is inside a checkout.
+    std::fs::create_dir(root.path().join(".git")).unwrap();
+    let write = |path: std::path::PathBuf, text: &str| {
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    };
+
+    // Normal checkout on a nested branch, queried from a subdirectory.
+    let repo = root.path().join("repo");
+    write(repo.join(".git/HEAD"), "ref: refs/heads/feat/tui-widths\n");
+    std::fs::create_dir_all(repo.join("src/deep")).unwrap();
+    assert_eq!(
+        git_branch_for(&repo.join("src/deep")).as_deref(),
+        Some("feat/tui-widths")
+    );
+    assert_eq!(find_git_head_path(&repo).unwrap(), repo.join(".git/HEAD"));
+
+    // Linked worktree nested inside that checkout, with a relative gitdir.
+    let worktree = repo.join(".worktrees/wt");
+    write(
+        repo.join(".git/worktrees/wt/HEAD"),
+        "ref: refs/heads/fix/footer\n",
+    );
+    write(worktree.join(".git"), "gitdir: ../../.git/worktrees/wt\n");
+    assert_eq!(git_branch_for(&worktree).as_deref(), Some("fix/footer"));
+    assert_eq!(
+        find_git_head_path(&worktree).unwrap(),
+        worktree.join("../../.git/worktrees/wt/HEAD")
+    );
+
+    // Absolute gitdir and a detached HEAD.
+    let detached = root.path().join("detached");
+    let gitdir = root.path().join("store/wt2");
+    write(
+        gitdir.join("HEAD"),
+        "0123456789abcdef0123456789abcdef01234567\n",
+    );
+    write(
+        detached.join(".git"),
+        &format!("gitdir: {}\n", gitdir.display()),
+    );
+    assert_eq!(git_branch_for(&detached).as_deref(), Some("0123456"));
+
+    // Not a repository.
+    let plain = root.path().join("plain");
+    std::fs::create_dir_all(&plain).unwrap();
+    assert_eq!(git_branch_for(&plain), None);
+
+    // A broken nested checkout must not silently report the outer branch.
+    let broken = repo.join("broken");
+    write(broken.join(".git"), "gitdir: ../missing\n");
+    assert_eq!(find_git_head_path(&broken), None);
+    assert_eq!(git_branch_for(&broken), None);
+    write(broken.join(".git"), "not a gitdir\n");
+    assert_eq!(git_branch_for(&broken), None);
+}
+
+/// Drag-copy uses cached transcript rows at the rendered width and slices
+/// cell columns without leaking styles or splitting graphemes.
+#[test]
+fn selection_copies_the_painted_cells_as_plain_text() {
+    let wide = format!("{}tail-past-80", "x".repeat(90));
+    let rows = vec![
+        "\x1b[1mheader row\x1b[0m".to_string(),
+        "first \x1b[31mred\x1b[0m line   ".to_string(),
+        wide.clone(),
+        "你好 world".to_string(),
+    ];
+    // Mid-line start and end across rows; styles dropped, padding trimmed.
+    assert_eq!(
+        extract_selected_text(&rows, (6, 1), (3, 3)).as_deref(),
+        Some(format!("red line\n{wide}\n你好").as_str())
+    );
+    // Reversed drag gives the same text; a single row keeps only its columns.
+    assert_eq!(
+        extract_selected_text(&rows, (3, 3), (6, 1)),
+        extract_selected_text(&rows, (6, 1), (3, 3))
+    );
+    assert_eq!(
+        extract_selected_text(&rows, (90, 2), (93, 2)).as_deref(),
+        Some("tail")
+    );
+    // A wide grapheme starting inside the range is copied whole.
+    assert_eq!(
+        extract_selected_text(&rows, (2, 3), (2, 3)).as_deref(),
+        Some("好")
+    );
+    // Rows past the frame are clamped; a start below it copies nothing.
+    assert_eq!(
+        extract_selected_text(&rows, (0, 3), (5, 40)).as_deref(),
+        Some("你好 world")
+    );
+    assert_eq!(extract_selected_text(&rows, (0, 9), (5, 9)), None);
+}
+
+#[test]
+fn selection_keeps_a_logical_anchor_across_viewport_movement() {
+    let mut rows = vec!["not selected".to_string(); 5];
+    rows.extend([
+        format!("{}FIRST", "x".repeat(90)),
+        "MIDDLE \x1b[31mred\x1b[0m".into(),
+        "last boundary".into(),
+    ]);
+    let mut snapshot = ice_tui::TranscriptSnapshot {
+        lines: Arc::new(rows),
+        viewport: ice_tui::LayoutRect::new(0, 2, 119, 4),
+        viewport_top: 4,
+        content_left: 0,
+        content_width: 119,
+    };
+    let (column, row) = snapshot.content_position(90, 3, false).unwrap();
+    let start = (column, row, snapshot.content_width);
+    snapshot.viewport_top = 6;
+    assert_eq!(
+        extract_transcript_selection(&snapshot, start, (3, 3)).as_deref(),
+        Some("FIRST\nMIDDLE red\nlast")
+    );
+    assert_eq!(
+        extract_transcript_selection(&snapshot, start, (3, 99)).as_deref(),
+        Some("FIRST\nMIDDLE red\nlast boundary")
+    );
+    snapshot.content_width = 79;
+    assert_eq!(extract_transcript_selection(&snapshot, start, (3, 3)), None);
+}
+
+#[test]
+fn selection_into_blank_viewport_rows_copies_the_complete_tail() {
+    let snapshot = ice_tui::TranscriptSnapshot {
+        lines: Arc::new(vec!["first row".into(), "last complete row".into()]),
+        viewport: ice_tui::LayoutRect::new(0, 2, 120, 6),
+        viewport_top: 0,
+        content_left: 0,
+        content_width: 120,
+    };
+    assert_eq!(snapshot.content_position(3, 6, false), None);
+    assert_eq!(
+        extract_transcript_selection(&snapshot, (6, 0, 120), (3, 6)).as_deref(),
+        Some("row\nlast complete row")
+    );
+}
+
+#[test]
+fn run_summary_line_formats_elapsed_run_duration() {
+    let at = |secs: u64| std::time::Duration::from_secs(secs);
+    let done = run_summary_line(at(197));
+    assert!(
+        done.starts_with("✻ ") && done.ends_with(" for 3m 17s"),
+        "{done}"
+    );
+    assert!(run_summary_line(at(45)).ends_with(" for 45s"));
+    assert!(run_summary_line(at(3720)).ends_with(" for 1h 2m"));
+}
+
+#[test]
+fn selection_preserves_combining_and_emoji_graphemes_at_the_edge() {
+    let rows = vec!["\x1b[1me\u{301}👩‍💻好\x1b[0m".to_string()];
+    assert_eq!(
+        extract_selected_text(&rows, (0, 0), (1, 0)).as_deref(),
+        Some("e\u{301}👩‍💻")
+    );
+    assert_eq!(
+        extract_selected_text(&rows, (1, 0), (1, 0)).as_deref(),
+        Some("👩‍💻")
+    );
+}
+
+/// First, earlier, and latest prompts all fork before the selected entry,
+/// preserve the original file, and restore the complete prompt for revision.
+#[test]
+fn fork_picker_preserves_exact_source_file_and_restores_each_prompt() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let source_project = tempfile::tempdir().unwrap();
+                let custom = tempfile::tempdir().unwrap();
+                let source = crate::session::create_jsonl_session_in_directory(
+                    custom.path(),
+                    &source_project.path().to_string_lossy(),
+                )
+                .await
+                .unwrap();
+                let old_id = source.storage().metadata().id.clone();
+                let old_path = source.storage().persistence_path().unwrap();
+                let prompts = [
+                    "first prompt\n猫🙂",
+                    "earlier prompt\nrevise this",
+                    "latest prompt",
+                ];
+                for (index, prompt) in prompts.iter().enumerate() {
+                    source
+                        .append_message(user_message_with_images(prompt, Vec::new()))
+                        .await
+                        .unwrap();
+                    let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+                    reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                        kind: ice_ai::types::TextContentType,
+                        text: format!("reply {index}"),
+                        text_signature: None,
+                    })];
+                    reply.usage.input = 100;
+                    reply.usage.output = 2;
+                    source
+                        .append_message(AgentMessage::Assistant(Box::new(reply)))
+                        .await
+                        .unwrap();
+                }
+                let old_bytes = std::fs::read(&old_path).unwrap();
+                // A different file in the default tree deliberately has the same
+                // session id: resolving by id would copy this decoy instead.
+                let decoy = crate::session::create_jsonl_session_with_id(
+                    &crate::session::default_session_dir(cwd.path()),
+                    &cwd_str,
+                    Some(old_id.clone()),
+                )
+                .await
+                .unwrap();
+                decoy
+                    .append_message(user_message_with_images("wrong file", Vec::new()))
+                    .await
+                    .unwrap();
+                let decoy_path = decoy.storage().persistence_path().unwrap();
+                let decoy_bytes = std::fs::read(&decoy_path).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let context = ice_extensions::ToolCallContext::new(cwd_str);
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                for (index, prompt) in prompts.iter().enumerate() {
+                    crate::session::set_active_session(&harness, source.clone(), Some(&context))
+                        .await
+                        .unwrap();
+                    let messages = user_messages_for_forking(&harness).await;
+                    assert_eq!(
+                        messages
+                            .iter()
+                            .map(|(_, text)| text.as_str())
+                            .collect::<Vec<_>>(),
+                        prompts
+                    );
+                    let selection = ForkSelection {
+                        session_id: old_id.clone(),
+                        session_path: Some(old_path.clone()),
+                        entry_id: messages[index].0.clone(),
+                    };
+                    state.footer.add_usage(999, 999, 0, 0, 1.0);
+                    state.tool_components.lock().unwrap().insert(
+                        "old".into(),
+                        Arc::new(ToolExecutionComponent::new("read", "old")),
+                    );
+                    state.editor.set_text("draft before fork");
+                    let restored = fork_before_message(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &context,
+                        &selection,
+                    )
+                    .await
+                    .expect("fork succeeds");
+                    assert_eq!(restored, *prompt);
+                    restore_fork_prompt(&state.editor, &restored);
+                    assert_eq!(state.editor.get_text(), *prompt);
+                    assert_eq!(
+                        state.editor.cursor_position(),
+                        (
+                            prompt.matches('\n').count(),
+                            prompt.rsplit('\n').next().unwrap().len()
+                        ),
+                    );
+                    let active = harness.session();
+                    let new_path = active.storage().persistence_path().unwrap();
+                    assert_ne!(active.storage().metadata().id, old_id);
+                    assert_eq!(
+                        active.storage().metadata().parent_session_id.as_deref(),
+                        Some(old_id.as_str())
+                    );
+                    assert_eq!(
+                        std::path::Path::new(&new_path).parent(),
+                        Some(custom.path())
+                    );
+                    let copied = user_messages_for_forking(&harness).await;
+                    assert_eq!(
+                        copied
+                            .iter()
+                            .map(|(_, text)| text.as_str())
+                            .collect::<Vec<_>>(),
+                        prompts[..index],
+                    );
+                    let usage = state.footer.usage();
+                    assert_eq!(
+                        (usage.input, usage.output),
+                        (100 * index as i64, 2 * index as i64)
+                    );
+                    assert!(state.tool_components.lock().unwrap().is_empty());
+                    assert_eq!(
+                        *state.last_assistant_text.lock().unwrap(),
+                        if index == 0 {
+                            String::new()
+                        } else {
+                            format!("reply {}", index - 1)
+                        },
+                    );
+                    assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                    assert_eq!(std::fs::read(&decoy_path).unwrap(), decoy_bytes);
+                    let lock = std::fs::OpenOptions::new()
+                        .write(true)
+                        .open(format!("{new_path}.lock"))
+                        .unwrap();
+                    assert!(
+                        fs2::FileExt::try_lock_exclusive(&lock).is_err(),
+                        "fork must own its session lock"
+                    );
+                }
+                // The extension's whole-branch fork shares the exact same path
+                // and lock helper, without changing the active session by itself.
+                crate::session::set_active_session(&harness, source, Some(&context))
+                    .await
+                    .unwrap();
+                let whole =
+                    crate::session::fork_session_storage(&harness, &cwd.path().to_string_lossy())
+                        .await
+                        .unwrap();
+                assert_eq!(
+                    harness.session().storage().persistence_path().as_deref(),
+                    Some(old_path.as_str())
+                );
+                assert_eq!(
+                    std::path::Path::new(&whole.storage().persistence_path().unwrap()).parent(),
+                    Some(custom.path())
+                );
+                assert_eq!(std::fs::read(&old_path).unwrap(), old_bytes);
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+#[test]
+fn fork_picker_rejects_stale_files_missing_messages_and_busy_state() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let cwd = tempfile::tempdir().unwrap();
+                let cwd_str = cwd.path().to_string_lossy().to_string();
+                let custom = tempfile::tempdir().unwrap();
+                let original =
+                    crate::session::create_jsonl_session_in_directory(custom.path(), &cwd_str)
+                        .await
+                        .unwrap();
+                original
+                    .append_message(user_message_with_images("original prompt", Vec::new()))
+                    .await
+                    .unwrap();
+                let original_path = original.storage().persistence_path().unwrap();
+                let bytes = std::fs::read(&original_path).unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let context = ice_extensions::ToolCallContext::new(cwd_str);
+                crate::session::set_active_session(&harness, original.clone(), Some(&context))
+                    .await
+                    .unwrap();
+                let selection = ForkSelection {
+                    session_id: original.storage().metadata().id.clone(),
+                    session_path: Some(original_path.clone()),
+                    entry_id: user_messages_for_forking(&harness).await[0].0.clone(),
+                };
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                state.editor.set_text("keep this draft");
+                for bad in [
+                    ForkSelection {
+                        session_id: "different".into(),
+                        ..selection.clone()
+                    },
+                    ForkSelection {
+                        entry_id: "missing".into(),
+                        ..selection.clone()
+                    },
+                ] {
+                    assert!(fork_before_message(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &context,
+                        &bad
+                    )
+                    .await
+                    .is_none());
+                }
+                for status in [RunStatus::Working, RunStatus::Aborting] {
+                    state.set_status(status);
+                    assert!(fork_before_message(
+                        &harness,
+                        cwd.path(),
+                        &chat,
+                        &state,
+                        &context,
+                        &selection
+                    )
+                    .await
+                    .is_none());
+                    assert!(
+                        !fork_session(
+                            &harness,
+                            cwd.path(),
+                            &chat,
+                            &state,
+                            &context,
+                            &Default::default()
+                        )
+                        .await
+                    );
+                }
+                state.set_status(RunStatus::Idle);
+                // A resumed copy has both the same session id and entry ids.
+                // File identity must invalidate the old selector nonetheless.
+                let copied = tempfile::tempdir().unwrap();
+                let copied_path = copied.path().join("copied.jsonl");
+                std::fs::write(&copied_path, &bytes).unwrap();
+                let storage = ice_harness::session::jsonl::JsonlSessionStorage::load(
+                    Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+                        cwd.path().to_path_buf(),
+                    )),
+                    &copied_path.to_string_lossy(),
+                    Arc::new(ice_harness::session::memory::SystemClock),
+                    Arc::new(ice_harness::session::session::DefaultIdGenerator::new()),
+                )
+                .await
+                .unwrap();
+                crate::session::set_active_session(
+                    &harness,
+                    ice_harness::session::Session::new(Arc::new(storage), None),
+                    Some(&context),
+                )
+                .await
+                .unwrap();
+                assert!(fork_message_text(&harness, &selection.entry_id)
+                    .await
+                    .is_some());
+                assert!(fork_before_message(
+                    &harness,
+                    cwd.path(),
+                    &chat,
+                    &state,
+                    &context,
+                    &selection
+                )
+                .await
+                .is_none());
+                assert_eq!(state.editor.get_text(), "keep this draft");
+                assert_eq!(std::fs::read(&original_path).unwrap(), bytes);
+                assert_eq!(std::fs::read(&copied_path).unwrap(), bytes);
+                for dir in [custom.path(), copied.path()] {
+                    let count = std::fs::read_dir(dir)
+                        .unwrap()
+                        .filter_map(Result::ok)
+                        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "jsonl"))
+                        .count();
+                    assert_eq!(count, 1, "rejected selections must not create a fork");
+                }
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+#[test]
+fn fork_picker_defaults_to_latest_and_cancel_preserves_draft() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                for prompt in ["first", "middle", "latest\nsecond line", ""] {
+                    harness
+                        .session()
+                        .append_message(user_message_with_images(prompt, Vec::new()))
+                        .await
+                        .unwrap();
+                }
+                let messages = user_messages_for_forking(&harness).await;
+                assert_eq!(messages.len(), 3, "empty prompts are not fork choices");
+                assert_eq!(messages.last().unwrap().1, "latest\nsecond line");
+                let latest = messages.last().unwrap().0.clone();
+                let state = test_tui_state();
+                let editor = state.editor.clone();
+                editor.set_text("unsent draft");
+                let editor_container = Arc::new(Container::new());
+                editor_container.add_child(editor.clone());
+                let chat = Arc::new(Container::new());
+                let tui = Arc::new(TuiAltScreen::new(
+                    Box::new(ProcessTerminal::new()),
+                    true,
+                    None,
+                ));
+                let (tx, mut rx) = mpsc::unbounded_channel();
+                for key in [KeyCode::Esc, KeyCode::Enter] {
+                    open_fork_selector(
+                        &harness,
+                        &state,
+                        &editor_container,
+                        &editor,
+                        &tui,
+                        &chat,
+                        &tx,
+                    )
+                    .await;
+                    let (view, kind) = state.active_selector.lock().unwrap().clone().unwrap();
+                    assert!(matches!(kind, SelectorKind::Fork));
+                    view.handle_key(KeyEvent::new(key, KeyModifiers::NONE));
+                    assert!(!state.selector_open());
+                    assert_eq!(editor.get_text(), "unsent draft");
+                    if key == KeyCode::Esc {
+                        assert!(rx.try_recv().is_err());
+                    } else {
+                        let TuiMessage::ForkBefore(selected) = rx.try_recv().unwrap() else {
+                            panic!("fork selection expected")
+                        };
+                        assert_eq!(selected.entry_id, latest);
+                        assert_eq!(
+                            selected.session_id,
+                            harness.session().storage().metadata().id
+                        );
+                    }
+                }
+                state.set_status(RunStatus::Working);
+                open_fork_selector(
+                    &harness,
+                    &state,
+                    &editor_container,
+                    &editor,
+                    &tui,
+                    &chat,
+                    &tx,
+                )
+                .await;
+                assert!(!state.selector_open());
+                assert!(rx.try_recv().is_err());
+                harness.close().await.unwrap();
+            })
+    })
+}
+
+fn model_switch_tui() -> Arc<TuiAltScreen> {
+    Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ))
+}
+
+/// A harness whose registry accepts the `faux` models used below.
+async fn model_switch_harness() -> AgentHarness {
+    AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        models: vec![ice_ai::providers::faux::FauxProvider::new(
+            ice_ai::providers::faux::FauxScript::new(),
+        )],
+        ..Default::default()
+    })
+    .await
+    .unwrap()
+}
+
+fn model_switch_model(id: &str) -> ice_ai::Model {
+    ice_ai::Model::new(id, id, ice_ai::Api::Faux, "faux", "http://unused")
+}
+
+/// A current-thread runtime keeps the spawned switch pending until we await it,
+/// making the former optimistic footer and success note fail deterministically.
+#[test]
+fn model_switch_waits_for_acceptance_before_footer_and_note() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = model_switch_harness().await;
+                let lane = harness.lane("main");
+                let state = test_tui_state();
+                let first = model_switch_model("first");
+                lane.set_model(first.clone()).await.unwrap();
+                state.set_current_model(&first);
+                let footer_before = state.footer.render(120);
+                let chat = Arc::new(Container::new());
+                let pending = spawn_set_model(
+                    &state,
+                    &lane,
+                    model_switch_model("second"),
+                    &chat,
+                    &model_switch_tui(),
+                    ModelSwitchMode::Session,
+                );
+                assert_eq!(state.current_model_id(), "first");
+                assert_eq!(state.footer.render(120), footer_before);
+                assert!(!strip_ansi(&chat.render(120).join("\n")).contains("Model set"));
+
+                pending.await.unwrap();
+                assert_eq!(state.current_model_id(), "second");
+                assert_eq!(lane.get_model().await.unwrap().id, "second");
+                assert!(strip_ansi(&state.footer.render(120).join("\n")).contains("second"));
+                let text = strip_ansi(&chat.render(120).join("\n"));
+                assert_eq!(text.matches("Model set to faux/second").count(), 1);
+                assert!(crate::settings::load_settings()
+                    .unwrap()
+                    .default_model
+                    .is_none());
+                harness.close().await.unwrap();
+            });
+    });
+}
+
+#[test]
+fn model_switch_rejection_keeps_footer_and_saved_default() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                set_default_model("faux", "first").unwrap();
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let lane = harness.lane("main");
+                harness.close().await.unwrap();
+                for mode in [
+                    ModelSwitchMode::Cycle,
+                    ModelSwitchMode::Session,
+                    ModelSwitchMode::PersistDefault,
+                ] {
+                    let state = test_tui_state();
+                    state.set_current_model(&model_switch_model("first"));
+                    let footer_before = state.footer.render(120);
+                    let chat = Arc::new(Container::new());
+                    spawn_set_model(
+                        &state,
+                        &lane,
+                        model_switch_model("second"),
+                        &chat,
+                        &model_switch_tui(),
+                        mode,
+                    )
+                    .await
+                    .unwrap();
+                    assert_eq!(state.current_model_id(), "first");
+                    assert_eq!(state.footer.render(120), footer_before);
+                    let text = strip_ansi(&chat.render(120).join("\n"));
+                    assert!(text.contains("Could not switch to faux/second"));
+                    assert!(!text.contains("Model set"));
+                    assert_eq!(
+                        crate::settings::load_settings()
+                            .unwrap()
+                            .default_model
+                            .as_deref(),
+                        Some("first"),
+                    );
+                }
+            });
+    });
+}
+
+#[test]
+fn model_switch_save_failure_reports_active_model_and_unsaved_default() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = model_switch_harness().await;
+                let lane = harness.lane("main");
+                let dir = crate::config::agent_dir().unwrap();
+                std::fs::create_dir(dir.join("settings.json")).unwrap();
+                let state = test_tui_state();
+                let chat = Arc::new(Container::new());
+                spawn_set_model(
+                    &state,
+                    &lane,
+                    model_switch_model("second"),
+                    &chat,
+                    &model_switch_tui(),
+                    ModelSwitchMode::PersistDefault,
+                )
+                .await
+                .unwrap();
+                assert_eq!(state.current_model_id(), "second");
+                assert_eq!(lane.get_model().await.unwrap().id, "second");
+                let text = strip_ansi(&chat.render(120).join("\n"));
+                assert!(text.contains("Model set to faux/second"));
+                assert!(text.contains("could not save its default"));
+                assert!(!text.contains("Model saved as the default."));
+                harness.close().await.unwrap();
+            });
+    });
+}
+
+/// Port of 7209-model-selector-filter-resets-selection.test.ts: opening selects
+/// the current model, but every query edit resets to the first filtered match.
+#[test]
+fn model_selector_opens_on_current_then_search_resets_selection() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = model_switch_harness().await;
+                let lane = harness.lane("main");
+                let state = test_tui_state();
+                let ec = Arc::new(Container::new());
+                let tui = model_switch_tui();
+                let catalog = vec![
+                    model_switch_model("alpha-1"),
+                    model_switch_model("alpha-2"),
+                    model_switch_model("alpha-3"),
+                    model_switch_model("beta"),
+                ];
+                let selector = open_model_selector(
+                    &state,
+                    &ec,
+                    &state.editor,
+                    &tui,
+                    &catalog,
+                    &lane,
+                    "alpha-3",
+                    &state.chat_container,
+                    None,
+                )
+                .unwrap();
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-3"
+                );
+                for ch in "alpha".chars() {
+                    selector.handle_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE));
+                }
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-1"
+                );
+                selector.list().set_selected_index(2);
+                selector.handle_key(KeyEvent::new(KeyCode::Backspace, KeyModifiers::NONE));
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-1"
+                );
+                selector.set_search_text("no-such-model");
+                assert!(selector.list().get_selected_item().is_none());
+                selector.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+                assert!(state.active_selector.lock().unwrap().is_some());
+                selector.handle_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+                assert!(state.active_selector.lock().unwrap().is_none());
+
+                let prefilled = open_model_selector(
+                    &state,
+                    &ec,
+                    &state.editor,
+                    &tui,
+                    &catalog,
+                    &lane,
+                    "alpha-3",
+                    &state.chat_container,
+                    Some("beta"),
+                )
+                .unwrap();
+                assert_eq!(
+                    prefilled.list().get_selected_item().unwrap().value,
+                    "faux/beta"
+                );
+                open_settings_model_selector(
+                    &state,
+                    &ec,
+                    &state.editor,
+                    &tui,
+                    &lane,
+                    &catalog,
+                    "alpha-3",
+                    &state.chat_container,
+                );
+                let selector = match &state.active_selector.lock().unwrap().as_ref().unwrap().0 {
+                    SelectorView::Searchable(selector) => selector.clone(),
+                    _ => panic!("expected the default-model search selector"),
+                };
+                assert_eq!(
+                    selector.list().get_selected_item().unwrap().value,
+                    "faux/alpha-3"
+                );
+                harness.close().await.unwrap();
+            });
+    });
+}
+
+/// Exercise the real on_select callback as well as the shared outcome handler.
+#[test]
+fn model_selector_rejected_cross_provider_switch_never_announces_or_saves() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                set_default_model("faux", "first").unwrap();
+                let harness = model_switch_harness().await;
+                let lane = harness.lane("main");
+                harness.close().await.unwrap();
+                let state = test_tui_state();
+                let first = model_switch_model("first");
+                state.set_current_model(&first);
+                let mut second = model_switch_model("second");
+                second.provider = "other".into();
+                let selector = open_model_selector(
+                    &state,
+                    &Arc::new(Container::new()),
+                    &state.editor,
+                    &model_switch_tui(),
+                    &[first, second],
+                    &lane,
+                    "first",
+                    &state.chat_container,
+                    None,
+                )
+                .unwrap();
+                selector.list().set_selected_index(1);
+                selector.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+                assert_eq!(state.current_model_id(), "first");
+                assert!(state.active_selector.lock().unwrap().is_none());
+                assert!(
+                    !strip_ansi(&state.chat_container.render(120).join("\n")).contains("Model set")
+                );
+                tokio::time::timeout(std::time::Duration::from_secs(1), async {
+                    loop {
+                        let text = strip_ansi(&state.chat_container.render(120).join("\n"));
+                        if text.contains("Could not switch to other/second") {
+                            break;
+                        }
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .expect("switch failure must be reported");
+                assert_eq!(state.current_model_id(), "first");
+                let settings = crate::settings::load_settings().unwrap();
+                assert_eq!(settings.default_model.as_deref(), Some("first"));
+                assert_eq!(settings.default_provider.as_deref(), Some("faux"));
+            });
+    });
+}
+
+/// `/tree` labels used to be only `message #N`, so picking a point meant
+/// guessing. They now say who said what.
+#[test]
+fn tree_labels_preview_each_entry() {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let harness = model_switch_harness().await;
+            let long = format!("\n  please refactor {}", "x".repeat(120));
+            harness
+                .session()
+                .append_message(user_message_with_images(&long, Vec::new()))
+                .await
+                .unwrap();
+            let mut reply = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+            reply.content = vec![Content::Text(ice_ai::types::TextContent {
+                kind: ice_ai::types::TextContentType,
+                text: "Done.\nDetails follow".into(),
+                text_signature: None,
+            })];
+            harness
+                .session()
+                .append_message(AgentMessage::Assistant(Box::new(reply)))
+                .await
+                .unwrap();
+            let entries = harness
+                .session()
+                .view("main")
+                .find_entries(&EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+            let labels: Vec<String> = entries.iter().map(tree_entry_summary).collect();
+            assert_eq!(labels.len(), 2, "{labels:?}");
+            assert!(
+                labels[0].starts_with("user: please refactor xxx"),
+                "{labels:?}"
+            );
+            assert!(labels[0].ends_with('…') && ice_tui::visible_width(&labels[0]) == 80);
+            assert_eq!(labels[1], "assistant: Done. Details follow");
+            harness.close().await.unwrap();
+        })
+}
+
+#[test]
+fn tree_preview_covers_metadata_and_untruncated_search_content() {
+    fn entry(kind: &str, extra: serde_json::Value) -> Entry {
+        let mut raw = serde_json::json!({
+            "type": kind, "id": "entry-1", "seq": 1, "parentId": null, "timestamp": 0
+        });
+        raw.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        serde_json::from_value(raw).unwrap()
+    }
+    for (kind, data, expected) in [
+        (
+            "model_change",
+            serde_json::json!({"provider":"p","modelId":"m"}),
+            "model → p/m",
+        ),
+        (
+            "thinking_level_change",
+            serde_json::json!({"thinkingLevel":"high"}),
+            "thinking: high",
+        ),
+        (
+            "active_tools_change",
+            serde_json::json!({"activeToolNames":["read","bash"]}),
+            "active tools: read, bash",
+        ),
+        (
+            "branch_summary",
+            serde_json::json!({"fromId":"old","summary":"earlier branch"}),
+            "branch summary: earlier branch",
+        ),
+        (
+            "compaction",
+            serde_json::json!({"summary":"retained facts","retainedTail":[],"tokensBefore":100}),
+            "compaction: retained facts",
+        ),
+        (
+            "custom",
+            serde_json::json!({"customType":"bashExecution","data":{"output":"build passed"}}),
+            "Command output: build passed",
+        ),
+    ] {
+        assert_eq!(tree_entry_summary(&entry(kind, data)), expected);
+    }
+
+    let content = format!("{}\nfind-this-late-word", "界".repeat(100));
+    let entry = Entry::Message(ice_harness::session::types::MessageEntry {
+        base: ice_harness::session::types::EntryBase {
+            entry_type: "message".into(),
+            id: "ユニコード識別子と長い文字列".into(),
+            seq: 2,
+            parent_id: None,
+            timestamp: 0,
+        },
+        message: user_message_with_images(&content, Vec::new()),
+        terminate: None,
+    });
+    let item = tree_entry_item(&entry, Some(entry.id()));
+    assert!(ice_tui::visible_width(&tree_entry_summary(&entry)) <= 80);
+    assert!(item.label.ends_with("(current)"));
+    assert!(item.description.as_ref().unwrap().starts_with("#2 "));
+    let list = Arc::new(SelectList::new(vec![item], 5));
+    let search = SearchableSelectList::new(None, None, list.clone());
+    search.set_search_text("find-this-late-word");
+    assert_eq!(list.get_selected_item().unwrap().value, entry.id());
+}
+
+#[test]
+fn tree_preview_handles_empty_and_aborted_assistant_without_losing_graphemes() {
+    let base = ice_harness::session::types::EntryBase {
+        entry_type: "message".into(),
+        id: "a".into(),
+        seq: 1,
+        parent_id: None,
+        timestamp: 0,
+    };
+    let mut assistant = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+    let entry = |assistant: AssistantMessage| {
+        Entry::Message(ice_harness::session::types::MessageEntry {
+            base: base.clone(),
+            message: AgentMessage::Assistant(Box::new(assistant)),
+            terminate: None,
+        })
+    };
+    assert_eq!(
+        tree_entry_summary(&entry(assistant.clone())),
+        "assistant: (no content)"
+    );
+    assistant.stop_reason = ice_ai::types::StopReason::Aborted;
+    assert_eq!(
+        tree_entry_summary(&entry(assistant.clone())),
+        "assistant: (aborted)"
+    );
+    assistant.stop_reason = ice_ai::types::StopReason::Error;
+    assistant.error_message = Some("provider failed".into());
+    assert_eq!(
+        tree_entry_summary(&entry(assistant.clone())),
+        "assistant: provider failed"
+    );
+    assistant.content = vec![Content::Text(ice_ai::types::TextContent {
+        kind: ice_ai::types::TextContentType,
+        text: format!("\u{1b}[31m{}\u{7}\u{1b}[0m", "👨‍👩‍👧‍👦".repeat(100)),
+        text_signature: None,
+    })];
+    let preview = tree_entry_summary(&entry(assistant));
+    assert!(ice_tui::visible_width(&preview) <= 80);
+    assert!(!preview.contains('\u{1b}') && !preview.contains('\u{7}'));
+    assert!(preview.ends_with("👨‍👩‍👧‍👦…"));
+}
+
+#[test]
+fn blank_editor_variables_fall_through_to_the_next_candidate() {
+    let env = |name: &str| match name {
+        "VISUAL" => Some(String::new()),
+        "EDITOR" => Some("hx".to_string()),
+        _ => None,
+    };
+    assert_eq!(run::external_editor_from(env), "hx");
+    assert_eq!(
+        run::external_editor_from(|_| None),
+        if cfg!(windows) { "notepad" } else { "nano" }
+    );
+}
+
+#[path = "events/session_drain_tests.rs"]
+mod session_drain;
+
+#[path = "run/clipboard_tests.rs"]
+mod clipboard;

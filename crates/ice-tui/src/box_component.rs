@@ -56,10 +56,12 @@ impl Box {
         self.invalidate_cache();
     }
 
-    /// Remove a child component.
+    /// Remove the first occurrence of a child component.
     pub fn remove_child(&self, component: &Arc<dyn Component>) {
         if let Ok(mut children) = self.children.lock() {
-            children.retain(|c| !Arc::ptr_eq(c, component));
+            if let Some(index) = children.iter().position(|c| Arc::ptr_eq(c, component)) {
+                children.remove(index);
+            }
         }
         self.invalidate_cache();
     }
@@ -135,7 +137,7 @@ impl Component for Box {
             return Vec::new();
         }
 
-        let content_width = width.saturating_sub(self.padding_x * 2);
+        let content_width = width.saturating_sub(self.padding_x * 2).max(1);
         let left_pad = " ".repeat(self.padding_x);
 
         // Render all children
@@ -246,5 +248,16 @@ mod tests {
 
         let lines = box_component.render(10);
         assert!(lines.is_empty());
+    }
+
+    #[test]
+    fn remove_child_drops_first_occurrence_and_narrow_width_keeps_content() {
+        let b = Box::new(2, 0);
+        let child: Arc<dyn Component> = Arc::new(crate::Text::new("ab", 0, 0));
+        b.add_child(child.clone());
+        b.add_child(child.clone());
+        b.remove_child(&child);
+        // Content width never drops to 0, even when margins use the row.
+        assert_eq!(b.render(3), vec!["  a", "  b"]);
     }
 }

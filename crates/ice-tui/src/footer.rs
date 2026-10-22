@@ -227,6 +227,11 @@ impl FooterComponent {
         }
     }
 
+    /// The running usage totals shown on line 2.
+    pub fn usage(&self) -> UsageTotals {
+        self.usage.lock().map(|u| *u).unwrap_or_default()
+    }
+
     /// Add one turn's usage to the running totals (line 2).
     pub fn add_usage(&self, input: i64, output: i64, cache_read: i64, cache_write: i64, cost: f64) {
         if let Ok(mut u) = self.usage.lock() {

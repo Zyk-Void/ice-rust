@@ -191,8 +191,7 @@ pub(super) fn add_help_message(container: &Arc<Container>) {
 
     let cmds: &[(&str, &str)] = &[
         ("/help, /?", "Show this help message"),
-        ("/new", "Start a new conversation in a fresh session"),
-        ("/clear", "Clear the visible transcript only"),
+        ("/new, /clear", "Start a new session"),
         ("/exit, /quit, /q", "Exit the application"),
         ("/version, /v", "Show version information"),
         ("/changelog", "Show recent release changes"),
@@ -204,7 +203,8 @@ pub(super) fn add_help_message(container: &Arc<Container>) {
         ("/thinking, /think", "Set reasoning depth (selector)"),
         ("/tools", "Toggle built-in tools on/off"),
         ("/images", "Toggle inline image rendering"),
-        ("/session", "List saved sessions"),
+        ("/session, /resume", "List saved sessions"),
+        ("/context", "Show context usage by category"),
         ("/theme", "Choose a theme (selector)"),
         ("/compact", "Compact the conversation"),
         ("/copy", "Copy last reply to clipboard"),
@@ -324,36 +324,11 @@ pub(super) fn add_hotkeys_message(container: &Arc<Container>) {
         0,
     )));
     container.add_child(Arc::new(Spacer::new(1)));
-    let keys: &[(&str, &str)] = &[
-        ("Enter", "Send message"),
-        ("Shift+Enter", "New line"),
-        ("Tab", "Accept autocomplete suggestion"),
-        ("Ctrl+A / Ctrl+E", "Line start / end"),
-        (
-            "Ctrl+K / Ctrl+U",
-            "Kill to end / start of line (Ctrl+Y yanks)",
-        ),
-        ("Ctrl+- / Ctrl+R", "Undo / redo"),
-        ("Ctrl+Y / Alt+Y", "Yank / yank-pop"),
-        ("Alt+Backspace", "Kill previous word"),
-        ("Ctrl+C", "Clear the editor (press twice quickly to exit)"),
-        ("Ctrl+X", "Copy the editor selection or the last reply"),
-        ("Esc", "Abort a running prompt"),
-        ("Ctrl+L", "Open model selector"),
-        ("Ctrl+P", "Cycle to the next model (live)"),
-        ("Ctrl+O", "Expand/collapse all tool output"),
-        ("Ctrl+T", "Show/hide reasoning blocks"),
-        ("PageUp/Down", "Scroll transcript by one page"),
-        ("Home / End", "Jump to transcript start / latest output"),
-    ];
-    let key_w = keys.iter().map(|(k, _)| k.len()).max().unwrap_or(0);
-    for (key, desc) in keys {
-        let row = format!(
-            "  {:<key_w$}  {}  {}",
-            c.accent.fg(key),
-            c.dim.fg("—"),
-            c.muted.fg(desc)
-        );
+    let bindings = ice_tui::get_keybindings().clone();
+    let rows = effective_hotkey_rows(&bindings);
+    let key_w = rows.iter().map(|row| row.1.len()).max().unwrap_or(0);
+    for (id, key, description) in rows {
+        let row = format!("  {key:<key_w$}  —  {description} [{id}]");
         container.add_child(Arc::new(Text::new(row, 1, 0)));
     }
     container.add_child(Arc::new(Spacer::new(1)));
@@ -495,6 +470,7 @@ pub(super) fn add_note_message(container: &Arc<Container>, text: &str) {
 /// Mirrors pi's context-panel intent (pi surfaces loaded resources on startup +
 /// via `/reload`); here it's a transcript note rather than an overlay since the
 /// resource set is refreshed after successful `/reload`s.
+#[cfg(test)]
 pub(super) fn show_context_panel(
     chat: &Arc<Container>,
     resources: &ice_harness::types::AgentHarnessResources,
@@ -558,6 +534,7 @@ pub(super) fn show_context_panel(
 }
 
 /// Append a multi-line neutral note (header line + body) to the chat container.
+#[cfg(test)]
 pub(super) fn container_note_block(container: &Arc<Container>, body: &str) {
     for line in body.lines() {
         container.add_child(Arc::new(Text::new(line.to_string(), 1, 0)));
