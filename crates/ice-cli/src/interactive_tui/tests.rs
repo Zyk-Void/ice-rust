@@ -5328,6 +5328,28 @@ fn selection_copies_the_painted_cells_as_plain_text() {
         Some("你好 world")
     );
     assert_eq!(extract_selected_text(&rows, (0, 9), (5, 9)), None);
+    assert_eq!(
+        extract_selected_text(&rows, (0, 1), (5, 1))
+            .unwrap()
+            .lines()
+            .count(),
+        1
+    );
+    assert_eq!(
+        extract_selected_text(&rows, (0, 1), (5, 3))
+            .unwrap()
+            .lines()
+            .count(),
+        3
+    );
+}
+
+#[test]
+fn copy_notice_uses_the_copied_line_count() {
+    let singular = ice_tui::strip_ansi(&CopyNotice(1).render(40)[0]);
+    let plural = ice_tui::strip_ansi(&CopyNotice(3).render(40)[0]);
+    assert!(singular.contains("1 line copied"));
+    assert!(plural.contains("3 lines copied"));
 }
 
 #[test]

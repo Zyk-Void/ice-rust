@@ -458,7 +458,7 @@ impl TuiAltScreen {
     /// Snapshot the transcript as last painted, for logical mouse selection.
     /// Never re-renders content or copies through a modal overlay.
     pub fn transcript_snapshot(&self) -> Option<TranscriptSnapshot> {
-        if self.uses_main_screen() || self.has_overlay() {
+        if self.uses_main_screen() || self.has_capturing_overlay() {
             return None;
         }
         let _render_guard = self.render_lock.lock().ok()?;
@@ -1173,6 +1173,13 @@ impl TuiAltScreen {
         }
     }
 
+    fn has_capturing_overlay(&self) -> bool {
+        self.overlays
+            .get_visible()
+            .iter()
+            .any(|(_, options)| !options.non_capturing)
+    }
+
     fn paint_overlays(&self, lines: &mut [String], width: usize, height: usize) {
         for overlay in self.overlays.render_visible(width, height) {
             let (x, y, overlay_width) = (overlay.x, overlay.y, overlay.width);
@@ -1684,6 +1691,15 @@ mod tests {
         tui.start_readerless();
         scroll.scroll_to(3);
         tui.request_render_reusing_scroll_content();
+        let passive = tui.show_overlay(
+            Arc::new(Text::new("copied", 0, 0)),
+            Some(crate::OverlayOptions {
+                anchor: crate::OverlayAnchor::TopRight,
+                non_capturing: true,
+                ..Default::default()
+            }),
+        );
+        assert!(tui.transcript_snapshot().is_some());
         let snapshot = tui.transcript_snapshot().unwrap();
         assert_eq!(
             (
@@ -1711,6 +1727,11 @@ mod tests {
         let moved = tui.transcript_snapshot().unwrap();
         assert_eq!(moved.viewport_top, 5);
         assert!(Arc::ptr_eq(&snapshot.lines, &moved.lines));
+        passive.hide();
+        assert!(tui.transcript_snapshot().is_some());
+        let modal = tui.show_overlay(Arc::new(Text::new("modal", 0, 0)), None);
+        assert!(tui.transcript_snapshot().is_none());
+        modal.hide();
         assert_eq!(moved.content_position(3, 3, false), Some((3, 6)));
     }
 

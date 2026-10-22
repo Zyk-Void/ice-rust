@@ -695,6 +695,48 @@ enum ProviderOAuthPurpose {
     Logout,
 }
 
+struct CopyNotice(usize);
+
+impl Component for CopyNotice {
+    fn render(&self, width: usize) -> Vec<String> {
+        let noun = if self.0 == 1 { "line" } else { "lines" };
+        let label = current_theme()
+            .colors
+            .success
+            .fg(&format!("{} {noun} copied", self.0));
+        vec![ice_tui::truncate_to_width(&label, width, "")]
+    }
+
+    fn invalidate(&self) {}
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+fn show_copy_notice(tui: &Arc<TuiAltScreen>, runtime: &tokio::runtime::Handle, line_count: usize) {
+    let notice = Arc::new(CopyNotice(line_count));
+    let handle = tui.show_overlay(
+        notice,
+        Some(ice_tui::OverlayOptions {
+            anchor: ice_tui::OverlayAnchor::TopRight,
+            margin: Some(ice_tui::OverlayMargin {
+                top: 1,
+                right: 2,
+                ..Default::default()
+            }),
+            non_capturing: true,
+            ..Default::default()
+        }),
+    );
+    let tui_notice = tui.clone();
+    runtime.spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        handle.hide();
+        tui_notice.request_render(false);
+    });
+}
+
 /// Message type for communication between the key/callback threads and the
 /// main async loop.
 enum TuiMessage {
@@ -1739,6 +1781,7 @@ pub async fn interactive_tui(
     let state_for_key = state.clone();
     let model_catalog_for_key = model_catalog_arc.clone();
     let ask_user_for_key = ask_user_bridge.clone();
+    let runtime_for_key = tokio::runtime::Handle::current();
     // Ctrl+L routes through the same registry as `/model` (one path, not two),
     // so the key loop needs the same `CommandContext` + registry the submit
     // handler uses. All fields are `Arc`/cheap, so this clone is free.
@@ -1917,8 +1960,15 @@ pub async fn interactive_tui(
                                         extract_transcript_selection(&snapshot, start, end)
                                     })
                                 {
-                                    if !selected_text.trim().is_empty() {
-                                        let _ = copy_to_clipboard(&selected_text);
+                                    if !selected_text.trim().is_empty()
+                                        && copy_to_clipboard(&selected_text)
+                                    {
+                                        let line_count = selected_text.split('\n').count();
+                                        show_copy_notice(
+                                            &tui_for_key,
+                                            &runtime_for_key,
+                                            line_count,
+                                        );
                                     }
                                 }
                             }
