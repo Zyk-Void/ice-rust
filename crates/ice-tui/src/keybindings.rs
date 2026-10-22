@@ -183,6 +183,15 @@ impl Keybindings {
             },
         );
         map.insert(
+            "app.model.toggleFavorite",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('f'), M::SHIFT)],
+                description: Some(
+                    "Toggle the highlighted model's favorite status in the model selector",
+                ),
+            },
+        );
+        map.insert(
             "app.model.cycleForward",
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(Char('p'), M::CONTROL)],
@@ -1032,6 +1041,7 @@ pub mod keys {
     pub const SESSION_TREE: KeybindingId = "app.session.tree";
     pub const SESSION_FORK: KeybindingId = "app.session.fork";
     pub const SESSION_RESUME: KeybindingId = "app.session.resume";
+    pub const MODEL_TOGGLE_FAVORITE: KeybindingId = "app.model.toggleFavorite";
     pub const MODEL_CYCLE_FORWARD: KeybindingId = "app.model.cycleForward";
     pub const MODEL_CYCLE_BACKWARD: KeybindingId = "app.model.cycleBackward";
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";

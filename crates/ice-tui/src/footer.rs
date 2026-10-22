@@ -178,6 +178,16 @@ impl FooterComponent {
         }
     }
 
+    /// The model label set by [`FooterComponent::set_model`].
+    pub fn model(&self) -> String {
+        self.model.lock().map(|m| m.clone()).unwrap_or_default()
+    }
+
+    /// The thinking level set by [`FooterComponent::set_thinking_level`].
+    pub fn thinking_level(&self) -> Option<String> {
+        self.thinking_level.lock().ok().and_then(|t| t.clone())
+    }
+
     /// Set the keybinding hints.
     pub fn set_hints(&self, hints: &str) {
         if let Ok(mut h) = self.hints.lock() {

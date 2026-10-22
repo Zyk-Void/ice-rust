@@ -396,6 +396,8 @@ pub struct Editor {
     /// color. Upstream's `editor.borderColor` (used for bash mode and thinking
     /// levels via `updateEditorBorderColor`).
     border_color: Mutex<Option<Color>>,
+    /// Gutter before the first line (upstream `prompt`, e.g. `"❯ "`).
+    prompt: Mutex<String>,
     /// Working indicator text shown inside the top border. `None` means idle.
     /// When `Some`, the top border line renders the spinner + elapsed + message
     /// instead of plain `─` characters (pi's working-inside-input-border style).
@@ -459,6 +461,7 @@ impl Editor {
             last_action: Mutex::new(None),
             jump_mode: Mutex::new(None),
             border_color: Mutex::new(None),
+            prompt: Mutex::new(String::new()),
             working: Mutex::new(None),
             pastes: Mutex::new(HashMap::new()),
             paste_counter: Mutex::new(0),
@@ -1363,6 +1366,15 @@ impl Editor {
         }
     }
 
+    /// Set the gutter drawn before the first line in the border color (e.g.
+    /// `"❯ "`); wrapped and later lines are indented to match. Empty removes
+    /// it. Mirrors upstream `Editor.setPrompt`.
+    pub fn set_prompt(&self, prompt: &str) {
+        if let Ok(mut guard) = self.prompt.lock() {
+            *guard = prompt.to_string();
+        }
+    }
+
     /// Set an explicit top/bottom border color. `None` restores the theme's
     /// default border color. Mirrors upstream's `editor.borderColor`.
     pub fn set_border_color(&self, color: Option<Color>) {
@@ -1683,11 +1695,34 @@ impl Component for Editor {
         let mut cursor_line: Option<usize> = None;
 
         let pad = " ".repeat(self.options.padding_x);
-        // `prompt` is no longer rendered (mirrors the TS editor, which draws a
-        // bordered box with padding-only lines and no `> ` prefix — see
-        // `editor.ts:539-578`). The `EditorStyle.prompt` field is retained for
-        // API compatibility but unread here.
-        let content_width = width.saturating_sub(self.options.padding_x).max(1);
+        // An explicit `border_color` (bash mode) wins over the theme default.
+        let border_color = self
+            .border_color
+            .lock()
+            .ok()
+            .and_then(|guard| *guard)
+            .unwrap_or(crate::theme::theme().colors.border);
+        // The prompt gutter (`set_prompt`) is dropped when it would leave fewer
+        // than 2 columns for text (upstream `editor.ts`). `EditorStyle.prompt`
+        // is unrelated and unread here.
+        let prompt = self.prompt.lock().map(|p| p.clone()).unwrap_or_default();
+        let prompt_width = crate::ansi::visible_width(&prompt);
+        let prompt_width = if prompt_width > 0
+            && prompt_width + 2 <= width.saturating_sub(self.options.padding_x * 2)
+        {
+            prompt_width
+        } else {
+            0
+        };
+        let prompt_gutter = if prompt_width > 0 {
+            border_color.fg(&prompt)
+        } else {
+            String::new()
+        };
+        let continuation_gutter = " ".repeat(prompt_width);
+        // Where text starts: left padding plus the prompt gutter.
+        let text_left = self.options.padding_x + prompt_width;
+        let content_width = width.saturating_sub(text_left).max(1);
         // Reserve the final cell for the cursor on every visual row so wrap
         // boundaries stay stable while navigating between logical lines.
         let visual_width = content_width.saturating_sub(1).max(1);
@@ -1730,11 +1765,8 @@ impl Component for Editor {
                 // Pad the line out to the full width (left padding + content +
                 // right padding) so the border box has a uniform interior width
                 // (mirrors editor.ts:522-578).
-                let right_pad = " ".repeat(
-                    width
-                        .saturating_sub(self.options.padding_x)
-                        .saturating_sub(visible_w),
-                );
+                let right_pad =
+                    " ".repeat(width.saturating_sub(text_left).saturating_sub(visible_w));
                 let right_pad_cursor = if state.focused && row_idx == state.cursor_row {
                     right_pad
                         .get(..right_pad.len().saturating_sub(1))
@@ -1744,7 +1776,12 @@ impl Component for Editor {
                     right_pad
                 };
 
-                let mut rendered = format!("{pad}{content}{right_pad_cursor}");
+                let gutter = if content_lines.is_empty() {
+                    &prompt_gutter
+                } else {
+                    &continuation_gutter
+                };
+                let mut rendered = format!("{pad}{gutter}{content}{right_pad_cursor}");
 
                 // Cursor marker if this focused row holds the cursor. `cursor_col`
                 // is a byte offset into `line`; the rendered prefix up to the caret
@@ -1763,7 +1800,7 @@ impl Component for Editor {
                     let cursor_col = crate::ansi::visible_width(
                         &line[chunk_start..state.cursor_col.min(chunk_end)],
                     );
-                    rendered = insert_cursor_marker(&rendered, self.options.padding_x + cursor_col);
+                    rendered = insert_cursor_marker(&rendered, text_left + cursor_col);
                 }
                 if row_idx == state.cursor_row
                     && state.cursor_col >= chunk_start
@@ -1781,21 +1818,14 @@ impl Component for Editor {
         // be defensive): emit one blank interior row so the box still renders.
         if content_lines.is_empty() {
             content_lines.push(format!(
-                "{pad}{}",
-                " ".repeat(width.saturating_sub(self.options.padding_x))
+                "{pad}{prompt_gutter}{}",
+                " ".repeat(width.saturating_sub(text_left))
             ));
         }
 
         // Full-width top + bottom border, colored via the theme border color
         // (mirrors editor.ts:494,530,587). The global `theme()` is read-only
         // after OnceLock init; `Color::fg` wraps the `─` run in the escape.
-        // An explicit `border_color` (bash mode) wins over the theme default.
-        let border_color = self
-            .border_color
-            .lock()
-            .ok()
-            .and_then(|guard| *guard)
-            .unwrap_or(crate::theme::theme().colors.border);
         // Check if we have a working state to display in the top border.
         //
         // The frame advances once per render, mirroring `Loader::render`: the
@@ -2592,6 +2622,47 @@ l12",
         editor.set_text("Test");
         editor.clear();
         assert_eq!(editor.get_text(), "");
+    }
+
+    #[test]
+    fn prompt_gutter_leads_the_first_line_and_indents_wrapped_rows() {
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_prompt("❯ ");
+        editor.set_focused(true);
+        editor.set_text("abcdefghijklmnop");
+        let lines = editor.render(12);
+        let rows: Vec<String> = lines[1..lines.len() - 1]
+            .iter()
+            .map(|line| crate::ansi::strip_ansi(&line.replace(CURSOR_MARKER, "")))
+            .collect();
+        // 12 columns - 1 padding - 2 prompt - 1 caret cell = 8 per row.
+        assert_eq!(rows[0].trim_end(), " ❯ abcdefgh");
+        assert_eq!(rows[1].trim_end(), "   ijklmnop");
+        for line in &lines {
+            assert!(crate::ansi::visible_width(&line.replace(CURSOR_MARKER, "")) <= 12);
+        }
+        // The caret column counts the gutter: at the start of the text it sits
+        // right after `❯ `, not on it.
+        editor.set_text("ab");
+        editor.handle_key(crossterm::event::KeyEvent::new(
+            KeyCode::Home,
+            KeyModifiers::NONE,
+        ));
+        let first = editor.render(12)[1].clone();
+        let before = &first[..first.find(CURSOR_MARKER).expect("cursor marker")];
+        assert_eq!(crate::ansi::strip_ansi(before), " ❯ ");
+
+        // Too narrow for the prompt plus two text columns: it is dropped.
+        editor.set_text("");
+        let narrow = crate::ansi::strip_ansi(&editor.render(5)[1].replace(CURSOR_MARKER, ""));
+        assert!(!narrow.contains('❯'), "{narrow:?}");
     }
 
     #[test]

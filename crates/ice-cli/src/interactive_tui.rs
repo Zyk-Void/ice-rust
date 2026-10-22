@@ -56,6 +56,8 @@ mod autocomplete;
 use autocomplete::*;
 mod rendering;
 use rendering::*;
+mod session_header;
+use session_header::*;
 mod panels;
 mod pet;
 mod side_questions;
@@ -273,8 +275,6 @@ struct CommandContext {
     cwd: std::path::PathBuf,
     /// Loaded resources for /context; refreshed after successful /reload.
     resources: Arc<Mutex<ice_harness::types::AgentHarnessResources>>,
-    /// Context file section retained in the startup header, if visible.
-    startup_context: Option<Arc<Container>>,
     /// B5d: the reload context `/reload` drives. `Arc<ReloadContext>` so the
     /// blocking submit thread can cheaply clone it into the `ReloadCommand`
     /// without an `.await` (the command can't drive reload directly — it signals
@@ -1061,30 +1061,7 @@ pub async fn interactive_tui(
         .map(|model| format!("({}) {}", model.provider, short_model_name(&model.id)))
         .unwrap_or_else(|| short_model_name(&lane_model_id));
 
-    // Snapshot startup capabilities for the welcome screen. Both accessors
-    // return defensive clones, so rendering this summary does not retain a
-    // harness lock or trigger a second resource scan.
-    let mut active_tool_names = lane.get_active_tools().await.unwrap_or_default();
-    // AgentHarness uses an empty active-name list as the default "all tools"
-    // state. Do not expose that implementation sentinel as `Tools (0) none`
-    // in the welcome banner (it is especially visible on the first prompt).
-    if active_tool_names.is_empty() {
-        active_tool_names = harness
-            .get_tools()
-            .await
-            .unwrap_or_default()
-            .into_iter()
-            .map(|tool| tool.tool.schema().name.clone())
-            .collect();
-    }
     let resources_snapshot = harness.get_resources().await.unwrap_or_default();
-    let skill_names: Vec<String> = resources_snapshot
-        .skills
-        .as_deref()
-        .unwrap_or(&[])
-        .iter()
-        .map(|skill| skill.name.clone())
-        .collect();
 
     // Channel between the key/callback threads and the main async loop.
     let (tx, mut rx) = mpsc::unbounded_channel::<TuiMessage>();
@@ -1108,17 +1085,30 @@ pub async fn interactive_tui(
     ask_user_bridge.attach();
     tui.set_main_screen_mode(matches!(args.tui_mode, crate::args::TuiMode::Regular));
 
+    // ---- Footer + status ----
+    let footer = Arc::new(FooterComponent::new());
+    footer.set_model(&model_name);
+    if let Ok(level) = lane.get_thinking_level().await {
+        footer.set_thinking_level(Some(thinking_level_name(level)));
+    }
+    footer.set_cwd(&cwd.to_string_lossy());
+    footer.set_git_branch(git_branch_for(&cwd).as_deref());
+    if let Some(m) = model_catalog.iter().find(|m| m.id == lane_model_id) {
+        footer.set_context_window(m.context_window as i64);
+    }
+    footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
+
+    // /context and the startup banner share a resource snapshot that the async
+    // reload handler refreshes, so neither awaits the harness accessor.
+    let resources_arc = Arc::new(Mutex::new(resources_snapshot));
+
     let chat_container = Arc::new(Container::new());
-    let startup_context = if should_show_startup_listing(args.verbose, quiet_startup) {
-        Some(add_welcome_message_with_capabilities(
+    if should_show_startup_listing(args.verbose, quiet_startup) {
+        add_welcome_message(
             &chat_container,
-            &active_tool_names,
-            &skill_names,
-            &resources_snapshot.context_files,
-        ))
-    } else {
-        None
-    };
+            startup_header(&footer, &cwd, &resources_arc),
+        );
+    }
 
     // First-launch gate: if `~/.icers/.setup_done` is absent, show the welcome
     // banner once, then write the sentinel. The banner covers the theme hint;
@@ -1194,9 +1184,9 @@ pub async fn interactive_tui(
     ));
 
     // ---- Editor ----
-    // Bordered box matching upstream: no `> ` prompt, no placeholder — the
-    // editor renders full-width `─` top/bottom borders with padding-only lines
-    // (see Editor::render). padding_x:1 gives a 1-col inset inside the box.
+    // Bordered box matching upstream: a `❯ ` prompt gutter in the border color,
+    // no placeholder, full-width `─` top/bottom borders (see Editor::render).
+    // padding_x:1 gives a 1-col inset inside the box.
     let keybindings = configured_keybindings();
     let new_message_count = Arc::new(crate::transcript_navigation::NewMessageCount::default());
     crate::transcript_navigation::install_with_message_count(
@@ -1213,6 +1203,8 @@ pub async fn interactive_tui(
         EditorStyle::default(),
         keybindings.clone(),
     ));
+    // upstream `defaultEditor.setPrompt(`${sym("prompt")} `)`.
+    editor.set_prompt("❯ ");
     sync_editor_viewport(&editor);
 
     // Bash-mode border: a `!`-prefixed draft recolors the editor border to the
@@ -1231,19 +1223,6 @@ pub async fn interactive_tui(
             });
         }));
     }
-
-    // ---- Footer + status ----
-    let footer = Arc::new(FooterComponent::new());
-    footer.set_model(&model_name);
-    if let Ok(level) = lane.get_thinking_level().await {
-        footer.set_thinking_level(Some(thinking_level_name(level)));
-    }
-    footer.set_cwd(&cwd.to_string_lossy());
-    footer.set_git_branch(git_branch_for(&cwd).as_deref());
-    if let Some(m) = model_catalog.iter().find(|m| m.id == lane_model_id) {
-        footer.set_context_window(m.context_window as i64);
-    }
-    footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
 
     // Live git-branch refresh (native fs-watch on `.git/HEAD`): a checkout or
     // commit updates the footer's branch without a manual refresh.
@@ -1266,10 +1245,7 @@ pub async fn interactive_tui(
     // the template's frontmatter description (or a fallback) so the autocomplete
     // popover shows what each template does.
     //
-    // Build autocomplete from the initial templates. /context shares a resource
-    // snapshot that the async reload handler refreshes, so its blocking command
-    // can list the current files without awaiting the harness accessor.
-    let resources_arc = Arc::new(Mutex::new(resources_snapshot));
+    // Build autocomplete from the initial templates.
     // Build the built-in command registry once — the single source of truth for
     // both dispatch and the built-in autocomplete entries. The discovered
     // prompt-template commands are merged into the autocomplete list separately
@@ -1500,7 +1476,6 @@ pub async fn interactive_tui(
         model_catalog: model_catalog_arc.clone(),
         cwd: cwd.clone(),
         resources: resources_arc.clone(),
-        startup_context,
         reload_context: Arc::new(reload_context.clone()),
         session: agent_session.clone(),
     };
@@ -2323,12 +2298,38 @@ pub async fn interactive_tui(
                     selector.handle_key(key);
                     continue;
                 }
-                let (selector, _kind) = state_for_key
+                let (selector, kind) = state_for_key
                     .active_selector
                     .lock()
                     .unwrap()
                     .clone()
                     .expect("selector_open guaranteed Some");
+                if let SelectorView::Searchable(searchable) = &selector {
+                    if kind == SelectorKind::Model
+                        && keybinding_matches(
+                            &keybindings_for_key,
+                            &key,
+                            ice_tui::keybindings::keys::MODEL_TOGGLE_FAVORITE,
+                        )
+                    {
+                        let catalog = model_catalog_for_key
+                            .read()
+                            .unwrap_or_else(|error| error.into_inner())
+                            .clone();
+                        if let Err(error) = toggle_selected_favorite(
+                            searchable,
+                            &catalog,
+                            &state_for_key.current_model_id(),
+                        ) {
+                            add_error_message(
+                                &state_for_key.chat_container,
+                                &format!("Could not save favorite models: {error}"),
+                            );
+                        }
+                        tui_for_key.request_render_reusing_scroll_content();
+                        continue;
+                    }
+                }
                 selector.handle_key(key);
                 tui_for_key.request_render_reusing_scroll_content();
                 continue;
@@ -3558,11 +3559,8 @@ pub async fn interactive_tui(
                                 }
                             })),
                         ));
-                        update_resource_listing(
-                            &ctx.resources,
-                            ctx.startup_context.as_ref(),
-                            resources,
-                        );
+                        // The startup banner reads this snapshot on render.
+                        *ctx.resources.lock().unwrap() = resources;
                     }
                 }
                 // B5e: the reload swapped a fresh `ExtensionSession` into the

@@ -6,87 +6,37 @@ use super::*;
 // Transcript message helpers
 // ===========================================================================
 
-/// Add the welcome header to the chat container.
-pub(super) fn add_welcome_message(container: &Arc<Container>) {
-    add_welcome_message_with_capabilities(container, &[], &[], &[]);
+/// Add the startup banner to the chat container, framed by blank rows like
+/// ice's header container.
+pub(super) fn add_welcome_message(container: &Arc<Container>, header: Arc<dyn Component>) {
+    container.add_child(Arc::new(Spacer::new(1)));
+    container.add_child(header);
+    container.add_child(Arc::new(Spacer::new(1)));
 }
 
-/// Add the startup welcome header and a compact snapshot of active tools and
-/// discovered skills and context files. The snapshot reflects the first turn's
-/// configuration, including tools contributed by extensions.
-pub(super) fn add_welcome_message_with_capabilities(
-    container: &Arc<Container>,
-    active_tools: &[String],
-    skills: &[String],
-    context_files: &[String],
-) -> Arc<Container> {
-    let c = current_theme().colors;
-    // The mark, wordmark and language mark live in `crate::brand`. See that
-    // module for why the layout is built from single-width characters only.
-    container.add_child(Arc::new(crate::brand::BrandLockup::new()));
-    container.add_child(Arc::new(Spacer::new(1)));
-    // The mark carries the product name, so the line under it is the tagline
-    // rather than a second logotype.
-    let title = c.muted.fg("interactive TUI · library-first agent runtime");
-    container.add_child(Arc::new(Text::new(title, 1, 0)));
-    container.add_child(Arc::new(Spacer::new(1)));
-    container.add_child(Arc::new(Text::new(
-        c.dim.fg("Type your message and press Enter to send."),
-        1,
-        0,
-    )));
-    let hint = c
-        .dim
-        .fg("Enter send · Shift+Enter newline · Ctrl+C clear · Esc abort · /help");
-    container.add_child(Arc::new(Text::new(hint, 1, 0)));
-    container.add_child(Arc::new(Spacer::new(1)));
-    let context_listing = Arc::new(Container::new());
-    render_context_files(&context_listing, context_files);
-    container.add_child(context_listing.clone());
-    container.add_child(Arc::new(Text::new(
-        welcome_capability_line("Tools", active_tools),
-        1,
-        0,
-    )));
-    container.add_child(Arc::new(Text::new(
-        welcome_capability_line("Skills", skills),
-        1,
-        0,
-    )));
-    container.add_child(Arc::new(DynamicBorder::new()));
-    context_listing
-}
-
-/// Retain this section in the welcome header so /reload can replace it.
-pub(super) fn render_context_files(container: &Arc<Container>, files: &[String]) {
-    container.clear();
-    if files.is_empty() {
-        return;
-    }
-    let colors = current_theme().colors;
-    container.add_child(Arc::new(Text::new(
-        colors.accent.fg(&format!("Context ({})", files.len())),
-        1,
-        0,
-    )));
-    for path in files {
-        container.add_child(Arc::new(Text::new(
-            colors.dim.fg(&format!("  {path}")),
-            1,
-            0,
-        )));
-    }
-}
-
-pub(super) fn update_resource_listing(
-    shared: &Arc<Mutex<ice_harness::types::AgentHarnessResources>>,
-    startup_context: Option<&Arc<Container>>,
-    resources: ice_harness::types::AgentHarnessResources,
-) {
-    if let Some(listing) = startup_context {
-        render_context_files(listing, &resources.context_files);
-    }
-    *shared.lock().unwrap() = resources;
+/// The startup banner. Model and thinking level come from the footer, which
+/// every model or thinking switch already updates, and the resource counts
+/// from the snapshot `/reload` refreshes.
+pub(super) fn startup_header(
+    footer: &Arc<FooterComponent>,
+    cwd: &std::path::Path,
+    resources: &Arc<Mutex<ice_harness::types::AgentHarnessResources>>,
+) -> Arc<SessionHeader> {
+    let footer = footer.clone();
+    let resources = resources.clone();
+    let home = std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .ok();
+    let cwd = ice_tui::footer::format_cwd_for_footer(&cwd.to_string_lossy(), home.as_deref());
+    Arc::new(SessionHeader::new(move || SessionHeaderData {
+        app_name: crate::APP_NAME.to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        model: Some(footer.model()).filter(|model| !model.is_empty()),
+        thinking: footer.thinking_level(),
+        cwd: cwd.clone(),
+        loaded: loaded_resource_summary(&resources.lock().unwrap()),
+        hint: "/hotkeys shortcuts · ctrl+o expand tools · / commands · ! bash".to_string(),
+    }))
 }
 
 /// Append update notices inside the live transcript. Fullscreen mode clears
@@ -160,20 +110,6 @@ pub(super) fn add_update_panel(
         0,
     )));
     container.add_child(Arc::new(DynamicBorder::with_color(color)));
-}
-
-pub(super) fn welcome_capability_line(label: &str, names: &[String]) -> String {
-    let c = current_theme().colors;
-    let value = if names.is_empty() {
-        "none".to_string()
-    } else {
-        names.join(" · ")
-    };
-    format!(
-        "{} {}",
-        c.accent.fg(&format!("{label} ({})", names.len())),
-        c.muted.fg(&value)
-    )
 }
 
 /// Add the `/help` command listing to the chat container.

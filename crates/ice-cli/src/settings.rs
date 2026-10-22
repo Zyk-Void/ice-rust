@@ -111,6 +111,11 @@ pub struct Settings {
     /// behaves the same.
     #[serde(default, alias = "enabledModels")]
     pub scoped_models: Option<Vec<String>>,
+    /// `favoriteModels`: exact `provider/model` ids pinned first in `/model`,
+    /// toggled there with Shift+F. Global only, like upstream; it does not
+    /// change the Ctrl+P cycle.
+    #[serde(default)]
+    pub favorite_models: Option<Vec<String>>,
 
     /// Custom session storage directory. upstream's `sessionDir`, same format as
     /// the `--session-dir` flag (which wins over it).
@@ -608,19 +613,24 @@ fn save_settings_to_path(
             }
         }
     }
-    match &settings.scoped_models {
-        Some(list) if !list.is_empty() => {
-            obj.insert(
-                "scopedModels".to_string(),
-                serde_json::Value::Array(
-                    list.iter()
-                        .map(|m| serde_json::Value::String(m.clone()))
-                        .collect(),
-                ),
-            );
-        }
-        _ => {
-            obj.remove("scopedModels");
+    for (key, list) in [
+        ("scopedModels", &settings.scoped_models),
+        ("favoriteModels", &settings.favorite_models),
+    ] {
+        match list {
+            Some(list) if !list.is_empty() => {
+                obj.insert(
+                    key.to_string(),
+                    serde_json::Value::Array(
+                        list.iter()
+                            .map(|m| serde_json::Value::String(m.clone()))
+                            .collect(),
+                    ),
+                );
+            }
+            _ => {
+                obj.remove(key);
+            }
         }
     }
     match &settings.keybindings {
@@ -1138,6 +1148,26 @@ mod scoped_tests {
         assert_eq!(settings.branch_summary_reserve_tokens(), Some(4242));
         assert!(settings.branch_summary_skipped());
     }
+    #[test]
+    fn save_load_favorite_models_roundtrip() {
+        let (_tmp, _guard) = with_temp_env();
+        let mut s = Settings::default();
+        s.favorite_models = Some(vec!["omni/a".into(), "anthropic/b".into()]);
+        save_settings(&s).unwrap();
+        let path = config::settings_path().unwrap();
+        let raw: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        assert_eq!(raw["favoriteModels"][1], "anthropic/b");
+        assert_eq!(
+            load_settings().unwrap().favorite_models,
+            Some(vec!["omni/a".to_string(), "anthropic/b".to_string()])
+        );
+        // An empty list removes the key.
+        s.favorite_models = Some(Vec::new());
+        save_settings(&s).unwrap();
+        assert_eq!(load_settings().unwrap().favorite_models, None);
+    }
+
     #[test]
     fn save_load_scoped_models_roundtrip() {
         let (_tmp, _guard) = with_temp_env();

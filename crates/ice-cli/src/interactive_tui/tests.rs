@@ -2156,152 +2156,121 @@ fn key_repeat_is_dispatched_but_release_is_not() {
     assert!(!should_dispatch_key(KeyEventKind::Release));
 }
 
+fn header_data(cwd: &str) -> SessionHeaderData {
+    SessionHeaderData {
+        app_name: "ice".into(),
+        version: "1.2.3".into(),
+        model: Some("gpt-test".into()),
+        thinking: Some("high".into()),
+        cwd: cwd.into(),
+        loaded: "2 skills".into(),
+        hint: "ctrl+o details".into(),
+    }
+}
+
+fn plain_lines(lines: Vec<String>) -> Vec<String> {
+    lines.iter().map(|line| strip_ansi(line)).collect()
+}
+
+// Ports ice session-header.test.ts.
 #[test]
-fn test_layout_renders_welcome_message() {
-    let chat = Arc::new(Container::new());
-    add_welcome_message(&chat);
-
-    let scroll = Arc::new(ScrollView::new(
-        chat.clone(),
-        ScrollViewOptions {
-            follow: FollowMode::End,
-            primary: true,
-            ..Default::default()
-        },
-    ));
-
-    let editor = Arc::new(Editor::new(
-        EditorOptions {
-            padding_x: 1,
-            ..Default::default()
-        },
-        EditorStyle::default(),
-        Arc::new(ice_tui::Keybindings::new()),
-    ));
-    let dock = Arc::new(Container::new());
-    dock.add_child(editor);
-
-    let footer = Arc::new(FooterComponent::new());
-
-    let root = VStack::from_children(vec![
-        StackChild::Entry(StackEntry::new(scroll.clone()).grow(1).min_size(1)),
-        StackChild::Entry(StackEntry::new(dock)),
-        StackChild::Entry(StackEntry::new(footer)),
-    ]);
-
-    let frame = ice_tui::render_layout_frame(Arc::new(root), 80, 24);
-
-    let all: String = frame.lines.join("\n");
-    assert!(
-        all.contains("icers"),
-        "Welcome message not found. Rendered: {}",
-        all
-    );
-    assert!(
-        all.contains("Type your message"),
-        "Help text not found. Rendered: {}",
-        all
+fn header_renders_a_compact_three_line_banner_beside_the_mascot() {
+    let header = SessionHeader::new(|| header_data("~/work/project"));
+    assert_eq!(
+        plain_lines(header.render(120)),
+        [
+            "█▄  ▄▄▄  ▄█",
+            "▀██▀███▀██▀  ICE v1.2.3",
+            " ██▄▀█▀▄██   gpt-test · high",
+            "  ▀█████▀    ~/work/project · 2 skills",
+            "   █▄▀▄█",
+            "ctrl+o details",
+        ]
     );
 }
 
 #[test]
-fn test_chat_container_has_welcome_content() {
-    let chat = Arc::new(Container::new());
-    add_welcome_message_with_capabilities(
-        &chat,
-        &["read".into(), "bash".into(), "web_fetch".into()],
-        &["rust-review".into(), "release".into()],
-        &[
-            "/project/.icers/SYSTEM.md".into(),
-            "/project/AGENTS.md".into(),
-        ],
-    );
+fn header_drops_loaded_resources_before_truncating_the_directory() {
+    let long_cwd = format!("~/{}leaf", "very-long-directory/".repeat(8));
+    for width in [30, 44, 60, 120] {
+        let cwd = long_cwd.clone();
+        let lines = SessionHeader::new(move || header_data(&cwd)).render(width);
+        for line in &lines {
+            assert!(ice_tui::visible_width(line) <= width, "{width}: {line:?}");
+        }
+        let plain = plain_lines(lines);
+        let location = plain.iter().find(|line| line.contains("leaf")).unwrap();
+        assert!(location.contains('…'), "{location}");
+        assert!(!location.contains("skills"), "{location}");
+    }
+}
 
-    let lines = chat.render(80);
-    let all: String = lines.join("\n");
-    // Welcome title is "icers" (accent bold) + "interactive TUI" (muted),
-    // joined by an ANSI reset — strip ANSI before checking the substring.
-    let plain = strip_ansi(&all);
-    assert!(
-        plain.contains("icers"),
-        "Welcome message not in chat container: {:?}",
-        lines
-    );
-    assert!(plain.contains("Tools (3)"), "Tool count missing: {plain}");
-    assert!(
-        plain.contains("read · bash · web_fetch"),
-        "Tool names missing: {plain}"
-    );
-    assert!(plain.contains("Skills (2)"), "Skill count missing: {plain}");
-    assert!(plain.contains("Context (2)"));
-    assert!(plain.contains("/project/.icers/SYSTEM.md"));
-    assert!(plain.contains("/project/AGENTS.md"));
-    assert!(
-        plain.contains("rust-review · release"),
-        "Skill names missing: {plain}"
+#[test]
+fn header_drops_the_mascot_on_narrow_terminals() {
+    let header = SessionHeader::new(|| SessionHeaderData {
+        loaded: String::new(),
+        ..header_data("~/work/project")
+    });
+    assert_eq!(
+        plain_lines(header.render(30))[..3],
+        ["ICE v1.2.3", "gpt-test · high", "~/work/project"]
     );
 }
 
 #[test]
-fn reload_updates_context_header_and_context_panel_without_stale_paths() {
+fn middle_truncate_keeps_both_ends() {
+    assert_eq!(middle_truncate("abcdefghij", 7), "abc…hij");
+    assert_eq!(middle_truncate("short", 10), "short");
+}
+
+#[test]
+fn startup_header_follows_model_switches_and_reloads() {
     use ice_harness::types::AgentHarnessResources;
+    let footer = Arc::new(FooterComponent::new());
+    footer.set_model("(omni) first-model");
+    footer.set_thinking_level(Some("medium"));
+    let resources = Arc::new(Mutex::new(AgentHarnessResources {
+        context_files: vec!["/p/AGENTS.md".into(), "/p/CLAUDE.md".into()],
+        ..Default::default()
+    }));
     let chat = Arc::new(Container::new());
-    let old = AgentHarnessResources {
-        context_files: vec!["/old/SYSTEM.md".into()],
+    add_welcome_message(
+        &chat,
+        startup_header(&footer, std::path::Path::new("/tmp/project"), &resources),
+    );
+    let before = strip_ansi(&chat.render(120).join("\n"));
+    assert!(before.contains("ICERS v"), "{before}");
+    assert!(before.contains("(omni) first-model · medium"), "{before}");
+    assert!(
+        before.contains("/tmp/project · 2 context files"),
+        "{before}"
+    );
+
+    footer.set_model("(omni) second-model");
+    *resources.lock().unwrap() = AgentHarnessResources {
+        context_files: vec!["/p/AGENTS.md".into()],
         ..Default::default()
     };
-    let listing = add_welcome_message_with_capabilities(&chat, &[], &[], &old.context_files);
-    let shared = Arc::new(Mutex::new(old));
-    let fresh = AgentHarnessResources {
+    let after = strip_ansi(&chat.render(120).join("\n"));
+    assert!(after.contains("(omni) second-model · medium"), "{after}");
+    assert!(after.contains("1 context file"), "{after}");
+    assert!(!after.contains("context files"), "{after}");
+}
+
+#[test]
+fn context_panel_lists_the_reloaded_files() {
+    use ice_harness::types::AgentHarnessResources;
+    let resources = AgentHarnessResources {
         context_files: vec!["/new/APPEND_SYSTEM.md".into(), "/new/CLAUDE.md".into()],
         ..Default::default()
     };
-    update_resource_listing(&shared, Some(&listing), fresh.clone());
-    let header = strip_ansi(&chat.render(120).join("\n"));
-    assert!(header.contains("Context (2)"));
-    assert!(header.contains("/new/APPEND_SYSTEM.md"));
-    assert!(!header.contains("/old/SYSTEM.md"));
-    assert_eq!(*shared.lock().unwrap(), fresh);
     let panel = Arc::new(Container::new());
-    show_context_panel(&panel, &shared.lock().unwrap());
+    show_context_panel(&panel, &resources);
     let output = strip_ansi(&panel.render(120).join("\n"));
     assert!(output.contains("/new/CLAUDE.md"));
-    assert!(!output.contains("/old/SYSTEM.md"));
-
-    update_resource_listing(&shared, Some(&listing), Default::default());
-    assert!(!strip_ansi(&chat.render(120).join("\n")).contains("Context"));
     let panel = Arc::new(Container::new());
-    show_context_panel(&panel, &shared.lock().unwrap());
+    show_context_panel(&panel, &AgentHarnessResources::default());
     assert!(strip_ansi(&panel.render(120).join("\n")).contains("no context files loaded"));
-}
-
-#[test]
-fn welcome_header_renders_the_brand_mark() {
-    let chat = Arc::new(Container::new());
-    add_welcome_message(&chat);
-    let lines: Vec<String> = chat.render(80).iter().map(|l| strip_ansi(l)).collect();
-    let all = lines.join("\n");
-
-    // The three-bar mark: the bottom row carries all three bars, and the
-    // wordmark sits on its baseline next to the middle bar.
-    assert!(
-        lines.iter().any(|l| l.contains("██ ██ ██")),
-        "brand mark missing: {all}"
-    );
-    assert!(
-        all.contains("icers"),
-        "the mark must carry the product name: {all}"
-    );
-
-    // Regression guard for the layout bug this replaced: `π` is East-Asian
-    // Ambiguous — width 1 normally, width 2 under a CJK locale — which
-    // walked the old box borders out of alignment depending on the user's
-    // system. The crab is deliberately wide but unambiguous, and `crate::brand`
-    // tests pin its width so the padding cannot silently drift.
-    assert!(
-        !all.contains('π'),
-        "the header must not use east-asian-ambiguous glyphs: {all}"
-    );
 }
 
 #[test]
@@ -2381,12 +2350,6 @@ fn package_updates_render_without_an_ice_update() {
         );
         assert_eq!(plain.contains("icers update"), include_ice, "{plain}");
     }
-}
-
-#[test]
-fn welcome_capabilities_show_empty_state() {
-    let plain = strip_ansi(&welcome_capability_line("Skills", &[]));
-    assert_eq!(plain, "Skills (0) none");
 }
 
 #[test]
@@ -2993,7 +2956,7 @@ fn model_selector_items_are_deduplicated_and_provider_qualified() {
         "Bearer test".into(),
     )]));
 
-    let items = model_selector_items(&[gateway, duplicate, anthropic], "gpt-5.6-sol");
+    let items = model_selector_items(&[gateway, duplicate, anthropic], "gpt-5.6-sol", &[]);
     assert_eq!(items.len(), 2);
     // Value is provider-qualified so a bare id shared across endpoints resolves
     // to the right provider.
@@ -3009,6 +2972,66 @@ fn model_selector_items_are_deduplicated_and_provider_qualified() {
     );
 }
 
+fn favorite_test_catalog() -> Vec<ice_ai::Model> {
+    use ice_ai::{Api, Model};
+    ["alpha", "beta", "gamma"]
+        .into_iter()
+        .map(|id| Model::new(id, "", Api::AnthropicMessages, "p", "https://example.com"))
+        .collect()
+}
+
+// Ports ice model-selector favorites: pinned first, marked, current kept.
+#[test]
+fn model_selector_pins_favorites_first_and_marks_them() {
+    let items = model_selector_items(
+        &favorite_test_catalog(),
+        "beta",
+        &["p/gamma".to_string(), "p/beta".to_string()],
+    );
+    let values: Vec<_> = items.iter().map(|item| item.value.as_str()).collect();
+    // Favorites keep catalog order among themselves.
+    assert_eq!(values, ["p/beta", "p/gamma", "p/alpha"]);
+    assert_eq!(
+        items[0].description.as_deref(),
+        Some("p/beta (current) [fav]")
+    );
+    assert_eq!(items[2].description.as_deref(), Some("p/alpha"));
+    assert_eq!(current_model_index(&items), Some(0));
+}
+
+#[test]
+fn toggling_a_favorite_saves_it_and_repins_the_highlighted_model() {
+    with_isolated_config_dir(|| {
+        let catalog = favorite_test_catalog();
+        let list = Arc::new(SelectList::new(
+            model_selector_items(&catalog, "alpha", &[]),
+            10,
+        ));
+        let searchable = SearchableSelectList::new(None, None, list.clone());
+        list.set_selected_index(2);
+
+        toggle_selected_favorite(&searchable, &catalog, "alpha").unwrap();
+        assert_eq!(
+            crate::settings::load_settings().unwrap().favorite_models,
+            Some(vec!["p/gamma".to_string()])
+        );
+        assert_eq!(list.get_selected_item().unwrap().value, "p/gamma");
+        assert_eq!(
+            list.get_selected_item().unwrap().description.as_deref(),
+            Some("p/gamma [fav]")
+        );
+
+        toggle_selected_favorite(&searchable, &catalog, "alpha").unwrap();
+        assert_eq!(
+            crate::settings::load_settings().unwrap().favorite_models,
+            None
+        );
+        let item = list.get_selected_item().unwrap();
+        assert_eq!(item.value, "p/gamma");
+        assert_eq!(item.description.as_deref(), Some("p/gamma"));
+    });
+}
+
 #[test]
 fn model_selector_search_text_covers_provider_name_and_qualified_id() {
     use ice_ai::{Api, Model};
@@ -3020,7 +3043,7 @@ fn model_selector_search_text_covers_provider_name_and_qualified_id() {
         "anthropic",
         "https://api.anthropic.com",
     );
-    let items = model_selector_items(&[anthropic], "");
+    let items = model_selector_items(&[anthropic], "", &[]);
     let search = items[0].search_key();
     // Mirrors native `getModelSelectorSearchText`: provider-prefixed first,
     // then the display name.

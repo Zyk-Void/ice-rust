@@ -249,6 +249,30 @@ impl SelectList {
         }
     }
 
+    /// Replace the items, re-apply `filter`, and keep the highlight on the
+    /// item whose value is `selected_value` when it is still listed.
+    pub fn replace_items(
+        &self,
+        items: Vec<SelectItem>,
+        filter: &str,
+        selected_value: Option<&str>,
+    ) {
+        if let Ok(mut current) = self.items.lock() {
+            *current = items;
+        }
+        self.set_filter(filter);
+        let index = selected_value.and_then(|value| {
+            self.filtered_items
+                .lock()
+                .ok()?
+                .iter()
+                .position(|item| item.value == value)
+        });
+        if let Some(index) = index {
+            self.set_selected_index(index);
+        }
+    }
+
     /// Set the selected index.
     pub fn set_selected_index(&self, index: usize) {
         if let Ok(mut current) = self.selected_index.lock() {
