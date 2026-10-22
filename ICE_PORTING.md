@@ -615,7 +615,8 @@ General:
 ## 9. AI layer (`ice:ai`)
 
 ### 9.1 Wire APIs
-Rust implements 3: `anthropic-messages`, `openai-completions`, `openai-responses`
+Rust implements 4: `anthropic-messages`, `openai-completions`, `openai-responses`,
+and `openai-codex-responses` (SSE)
 (`crates/ice-ai/src/providers/`). The closed `ice_ai::WireProtocol` enum
 (`crates/ice-ai/src/model.rs`) lists exactly these. The provider factory, the
 default endpoints and `models.json` `compat` parsing all match on it
@@ -638,7 +639,7 @@ Not planned (`ice:ai/src/api/*`), except `openai-codex-responses`:
 | `bedrock-converse-stream` | `bedrock-converse-stream.ts` (42 KB) | AWS SigV4, event-stream decoding |
 | `mistral-conversations` | `mistral-conversations.ts` | |
 | `azure-openai-responses` | `azure-openai-responses.ts` | Azure deployment URLs on top of Responses |
-| `openai-codex-responses` | `openai-codex-responses.ts` (54 KB) | ChatGPT/Codex OAuth backend. **Planned**, with built-in ChatGPT login |
+| `openai-codex-responses` | `openai-codex-responses.ts` (54 KB) | Built-in ChatGPT login and SSE Responses implemented; WebSockets, compression and device-code login remain out of scope. See `docs/guides/chatgpt-subscription.md` |
 | `ice-messages` | `ice-messages.ts` | ice's own protocol: one POST `{model,context,options}` to `<baseUrl>/messages`, SSE of serialized assistant events plus `done`/`error`; used by the Radius gateway or any `"api": "ice-messages"` custom provider |
 | OpenRouter images | `openrouter-images.ts` | Rust has `crates/ice-ai/src/images.rs`; verify parity |
 
@@ -651,8 +652,8 @@ Not planned (`ice:ai/src/api/*`), except `openai-codex-responses`:
   minimax(+cn), mistral, moonshotai(+cn), nvidia, openai, openai-codex,
   opencode(+go), openrouter(+images), qwen-token-plan(+cn), radius, together,
   vercel-ai-gateway, xai, xiaomi(+3 token-plan regions), zai(+coding-cn).
-- **ice-rust:** built-in native providers are `anthropic` and `openai` only.
-  Everything else must be declared in `models.json` or a provider package
+- **ice-rust:** built-in native providers are `anthropic`, `openai`, and
+  `openai-codex`. Everything else must be declared in `models.json` or a provider package
   (`crates/ice-cli/src/config.rs:1518` test
   `native_provider_api_key_env_mapping_uses_exact_provider_ids`).
 
@@ -661,9 +662,12 @@ Not planned (`ice:ai/src/api/*`), except `openai-codex-responses`:
   `auth/oauth/{anthropic,openai-codex,github-copilot,kimi-coding,openrouter,radius,xai,device-code,pkce,oauth-page}.ts`,
   `env-api-keys.ts`. Built-in PKCE and device-code flows per provider, plus a
   local callback page.
-- **ice-rust:** OAuth is delegated to provider plugins
-  (`crates/ice-cli/src/auth.rs:178` `ice_extensions::request_oauth`). Copilot
-  is a TODO (`crates/ice-ai/src/providers/anthropic/mod.rs:52`).
+- **ice-rust:** `openai-codex` has built-in PKCE browser/manual login,
+  account-bound credential storage and request-time refresh
+  (`crates/ice-cli/src/oauth_codex.rs`, `codex_auth.rs`). CLI and TUI reuse the
+  same protocol implementation. Extension-owned OAuth retains precedence;
+  other OAuth providers still require provider extensions. Device-code login
+  and Copilot authentication remain unimplemented.
 
 ### 9.4 Other ai utilities to check
 `ice:ai/src/legacy-api-aliases.ts` (old API names), `compat.ts`,

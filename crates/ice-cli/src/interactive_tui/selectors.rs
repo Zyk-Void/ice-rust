@@ -159,7 +159,8 @@ pub(super) fn open_model_selector(
     chat: &Arc<Container>,
     initial_search: Option<&str>,
 ) -> Option<Arc<SearchableSelectList>> {
-    let items = model_selector_items(catalog, lane_model_id, &favorite_models());
+    let favorites = favorite_models();
+    let items = model_selector_items(catalog, lane_model_id, &favorites);
     if items.is_empty() {
         add_note_message(
             chat,
@@ -168,9 +169,9 @@ pub(super) fn open_model_selector(
         tui.request_render(false);
         return None;
     }
-    let current = current_model_index(&items);
+    let start = model_selector_start(&items, &favorites);
     let list = Arc::new(SelectList::new(items, 10));
-    if let Some(index) = current {
+    if let Some(index) = start {
         list.set_selected_index(index);
     }
 
@@ -196,12 +197,13 @@ pub(super) fn open_model_selector(
 
         // The harness now registers every authenticated provider runtime, so
         // picking a model from ANOTHER provider hot-switches it (no restart).
-        // Persist the choice as the saved default so the next launch keeps it.
+        // Persist the choice as the saved default so the next launch keeps it,
+        // whichever provider it belongs to.
         let lane = lane_sel.clone();
         let state = state_sel.clone();
         let tui = tui_sel.clone();
         tokio::spawn(async move {
-            report_model_selection(&lane, &state, &tui, model, false).await;
+            report_model_selection(&lane, &state, &tui, model, true).await;
         });
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
@@ -256,6 +258,17 @@ pub(super) fn current_model_index(items: &[SelectItem]) -> Option<usize> {
             .as_deref()
             .is_some_and(|d| d.contains(" (current)"))
     })
+}
+
+/// Where `/model` opens. Favorites are pinned at the top, and opening on the
+/// current model would scroll them out of view, so with any favorite listed the
+/// picker opens at the top; otherwise it opens on the current model.
+pub(super) fn model_selector_start(items: &[SelectItem], favorites: &[String]) -> Option<usize> {
+    if items.iter().any(|item| favorites.contains(&item.value)) {
+        None
+    } else {
+        current_model_index(items)
+    }
 }
 
 /// The caller's requested behavior after a model switch has succeeded.

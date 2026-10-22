@@ -2099,7 +2099,7 @@ impl AgentHarness {
     fn deferred_stream_options(&self, snap: &ConfigSnapshot) -> ice_ai::SimpleStreamOptions {
         ice_ai::SimpleStreamOptions {
             timeout: snap.stream_options.timeout,
-            session_id: None,
+            session_id: Some(self.session.storage().metadata().id),
             signal: CancellationToken::new(),
             reasoning: match snap.thinking_level {
                 ThinkingLevel::Off => None,
@@ -4723,7 +4723,10 @@ impl AgentHarness {
                 snap.retry.max_agent_delay_ms,
             )),
             cache_retention: snap.stream_options.cache_retention.unwrap_or_default(),
-            session_id: None,
+            // The session id keys provider prompt caches (OpenAI/Codex
+            // `prompt_cache_key`, session headers), so every turn of a session
+            // reuses its cached prefix.
+            session_id: Some(self.session.storage().metadata().id),
             signal: signal.clone(),
         };
 

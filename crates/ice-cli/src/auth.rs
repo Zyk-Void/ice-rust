@@ -3,7 +3,8 @@
 //! + `main.ts:runAuthCommand` + `core/auth-check.ts`.
 //!
 //! The host owns credential storage and standard login/check/logout/refresh
-//! commands. Packages own provider-specific policy and OAuth implementations.
+//! commands. Packages own provider policy and may supply OAuth implementations;
+//! ChatGPT subscription login also has a built-in fallback.
 //!
 //! - `icers auth login`  — legacy API-key prompt (no echo, via `rpassword`) for
 //!   the default provider and persist it to `~/.icers/auth.json`.
@@ -14,10 +15,7 @@
 //! - `icers auth logout` — drop the selected provider entry from `auth.json`
 //!   (env vars are left untouched).
 //!
-//! # Not ported (deferred — see the initial port notes (retired))
-//!
-//! Provider-specific OAuth implementations belong in extensions. The host only
-//! understands the standard OAuth action response and scoped credential format.
+//! Extension-owned OAuth takes precedence over the built-in Codex flow.
 
 use std::io::{self, Write};
 use std::sync::Arc;
@@ -31,6 +29,17 @@ use crate::credentials::CredentialSource;
 const EXIT_NOT_READY: i32 = 1;
 /// Exit code for an operational error (IO failure, bad args).
 const EXIT_ERROR: i32 = 2;
+
+async fn run_auth_store_io<T, F>(operation: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, config::ConfigError> + Send + 'static,
+{
+    tokio::task::spawn_blocking(operation)
+        .await
+        .map_err(|error| format!("credential worker failed: {error}"))?
+        .map_err(|error| error.to_string())
+}
 
 /// `icers auth <sub> [args]` entry. `args` is the slice *after* `auth` (i.e. the
 /// subcommand + its flags). Returns the process exit code. Async to match the
@@ -75,6 +84,9 @@ async fn run_login(
             return run_oauth_login(provider, snapshot).await;
         }
     }
+    if provider == crate::codex_auth::PROVIDER_ID {
+        return run_codex_login().await;
+    }
     // Compatibility API-key login. This path is provider-neutral; OAuth
     // behavior is supplied by the matching extension above.
     eprint!("Enter API key for {provider}: ");
@@ -96,7 +108,8 @@ async fn run_login(
         key: Some(key.to_string()),
         env: None,
     };
-    if let Err(e) = upsert_credential(provider, cred) {
+    let provider_id = provider.to_string();
+    if let Err(e) = run_auth_store_io(move || upsert_credential(&provider_id, cred)).await {
         eprintln!("error: could not save credentials: {e}");
         return EXIT_ERROR;
     }
@@ -128,15 +141,33 @@ async fn run_check(
         }
     };
     let ready = source.is_present();
+    let expires = config::read_oauth_token(provider)
+        .ok()
+        .flatten()
+        .and_then(|credential| match credential {
+            Credential::Oauth { expires, .. } if expires > 0 => Some(expires),
+            _ => None,
+        });
     if want_json {
         let json = serde_json::json!({
             "ready": ready,
             "provider": provider,
             "source": source.as_json_str(),
+            "oauth_expires_at": expires,
         });
         println!("{json}");
     } else if ready {
         println!("ready ({})", source.as_json_str());
+        if let Some(expires) = expires {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|duration| duration.as_secs() as i64)
+                .unwrap_or(expires);
+            println!(
+                "{provider}: OAuth, expires in {}h",
+                expires.saturating_sub(now).max(0) / 3600
+            );
+        }
     } else {
         println!("not_ready — no credentials found.");
         eprintln!();
@@ -162,6 +193,22 @@ async fn run_refresh(
     snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
 ) -> i32 {
     let provider = parse_provider(args).unwrap_or(DEFAULT_PROVIDER_ID);
+    if provider == crate::codex_auth::PROVIDER_ID
+        && snapshot
+            .and_then(|snapshot| snapshot.oauth_provider(provider))
+            .is_none()
+    {
+        return match crate::codex_auth::refresh().await {
+            Ok(()) => {
+                println!("OAuth credentials refreshed for \"{provider}\".");
+                0
+            }
+            Err(error) => {
+                eprintln!("error: {error}");
+                EXIT_ERROR
+            }
+        };
+    }
     let Some(snapshot) = snapshot else {
         eprintln!("error: no OAuth extensions are loaded");
         return EXIT_ERROR;
@@ -170,6 +217,7 @@ async fn run_refresh(
         access,
         refresh,
         expires,
+        ..
     }) = config::read_oauth_token(provider).ok().flatten()
     else {
         eprintln!("error: no stored OAuth credentials for \"{provider}\"");
@@ -204,8 +252,11 @@ async fn run_refresh(
         eprintln!("error: OAuth refresh returned no credential");
         return EXIT_ERROR;
     };
-    if let Err(error) =
-        config::upsert_oauth_token(provider, token.access, token.refresh, token.expires_at)
+    let provider_id = provider.to_string();
+    if let Err(error) = run_auth_store_io(move || {
+        config::upsert_oauth_token(&provider_id, token.access, token.refresh, token.expires_at)
+    })
+    .await
     {
         eprintln!("error: could not save refreshed OAuth credentials: {error}");
         return EXIT_ERROR;
@@ -219,6 +270,24 @@ async fn run_logout(
     snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
 ) -> i32 {
     let provider = parse_provider(args).unwrap_or(DEFAULT_PROVIDER_ID);
+    if provider == crate::codex_auth::PROVIDER_ID
+        && snapshot
+            .and_then(|snapshot| snapshot.oauth_provider(provider))
+            .is_none()
+    {
+        return match run_auth_store_io(|| config::delete_credential(crate::codex_auth::PROVIDER_ID))
+            .await
+        {
+            Ok(_) => {
+                println!("Local Codex credentials removed.");
+                0
+            }
+            Err(error) => {
+                eprintln!("error: {error}");
+                EXIT_ERROR
+            }
+        };
+    }
     if let Ok(Some(Credential::Oauth {
         access, refresh, ..
     })) = config::read_oauth_token(provider)
@@ -257,7 +326,8 @@ async fn run_logout(
         /*
          */
     }
-    match delete_credential(provider) {
+    let provider_id = provider.to_string();
+    match run_auth_store_io(move || delete_credential(&provider_id)).await {
         Ok(true) => {
             println!("Removed stored credentials for \"{provider}\".");
             0
@@ -300,12 +370,17 @@ async fn run_oauth_login(provider: &str, snapshot: &Arc<ice_extensions::Registry
                     eprintln!("error: OAuth response contained no valid credential");
                     return EXIT_ERROR;
                 };
-                if let Err(error) = config::upsert_oauth_token(
-                    provider,
-                    token.access,
-                    token.refresh,
-                    token.expires_at,
-                ) {
+                let provider_id = provider.to_string();
+                if let Err(error) = run_auth_store_io(move || {
+                    config::upsert_oauth_token(
+                        &provider_id,
+                        token.access,
+                        token.refresh,
+                        token.expires_at,
+                    )
+                })
+                .await
+                {
                     eprintln!("error: could not save OAuth credentials: {error}");
                     return EXIT_ERROR;
                 }
@@ -346,6 +421,129 @@ async fn run_oauth_login(provider: &str, snapshot: &Arc<ice_extensions::Registry
                 input = serde_json::json!({"value": line.trim()});
                 action = "exchange";
             }
+        }
+    }
+}
+
+async fn run_codex_login() -> i32 {
+    let (url, flow) = match crate::oauth_codex::LoginFlow::begin().await {
+        Ok(flow) => flow,
+        Err(error) => {
+            eprintln!("error: {error}");
+            return EXIT_ERROR;
+        }
+    };
+    println!("Open this URL to sign in:\n{url}");
+    if let Err(error) = crate::codex_auth::open_browser(&url) {
+        eprintln!("Could not open the browser ({error}); open the URL manually.");
+    }
+    println!("You may paste the redirect URL or authorization code here. Press Esc to cancel.");
+    let flow_cancellation = tokio_util::sync::CancellationToken::new();
+    let (sender, receiver) = tokio::sync::mpsc::channel(1);
+    let input_cancellation = flow_cancellation.clone();
+    let input = tokio::task::spawn_blocking(move || codex_manual_input(sender, input_cancellation));
+    let result = tokio::select! {
+        result = flow.complete(receiver, flow_cancellation.clone()) => result.map_err(|error| error.to_string()),
+        _ = tokio::signal::ctrl_c() => Err("Login cancelled".to_string()),
+    };
+    flow_cancellation.cancel();
+    let _ = input.await;
+    match result {
+        Ok(credential) => match persist_codex_login_cancellable(credential, async {
+            let _ = tokio::signal::ctrl_c().await;
+        })
+        .await
+        {
+            Ok(()) => {
+                println!("Codex OAuth credentials saved.");
+                0
+            }
+            Err(error) if error == "Request aborted" => {
+                eprintln!("error: Login cancelled");
+                EXIT_ERROR
+            }
+            Err(error) => {
+                eprintln!("error: could not save credentials: {error}");
+                EXIT_ERROR
+            }
+        },
+        Err(error) => {
+            eprintln!("error: {error}");
+            EXIT_ERROR
+        }
+    }
+}
+
+async fn persist_codex_login_cancellable<F>(
+    credential: crate::oauth_codex::CodexCredential,
+    cancellation: F,
+) -> Result<(), String>
+where
+    F: std::future::Future<Output = ()>,
+{
+    let persistence_cancellation = tokio_util::sync::CancellationToken::new();
+    let persistence =
+        crate::codex_auth::persist_cancellable(credential, persistence_cancellation.clone());
+    tokio::pin!(persistence);
+    tokio::select! {
+        result = &mut persistence => result,
+        _ = cancellation => {
+            persistence_cancellation.cancel();
+            persistence.await
+        }
+    }
+}
+
+/// Poll terminal events so browser completion never leaves a blocked stdin reader.
+fn codex_manual_input(
+    sender: tokio::sync::mpsc::Sender<String>,
+    cancellation: tokio_util::sync::CancellationToken,
+) {
+    use crossterm::event::{self, Event, KeyCode, KeyModifiers};
+    use std::io::IsTerminal;
+    if !io::stdin().is_terminal() {
+        return;
+    }
+    struct RawMode;
+    impl Drop for RawMode {
+        fn drop(&mut self) {
+            let _ = crossterm::terminal::disable_raw_mode();
+        }
+    }
+    if crossterm::terminal::enable_raw_mode().is_err() {
+        return;
+    }
+    let _raw = RawMode;
+    let mut value = String::new();
+    while !cancellation.is_cancelled() {
+        match event::poll(std::time::Duration::from_millis(100)) {
+            Ok(true) => {}
+            Ok(false) => continue,
+            Err(_) => return,
+        }
+        match event::read() {
+            Ok(Event::Key(key)) if key.kind != event::KeyEventKind::Release => match key.code {
+                KeyCode::Esc => {
+                    cancellation.cancel();
+                    return;
+                }
+                KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    cancellation.cancel();
+                    return;
+                }
+                KeyCode::Enter if !value.trim().is_empty() => {
+                    let _ = sender.blocking_send(value);
+                    return;
+                }
+                KeyCode::Backspace => {
+                    value.pop();
+                }
+                KeyCode::Char(character) => value.push(character),
+                _ => {}
+            },
+            Ok(Event::Paste(text)) => value.push_str(&text),
+            Err(_) => return,
+            _ => {}
         }
     }
 }
@@ -405,8 +603,8 @@ Subcommands:
   login   Prompt for an API key, or run an OAuth provider login.
   check   Report whether credentials are available (no network call).
   status  Alias for check; never prints token material.
-  refresh Refresh an OAuth token through its provider extension.
-  logout  Revoke OAuth credentials, then remove the stored credential.
+  refresh Refresh built-in Codex or extension-owned OAuth credentials.
+  logout  Remove saved credentials (extensions may also revoke them).
 
 Options:
   --provider <id>   Provider id (default: anthropic)
@@ -422,10 +620,11 @@ Environment:
 
 Notes:
   `login --provider <id>` uses the registered OAuth extension when one exists;
-  otherwise it is a provider-neutral API-key compatibility prompt. The host
-  only handles standard interaction and credential responses for OAuth.
-  `refresh` and `logout` use extension actions. API-key providers may still
-  use ~/.icers/agent/models.json or environment variables.
+  otherwise openai-codex uses built-in ChatGPT subscription OAuth, and other
+  providers use a provider-neutral API-key compatibility prompt.
+  Codex logout removes local credentials without revoking remote sessions.
+  API-key providers may still use ~/.icers/agent/models.json or environment
+  variables.
 ",
         name = crate::APP_NAME
     );
@@ -543,6 +742,59 @@ mod tests {
         )
         .unwrap();
         assert_eq!(run_check(&[], None).await, 0);
+    }
+
+    #[tokio::test]
+    async fn codex_logout_without_extension_removes_local_credentials() {
+        let _cfg = TempConfig::new();
+        crate::config::upsert_oauth_token_with_account(
+            "openai-codex",
+            "access".into(),
+            "refresh".into(),
+            1,
+            Some("account".into()),
+        )
+        .unwrap();
+        let args = vec!["--provider".into(), "openai-codex".into()];
+        assert_eq!(run_logout(&args, None).await, 0);
+        assert!(crate::config::read_oauth_token("openai-codex")
+            .unwrap()
+            .is_none());
+    }
+
+    #[tokio::test]
+    async fn codex_login_cancellation_during_store_lock_wait_does_not_save_later() {
+        let _cfg = TempConfig::new();
+        let store_lock = crate::config::lock_auth_store().unwrap();
+        let credential = crate::oauth_codex::CodexCredential::from_stored(
+            "new-access".into(),
+            "new-refresh".into(),
+            4_000_000_000,
+            Some("acct-new".into()),
+        )
+        .unwrap();
+        let (cancel_tx, cancel_rx) = tokio::sync::oneshot::channel();
+        let task = tokio::spawn(async move {
+            persist_codex_login_cancellable(credential, async {
+                let _ = cancel_rx.await;
+            })
+            .await
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(75)).await;
+        cancel_tx.send(()).unwrap();
+        let error = tokio::time::timeout(std::time::Duration::from_secs(1), task)
+            .await
+            .expect("cancelled login remained blocked on the credential lock")
+            .unwrap()
+            .unwrap_err();
+        assert_eq!(error, "Request aborted");
+
+        drop(store_lock);
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        assert!(crate::config::read_oauth_token("openai-codex")
+            .unwrap()
+            .is_none());
     }
 
     #[tokio::test]

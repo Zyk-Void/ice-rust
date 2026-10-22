@@ -421,6 +421,7 @@ impl StopReason {
 pub enum Api {
     OpenaiCompletions,
     OpenaiResponses,
+    OpenaiCodexResponses,
     AnthropicMessages,
     Faux,
     Other(String),
@@ -431,6 +432,7 @@ impl Api {
         match self {
             Api::OpenaiCompletions => "openai-completions",
             Api::OpenaiResponses => "openai-responses",
+            Api::OpenaiCodexResponses => "openai-codex-responses",
             Api::AnthropicMessages => "anthropic-messages",
             Api::Faux => "faux",
             Api::Other(s) => s.as_str(),
@@ -449,6 +451,7 @@ impl<'de> Deserialize<'de> for Api {
         Ok(match s.as_str() {
             "openai-completions" => Api::OpenaiCompletions,
             "openai-responses" => Api::OpenaiResponses,
+            "openai-codex-responses" => Api::OpenaiCodexResponses,
             "anthropic-messages" => Api::AnthropicMessages,
             "faux" => Api::Faux,
             other => Api::Other(other.to_string()),

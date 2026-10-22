@@ -717,7 +717,7 @@ where
             "navigate" => rpc_navigate(&lane, &msg).await,
             "get_available_models" => Ok(rpc_get_available_models(&model_catalog)),
             "get_auth_status" => Ok(rpc_get_auth_status(&model_catalog, oauth_snapshot.as_ref())),
-            "oauth" => rpc_oauth(&oauth_snapshot, &msg),
+            "oauth" => rpc_oauth(&oauth_snapshot, &msg).await,
             "set_api_key" => rpc_set_api_key(&msg).await,
             "set_model" => rpc_set_model(&lane, &model_catalog, &msg).await,
             "get_available_thinking_levels" => Ok(rpc_get_available_thinking_levels(&lane).await),
@@ -1493,7 +1493,7 @@ fn rpc_get_auth_status(
     serde_json::json!({"providers": providers})
 }
 
-fn rpc_oauth(
+async fn rpc_oauth(
     snapshot: &Option<Arc<ice_extensions::RegistrySnapshot>>,
     msg: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
@@ -1526,12 +1526,17 @@ fn rpc_oauth(
                 .credential()
                 .map_err(|_| "OAuth provider returned an invalid credential".to_string())?
                 .ok_or_else(|| "OAuth provider returned no credential".to_string())?;
-            crate::config::upsert_oauth_token(
-                provider,
-                credential.access,
-                credential.refresh,
-                credential.expires_at,
-            )
+            let provider_id = provider.to_string();
+            tokio::task::spawn_blocking(move || {
+                crate::config::upsert_oauth_token(
+                    &provider_id,
+                    credential.access,
+                    credential.refresh,
+                    credential.expires_at,
+                )
+            })
+            .await
+            .map_err(|_| "OAuth credential worker failed".to_string())?
             .map_err(|_| "OAuth credentials could not be saved".to_string())?;
             Ok(serde_json::json!({
                 "provider": provider,
@@ -1589,13 +1594,19 @@ async fn rpc_set_api_key(msg: &serde_json::Value) -> Result<serde_json::Value, S
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| "set_api_key requires a non-empty apiKey".to_string())?;
-    crate::config::upsert_credential(
-        provider,
-        crate::config::Credential::ApiKey {
-            key: Some(api_key.to_string()),
-            env: None,
-        },
-    )
+    let provider_id = provider.to_string();
+    let api_key = api_key.to_string();
+    tokio::task::spawn_blocking(move || {
+        crate::config::upsert_credential(
+            &provider_id,
+            crate::config::Credential::ApiKey {
+                key: Some(api_key),
+                env: None,
+            },
+        )
+    })
+    .await
+    .map_err(|error| format!("credential worker failed: {error}"))?
     .map_err(|error| error.to_string())?;
     Ok(serde_json::json!({
         "provider": provider,

@@ -1,19 +1,21 @@
 //! OpenAI Responses API provider (`/v1/responses`).
 
+pub(crate) mod request;
+
 use crate::event_stream::{
     create_assistant_message_event_stream, AssistantMessageEventStream,
     AssistantMessageEventStreamProducer,
 };
 use crate::model::{Model, StreamingProtocolCompat};
 use crate::provider::{
-    enforce_hard_max_tokens_in_record, request_max_tokens, Provider, SimpleStreamOptions,
+    enforce_hard_max_tokens_in_record, request_max_tokens, CacheRetention, Provider,
+    SimpleStreamOptions,
 };
 use crate::providers::anthropic::cost::calculate_cost;
 use crate::providers::anthropic::json_parse::parse_streaming_json;
 use crate::providers::anthropic::retry::retry_provider_request;
 use crate::providers::anthropic::sse::SseEventStream;
 use crate::providers::{DELTA_FLUSH_BYTES, DELTA_FLUSH_INTERVAL};
-use crate::strict_schema::strict_tool_parameters;
 use crate::types::{
     Api, AssistantMessage, AssistantMessageEvent, ConstrainedSamplingConfig, Content, Context,
     DoneReason, ErrorReason, ImageContent, InputModality, Message, StopReason, ThinkingLevel, Tool,
@@ -21,6 +23,10 @@ use crate::types::{
 };
 use crate::AiError;
 use async_trait::async_trait;
+use request::{
+    clamp_cache_key, FunctionToolStrictness, ResponsesReasoning, ResponsesRequest, ResponsesTool,
+    ResponsesToolFormat,
+};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -1161,12 +1167,21 @@ async fn run_stream(
     opts: &SimpleStreamOptions,
 ) {
     let mut out = AssistantMessage::empty(
-        Api::OpenaiResponses,
+        model.api.clone(),
         model.provider.clone(),
         model.id.clone(),
         now_ms(),
     );
     let mut headers = model.headers.clone().unwrap_or_default();
+    // Session affinity first so explicit caller headers can still override it.
+    if opts.cache_retention != CacheRetention::None {
+        if let Some(session_id) = opts.session_id.as_deref() {
+            for (name, value) in session_affinity_headers(model, session_id) {
+                headers.retain(|existing, _| !existing.eq_ignore_ascii_case(name));
+                headers.insert(name.to_string(), value);
+            }
+        }
+    }
     if let Some(extra) = &opts.headers {
         for (k, v) in extra {
             headers.insert(k.clone(), v.clone());
@@ -1203,6 +1218,18 @@ async fn run_stream(
             return;
         }
     };
+    process_responses_sse(p, out, response, model, ctx, opts, "OpenAI Responses").await;
+}
+
+pub(crate) async fn process_responses_sse(
+    p: &mut AssistantMessageEventStreamProducer,
+    mut out: AssistantMessage,
+    response: reqwest::Response,
+    model: &Model,
+    ctx: &Context,
+    opts: &SimpleStreamOptions,
+    protocol_name: &str,
+) {
     let mut events = SseEventStream::new(response, opts.signal.clone());
     let mut state =
         ResponsesStreamState::with_tools(&ctx.tools, supports_openai_grammar_tools(model));
@@ -1235,7 +1262,7 @@ async fn run_stream(
                             p,
                             &mut out,
                             format!(
-                                "invalid OpenAI Responses SSE event: {error}; data={}",
+                                "invalid {protocol_name} SSE event: {error}; data={}",
                                 ev.data
                             ),
                             false,
@@ -1472,7 +1499,7 @@ async fn run_stream(
                     emit_error(
                         p,
                         &mut out,
-                        "OpenAI Responses stream ended before a terminal response event",
+                        format!("{protocol_name} stream ended before a terminal response event"),
                         false,
                     );
                 } else {
@@ -1583,6 +1610,82 @@ fn build_request_with_hard_max_tokens(
 }
 
 fn build_request(model: &Model, ctx: &Context, opts: &SimpleStreamOptions) -> Value {
+    let input = build_responses_input(model, ctx);
+
+    // Responses requests are replayed statelessly from the provider-neutral
+    // transcript. Disable server-side response storage so an omitted
+    // `previous_response_id` cannot change that contract.
+    let max = opts.max_tokens.unwrap_or(model.max_tokens);
+    let max_output_tokens = (max > 0).then_some(max.max(16));
+    // Like TS: with thinking on, ask for summaries and encrypted reasoning
+    // content so `store:false` replay of earlier reasoning items stays exact.
+    let thinking_on = model.reasoning && opts.reasoning_level() != ThinkingLevel::Off;
+    let reasoning = if model.reasoning {
+        reasoning_effort(model, opts.reasoning_level()).map(|effort| ResponsesReasoning {
+            effort,
+            summary: thinking_on.then(|| "auto".to_string()),
+        })
+    } else {
+        None
+    };
+    let include = (thinking_on && reasoning.is_some())
+        .then(|| vec!["reasoning.encrypted_content".to_string()]);
+    let tools = build_responses_tools(model, &ctx.tools, supports_strict_mode(model), None);
+    // Same cache identity the TS client sends: the session id keys the cached
+    // prefix, and `Long` asks for 24h retention where supported.
+    let prompt_cache_key = (opts.cache_retention != CacheRetention::None)
+        .then(|| opts.session_id.as_deref())
+        .flatten()
+        .map(clamp_cache_key);
+    let prompt_cache_retention = (opts.cache_retention == CacheRetention::Long
+        && supports_long_cache_retention(model))
+    .then_some("24h");
+
+    ResponsesRequest {
+        model: model.id.clone(),
+        input,
+        stream: true,
+        store: false,
+        instructions: ctx.system_prompt.clone(),
+        max_output_tokens,
+        reasoning,
+        tools,
+        prompt_cache_key,
+        prompt_cache_retention,
+        include,
+    }
+    .into_value_with_sampling_params(model.sampling_params.as_ref())
+}
+
+/// Headers that pin a session to one backend so its cached prompt prefix is
+/// reused (TS `sessionAffinityFormat`): OpenRouter reads `x-session-id`, every
+/// other endpoint gets OpenAI's `session_id` plus `x-client-request-id`.
+fn session_affinity_headers(model: &Model, session_id: &str) -> Vec<(&'static str, String)> {
+    if model.provider == "openrouter" || model.base_url.contains("openrouter.ai") {
+        vec![("x-session-id", session_id.to_string())]
+    } else {
+        vec![
+            ("session_id", session_id.to_string()),
+            ("x-client-request-id", session_id.to_string()),
+        ]
+    }
+}
+
+/// Whether the endpoint accepts `prompt_cache_retention: "24h"`; on by default
+/// like TS `supportsLongCacheRetention`.
+fn supports_long_cache_retention(model: &Model) -> bool {
+    match model.compat.as_ref() {
+        Some(StreamingProtocolCompat::OpenaiResponses(compat)) => {
+            compat.supports_long_cache_retention.unwrap_or(true)
+        }
+        _ => true,
+    }
+}
+
+/// Convert provider-neutral history into Responses input items. Kept
+/// crate-private so other Responses-compatible providers can share the same
+/// tool-call pairing, item ids, reasoning replay, and image handling.
+pub(crate) fn build_responses_input(model: &Model, ctx: &Context) -> Vec<Value> {
     let grammar_tool_properties = grammar_tool_properties(model, &ctx.tools);
     let mut index = ToolCallIndex::default();
 
@@ -1777,64 +1880,36 @@ fn build_request(model: &Model, ctx: &Context, opts: &SimpleStreamOptions) -> Va
     }
     flush_pending_tool_results(&mut input, &mut pending, &mut completed, &index);
 
-    // Responses requests are replayed statelessly from the provider-neutral
-    // transcript. Disable server-side response storage so an omitted
-    // `previous_response_id` cannot change that contract.
-    let mut body = json!({"model":model.id,"input":input,"stream":true,"store":false});
-    if let Some(s) = &ctx.system_prompt {
-        body["instructions"] = Value::String(s.clone());
-    }
-    let max = opts.max_tokens.unwrap_or(model.max_tokens);
-    if max > 0 {
-        // OpenAI rejects Responses requests with max_output_tokens < 16.
-        body["max_output_tokens"] = Value::from(max.max(16));
-    }
-    if model.reasoning {
-        if let Some(e) = reasoning_effort(model, opts.reasoning_level()) {
-            body["reasoning"] = json!({"effort":e});
-        }
-    }
-    if !ctx.tools.is_empty() {
-        body["tools"] = Value::Array(ctx.tools.iter().map(|t| {
-            if let Some((syntax, definition, _property)) =
-                grammar_tool_spec(t, supports_openai_grammar_tools(model))
-            {
-                json!({
-                    "type": "custom",
-                    "name": t.name,
-                    "description": t.description,
-                    "format": {
-                        "type": "grammar",
-                        "syntax": syntax,
-                        "definition": definition,
-                    },
-                })
-            } else {
-                let mut tool = json!({"type":"function","name":t.name,"description":t.description,"parameters":t.parameters.as_value()});
-                // OpenAI rejects `strict: true` unless every object node carries
-                // `additionalProperties: false`, which `schemars` does not emit for
-                // the built-in tools. Transform first and only advertise strict
-                // when the transform succeeds, otherwise the request is a hard
-                // 400 (`'additionalProperties' is required to be supplied and to
-                // be false`).
-                if supports_strict_mode(model) {
-                    if let Some(strict_parameters) = strict_tool_parameters(t) {
-                        tool["parameters"] = strict_parameters;
-                        tool["strict"] = Value::Bool(true);
+    input
+}
+
+/// Serialize function and grammar tools using the shared Responses wire
+/// shapes. The caller can select a protocol-specific default strictness while
+/// constrained strict schemas are prepared before serialization.
+pub(crate) fn build_responses_tools(
+    model: &Model,
+    tools: &[Tool],
+    supports_strict: bool,
+    default_strict: Option<FunctionToolStrictness>,
+) -> Option<Vec<ResponsesTool>> {
+    (!tools.is_empty()).then(|| {
+        tools
+            .iter()
+            .map(|tool| {
+                if let Some((syntax, definition, _property)) =
+                    grammar_tool_spec(tool, supports_openai_grammar_tools(model))
+                {
+                    ResponsesTool::Custom {
+                        name: tool.name.clone(),
+                        description: tool.description.clone(),
+                        format: ResponsesToolFormat::grammar(syntax, definition),
                     }
+                } else {
+                    ResponsesTool::function(tool, supports_strict, default_strict)
                 }
-                tool
-            }
-        }).collect());
-    }
-    if let Some(params) = &model.sampling_params {
-        if let Value::Object(map) = &mut body {
-            for (k, v) in params {
-                map.insert(k.clone(), v.clone());
-            }
-        }
-    }
-    body
+            })
+            .collect()
+    })
 }
 
 /// Build the Responses output-message shape used when replaying an assistant
@@ -2353,6 +2428,7 @@ fn finish(
     // such as `content_filter`), rather than a separate transport error. Keep
     // the status in `raw_stop_reason` and map every incomplete response to the
     // provider-neutral length stop, matching the TypeScript implementation.
+    let protocol_name = responses_protocol_name(model);
     out.raw_stop_reason = terminal_status.map(str::to_string);
     out.stop_reason = match terminal_status {
         Some("incomplete") => StopReason::Length,
@@ -2370,8 +2446,8 @@ fn finish(
     if matches!(out.stop_reason, StopReason::Error | StopReason::Aborted) {
         if out.error_message.is_none() {
             out.error_message = match terminal_status {
-                Some(status) => Some(format!("OpenAI Responses finished with status {status}")),
-                _ => Some("OpenAI Responses ended with an error".to_string()),
+                Some(status) => Some(format!("{protocol_name} finished with status {status}")),
+                _ => Some(format!("{protocol_name} ended with an error")),
             };
         }
         p.push(AssistantMessageEvent::Error {
@@ -2389,7 +2465,16 @@ fn finish(
         message: out,
     });
 }
-fn emit_error(
+
+fn responses_protocol_name(model: &Model) -> &'static str {
+    if model.api == Api::OpenaiCodexResponses {
+        "OpenAI Codex Responses"
+    } else {
+        "OpenAI Responses"
+    }
+}
+
+pub(crate) fn emit_error(
     p: &mut AssistantMessageEventStreamProducer,
     out: &mut AssistantMessage,
     msg: impl Into<String>,
@@ -2436,6 +2521,72 @@ mod tests {
             "openai",
             "https://example.test/v1",
         )
+    }
+
+    #[test]
+    fn session_id_becomes_the_bounded_prompt_cache_key() {
+        let context = Context {
+            system_prompt: None,
+            messages: Vec::new(),
+            tools: Vec::new(),
+        };
+        let mut options = SimpleStreamOptions::default();
+        assert!(build_request(&model(), &context, &options)
+            .get("prompt_cache_key")
+            .is_none());
+
+        options.session_id = Some("é".repeat(80));
+        let body = build_request(&model(), &context, &options);
+        assert_eq!(body["prompt_cache_key"], "é".repeat(64));
+        assert!(body.get("prompt_cache_retention").is_none());
+
+        options.cache_retention = CacheRetention::Long;
+        let body = build_request(&model(), &context, &options);
+        assert_eq!(body["prompt_cache_retention"], "24h");
+
+        let mut no_long = model();
+        no_long.compat = Some(StreamingProtocolCompat::OpenaiResponses(
+            crate::model::OpenaiResponsesCompat {
+                supports_long_cache_retention: Some(false),
+                ..Default::default()
+            },
+        ));
+        let body = build_request(&no_long, &context, &options);
+        assert!(body.get("prompt_cache_retention").is_none());
+        assert_eq!(body["prompt_cache_key"], "é".repeat(64));
+
+        options.cache_retention = CacheRetention::None;
+        let body = build_request(&model(), &context, &options);
+        assert!(body.get("prompt_cache_key").is_none());
+        assert!(body.get("prompt_cache_retention").is_none());
+    }
+
+    #[test]
+    fn thinking_requests_encrypted_reasoning_and_summaries_like_ts() {
+        let context = Context {
+            system_prompt: None,
+            messages: Vec::new(),
+            tools: Vec::new(),
+        };
+        let mut reasoning_model = model();
+        reasoning_model.reasoning = true;
+
+        let mut options = SimpleStreamOptions::default();
+        options.reasoning = Some(ThinkingLevel::Medium);
+        let body = build_request(&reasoning_model, &context, &options);
+        assert_eq!(body["reasoning"]["effort"], "medium");
+        assert_eq!(body["reasoning"]["summary"], "auto");
+        assert_eq!(body["include"], json!(["reasoning.encrypted_content"]));
+
+        // Thinking off, or a non-reasoning model, requests neither.
+        options.reasoning = Some(ThinkingLevel::Off);
+        let body = build_request(&reasoning_model, &context, &options);
+        assert!(body.get("include").is_none());
+        assert!(body["reasoning"].get("summary").is_none());
+        options.reasoning = Some(ThinkingLevel::Medium);
+        let body = build_request(&model(), &context, &options);
+        assert!(body.get("include").is_none());
+        assert!(body.get("reasoning").is_none());
     }
 
     fn strict_model() -> Model {
@@ -2537,6 +2688,67 @@ mod tests {
             tools[1]
         );
         assert!(tools[1]["parameters"].get("additionalProperties").is_none());
+    }
+
+    #[test]
+    fn typed_request_keeps_the_ordinary_responses_wire_defaults() {
+        let mut model = model();
+        model.max_tokens = 0;
+
+        let body = build_request(
+            &model,
+            &Context::new(Vec::new()),
+            &SimpleStreamOptions::default(),
+        );
+
+        assert_eq!(
+            body,
+            json!({
+                "model": "gpt-test",
+                "input": [],
+                "stream": true,
+                "store": false
+            })
+        );
+    }
+
+    #[test]
+    fn custom_sampling_parameters_keep_their_last_write_precedence() {
+        let mut model = model();
+        model.sampling_params = Some(
+            json!({
+                "model": "sampling-model",
+                "input": [{"role": "user", "content": "sampling input"}],
+                "stream": false,
+                "store": true,
+                "instructions": "sampling instructions",
+                "max_output_tokens": 99,
+                "custom_sampling_parameter": {"enabled": true}
+            })
+            .as_object()
+            .unwrap()
+            .clone(),
+        );
+        let mut context = Context::new(vec![Message::User(crate::types::UserMessage::new(
+            "transcript input",
+            1,
+        ))]);
+        context.system_prompt = Some("transcript instructions".into());
+        let mut options = SimpleStreamOptions::default();
+        options.max_tokens = Some(128);
+
+        let body = build_request(&model, &context, &options);
+
+        assert_eq!(body["model"], "sampling-model");
+        assert_eq!(
+            body["input"],
+            json!([{"role": "user", "content": "sampling input"}])
+        );
+        assert_eq!(body["stream"], false);
+        assert_eq!(body["store"], true);
+        assert_eq!(body["instructions"], "sampling instructions");
+        assert_eq!(body["max_output_tokens"], 99);
+        assert_eq!(body["custom_sampling_parameter"], json!({"enabled": true}));
     }
 
     #[test]
@@ -3751,6 +3963,71 @@ mod tests {
             response_incomplete_reason(&top_level, &top_level),
             Some("content_filter")
         );
+    }
+
+    async fn request_head(
+        session_id: Option<&str>,
+        retention: CacheRetention,
+        provider: &str,
+    ) -> String {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut chunk = [0u8; 2048];
+            while !request.windows(4).any(|window| window == b"\r\n\r\n") {
+                let read = socket.read(&mut chunk).await.unwrap();
+                request.extend_from_slice(&chunk[..read]);
+            }
+            let body = "event: response.created\r\ndata: {\"type\":\"response.created\",\"response\":{\"id\":\"r\"}}\r\n\r\n";
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            socket.write_all(response.as_bytes()).await.unwrap();
+            String::from_utf8(request).unwrap().to_ascii_lowercase()
+        });
+        let mut test_model = model();
+        test_model.provider = provider.into();
+        test_model.base_url = format!("http://{address}/v1");
+        let responses = OpenAiResponsesProvider::with_models(
+            provider,
+            Some("test-key".to_string()),
+            reqwest::Client::new(),
+            vec![test_model.clone()],
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.session_id = session_id.map(str::to_string);
+        options.cache_retention = retention;
+        let stream = responses
+            .stream_simple(&test_model, &Context::new(Vec::new()), &options)
+            .await;
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(2), stream.result()).await;
+        server.await.unwrap()
+    }
+
+    #[tokio::test]
+    async fn session_affinity_headers_follow_the_endpoint_format() {
+        let openai = request_head(Some("sess-1"), CacheRetention::Short, "openai").await;
+        assert!(openai.contains("\r\nsession_id: sess-1\r\n"), "{openai}");
+        assert!(openai.contains("\r\nx-client-request-id: sess-1\r\n"));
+        assert!(!openai.contains("x-session-id"));
+
+        let router = request_head(Some("sess-1"), CacheRetention::Short, "openrouter").await;
+        assert!(router.contains("\r\nx-session-id: sess-1\r\n"), "{router}");
+        assert!(!router.contains("session_id:"));
+
+        // Caching off, or no session: nothing identifies the session.
+        for head in [
+            request_head(Some("sess-1"), CacheRetention::None, "openai").await,
+            request_head(None, CacheRetention::Short, "openai").await,
+        ] {
+            assert!(!head.contains("session_id"), "{head}");
+            assert!(!head.contains("x-client-request-id"), "{head}");
+        }
     }
 
     #[tokio::test]

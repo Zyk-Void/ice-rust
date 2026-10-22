@@ -85,7 +85,7 @@ pub fn prior_reasoning_is_replayed(model: &Model) -> bool {
                 if compat.requires_thinking_as_text == Some(true)
                     || compat.requires_reasoning_content == Some(true)
         ),
-        Api::OpenaiResponses => true,
+        Api::OpenaiResponses | Api::OpenaiCodexResponses => true,
         Api::AnthropicMessages => true,
         _ => false,
     }
@@ -160,15 +160,17 @@ pub enum WireProtocol {
     AnthropicMessages,
     OpenaiCompletions,
     OpenaiResponses,
+    OpenaiCodexResponses,
 }
 
 impl WireProtocol {
     /// Every protocol, in the order the provider form offers them (Chat
     /// Completions first: most compatible endpoints speak it).
-    pub const ALL: [WireProtocol; 3] = [
+    pub const ALL: [WireProtocol; 4] = [
         WireProtocol::OpenaiCompletions,
         WireProtocol::AnthropicMessages,
         WireProtocol::OpenaiResponses,
+        WireProtocol::OpenaiCodexResponses,
     ];
 
     /// The `Api` label models and messages of this protocol carry.
@@ -177,6 +179,7 @@ impl WireProtocol {
             WireProtocol::AnthropicMessages => Api::AnthropicMessages,
             WireProtocol::OpenaiCompletions => Api::OpenaiCompletions,
             WireProtocol::OpenaiResponses => Api::OpenaiResponses,
+            WireProtocol::OpenaiCodexResponses => Api::OpenaiCodexResponses,
         }
     }
 
@@ -187,6 +190,7 @@ impl WireProtocol {
             Api::AnthropicMessages => Some(WireProtocol::AnthropicMessages),
             Api::OpenaiCompletions => Some(WireProtocol::OpenaiCompletions),
             Api::OpenaiResponses => Some(WireProtocol::OpenaiResponses),
+            Api::OpenaiCodexResponses => Some(WireProtocol::OpenaiCodexResponses),
             Api::Faux | Api::Other(_) => None,
         }
     }
@@ -203,6 +207,7 @@ impl WireProtocol {
             WireProtocol::AnthropicMessages => "anthropic-messages",
             WireProtocol::OpenaiCompletions => "openai-completions",
             WireProtocol::OpenaiResponses => "openai-responses",
+            WireProtocol::OpenaiCodexResponses => "openai-codex-responses",
         }
     }
 
@@ -219,7 +224,7 @@ impl WireProtocol {
             WireProtocol::OpenaiCompletions => {
                 StreamingProtocolCompat::OpenaiCompletions(serde_json::from_value(value)?)
             }
-            WireProtocol::OpenaiResponses => {
+            WireProtocol::OpenaiResponses | WireProtocol::OpenaiCodexResponses => {
                 StreamingProtocolCompat::OpenaiResponses(serde_json::from_value(value)?)
             }
         })
@@ -396,11 +401,7 @@ mod tests {
     fn labels_without_a_protocol_round_trip_unchanged() {
         // Older sessions and plugin providers may carry api labels icers has no
         // protocol for; they must read back and serialize as the same string.
-        for label in [
-            "google-generative-ai",
-            "openai-codex-responses",
-            "my-plugin",
-        ] {
+        for label in ["google-generative-ai", "my-plugin"] {
             let api: Api = serde_json::from_value(serde_json::json!(label)).unwrap();
             assert_eq!(api, Api::Other(label.to_string()));
             assert_eq!(
@@ -415,6 +416,10 @@ mod tests {
         let value = serde_json::json!({ "supportsStrictMode": true });
         assert!(matches!(
             WireProtocol::OpenaiResponses.parse_compat(value.clone()),
+            Ok(StreamingProtocolCompat::OpenaiResponses(c)) if c.supports_strict_mode == Some(true)
+        ));
+        assert!(matches!(
+            WireProtocol::OpenaiCodexResponses.parse_compat(value.clone()),
             Ok(StreamingProtocolCompat::OpenaiResponses(c)) if c.supports_strict_mode == Some(true)
         ));
         assert!(matches!(

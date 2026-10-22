@@ -2980,6 +2980,21 @@ fn favorite_test_catalog() -> Vec<ice_ai::Model> {
         .collect()
 }
 
+#[test]
+fn model_selector_opens_on_favorites_when_pinned_else_on_current() {
+    let catalog = favorite_test_catalog();
+    let favorites = vec!["p/gamma".to_string()];
+
+    // `gamma` is pinned first; opening on the current `beta` would scroll the
+    // pinned rows out of view, so the picker stays at the top.
+    let items = model_selector_items(&catalog, "beta", &favorites);
+    assert_eq!(model_selector_start(&items, &favorites), None);
+
+    // Without favorites the picker opens on the current model.
+    let items = model_selector_items(&catalog, "beta", &[]);
+    assert_eq!(model_selector_start(&items, &[]), Some(1));
+}
+
 // Ports ice model-selector favorites: pinned first, marked, current kept.
 #[test]
 fn model_selector_pins_favorites_first_and_marks_them() {
@@ -3206,6 +3221,43 @@ fn provider_login_saves_deepseek_key_and_restores_editor() {
             &state,
             KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE)
         ));
+        let TuiMessage::AuthStoreMutation(request) = rx.try_recv().unwrap() else {
+            panic!("API-key login did not route persistence to the main loop");
+        };
+        let AuthStoreMutationRequest {
+            provider,
+            operation,
+            purpose,
+        } = request;
+        assert_eq!(provider, "deepseek");
+        assert!(matches!(
+            purpose,
+            AuthStoreMutationPurpose::ApiKeyPrompt { .. }
+        ));
+        assert!(!crate::config::read_auth().unwrap().contains_key("deepseek"));
+        let result = match operation {
+            AuthStoreMutationOperation::Upsert(credential) => {
+                crate::config::upsert_credential(&provider, credential)
+                    .map(|()| AuthStoreMutationOutcome::Changed(true))
+            }
+            AuthStoreMutationOperation::Delete => {
+                crate::config::delete_credential(&provider).map(AuthStoreMutationOutcome::Changed)
+            }
+            AuthStoreMutationOperation::Logout { .. } => unreachable!(),
+        }
+        .map_err(|error| error.to_string());
+        handle_auth_store_mutation_result(
+            &state,
+            &editor_container,
+            &editor,
+            &tui,
+            &tx,
+            AuthStoreMutationResult {
+                provider,
+                purpose,
+                result,
+            },
+        );
         assert!(matches!(
             crate::config::read_auth().unwrap().get("deepseek"),
             Some(crate::config::Credential::ApiKey { key: Some(key), .. })
@@ -3236,6 +3288,190 @@ fn provider_login_saves_deepseek_key_and_restores_editor() {
             .unwrap()
             .contains_key("cancelled-provider"));
         assert!(rx.try_recv().is_err());
+    });
+}
+
+#[test]
+fn stale_api_key_save_does_not_close_a_new_login_prompt() {
+    let state = test_tui_state();
+    let editor_container = Arc::new(Container::new());
+    let editor = state.editor.clone();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    let (tx, mut rx) = mpsc::unbounded_channel();
+    begin_provider_login(
+        &state,
+        &editor_container,
+        &editor,
+        &tui,
+        &tx,
+        &state.extension_session,
+        "first",
+    );
+    let input = state.active_provider_input.lock().unwrap().clone().unwrap();
+    input.handle_paste("first-key");
+    handle_provider_login_key(&state, KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+    let TuiMessage::AuthStoreMutation(request) = rx.try_recv().unwrap() else {
+        panic!("expected credential save");
+    };
+    handle_provider_login_key(&state, KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+    begin_provider_login(
+        &state,
+        &editor_container,
+        &editor,
+        &tui,
+        &tx,
+        &state.extension_session,
+        "second",
+    );
+    let replacement = state.active_provider_input.lock().unwrap().clone().unwrap();
+    handle_auth_store_mutation_result(
+        &state,
+        &editor_container,
+        &editor,
+        &tui,
+        &tx,
+        AuthStoreMutationResult {
+            provider: request.provider,
+            purpose: request.purpose,
+            result: Ok(AuthStoreMutationOutcome::Changed(true)),
+        },
+    );
+    assert!(Arc::ptr_eq(
+        &replacement,
+        state
+            .active_provider_input
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap(),
+    ));
+    assert!(!editor.is_focused());
+    assert!(matches!(rx.try_recv(), Ok(TuiMessage::ReloadExtensions)));
+}
+
+#[test]
+fn auth_store_mutation_worker_offloads_lock_wait_and_preserves_request_order() {
+    with_isolated_config_dir(|| {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            let store_lock = tokio::task::spawn_blocking(crate::config::lock_auth_store)
+                .await
+                .unwrap()
+                .unwrap();
+            let (result_tx, mut result_rx) = mpsc::unbounded_channel();
+            let mutation_tx = spawn_auth_store_mutation_worker(result_tx);
+            mutation_tx
+                .send(AuthStoreMutationRequest {
+                    provider: "queued-provider".into(),
+                    operation: AuthStoreMutationOperation::Upsert(
+                        crate::config::Credential::ApiKey {
+                            key: Some("queued-key".into()),
+                            env: None,
+                        },
+                    ),
+                    purpose: AuthStoreMutationPurpose::ApiKeyCommand,
+                })
+                .unwrap();
+            mutation_tx
+                .send(AuthStoreMutationRequest {
+                    provider: "queued-provider".into(),
+                    operation: AuthStoreMutationOperation::Logout {
+                        extension_owns_codex: false,
+                    },
+                    purpose: AuthStoreMutationPurpose::LocalLogout,
+                })
+                .unwrap();
+
+            tokio::time::timeout(
+                std::time::Duration::from_secs(1),
+                tokio::time::sleep(std::time::Duration::from_millis(75)),
+            )
+            .await
+            .expect("the async runtime stalled while auth storage waited for its lock");
+            assert!(result_rx.try_recv().is_err());
+
+            drop(store_lock);
+            for expected_purpose in [
+                AuthStoreMutationPurpose::ApiKeyCommand,
+                AuthStoreMutationPurpose::LocalLogout,
+            ] {
+                let message =
+                    tokio::time::timeout(std::time::Duration::from_secs(1), result_rx.recv())
+                        .await
+                        .expect("credential mutation result was lost")
+                        .expect("credential mutation worker stopped");
+                let TuiMessage::AuthStoreMutationFinished(result) = message else {
+                    panic!("unexpected message from credential mutation worker");
+                };
+                assert_eq!(result.purpose, expected_purpose);
+                assert_eq!(result.provider, "queued-provider");
+                match expected_purpose {
+                    AuthStoreMutationPurpose::ApiKeyCommand => assert!(matches!(
+                        result.result,
+                        Ok(AuthStoreMutationOutcome::Changed(true))
+                    )),
+                    AuthStoreMutationPurpose::LocalLogout => assert!(matches!(
+                        result.result,
+                        Ok(AuthStoreMutationOutcome::Logout(
+                            AuthStoreLogoutOutcome::Removed(true)
+                        ))
+                    )),
+                    _ => unreachable!(),
+                }
+            }
+            assert!(!crate::config::read_auth()
+                .unwrap()
+                .contains_key("queued-provider"));
+
+            tokio::task::spawn_blocking(|| {
+                crate::config::upsert_oauth_token(
+                    crate::codex_auth::PROVIDER_ID,
+                    "extension-access".into(),
+                    "extension-refresh".into(),
+                    4_000_000_000,
+                )
+            })
+            .await
+            .unwrap()
+            .unwrap();
+            mutation_tx
+                .send(AuthStoreMutationRequest {
+                    provider: crate::codex_auth::PROVIDER_ID.into(),
+                    operation: AuthStoreMutationOperation::Logout {
+                        extension_owns_codex: true,
+                    },
+                    purpose: AuthStoreMutationPurpose::LocalLogout,
+                })
+                .unwrap();
+            let message = tokio::time::timeout(std::time::Duration::from_secs(1), result_rx.recv())
+                .await
+                .expect("extension logout result was lost")
+                .expect("credential mutation worker stopped");
+            let TuiMessage::AuthStoreMutationFinished(result) = message else {
+                panic!("unexpected message from credential mutation worker");
+            };
+            assert!(matches!(
+                result.result,
+                Ok(AuthStoreMutationOutcome::Logout(
+                    AuthStoreLogoutOutcome::OAuthCredential(
+                        crate::config::Credential::Oauth { .. }
+                    )
+                ))
+            ));
+            assert!(
+                crate::config::read_oauth_token(crate::codex_auth::PROVIDER_ID)
+                    .unwrap()
+                    .is_some()
+            );
+        });
     });
 }
 
@@ -3402,11 +3638,17 @@ fn provider_selector_items_cover_builtin_providers() {
             ids.contains(&"openai"),
             "built-in openai provider missing: {ids:?}"
         );
-        // Every row advertises its model count, origin, and key status, so a
-        // built-in catalog entry can't be mistaken for a configured one.
+        assert!(ids.contains(&"openai-codex"));
+        // Every row advertises its model count, origin, and authentication status.
         assert!(items.iter().all(|item| {
             item.description.as_deref().is_some_and(|d| {
-                d.contains("model(s)") && d.contains("built-in") && d.contains("key")
+                d.contains("model(s)")
+                    && d.contains("built-in")
+                    && if item.value == "openai-codex" {
+                        d.contains("OAuth login required") && d.contains("ChatGPT subscription")
+                    } else {
+                        d.contains("key")
+                    }
             })
         }));
     });
@@ -3600,9 +3842,13 @@ fn provider_commands_include_packages_without_keys_and_save_their_model_identity
             .description
             .as_deref()
             .unwrap()
-            .contains("未配置 key"));
+            .contains("key not configured"));
         let local = items.iter().find(|item| item.value == "llama-cpp").unwrap();
-        assert!(local.description.as_deref().unwrap().contains("无需 key"));
+        assert!(local
+            .description
+            .as_deref()
+            .unwrap()
+            .contains("no key required"));
         switch_provider_for_test("OPENROUTER", &manifests).unwrap();
         let saved = crate::settings::load_settings().unwrap();
         assert_eq!(saved.default_provider.as_deref(), Some("openrouter"));
@@ -3686,7 +3932,7 @@ fn provider_package_key_status_uses_its_declared_environment() {
             .description
             .as_deref()
             .unwrap()
-            .contains("已配置 key"));
+            .contains("key configured"));
     });
 }
 
