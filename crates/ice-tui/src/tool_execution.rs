@@ -4,7 +4,7 @@
 //! packages/coding-agent/src/modes/interactive/components/tool-execution.ts
 
 use std::any::Any;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
@@ -14,16 +14,46 @@ use crate::theme::{theme, theme_revision, Theme, ThemeColors};
 use crate::tool_panel::ToolPanel;
 use crate::utils::{apply_background_to_line, truncate_to_width, wrap_text_with_ansi};
 
-/// Maximum diff lines rendered inline when expanded before collapsing the rest.
-const DIFF_LINE_CAP: usize = 40;
 /// Diff lines shown when collapsed — a preview density that keeps a big edit
 /// from dumping 40 lines into the transcript while still showing what changed.
-/// Ctrl+O expands to [`DIFF_LINE_CAP`].
+/// Ctrl+O expands to the full diff.
 const DIFF_PREVIEW_LINES: usize = 6;
 /// Maximum visual rows shown for a regular tool result while collapsed.
 /// Read/grep/find output can be hundreds of physical lines; keeping a compact
 /// preview prevents one tool from taking over the conversation transcript.
 const OUTPUT_PREVIEW_LINES: usize = 12;
+/// Collapsed bash preview: the last rows of output, as in ice.
+const BASH_PREVIEW_LINES: usize = 5;
+
+/// How tool calls are drawn: ice's default one-row bullets with a gutter
+/// preview (`Compact`), or padded tinted blocks (`Boxed`). Process-wide like
+/// the theme; the hosting app applies the `toolStyle` setting at startup.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ToolStyle {
+    Compact,
+    Boxed,
+}
+
+static TOOL_STYLE: AtomicU8 = AtomicU8::new(ToolStyle::Boxed as u8);
+
+pub fn set_tool_style(style: ToolStyle) {
+    TOOL_STYLE.store(style as u8, Ordering::Release);
+}
+
+pub fn tool_style() -> ToolStyle {
+    if TOOL_STYLE.load(Ordering::Acquire) == ToolStyle::Compact as u8 {
+        ToolStyle::Compact
+    } else {
+        ToolStyle::Boxed
+    }
+}
+
+/// Collapsed compact rows stay readable on ultrawide terminals.
+const COMPACT_TOOL_MAX_WIDTH: usize = 100;
+const COMPACT_RUNNING_TAIL_LINES: usize = 3;
+const COMPACT_ERROR_HEAD_LINES: usize = 5;
+const COMPACT_OUTPUT_HEAD_LINES: usize = 3;
+const COMPACT_DIFF_PREVIEW_LINES: usize = 14;
 
 /// Tool execution status.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,6 +110,9 @@ pub struct ToolExecutionComponent {
     /// elapsed timer), so its rendered lines are memoized by width; the
     /// revision drops the cache when args/result/expand change.
     revision: AtomicU64,
+    /// Standalone transcript items are separated by a blank row; members of a
+    /// tool group are not (ice `setLeadingSpacer`).
+    leading_spacer: AtomicBool,
     /// Memoized render of a `Completed`/`Failed` panel. Mirrors upstream's
     /// per-component render cache (`tool-execution.ts` + `layout.ts
     /// renderCached`), which is what keeps a transcript repaint from
@@ -92,6 +125,7 @@ struct ToolRenderCache {
     width: usize,
     revision: u64,
     theme_revision: u64,
+    style: ToolStyle,
     lines: Vec<String>,
 }
 
@@ -113,8 +147,15 @@ impl ToolExecutionComponent {
             todo_state: Mutex::new(None),
             plan_state: Mutex::new(None),
             revision: AtomicU64::new(0),
+            leading_spacer: AtomicBool::new(true),
             cache: Mutex::new(None),
         }
+    }
+
+    /// Whether a blank row precedes this item (compact style only).
+    pub fn set_leading_spacer(&self, enabled: bool) {
+        self.leading_spacer.store(enabled, Ordering::Release);
+        self.bump();
     }
 
     /// Invalidate the memoized render (state changed).
@@ -266,7 +307,12 @@ impl ToolExecutionComponent {
 
 impl ToolExecutionComponent {
     /// Render one theme snapshot, independently of the production render cache.
+    #[cfg(test)]
     fn render_panel(&self, width: usize, theme: &Theme) -> Vec<String> {
+        self.render_panel_with(width, theme, tool_style())
+    }
+
+    fn render_panel_with(&self, width: usize, theme: &Theme, style: ToolStyle) -> Vec<String> {
         if width == 0 {
             return Vec::new();
         }
@@ -315,8 +361,9 @@ impl ToolExecutionComponent {
                 if content.len() > shown {
                     rows.push(truncate_to_width(
                         &colors.muted.fg(&format!(
-                            "  … {} more lines · Ctrl+O or /plan show",
-                            content.len() - shown
+                            "  … {} more lines · {} or /plan show",
+                            content.len() - shown,
+                            crate::keybindings::tools_expand_key()
                         )),
                         width,
                         "…",
@@ -392,6 +439,24 @@ impl ToolExecutionComponent {
         if let Some(skill) = skill_name.as_deref() {
             let content = result.as_deref().unwrap_or("");
             return render_skill(colors, skill, content, *expanded, width);
+        }
+
+        if style == ToolStyle::Compact {
+            let compact = CompactTool {
+                name: name.as_str(),
+                label: display_title
+                    .as_deref()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| tools::tool_label(&name)),
+                summary: tools::parse_args_summary(&name, &args),
+                status: *status,
+                result: result.as_deref(),
+                diff: diff_lines.as_deref(),
+                markdown: *result_markdown,
+                expanded: *expanded,
+                leading_spacer: self.leading_spacer.load(Ordering::Acquire),
+            };
+            return render_compact(colors, &compact, width);
         }
 
         // Status indicator — a colored glyph (no emoji), pi style.
@@ -478,8 +543,16 @@ impl ToolExecutionComponent {
         // Do not sacrifice a long tool name/path summary for the running
         // indicator. Tool calls often carry generated paths or extension
         // names; wrap the header into panel rows so it remains inspectable.
-        for part in wrap_text_with_ansi(&head_parts, content_width) {
-            lines.push(panel.line(&part));
+        if *expanded || name.as_str() != "bash" {
+            for part in wrap_text_with_ansi(&head_parts, content_width) {
+                lines.push(panel.line(&part));
+            }
+        } else {
+            // Collapsed bash: one row, like ice's `$ command`. A multi-line shell
+            // command must not take over the transcript; the
+            // expanded view and args block show the full text.
+            let head_one_line = head_parts.replace('\n', " ");
+            lines.push(panel.line(&truncate_to_width(&head_one_line, content_width, "…")));
         }
 
         // Expanded: the full args JSON (indented, dim) above the result. The
@@ -518,12 +591,21 @@ impl ToolExecutionComponent {
                     .flat_map(|line| wrap_text_with_ansi(&line, body_width))
                     .collect()
             };
+            // Bash output ends with the result (exit status, last test line),
+            // so its collapsed preview is the tail, as in ice.
+            let tail = name.as_str() == "bash" && !*expanded;
+            let limit = if tail {
+                BASH_PREVIEW_LINES
+            } else {
+                OUTPUT_PREVIEW_LINES
+            };
             let shown = if *expanded {
                 visual_lines.len()
             } else {
-                visual_lines.len().min(OUTPUT_PREVIEW_LINES)
+                visual_lines.len().min(limit)
             };
-            for part in visual_lines.iter().take(shown) {
+            let skip = if tail { visual_lines.len() - shown } else { 0 };
+            for part in visual_lines.iter().skip(skip).take(shown) {
                 let result_line = if gutter {
                     format!("{} {}", colors.dim.fg("│"), colors.tool_output.fg(part))
                 } else if *result_markdown {
@@ -536,14 +618,32 @@ impl ToolExecutionComponent {
             }
             let hidden = visual_lines.len().saturating_sub(shown);
             if hidden > 0 {
-                let hint = colors
-                    .muted
-                    .fg(&format!("… {hidden} more lines (Ctrl+O to expand)"));
-                for part in wrap_text_with_ansi(&hint, content_width) {
-                    lines.push(panel.line(&part));
+                let hint = colors.muted.fg(&if tail {
+                    format!(
+                        "… {hidden} earlier lines{}",
+                        crate::keybindings::tools_expand_paren("expand")
+                    )
+                } else {
+                    format!(
+                        "… {hidden} more lines{}",
+                        crate::keybindings::tools_expand_paren("expand")
+                    )
+                });
+                // Tail hint goes above the preview, matching ice.
+                let hint_rows: Vec<String> = wrap_text_with_ansi(&hint, content_width)
+                    .into_iter()
+                    .map(|part| panel.line(&part))
+                    .collect();
+                if tail {
+                    let at = lines.len() - shown;
+                    lines.splice(at..at, hint_rows);
+                } else {
+                    lines.extend(hint_rows);
                 }
             } else if *expanded && visual_lines.len() > OUTPUT_PREVIEW_LINES {
-                let hint = colors.muted.fg("Ctrl+O to collapse");
+                let hint = colors
+                    .muted
+                    .fg(crate::keybindings::tools_expand_paren("collapse").trim_start());
                 for part in wrap_text_with_ansi(&hint, content_width) {
                     lines.push(panel.line(&part));
                 }
@@ -553,14 +653,10 @@ impl ToolExecutionComponent {
         // A colored diff (from `render_diff`) is shown collapsed by default
         // (a small preview) and fully when expanded — an edit's diff is the
         // useful payload, but dumping 40 lines into the transcript by default
-        // swamped the conversation. Cap at DIFF_LINE_CAP even when expanded.
+        // swamped the conversation.
         if let Some(diff) = diff_lines.as_ref() {
             let total = diff.len();
-            let cap = if *expanded {
-                DIFF_LINE_CAP
-            } else {
-                DIFF_PREVIEW_LINES
-            };
+            let cap = if *expanded { total } else { DIFF_PREVIEW_LINES };
             let shown = diff.iter().take(cap);
             for dl in shown {
                 // Keep the diff's fixed gutter and clipping behavior, but put
@@ -569,11 +665,10 @@ impl ToolExecutionComponent {
             }
             if total > cap {
                 let more = total - cap;
-                let hint = if *expanded {
-                    format!("… {} more diff lines (Ctrl+O to collapse)", more)
-                } else {
-                    format!("… {} more diff lines (Ctrl+O to expand)", more)
-                };
+                let hint = format!(
+                    "… {more} more diff lines{}",
+                    crate::keybindings::tools_expand_paren("expand")
+                );
                 for part in wrap_text_with_ansi(&colors.muted.fg(&hint), content_width) {
                     lines.push(panel.line(&part));
                 }
@@ -590,6 +685,7 @@ impl Component for ToolExecutionComponent {
         let status = *self.status.lock().unwrap();
         let revision = self.revision.load(Ordering::Acquire);
         let theme_revision = theme_revision();
+        let style = tool_style();
 
         // Only finished panels are immutable: running ones have a live timer.
         let finished = matches!(status, ToolStatus::Completed | ToolStatus::Failed);
@@ -599,19 +695,21 @@ impl Component for ToolExecutionComponent {
                     if cached.width == width
                         && cached.revision == revision
                         && cached.theme_revision == theme_revision
+                        && cached.style == style
                     {
                         return cached.lines.clone();
                     }
                 }
             }
         }
-        let lines = self.render_panel(width, &theme());
+        let lines = self.render_panel_with(width, &theme(), style);
         if finished {
             if let Ok(mut cache) = self.cache.lock() {
                 *cache = Some(ToolRenderCache {
                     width,
                     revision,
                     theme_revision,
+                    style,
                     lines: lines.clone(),
                 });
             }
@@ -660,7 +758,9 @@ fn render_skill(
             "{pad}{} {} {}",
             colors.custom_message_label.fg(&label),
             colors.custom_message_text.fg(name),
-            colors.dim.fg("(Ctrl+O to expand)"),
+            colors
+                .dim
+                .fg(crate::keybindings::tools_expand_paren("expand").trim_start()),
         );
         out.push(apply_background_to_line(&line, width, |s| bg.bg(s)));
         out.push(apply_background_to_line("", width, |s| bg.bg(s)));
@@ -729,6 +829,232 @@ pub(crate) fn format_elapsed(duration: std::time::Duration) -> String {
         let remaining_secs = (secs % 60.0).floor() as u64;
         format!("{}m{}s", mins, remaining_secs)
     }
+}
+
+/// Borrowed view of a tool call for [`render_compact`].
+struct CompactTool<'a> {
+    name: &'a str,
+    label: String,
+    summary: String,
+    status: ToolStatus,
+    result: Option<&'a str>,
+    diff: Option<&'a [String]>,
+    markdown: bool,
+    expanded: bool,
+    leading_spacer: bool,
+}
+
+fn is_blank_row(line: &str) -> bool {
+    strip_ansi(line).trim().is_empty()
+}
+
+fn trim_blank_rows(mut rows: Vec<String>) -> Vec<String> {
+    while rows.last().is_some_and(|row| is_blank_row(row)) {
+        rows.pop();
+    }
+    let lead = rows.iter().take_while(|row| is_blank_row(row)).count();
+    rows.drain(..lead);
+    rows
+}
+
+/// `+added -removed` from rendered diff rows, whose first column is the sign.
+fn diff_stats(diff: &[String]) -> String {
+    let (mut added, mut removed) = (0, 0);
+    for row in diff {
+        match strip_ansi(row).chars().next() {
+            Some('+') => added += 1,
+            Some('-') => removed += 1,
+            _ => {}
+        }
+    }
+    format!("+{added} -{removed}")
+}
+
+/// Port of ice `ToolExecutionComponent.renderCompact`: a bullet row, then the
+/// outcome under a `⎿` gutter. Collapsed shows a short preview; expanded shows
+/// the whole result.
+fn render_compact(colors: &ThemeColors, t: &CompactTool, width: usize) -> Vec<String> {
+    let width = if t.expanded {
+        width
+    } else {
+        width.min(COMPACT_TOOL_MAX_WIDTH)
+    };
+    let mut lines = Vec::new();
+    if t.leading_spacer {
+        lines.push(String::new());
+    }
+    let (glyph, color) = match t.status {
+        ToolStatus::Completed => ("✓", colors.success),
+        ToolStatus::Failed => ("✗", colors.error),
+        ToolStatus::Pending | ToolStatus::Running => ("›", colors.muted),
+    };
+    for (index, row) in compact_title(colors, t, width.saturating_sub(2).max(1))
+        .into_iter()
+        .enumerate()
+    {
+        if index == 0 {
+            lines.push(format!("{} {row}", color.fg(glyph)));
+        } else {
+            lines.push(format!("  {row}"));
+        }
+    }
+    let body_width = width.saturating_sub(4).max(1);
+    for (index, row) in compact_body(colors, t, body_width).iter().enumerate() {
+        let prefix = if index == 0 {
+            format!("  {} ", colors.dim.fg("⎿"))
+        } else {
+            "    ".to_string()
+        };
+        lines.push(format!(
+            "{prefix}{}",
+            truncate_to_width(row, body_width, "…")
+        ));
+    }
+    lines
+}
+
+fn compact_title(colors: &ThemeColors, t: &CompactTool, width: usize) -> Vec<String> {
+    let title = |text: &str| colors.tool_title.fg(&bold(text));
+    if t.name == "edit" && !t.summary.is_empty() {
+        let verb = match t.status {
+            ToolStatus::Pending | ToolStatus::Running => "Edit",
+            ToolStatus::Failed => "Edit failed",
+            ToolStatus::Completed => "Edited",
+        };
+        let stats = match (t.status, t.diff) {
+            (ToolStatus::Completed, Some(diff)) => {
+                format!(" {}", colors.dim.fg(&format!("({})", diff_stats(diff))))
+            }
+            _ => String::new(),
+        };
+        let row = format!(
+            "{} {}{stats}",
+            title(verb),
+            colors.tool_title.fg(&t.summary)
+        );
+        return vec![truncate_to_width(&row, width, "…")];
+    }
+    let command = t.summary.trim();
+    if t.name == "bash" && !command.is_empty() {
+        let verb = title(if t.status == ToolStatus::Running {
+            "Running"
+        } else {
+            "Ran"
+        });
+        if t.expanded {
+            return wrap_text_with_ansi(
+                &format!("{verb} {}", colors.tool_title.fg(command)),
+                width,
+            );
+        }
+        let mut rows = command.split('\n');
+        let first = rows.next().unwrap_or("");
+        let text = if rows.next().is_some() {
+            format!("{first} …")
+        } else {
+            first.to_string()
+        };
+        return vec![truncate_to_width(
+            &format!("{verb} {}", colors.tool_title.fg(&text)),
+            width,
+            "…",
+        )];
+    }
+    let row = if t.summary.is_empty() {
+        title(&t.label)
+    } else {
+        format!("{} {}", title(&t.label), colors.tool_output.fg(&t.summary))
+    };
+    if t.expanded {
+        wrap_text_with_ansi(&row, width)
+    } else {
+        vec![truncate_to_width(&row, width, "…")]
+    }
+}
+
+fn compact_body(colors: &ThemeColors, t: &CompactTool, body_width: usize) -> Vec<String> {
+    let Some(result) = t.result else {
+        return Vec::new();
+    };
+    let failed = t.status == ToolStatus::Failed;
+    let mut text = normalized_output_lines(result);
+    while text.last().is_some_and(|row| row.trim().is_empty()) {
+        text.pop();
+    }
+    let diff = t
+        .diff
+        .filter(|_| t.name == "edit" && !failed)
+        .map(|rows| trim_blank_rows(rows.to_vec()));
+
+    if t.expanded {
+        if let Some(diff) = diff {
+            return diff;
+        }
+        if t.markdown {
+            return trim_blank_rows(
+                crate::markdown::Markdown::new(result.to_string(), 0, 0).render(body_width),
+            );
+        }
+        let tint = if failed {
+            colors.error
+        } else {
+            colors.tool_output
+        };
+        return text.iter().map(|row| tint.fg(row)).collect();
+    }
+
+    let dim = |row: &str| colors.dim.fg(row);
+    let more = |hidden: usize| {
+        dim(&format!(
+            "… +{hidden} lines{}",
+            crate::keybindings::tools_expand_paren("expand")
+        ))
+    };
+    if matches!(t.status, ToolStatus::Pending | ToolStatus::Running) {
+        let tail: Vec<String> = text
+            .iter()
+            .skip(text.len().saturating_sub(COMPACT_RUNNING_TAIL_LINES))
+            .map(|row| dim(row))
+            .collect();
+        let hidden = text.len() - tail.len();
+        let mut rows = Vec::new();
+        if hidden > 0 {
+            rows.push(dim(&format!("… +{hidden} lines")));
+        }
+        rows.extend(tail);
+        return rows;
+    }
+    if failed {
+        let mut rows: Vec<String> = text
+            .iter()
+            .take(COMPACT_ERROR_HEAD_LINES)
+            .map(|row| colors.error.fg(row))
+            .collect();
+        if text.len() > rows.len() {
+            rows.push(more(text.len() - rows.len()));
+        }
+        return rows;
+    }
+    if let Some(mut diff) = diff {
+        if diff.len() > COMPACT_DIFF_PREVIEW_LINES {
+            let hidden = diff.len() - COMPACT_DIFF_PREVIEW_LINES;
+            diff.truncate(COMPACT_DIFF_PREVIEW_LINES);
+            diff.push(more(hidden));
+        }
+        return diff;
+    }
+    if text.is_empty() {
+        return vec![dim("no output")];
+    }
+    let mut rows: Vec<String> = text
+        .iter()
+        .take(COMPACT_OUTPUT_HEAD_LINES)
+        .map(|row| dim(row))
+        .collect();
+    if text.len() > rows.len() {
+        rows.push(more(text.len() - rows.len()));
+    }
+    rows
 }
 
 /// Normalize tool output for display. Tool payloads are not guaranteed to use
@@ -1174,7 +1500,9 @@ mod tools {
 
     fn unquote(v: &str) -> String {
         if v.len() >= 2 && v.starts_with('"') && v.ends_with('"') {
-            v[1..v.len() - 1].to_string()
+            // Decode JSON escapes (`\n`, `\"`, `\u00e9`) so a multi-line command
+            // is multi-line, not one row with literal backslashes.
+            serde_json::from_str::<String>(v).unwrap_or_else(|_| v[1..v.len() - 1].to_string())
         } else {
             v.to_string()
         }
@@ -1545,6 +1873,118 @@ mod tests {
         let expanded_plain = crate::ansi::strip_ansi(&expanded.join("\n"));
         assert!(expanded_plain.contains("line 20"));
         assert!(expanded_plain.contains("Ctrl+O to collapse"));
+    }
+
+    /// A collapsed bash panel is one header row plus the output tail, so a
+    /// long multi-line command cannot cover the transcript.
+    #[test]
+    fn collapsed_bash_is_one_header_row_and_output_tail() {
+        let tool = ToolExecutionComponent::new(
+            "bash",
+            r#"{"command":"git log --oneline && printf '\\n\\nBranches:' && git branch\nsecond line that is long enough to wrap around the panel width twice over"}"#,
+        );
+        let output = (1..=20)
+            .map(|line| format!("line {line}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        tool.set_result(&output, false);
+
+        let collapsed = crate::ansi::strip_ansi(&tool.render(60).join("\n"));
+        assert_eq!(collapsed.matches("bash").count(), 1);
+        assert!(!collapsed
+            .contains("second line that is long enough to wrap around the panel width twice over"));
+        assert!(collapsed.contains("15 earlier lines (Ctrl+O to expand)"));
+        assert!(collapsed.contains("line 20") && collapsed.contains("line 16"));
+        assert!(!collapsed.contains("line 15"));
+
+        tool.set_expanded(true);
+        let expanded = crate::ansi::strip_ansi(&tool.render(60).join("\n"));
+        assert!(expanded.contains("line 1\n") || expanded.contains("line 1 "));
+        assert!(expanded.contains("Ctrl+O to collapse"));
+    }
+
+    fn compact_plain(tool: &ToolExecutionComponent, width: usize) -> String {
+        let lines = tool.render_panel_with(width, &theme(), ToolStyle::Compact);
+        crate::ansi::strip_ansi(&lines.join("\n"))
+    }
+
+    fn numbered(count: usize) -> String {
+        (1..=count)
+            .map(|line| format!("line {line}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    /// ice compact: `✓ Ran <first line> …`, then the first 3 output rows under
+    /// a gutter and a `+N lines` hint; expanding shows the whole command and
+    /// output.
+    #[test]
+    fn compact_bash_shows_bullet_row_and_head_preview() {
+        let tool = ToolExecutionComponent::new(
+            "bash",
+            r#"{"command":"git log --oneline\nsecond \"quoted\" line"}"#,
+        );
+        tool.set_result(&numbered(20), false);
+
+        let collapsed = compact_plain(&tool, 120);
+        assert!(
+            collapsed.contains("✓ Ran git log --oneline …"),
+            "{collapsed}"
+        );
+        assert!(!collapsed.contains("second"));
+        assert!(collapsed.contains("⎿ line 1"));
+        assert!(collapsed.contains("line 3") && !collapsed.contains("line 4"));
+        assert!(collapsed.contains("… +17 lines (Ctrl+O to expand)"));
+        assert!(collapsed.lines().all(|line| line.chars().count() <= 100));
+
+        tool.set_expanded(true);
+        let expanded = compact_plain(&tool, 120);
+        assert!(expanded.contains("second \"quoted\" line"));
+        assert!(expanded.contains("line 20") && !expanded.contains("+17 lines"));
+    }
+
+    #[test]
+    fn compact_failure_shows_five_error_rows_and_empty_output_is_labelled() {
+        let failed = ToolExecutionComponent::new("bash", r#"{"command":"make"}"#);
+        failed.set_result(&numbered(9), true);
+        let text = compact_plain(&failed, 80);
+        assert!(text.contains("✗ Ran make"));
+        assert!(text.contains("line 5") && !text.contains("line 6"));
+        assert!(text.contains("… +4 lines"));
+
+        let empty = ToolExecutionComponent::new("bash", r#"{"command":"true"}"#);
+        empty.set_result("", false);
+        assert!(compact_plain(&empty, 80).contains("no output"));
+    }
+
+    #[test]
+    fn compact_edit_reports_diff_stats_and_previews_fourteen_rows() {
+        let mut diff = String::new();
+        for i in 1..=10 {
+            diff.push_str(&format!("-{i} old {i}\n+{i} new {i}\n"));
+        }
+        let tool = ToolExecutionComponent::new("edit", r#"{"path":"src/f.rs"}"#);
+        tool.set_result("ok", false);
+        tool.set_diff(crate::diff::render_diff(&diff, 80));
+        let collapsed = compact_plain(&tool, 80);
+        assert!(
+            collapsed.contains("Edited src/f.rs (+10 -10)"),
+            "{collapsed}"
+        );
+        assert!(collapsed.contains("… +"), "{collapsed}");
+        tool.set_expanded(true);
+        assert!(!compact_plain(&tool, 80).contains("… +"));
+    }
+
+    #[test]
+    fn compact_group_members_drop_the_leading_blank_row() {
+        let tool = ToolExecutionComponent::new("read", r#"{"path":"a.rs"}"#);
+        tool.set_result("x", false);
+        let with = tool.render_panel_with(80, &theme(), ToolStyle::Compact);
+        assert!(with[0].is_empty());
+        tool.set_leading_spacer(false);
+        let without = tool.render_panel_with(80, &theme(), ToolStyle::Compact);
+        assert!(!without[0].is_empty());
     }
 
     /// The header summarizes the args JSON into a compact signature instead

@@ -987,6 +987,25 @@ pub fn get_keybindings() -> std::sync::MutexGuard<'static, Keybindings> {
     guard.lock().expect("Failed to lock global keybindings")
 }
 
+/// The key(s) bound to the tool-output toggle, e.g. `Ctrl+O`; empty if unbound.
+pub fn tools_expand_key() -> String {
+    get_keybindings()
+        .get_keys(keys::TOOLS_EXPAND)
+        .iter()
+        .map(|key| key.display())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+/// ` (Ctrl+O to expand)` using the live binding, or nothing when unbound, so
+/// hints never name a key the user has rebound or removed.
+pub fn tools_expand_paren(action: &str) -> String {
+    match tools_expand_key().as_str() {
+        "" => String::new(),
+        key => format!(" ({key} to {action})"),
+    }
+}
+
 /// Predefined keybinding IDs.
 pub mod keys {
     use super::KeybindingId;

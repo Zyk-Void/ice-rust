@@ -230,6 +230,16 @@ pub(super) fn settings_menu_items(
         .with_description("Copy selected text automatically in fullscreen mode")
         .with_values(&["true", "false"]),
         SettingItem::new(
+            "tool-style",
+            "Tool style",
+            match settings.tool_style() {
+                ice_tui::ToolStyle::Compact => "compact",
+                ice_tui::ToolStyle::Boxed => "boxed",
+            },
+        )
+        .with_description("compact: bullet rows grouped into summaries; boxed: padded blocks")
+        .with_values(&["compact", "boxed"]),
+        SettingItem::new(
             "double-escape-action",
             "Double-escape action",
             settings
@@ -334,6 +344,12 @@ pub(super) fn apply_setting_change(
         "terminal-progress" => {
             settings.show_terminal_progress = Some(as_bool());
             None
+        }
+        // Live: tool panels read the style on every render.
+        "tool-style" => {
+            settings.tool_style = Some(value.to_string());
+            ice_tui::set_tool_style(settings.tool_style());
+            Some(format!("Tool style: {value}."))
         }
         "double-escape-action" => {
             settings.double_escape_action = Some(value.to_string());

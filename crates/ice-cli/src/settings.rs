@@ -187,6 +187,10 @@ pub struct Settings {
     /// Hide the body of thinking blocks while retaining a compact label.
     #[serde(default)]
     pub hide_thinking_block: Option<bool>,
+    /// `compact` (default): bullet rows with a gutter preview. `boxed`:
+    /// padded background blocks.
+    #[serde(default)]
+    pub tool_style: Option<String>,
     /// Suppress the interactive startup header and resource summary.
     /// Update checks remain enabled, matching upstream.
     #[serde(default)]
@@ -257,6 +261,14 @@ pub struct TerminalSettings {
 }
 
 impl Settings {
+    /// Resolved tool-call style; anything but `boxed` is the compact default.
+    pub fn tool_style(&self) -> ice_tui::ToolStyle {
+        match self.tool_style.as_deref() {
+            Some("boxed") => ice_tui::ToolStyle::Boxed,
+            _ => ice_tui::ToolStyle::Compact,
+        }
+    }
+
     /// Resolved HTTP idle timeout in milliseconds (`None` ⇒ library default,
     /// `Some(0)` ⇒ disabled). See [`ice_ai::http::parse_http_idle_timeout_ms`].
     pub fn http_idle_timeout_ms(&self) -> Option<i64> {
@@ -631,6 +643,17 @@ fn save_settings_to_path(
         }
         _ => {
             obj.remove("doubleEscapeAction");
+        }
+    }
+    match settings.tool_style.as_deref() {
+        Some(style) if !style.trim().is_empty() => {
+            obj.insert(
+                "toolStyle".to_string(),
+                serde_json::Value::String(style.to_string()),
+            );
+        }
+        _ => {
+            obj.remove("toolStyle");
         }
     }
     for (key, value) in [
@@ -1196,6 +1219,26 @@ mod scoped_tests {
             path.file_name().and_then(|name| name.to_str()).unwrap()
         ));
         assert!(!temp.exists(), "atomic staging file should not remain");
+    }
+
+    #[test]
+    fn tool_style_defaults_to_compact_and_round_trips() {
+        let (_tmp, _guard) = with_temp_env();
+        assert_eq!(
+            Settings::default().tool_style(),
+            ice_tui::ToolStyle::Compact
+        );
+        let path = config::settings_path().unwrap();
+        let mut settings = Settings::default();
+        settings.tool_style = Some("boxed".to_string());
+        save_settings(&settings).unwrap();
+        let saved: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(saved["toolStyle"], "boxed");
+        assert_eq!(
+            load_settings().unwrap().tool_style(),
+            ice_tui::ToolStyle::Boxed
+        );
     }
 
     #[test]

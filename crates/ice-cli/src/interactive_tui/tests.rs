@@ -1779,6 +1779,7 @@ fn settings_menu_covers_the_wired_settings_surface() {
             "collapse-changelog",
             "terminal-progress",
             "fullscreen-copy-on-select",
+            "tool-style",
             "double-escape-action",
             "editor-padding",
             "autocomplete-max-items",

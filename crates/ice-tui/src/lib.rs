@@ -98,8 +98,8 @@ pub use keybinding_hints::{
     format_combo, key_code_name, key_display_text, key_hint, key_text, raw_key_hint,
 };
 pub use keybindings::{
-    get_keybindings, set_keybindings, KeyCombo, KeybindingConflict, KeybindingDefinition,
-    KeybindingId, Keybindings,
+    get_keybindings, set_keybindings, tools_expand_key, tools_expand_paren, KeyCombo,
+    KeybindingConflict, KeybindingDefinition, KeybindingId, Keybindings,
 };
 pub use keys::{
     is_key_release, is_key_repeat, is_kitty_protocol_active, matches_key, parse_key,
@@ -147,7 +147,9 @@ pub use theme::{
     apply_theme_preset, global_theme_manager, theme, theme_revision, Color, Theme, ThemeColors,
     ThemeManager, ThemePreset, ThemeSpacing,
 };
-pub use tool_execution::{ToolExecutionComponent, ToolStatus};
+pub use tool_execution::{
+    set_tool_style, tool_style, ToolExecutionComponent, ToolStatus, ToolStyle,
+};
 pub use tool_group::{describe_exploration, ToolGroupComponent};
 pub use truncated_text::TruncatedText;
 pub use tui::{

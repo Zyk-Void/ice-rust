@@ -29,7 +29,7 @@ use crate::visual_truncate::truncate_to_visual_lines;
 const PREVIEW_LINES: usize = 20;
 
 /// After this long without a result, a running bash panel shows the
-/// "Esc / Ctrl+C 中止" hint (the tool has no default timeout — the model must
+/// "Esc / Ctrl+C to abort" hint (the tool has no default timeout — the model must
 /// pass one, and a stuck command otherwise looks frozen).
 const LONG_RUNNING_HINT_AFTER: Duration = Duration::from_secs(60);
 
@@ -253,13 +253,17 @@ impl BashExecutionComponent {
         }
         if hidden > 0 {
             if expanded {
-                parts.push(colors.muted.fg("(Ctrl+O to collapse)"));
-            } else {
                 parts.push(
                     colors
                         .muted
-                        .fg(&format!("... {} more lines (Ctrl+O to expand)", hidden)),
+                        .fg(crate::keybindings::tools_expand_paren("collapse").trim_start()),
                 );
+            } else {
+                parts.push(colors.muted.fg(&format!(
+                    "... {} more lines{}",
+                    hidden,
+                    crate::keybindings::tools_expand_paren("expand")
+                )));
             }
         }
         match status {

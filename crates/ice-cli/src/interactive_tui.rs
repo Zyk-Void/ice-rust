@@ -948,6 +948,7 @@ pub async fn interactive_tui(
     // which project settings or package update roots this TUI observes.
     let cwd = reload_context.cwd.clone();
     let saved_settings = crate::settings::load_settings().unwrap_or_default();
+    ice_tui::set_tool_style(saved_settings.tool_style());
     // Remember visited projects for the all-project session picker. The index
     // points to existing files; it never moves or rewrites a session log.
     if let Ok(agent_dir) = crate::config::agent_dir() {

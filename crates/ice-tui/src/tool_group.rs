@@ -29,7 +29,10 @@ impl Member {
             Self::Bash(bash) => match bash.status() {
                 BashStatus::Running => ToolStatus::Running,
                 BashStatus::Complete => ToolStatus::Completed,
-                BashStatus::Cancelled | BashStatus::Error => ToolStatus::Failed,
+                BashStatus::Error => ToolStatus::Failed,
+                // A user abort is not a command failure: it must not close the
+                // group or paint a red ✗ (ice only closes on `error`).
+                BashStatus::Cancelled => ToolStatus::Completed,
             },
         }
     }
@@ -72,6 +75,8 @@ impl ToolGroupComponent {
     }
 
     pub fn add_tool(&self, tool: Arc<ToolExecutionComponent>) {
+        // Members sit under the group's own row, not a standalone cell.
+        tool.set_leading_spacer(false);
         self.add(Member::Tool(tool));
     }
 
@@ -143,7 +148,10 @@ impl Component for ToolGroupComponent {
         let shown = if members.len() > 6 { 5 } else { members.len() };
         for (index, member) in members.iter().take(shown).enumerate() {
             let prefix = if index == 0 { "  ⎿ " } else { "    " };
-            lines.push(format!("{prefix}{}", member.description().escape_debug()));
+            lines.push(format!(
+                "{prefix}{}",
+                escape_controls(&member.description())
+            ));
         }
         if shown < members.len() {
             let keys = crate::get_keybindings()
@@ -190,6 +198,20 @@ impl Component for ToolGroupComponent {
     fn as_any(&self) -> &dyn Any {
         self
     }
+}
+
+/// Escape only control characters (terminal-injection safety); quotes and
+/// backslashes in commands and paths stay as written.
+fn escape_controls(text: &str) -> String {
+    text.chars()
+        .flat_map(|c| {
+            if c.is_control() {
+                c.escape_default().collect::<Vec<_>>()
+            } else {
+                vec![c]
+            }
+        })
+        .collect()
 }
 
 /// Display classification only. Unknown or mutating shell commands stay separate.
@@ -390,6 +412,16 @@ mod tests {
         assert!(label.contains("\\n") && label.contains("\\u{1b}") && label.contains("\\t"));
         assert!(label.contains('界'));
         assert!(lines.iter().all(|line| visible_width(line) <= 80));
+    }
+
+    #[test]
+    fn exploration_group_keeps_quotes_and_backslashes_readable() {
+        let group = ToolGroupComponent::new(false);
+        let member = tool("grep", serde_json::json!({"pattern":r#"say "hi" \bfoo\b"#}));
+        member.set_result("done", false);
+        group.add_tool(member);
+        let text = strip_ansi(&group.render(80).join("\n"));
+        assert!(text.contains(r#"say "hi" \bfoo\b"#), "{text}");
     }
 
     #[test]
