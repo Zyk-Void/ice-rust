@@ -69,52 +69,101 @@ pub(super) async fn maybe_add_startup_changelog(
 // Run a single prompt (streaming or blocking)
 // ===========================================================================
 
-pub(super) fn launch_external_editor(draft: String, tx: mpsc::UnboundedSender<TuiMessage>) {
-    std::thread::spawn(move || {
-        let file = match tempfile::Builder::new()
-            .prefix("ice-draft-")
-            .suffix(".md")
-            .tempfile()
-        {
-            Ok(file) => file,
-            Err(error) => {
-                let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(
-                    "Could not create editor file: {error}"
-                ))));
-                return;
+/// Ctrl+G: hand the terminal to the user's editor for the current draft, then
+/// take it back (ice `handleOpenExternalEditor`: `ui.stop()`, edit,
+/// `ui.start()`). Runs on the key-dispatch thread, like Ctrl+Z, so nothing
+/// reads stdin or paints while the editor owns the terminal.
+pub(super) fn run_external_editor(
+    tui: &Arc<TuiAltScreen>,
+    draft: String,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+) {
+    let command = external_editor_command();
+    tui.suspend();
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::Show);
+    let result = edit_in_external_editor(&command, &draft);
+    tui.resume();
+    let _ = tx.send(TuiMessage::ExternalEditorResult(result));
+}
+
+/// `ICERS_EXTERNAL_EDITOR` (nonblank), then `VISUAL`, `EDITOR`, then the
+/// platform default.
+fn external_editor_command() -> String {
+    external_editor_from(|name| std::env::var(name).ok())
+}
+
+pub(super) fn external_editor_from(get: impl Fn(&str) -> Option<String>) -> String {
+    ["ICERS_EXTERNAL_EDITOR", "VISUAL", "EDITOR"]
+        .into_iter()
+        .filter_map(get)
+        .find(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| {
+            if cfg!(windows) {
+                "notepad".to_string()
+            } else {
+                "nano".to_string()
             }
-        };
-        if let Err(error) = std::fs::write(file.path(), draft.as_bytes()) {
-            let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(
-                "Could not write editor file: {error}"
-            ))));
-            return;
-        }
-        let editor = std::env::var("ICERS_EXTERNAL_EDITOR")
-            .ok()
-            .filter(|value| !value.trim().is_empty())
-            .or_else(|| std::env::var("VISUAL").ok())
-            .or_else(|| std::env::var("EDITOR").ok())
-            .unwrap_or_else(|| {
-                if cfg!(windows) {
-                    "notepad".to_string()
-                } else {
-                    "nano".to_string()
-                }
-            });
-        let status = std::process::Command::new(&editor)
-            .arg(file.path())
-            .status();
-        let result = match status {
-            Ok(status) if status.success() => std::fs::read_to_string(file.path())
-                .map_err(|error| format!("Could not read editor file: {error}")),
-            Ok(status) => Err(format!("External editor exited with {status}")),
-            Err(error) => Err(format!(
-                "Could not launch external editor `{editor}`: {error}"
-            )),
-        };
-        let _ = tx.send(TuiMessage::ExternalEditorResult(result));
-    });
+        })
+}
+
+/// Edit `content` in `command` and return the saved text (ice
+/// `editInExternalEditor`). An existing executable path is kept whole, including
+/// spaces. Otherwise split on whitespace into a program and its arguments
+/// (`code --wait`), then append the draft path. Remove one trailing newline,
+/// which most editors add on save.
+pub(super) fn edit_in_external_editor(
+    command: &str,
+    content: &str,
+) -> Result<Option<String>, String> {
+    // Editors commonly replace the file atomically. Keep no open file handle
+    // and protect the draft with its own private directory (also on Windows).
+    let directory = tempfile::Builder::new()
+        .prefix("icers-editor-")
+        .tempdir()
+        .map_err(|error| format!("Could not create editor directory: {error}"))?;
+    let path = directory.path().join("prompt.md");
+    std::fs::write(&path, content.as_bytes())
+        .map_err(|error| format!("Could not write editor file: {error}"))?;
+    let (program, args) = if std::path::Path::new(command).is_file() {
+        (command, Vec::new())
+    } else {
+        let mut parts = command.split_whitespace();
+        let program = parts
+            .next()
+            .ok_or_else(|| "No external editor is configured.".to_string())?;
+        (program, parts.collect::<Vec<_>>())
+    };
+    // ice spawns with `shell: true` on Windows so `.cmd`/`.bat` editors resolve.
+    let mut child = if cfg!(windows) {
+        let mut cmd = std::process::Command::new("cmd");
+        cmd.arg("/C").arg(program);
+        cmd
+    } else {
+        std::process::Command::new(program)
+    };
+    let status = child
+        .args(args)
+        .arg(&path)
+        .status()
+        .map_err(|error| format!("Could not launch external editor `{command}`: {error}"))?;
+    if !status.success() {
+        // A nonzero editor exit is cancellation: keep the original draft.
+        return Ok(None);
+    }
+    let text = std::fs::read_to_string(&path)
+        .map_err(|error| format!("Could not read editor file: {error}"))?;
+    let text = match text.strip_suffix('\n') {
+        Some(rest) => rest.strip_suffix('\r').unwrap_or(rest).to_string(),
+        None => text,
+    };
+    Ok(Some(text))
+}
+
+/// Editor caret at the end of `text`: the last line and its byte length.
+pub(super) fn end_of_text_cursor(text: &str) -> (usize, usize) {
+    let row = text.matches('\n').count();
+    let col = text.rsplit('\n').next().map_or(0, str::len);
+    (row, col)
 }
 
 /// Apply the authoritative run result when it wins the race with the async
@@ -140,27 +189,136 @@ pub(super) fn reconcile_streamed_assistant_completion(
     }
 }
 
-/// Drive a single prompt through the lane. When `streaming` is true, the
-/// `AgentEvent` drain task renders the response live and the completed outcome
-/// reconciles its final snapshot. When false (no `event_rx`), this falls back
-/// to the blocking await-final-text path.
-
-/// Drive a single prompt through the lane. When `streaming` is true, the
-/// `AgentEvent` drain task renders the response live and the completed outcome
-/// reconciles its final snapshot. When false (no `event_rx`), this falls back
-/// to the blocking await-final-text path.
-pub(super) async fn run_prompt_streaming(
+/// Persist buffered shell results before prompt settlement releases the UI.
+/// Event rendering must never perform this write against a later session.
+pub(super) async fn flush_pending_bash_messages(
+    harness: &AgentHarness,
     lane: &Arc<dyn AgentLane>,
+    state: &Arc<TuiState>,
+    session_id: &str,
+) {
+    let pending = std::mem::take(&mut *state.pending_bash_messages.lock().unwrap());
+    if harness.session().storage().metadata().id != session_id {
+        if !pending.is_empty() {
+            add_note_message(
+                &state.chat_container,
+                "Discarded buffered bash results because the session changed.",
+            );
+        }
+        return;
+    }
+    for item in pending {
+        if !Arc::ptr_eq(&item.storage, &harness.session().storage()) {
+            add_note_message(
+                &state.chat_container,
+                "Discarded a buffered shell result because its session was replaced.",
+            );
+            continue;
+        }
+        if let Err(error) = lane.append_message(item.message).await {
+            add_error_message(
+                &state.chat_container,
+                &format!("Could not record bash result: {error}"),
+            );
+        }
+    }
+}
+
+/// Record an out-of-band shell result at a turn boundary.
+pub(super) async fn finish_user_bash(
+    harness: &AgentHarness,
+    state: &Arc<TuiState>,
+    report: UserBashReport,
+) {
+    state.finish_user_bash();
+    if !Arc::ptr_eq(&report.storage, &harness.session().storage()) {
+        add_note_message(
+            &state.chat_container,
+            "Discarded a shell result because its session was replaced.",
+        );
+        return;
+    }
+    let message = ice_harness::messages::bash_execution_message(
+        report.command,
+        report.output,
+        report.exit_code,
+        report.cancelled,
+        report.truncated,
+        report.full_output_path,
+        Some(report.exclude_from_context),
+        now_ms(),
+    );
+    // Defer during a run to preserve complete tool-call/result sequences.
+    // The prompt owner flushes these before releasing the UI to another run.
+    if *state.status.lock().unwrap() == RunStatus::Idle {
+        if let Err(error) = harness.lane("main").append_message(message).await {
+            add_error_message(
+                &state.chat_container,
+                &format!("Could not record bash result: {error}"),
+            );
+        }
+    } else {
+        state
+            .pending_bash_messages
+            .lock()
+            .unwrap()
+            .push(BufferedBashMessage {
+                storage: report.storage,
+                message,
+            });
+    }
+}
+
+/// Drive the startup batch through the same prompt owner as interactive input.
+pub(super) async fn run_initial_prompts(
+    harness: &AgentHarness,
+    prompts: Vec<String>,
+    mut images: Vec<ice_ai::types::ImageContent>,
+    tui: &Arc<TuiAltScreen>,
+    state: &Arc<TuiState>,
+    streaming: bool,
+    running: &Arc<Mutex<bool>>,
+) {
+    for prompt in prompts {
+        if !*running.lock().unwrap() {
+            break;
+        }
+        // Direct prompts do not receive a user MessageStart event.
+        add_user_message(&state.chat_container, &prompt);
+        add_image_previews(&state.chat_container, &images, state.images_visible());
+        tui.request_render(false);
+        if !run_prompt_streaming(
+            harness,
+            &prompt,
+            false,
+            tui,
+            state,
+            streaming,
+            std::mem::take(&mut images),
+        )
+        .await
+        {
+            break;
+        }
+    }
+}
+
+/// Drive one prompt, reconcile its final response, and settle buffered writes.
+pub(super) async fn run_prompt_streaming(
+    harness: &AgentHarness,
     prompt: &str,
     resume: bool,
     tui: &Arc<TuiAltScreen>,
     state: &Arc<TuiState>,
     streaming: bool,
     images: Vec<ice_ai::types::ImageContent>,
-) {
+) -> bool {
+    let lane = harness.lane("main");
+    let session_id = harness.session().storage().metadata().id;
     state.set_status(RunStatus::Working);
     tui.request_render(false);
 
+    let started = std::time::Instant::now();
     let outcome = if resume {
         // Continuing an interrupted run: no new user turn, just the provider call
         // the interrupted run never reached. upstream behaves the same way.
@@ -169,15 +327,35 @@ pub(super) async fn run_prompt_streaming(
             // Nothing to resume after all: leave the status alone and let the
             // normal prompt path take over.
             Ok(None) => {
+                flush_pending_bash_messages(harness, &lane, state, &session_id).await;
                 state.set_status(RunStatus::Idle);
                 tui.request_render(false);
-                return;
+                return true;
             }
             Err(error) => Err(error),
         }
     } else {
         lane.prompt_text(prompt, images).await
     };
+
+    // Settle final tool/message delivery before completion reconciliation. This
+    // also consumes the ordered RunSettled marker and its authoritative summary.
+    // A stopped consumer must not turn into a successful-looking completion.
+    let updates_settled = if streaming {
+        match state.event_drain.flush().await {
+            Ok(()) => true,
+            Err(error) => {
+                add_error_message(
+                    &state.chat_container,
+                    &format!("Could not finish response updates: {error}"),
+                );
+                false
+            }
+        }
+    } else {
+        false
+    };
+    flush_pending_bash_messages(harness, &lane, state, &session_id).await;
 
     if streaming {
         // Broadcast delivery is asynchronous: the harness result can resolve
@@ -204,23 +382,13 @@ pub(super) async fn run_prompt_streaming(
     // Guarantee the pending-messages display reconciles at the end of every
     // run/prompt — covers aborts and the non-streaming path, where no
     // `AgentEnd` event necessarily reaches the drain task.
-    refresh_pending_messages(state, lane).await;
+    refresh_pending_messages(state, &lane).await;
 
-    // Authoritative context-badge fallback. The streaming drain normally
-    // updates it from `MessageEnd`, but a `Lagged` broadcast or the blocking
-    // path can skip that event; reconcile from the run outcome so the badge
-    // always reflects the newest real response.
-    if let Ok(result) = &outcome {
-        let final_message: Option<&AssistantMessage> = match &result.outcome {
-            HarnessRunOutcome::Completed { final_message, .. }
-            | HarnessRunOutcome::Aborted { final_message, .. } => Some(final_message),
-            HarnessRunOutcome::Failed { final_message, .. } => final_message.as_ref(),
-            HarnessRunOutcome::Suspended { .. } => None,
-        };
-        if let Some(a) = final_message {
-            record_context_usage(&state.footer, a);
-        }
-    }
+    record_context_usage(&state.footer, harness).await;
+    let completed = matches!(
+        &outcome,
+        Ok(result) if matches!(result.outcome, HarnessRunOutcome::Completed { .. })
+    );
 
     match outcome {
         Ok(result) => match &result.outcome {
@@ -236,7 +404,7 @@ pub(super) async fn run_prompt_streaming(
                 // in streaming mode. In regular mode there is no drain task,
                 // so suppressing this branch merely hides 405/auth/network
                 // diagnostics from the user.
-                let already_rendered = streaming && final_message.is_some();
+                let already_rendered = updates_settled && final_message.is_some();
                 if !already_rendered {
                     let msg = final_message
                         .as_ref()
@@ -270,6 +438,7 @@ pub(super) async fn run_prompt_streaming(
                         );
                         *state.last_assistant_text.lock().unwrap() = text;
                     }
+                    add_run_summary(&state.chat_container, started.elapsed());
                 }
             }
         },
@@ -279,30 +448,43 @@ pub(super) async fn run_prompt_streaming(
     }
 
     tui.request_render(false);
+    completed
+}
+
+pub(super) fn compact_outcome_message(outcome: CompactionOutcome) -> Result<(), String> {
+    match outcome {
+        CompactionOutcome::Completed { .. } => Ok(()),
+        CompactionOutcome::Declined { .. } => Err("Nothing to compact.".into()),
+        CompactionOutcome::Aborted { .. } => Err("Compaction cancelled.".into()),
+        CompactionOutcome::Failed { error, .. } => {
+            Err(format!("Compact failed: {}", error.message))
+        }
+    }
 }
 
 /// `/compact`: drive a compaction on the lane (mirrors TS `app.compact`).
 /// Reports the outcome as a transcript note; the harness progress watcher
 /// displays the compaction indicator while the summary is generated.
 pub(super) async fn run_compact(
-    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
     tui: &Arc<TuiAltScreen>,
     state: &Arc<TuiState>,
 ) {
     state.set_status(RunStatus::Working);
     tui.request_render(false);
-    match lane.compact(None).await {
-        Ok(_) => {
-            add_note_message(&state.chat_container, "Conversation compacted.");
-            // The last assistant usage describes the pre-compaction context;
-            // reset the badge to `?` until the next response reports the new
-            // (much smaller) prompt size — mirrors pi's `percent: null`.
-            state.footer.set_context_tokens(None);
-        }
-        Err(e) => {
-            add_error_message(&state.chat_container, &format!("Compact failed: {e}"));
+    match harness.lane("main").compact(None).await {
+        Ok(result) => match compact_outcome_message(result.outcome) {
+            Ok(()) => {
+                add_note_message(&state.chat_container, "Conversation compacted.");
+                // Refresh below also handles cancellation after a saved checkpoint.
+            }
+            Err(message) => add_error_message(&state.chat_container, &message),
+        },
+        Err(error) => {
+            add_error_message(&state.chat_container, &format!("Compact failed: {error}"));
         }
     }
+    record_context_usage(&state.footer, harness).await;
     state.set_status(RunStatus::Idle);
     tui.request_render(false);
 }
@@ -336,60 +518,147 @@ pub(super) fn copy_last_assistant(state: &Arc<TuiState>, chat: &Arc<Container>) 
     }
 }
 
-/// Extract text from the chat container within the given screen coordinates.
-/// Returns None if the selection is invalid or empty.
-pub(super) fn extract_selected_text(
-    chat_container: &Arc<Container>,
-    start: (u16, u16),
+/// Finish a drag using the current viewport and the original logical anchor.
+/// A changed wrapping width invalidates row coordinates, so cancel that drag.
+pub(super) fn extract_transcript_selection(
+    snapshot: &ice_tui::TranscriptSnapshot,
+    start: (usize, usize, usize),
     end: (u16, u16),
 ) -> Option<String> {
-    use ice_tui::Component;
-
-    // Get the rendered lines from the chat container
-    let lines = chat_container.render(80); // Use a reasonable width
-    if lines.is_empty() {
+    if snapshot.content_width != start.2 {
         return None;
     }
+    let end = snapshot.content_position(end.0 as usize, end.1 as usize, true)?;
+    extract_selected_text(&snapshot.lines, (start.0, start.1), end)
+}
 
-    // Normalize coordinates (ensure start is before end)
-    let (start_row, end_row) = if start.1 <= end.1 {
-        (start.1 as usize, end.1 as usize)
+/// Plain text of a mouse selection over cached logical transcript rows.
+///
+/// `start` and `end` are `(column, row)` content cells, inclusive, in either
+/// order. The first row is taken from the start column, the last row up to
+/// the end column, and rows between in full. Escape sequences are dropped and
+/// trailing padding is trimmed. This used to re-render the chat at a fixed
+/// width of 80 and index it by screen row, which ignored the real width, the
+/// scroll position and the columns, and kept escape codes.
+pub(super) fn extract_selected_text(
+    rows: &[String],
+    start: (usize, usize),
+    end: (usize, usize),
+) -> Option<String> {
+    let key = |(col, row): (usize, usize)| (row, col);
+    let ((first_row, first_col), (last_row, last_col)) = if key(start) <= key(end) {
+        (key(start), key(end))
     } else {
-        (end.1 as usize, start.1 as usize)
+        (key(end), key(start))
     };
-
-    // Clamp to valid range
-    let start_row = start_row.min(lines.len().saturating_sub(1));
-    let end_row = end_row.min(lines.len().saturating_sub(1));
-
-    if start_row > end_row {
+    if first_row >= rows.len() {
         return None;
     }
+    // A drag that ends below the frame takes the last row in full.
+    let (last_row, last_col) = if last_row >= rows.len() {
+        (rows.len() - 1, usize::MAX)
+    } else {
+        (last_row, last_col)
+    };
+    let selected: Vec<String> = (first_row..=last_row)
+        .map(|index| {
+            let from = if index == first_row { first_col } else { 0 };
+            let line = &rows[index];
+            let text = if index == last_row {
+                let width = last_col.saturating_add(1).saturating_sub(from);
+                ice_tui::slice_with_width(line, from, width, false).0
+            } else {
+                ice_tui::slice_with_width(line, from, usize::MAX, false).0
+            };
+            ice_tui::strip_ansi(&text).trim_end().to_string()
+        })
+        .collect();
+    Some(selected.join("\n"))
+}
 
-    // Extract the selected lines
-    let selected_lines: Vec<String> = lines[start_row..=end_row].to_vec();
+#[cfg(all(feature = "clipboard", not(target_os = "android")))]
+thread_local! {
+    // X11 clipboard ownership must outlive set_text so other clients can read
+    // the selection. Keep one owner per calling UI/runtime thread; Clipboard
+    // does not need to be Send, and successful copies reuse the same owner.
+    static SYSTEM_CLIPBOARD: std::cell::RefCell<Option<arboard::Clipboard>> =
+        std::cell::RefCell::new(None);
+}
 
-    if selected_lines.is_empty() {
-        return None;
+/// Lazily retain a successful backend and retire a failed one so a later copy
+/// can retry. The generic seam tests ownership without accessing an OS clipboard.
+#[cfg(any(test, all(feature = "clipboard", not(target_os = "android"))))]
+pub(super) fn write_retained_resource<T, E>(
+    slot: &std::cell::RefCell<Option<T>>,
+    initialize: impl FnOnce() -> Result<T, E>,
+    write: impl FnOnce(&mut T) -> Result<(), E>,
+) -> bool {
+    let mut retained = slot.borrow_mut();
+    if retained.is_none() {
+        match initialize() {
+            Ok(resource) => *retained = Some(resource),
+            Err(_) => return false,
+        }
     }
-
-    Some(selected_lines.join("\n"))
+    let succeeded = write(retained.as_mut().expect("initialized resource")).is_ok();
+    if !succeeded {
+        retained.take();
+    }
+    succeeded
 }
 
 /// Best-effort clipboard write. Enabled only with the `clipboard` feature
 /// (`arboard`) on non-Android platforms; otherwise returns `false` so the
 /// caller degrades to a hint.
 #[cfg(all(feature = "clipboard", not(target_os = "android")))]
-pub(super) fn copy_to_clipboard(text: &str) -> bool {
-    match arboard::Clipboard::new() {
-        Ok(mut cb) => cb.set_text(text).is_ok(),
-        Err(_) => false,
-    }
+fn copy_to_system_clipboard(text: &str) -> bool {
+    SYSTEM_CLIPBOARD.with(|slot| {
+        write_retained_resource(slot, arboard::Clipboard::new, |clipboard| {
+            clipboard.set_text(text)
+        })
+    })
 }
 
 #[cfg(any(not(feature = "clipboard"), target_os = "android"))]
-pub(super) fn copy_to_clipboard(_text: &str) -> bool {
+fn copy_to_system_clipboard(_text: &str) -> bool {
     false
+}
+
+/// Copy `text` like ice `copyToClipboard`: the system clipboard first, then,
+/// over SSH or mosh (where that clipboard is the remote machine's) or when it
+/// failed, also an OSC 52 request so the user's own terminal stores it.
+pub(super) fn copy_to_clipboard(text: &str) -> bool {
+    let copied = copy_to_system_clipboard(text);
+    if copied && !is_remote_session(|key| std::env::var_os(key)) {
+        return true;
+    }
+    match osc52_sequence(text) {
+        Some(sequence) => {
+            use std::io::Write;
+            let mut out = std::io::stdout().lock();
+            out.write_all(sequence.as_bytes()).is_ok() && out.flush().is_ok() || copied
+        }
+        None => copied,
+    }
+}
+
+/// ice `isRemoteSession`.
+pub(super) fn is_remote_session(env: impl Fn(&str) -> Option<std::ffi::OsString>) -> bool {
+    ["SSH_CONNECTION", "SSH_CLIENT", "MOSH_CONNECTION"]
+        .iter()
+        .any(|key| env(key).is_some_and(|v| !v.is_empty()))
+}
+
+/// The OSC 52 clipboard write for `text`, or `None` when the payload is too
+/// large for terminals to take reliably (ice `MAX_OSC52_ENCODED_LENGTH`).
+pub(super) fn osc52_sequence(text: &str) -> Option<String> {
+    const MAX_ENCODED: usize = 100_000;
+    // Reject by the known encoded length before allocating it.
+    if text.len().div_ceil(3).saturating_mul(4) > MAX_ENCODED {
+        return None;
+    }
+    let encoded = base64::engine::general_purpose::STANDARD.encode(text.as_bytes());
+    (encoded.len() <= MAX_ENCODED).then(|| format!("\x1b]52;c;{encoded}\x07"))
 }
 
 /// Best-effort clipboard text read for Ctrl+V paste. The optional `clipboard`

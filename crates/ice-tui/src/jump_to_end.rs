@@ -38,7 +38,13 @@ impl JumpToEnd {
         let Some(scroll) = &frame.primary_scroll_view else {
             return;
         };
-        if has_overlay || !scroll.follows_end() || scroll.is_following_end() {
+        if has_overlay || !scroll.follows_end() {
+            return;
+        }
+        // Evaluate dynamic labels even while following so stateful indicators
+        // can observe the return to the end and clear their accumulated state.
+        let label = label();
+        if scroll.is_following_end() {
             return;
         }
         let Some(view) = primary_box(&frame.root) else {
@@ -59,7 +65,7 @@ impl JumpToEnd {
         {
             return;
         }
-        let label = truncate_to_width(&label(), clip.width, "");
+        let label = truncate_to_width(&label, clip.width, "");
         let label_width = visible_width(&label);
         let column = clip.x + (clip.width - label_width) / 2;
         // Center against the full clip so auto scrollbar visibility cannot move
@@ -141,6 +147,23 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_label_is_evaluated_while_following_so_state_can_reset() {
+        let (scroll, root, indicator) = scene(30, FollowMode::End, ScrollbarMode::Hidden);
+        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let calls_for_label = calls.clone();
+        indicator.set_label(Some(Arc::new(move || {
+            calls_for_label.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            "hidden".to_owned()
+        })));
+        let frame = crate::layout::render_layout_frame(root, 30, 6);
+        let mut lines = frame.lines.clone();
+        indicator.paint(&frame, &mut lines, false);
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+        assert!(indicator.state.lock().unwrap().rect.is_none());
+        assert!(scroll.is_following_end());
+    }
+
+    #[test]
     fn indicator_is_inside_the_transcript_and_only_the_label_captures_presses() {
         let (scroll, root, indicator) = scene(30, FollowMode::End, ScrollbarMode::Hidden);
         let frame = crate::layout::render_layout_frame(root.clone(), 30, 6);
@@ -185,8 +208,8 @@ mod tests {
             let mut lines = frame.lines.clone();
             indicator.paint(&frame, &mut lines, false);
             assert_eq!(
-                crate::ansi::slice_by_column(&lines[3], width - 1, 1, true),
-                crate::ansi::slice_by_column(&frame.lines[3], width - 1, 1, true)
+                crate::ansi::slice_by_column(&lines[3], width - 1, 1, false),
+                crate::ansi::slice_by_column(&frame.lines[3], width - 1, 1, false)
             );
             assert!(visible_width(&lines[3]) <= width);
             let rect = indicator.state.lock().unwrap().rect;

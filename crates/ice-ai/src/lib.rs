@@ -24,6 +24,7 @@ pub mod json_parse;
 pub mod model;
 pub mod provider;
 pub mod providers;
+pub mod retry;
 pub mod schema;
 pub mod simple_options;
 pub(crate) mod strict_schema;
@@ -36,6 +37,11 @@ pub use model::{Model, StreamingProtocolCompat};
 pub use provider::{
     CacheRetention, ContextPatch, NoopProviderHooks, Provider, ProviderHooks, SimpleStreamOptions,
     SimpleStreamOptionsPatch, DEFAULT_LLM_API_TIMEOUT,
+};
+pub use retry::{
+    get_retry_delay_ms, is_retryable_assistant_error, retry_assistant_call_with_options,
+    AssistantRetryCallbacks, AssistantRetryOptions, AssistantRetryPolicy, RetryCallbackFailure,
+    RetryCallbackFuture, RetryCallbackKind, RetryFinished, RetryScheduled, MAX_RETRY_DELAY_MS,
 };
 pub use schema::validate_tool_arguments;
 pub use types::{

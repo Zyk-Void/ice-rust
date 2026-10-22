@@ -2,6 +2,113 @@
 
 use super::*;
 
+/// A session barrier is acknowledged only after prior ordered broadcasts,
+/// including the harness's RunSettled completion markers, have been handled.
+pub(super) enum AgentEventDrainRequest {
+    Flush(tokio::sync::oneshot::Sender<()>),
+}
+
+/// RunEnd is derived from HarnessRunOutcome, unlike AgentEnd's message-only
+/// payload. Observe the bus synchronously (including extension-started runs),
+/// then render on the same consumer that owns final message/tool delivery.
+pub(super) fn watch_run_summaries(
+    harness: &AgentHarness,
+    state: &Arc<TuiState>,
+) -> ice_harness::watcher::HarnessWatcher {
+    let state = Arc::downgrade(state);
+    let started = Mutex::new(None);
+    harness.watch(move |event| {
+        use ice_harness::events::HarnessEvent;
+        match event {
+            HarnessEvent::RunStart(event) if event.lane == "main" => {
+                *started.lock().unwrap() = Some((event.run_id.clone(), std::time::Instant::now()));
+            }
+            HarnessEvent::RunEnd(event) if event.lane == "main" => {
+                let at = started
+                    .lock()
+                    .unwrap()
+                    .take()
+                    .filter(|(id, _)| id == &event.run_id)
+                    .map(|(_, at)| at);
+                if let (Some(at), Some(state)) = (at, state.upgrade()) {
+                    state.event_drain.record_run_summary(
+                        event.run_id.clone(),
+                        event.outcome,
+                        at.elapsed(),
+                    );
+                }
+            }
+            _ => {}
+        }
+    })
+}
+
+/// A completed lane can still have display events buffered in its broadcast
+/// receiver. Session changes wait until the UI has consumed those events.
+#[derive(Default)]
+pub(super) struct AgentEventDrain {
+    pub(super) session_changing: std::sync::atomic::AtomicBool,
+    sender: Mutex<Option<mpsc::UnboundedSender<AgentEventDrainRequest>>>,
+    // A lost marker must not retain metadata forever. Dropping the oldest
+    // metadata can suppress a lagged summary, never invent success for a run.
+    summaries: Mutex<
+        std::collections::VecDeque<(
+            String,
+            ice_harness::events::RunEndOutcome,
+            std::time::Duration,
+        )>,
+    >,
+}
+
+impl AgentEventDrain {
+    const MAX_SUMMARIES: usize = 256;
+
+    fn record_run_summary(
+        &self,
+        run_id: String,
+        outcome: ice_harness::events::RunEndOutcome,
+        elapsed: std::time::Duration,
+    ) {
+        let mut summaries = self.summaries.lock().unwrap();
+        if summaries.len() == Self::MAX_SUMMARIES {
+            summaries.pop_front();
+        }
+        summaries.push_back((run_id, outcome, elapsed));
+    }
+
+    fn take_run_summary(
+        &self,
+        run_id: &str,
+    ) -> Option<(ice_harness::events::RunEndOutcome, std::time::Duration)> {
+        let mut summaries = self.summaries.lock().unwrap();
+        let index = summaries.iter().position(|(id, _, _)| id == run_id)?;
+        summaries
+            .remove(index)
+            .map(|(_, outcome, elapsed)| (outcome, elapsed))
+    }
+
+    pub(super) fn install(&self) -> mpsc::UnboundedReceiver<AgentEventDrainRequest> {
+        let (sender, receiver) = mpsc::unbounded_channel();
+        *self.sender.lock().unwrap() = Some(sender);
+        receiver
+    }
+
+    pub(super) async fn flush(&self) -> Result<(), &'static str> {
+        let sender = self.sender.lock().unwrap().clone();
+        let Some(sender) = sender else {
+            return Ok(());
+        };
+        let (acknowledge, completed) = tokio::sync::oneshot::channel();
+        sender
+            .send(AgentEventDrainRequest::Flush(acknowledge))
+            .map_err(|_| "response updates are unavailable")?;
+        tokio::time::timeout(std::time::Duration::from_secs(5), completed)
+            .await
+            .map_err(|_| "the previous response updates did not finish; try again")?
+            .map_err(|_| "response updates are unavailable")
+    }
+}
+
 // ===========================================================================
 // AgentEvent drain task — the streaming core
 // ===========================================================================
@@ -128,23 +235,191 @@ pub(super) async fn handle_dequeue(
     tui.request_render(false);
 }
 
+/// Cancel one queued message by dock position and restore its text and images
+/// to the editor only after the durable cancel succeeds, so a
+/// failure or a lost race with consumption never duplicates the message.
+pub(super) async fn unqueue_message(
+    harness: AgentHarness,
+    editor: Arc<Editor>,
+    state: Arc<TuiState>,
+    tui: Arc<TuiAltScreen>,
+    position: Option<usize>,
+) {
+    use ice_harness::agent_harness::CancelQueuedOutcome;
+    use ice_harness::session::types::{LaneRecord, RecordQuery};
+
+    let lane = harness.lane("main");
+    let storage = harness.session().storage();
+
+    let note = |message: &str, error: bool| {
+        if error {
+            add_error_message(&state.chat_container, message);
+        } else {
+            add_note_message(&state.chat_container, message);
+        }
+        tui.request_render(false);
+    };
+    let queued = match lane.queued_messages().await {
+        Ok(queued) => queued,
+        Err(error) => return note(&format!("Could not read queued messages: {error}"), true),
+    };
+    let rows: Vec<(&String, &String)> = queued
+        .steering_ids
+        .iter()
+        .zip(&queued.steering)
+        .chain(queued.follow_up_ids.iter().zip(&queued.follow_up))
+        .collect();
+    let index = match position {
+        Some(n) => n - 1,
+        None => rows.len().saturating_sub(1),
+    };
+    let Some((id, text)) = rows
+        .get(index)
+        .map(|(id, text)| ((*id).clone(), (*text).clone()))
+    else {
+        return note("No such queued message", false);
+    };
+    // Queue previews contain text only. The durable enqueue owns the complete
+    // message; read it before cancellation, and restore only after cancellation
+    // wins the same storage boundary that excludes queue consumption.
+    let records = match storage
+        .find_records(&RecordQuery {
+            lane: Some("main".into()),
+            record_type: Some("queue_enqueued"),
+            ..Default::default()
+        })
+        .await
+    {
+        Ok(records) => records,
+        Err(error) => return note(&format!("Could not read queued attachments: {error}"), true),
+    };
+    let message = records.into_iter().find_map(|record| match record {
+        LaneRecord::QueueEnqueued(record)
+            if record.target.get("id").and_then(serde_json::Value::as_str) == Some(id.as_str()) =>
+        {
+            record.target.get("message").cloned()
+        }
+        _ => None,
+    });
+    let message = match message.and_then(|value| serde_json::from_value::<AgentMessage>(value).ok())
+    {
+        Some(message) => message,
+        None => {
+            return note(
+                "Could not read the queued message; it was left in the queue.",
+                true,
+            )
+        }
+    };
+    let images = match message {
+        AgentMessage::User(UserMessage {
+            content: ice_ai::types::UserContent::Blocks(blocks),
+            ..
+        }) => blocks
+            .into_iter()
+            .filter_map(|block| match block {
+                Content::Image(image) => Some(image),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    match lane.cancel_queued(&id).await {
+        Ok(result) if result.outcome == CancelQueuedOutcome::Cancelled => {
+            state.restore_pending_images(images);
+            let combined = merge_queued_into_draft(&text, &editor.get_expanded_text());
+            set_editor_text_caret_at_end(&editor, &combined);
+            refresh_pending_messages(&state, &lane).await;
+            note("Moved queued message to editor", false);
+        }
+        Ok(_) => {
+            refresh_pending_messages(&state, &lane).await;
+            note("That message was already sent to the model", false);
+        }
+        Err(error) => note(&format!("Could not cancel queued message: {error}"), true),
+    }
+}
+
 /// Cancel the active run the native-pi way: pull every queued steering /
 /// follow-up message back into the editor FIRST, then abort. upstream's
 /// `onEscape` does exactly this during streaming
 /// (`restoreQueuedMessagesToEditor({abort: true})`), so a cancel never silently
 /// swallows messages the user staged while the run was in flight — they land in
 /// the editor to be re-edited or resent.
-pub(super) fn abort_run_restoring_queue(
+/// Ownership is captured under the dispatch status lock and passed explicitly.
+/// Never reclassify a completed navigation as an ordinary queued-message run.
+pub(super) fn abort_interrupted_run(
     lane: Arc<dyn AgentLane>,
     editor: Arc<Editor>,
     state: Arc<TuiState>,
     tui: Arc<TuiAltScreen>,
-) {
-    tokio::spawn(async move {
-        let _ = restore_queued_messages_to_editor(lane.clone(), editor, state, tui.clone()).await;
-        let _ = lane.abort().await;
+    navigation: bool,
+) -> impl std::future::Future<Output = ()> + Send {
+    async move {
+        if navigation {
+            // The source operation may finish before this task gets CPU time.
+            // Do not restore its queue or abort a subsequently admitted prompt.
+            if !state
+                .tree_navigation_active
+                .load(std::sync::atomic::Ordering::Acquire)
+                || *state.status.lock().unwrap() != RunStatus::Aborting
+            {
+                return;
+            }
+        } else {
+            let _ =
+                restore_queued_messages_to_editor(lane.clone(), editor, state.clone(), tui.clone())
+                    .await;
+        }
+        loop {
+            match lane.abort().await {
+                // Navigation can still be waiting to be admitted as a run, so
+                // there is nothing to abort yet. Keep trying until it is, or
+                // until it ends; a lost Esc would let it commit anyway.
+                Err(ice_harness::result::HarnessError::NoActiveRun { .. })
+                    if navigation
+                        && state
+                            .tree_navigation_active
+                            .load(std::sync::atomic::Ordering::Acquire)
+                        && *state.status.lock().unwrap() == RunStatus::Aborting =>
+                {
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                }
+                _ => break,
+            }
+        }
         tui.request_render(false);
-    });
+    }
+}
+
+/// The actual key-loop interrupt seam, also used by navigation cancellation
+/// regressions so effective key routing and queue ownership stay coupled.
+pub(super) fn dispatch_run_interrupt(
+    key: &KeyEvent,
+    bindings: &ice_tui::Keybindings,
+    lane: Arc<dyn AgentLane>,
+    editor: Arc<Editor>,
+    state: Arc<TuiState>,
+    tui: Arc<TuiAltScreen>,
+) -> bool {
+    if !keybinding_matches(bindings, key, ice_tui::keybindings::keys::INTERRUPT) {
+        return false;
+    }
+    // TreeNavigationActivity::drop uses this same lock to clear ownership and
+    // publish Idle. Claim Working, capture ownership, and publish Aborting as
+    // one transaction; completion cannot split those observations.
+    let mut status = state.status.lock().unwrap();
+    if *status != RunStatus::Working {
+        return false;
+    }
+    let navigation = state
+        .tree_navigation_active
+        .load(std::sync::atomic::Ordering::Acquire);
+    *status = RunStatus::Aborting;
+    drop(status);
+    state.apply_status(RunStatus::Aborting);
+    tokio::spawn(abort_interrupted_run(lane, editor, state, tui, navigation));
+    true
 }
 
 pub(super) async fn drain_agent_events(
@@ -153,16 +428,31 @@ pub(super) async fn drain_agent_events(
     state: Arc<TuiState>,
     chat: Arc<Container>,
     lane: Arc<dyn AgentLane>,
+    mut requests: mpsc::UnboundedReceiver<AgentEventDrainRequest>,
 ) {
     loop {
-        match rx.recv().await {
-            Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
-            Err(broadcast::error::RecvError::Lagged(_)) => {
-                // We dropped some intermediate deltas; the next MessageUpdate/
-                // MessageEnd carries a full partial snapshot so the UI re-syncs.
-                continue;
+        tokio::select! {
+            request = requests.recv() => {
+                let Some(request) = request else { break };
+                // The caller has settled the lane. Consume everything already
+                // emitted, including AgentEnd's deferred bash writes, before
+                // allowing the durable session backing to change.
+                loop {
+                    match rx.try_recv() {
+                        Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
+                        Err(broadcast::error::TryRecvError::Lagged(_)) => continue,
+                        Err(broadcast::error::TryRecvError::Empty
+                            | broadcast::error::TryRecvError::Closed) => break,
+                    }
+                }
+                let AgentEventDrainRequest::Flush(acknowledge) = request;
+                let _ = acknowledge.send(());
             }
-            Err(broadcast::error::RecvError::Closed) => break,
+            event = rx.recv() => match event {
+                Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
+                Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                Err(broadcast::error::RecvError::Closed) => break,
+            }
         }
     }
 }
@@ -177,6 +467,14 @@ pub(super) async fn handle_agent_event(
     lane: &Arc<dyn AgentLane>,
 ) {
     match event {
+        AgentEvent::RunSettled { run_id } => {
+            if let Some((outcome, elapsed)) = state.event_drain.take_run_summary(&run_id) {
+                if outcome == ice_harness::events::RunEndOutcome::Completed {
+                    add_run_summary(chat, elapsed);
+                    tui.request_render(false);
+                }
+            }
+        }
         AgentEvent::AgentStart => {
             state.set_status(RunStatus::Working);
             tui.request_render(false);
@@ -185,17 +483,8 @@ pub(super) async fn handle_agent_event(
         AgentEvent::AgentEnd { .. } => {
             // Finalize any still-streaming assistant message.
             state.transcript_view().finalize_assistant();
-            state.set_status(RunStatus::Idle);
-            // Flush any `!command` results that completed mid-run: the run's
-            // tool sequence is closed, so appending now keeps transcript order
-            // intact (upstream's `flushPendingBashMessages`).
-            let pending: Vec<AgentMessage> =
-                std::mem::take(&mut *state.pending_bash_messages.lock().unwrap());
-            for message in pending {
-                if let Err(error) = lane.append_message(message).await {
-                    add_error_message(chat, &format!("Could not record bash result: {error}"));
-                }
-            }
+            // The outer prompt future owns the durable bash-result flush and
+            // transition to Idle. A delayed event may only update presentation.
             // The run drained the queue; refresh so consumed entries drop out
             // of the pending-messages display.
             refresh_pending_messages(state, lane).await;
@@ -209,6 +498,16 @@ pub(super) async fn handle_agent_event(
             ..
         } => {
             state.show_retry(attempt, max_retries, delay_ms);
+            tui.request_render(false);
+        }
+
+        AgentEvent::RetryRefused { error } => {
+            add_note_message(
+                &state.chat_container,
+                &format!(
+                    "Not retrying automatically: the failed response may already have started a tool call or effect, and replaying it could repeat that. Provider error: {error}"
+                ),
+            );
             tui.request_render(false);
         }
 
@@ -238,6 +537,7 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageStart { message } => match message {
             AgentMessage::Assistant(a) => {
+                state.new_message_count.begin_assistant_message();
                 // The shared transcript view renders this through the same
                 // component path as the remote client. It installs the live
                 // markdown transformer + hide-thinking preference itself.
@@ -250,6 +550,7 @@ pub(super) async fn handle_agent_event(
                 tui.request_render(false);
             }
             AgentMessage::Custom(custom) => {
+                state.new_message_count.custom_message();
                 let payload = serde_json::json!({
                     "customType": custom.role,
                     "content": custom.content,
@@ -281,15 +582,16 @@ pub(super) async fn handle_agent_event(
             // so no `message_start` is emitted for it — the submit handler
             // renders that bubble instead.
             AgentMessage::User(user) => {
+                state.new_message_count.other_message();
                 state.transcript_view().add_user(&user_message_text(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
                 refresh_pending_messages(state, lane).await;
                 tui.request_render(false);
             }
-            // ToolResult / other starts are echoed via the tool-execution
-            // components; ignore the dupes.
-            _ => {}
+            // Tool results break adjacent assistant continuations, but their
+            // starts are echoed via tool-execution components.
+            AgentMessage::ToolResult(_) => state.new_message_count.other_message(),
         },
 
         AgentEvent::MessageUpdate {
@@ -299,6 +601,9 @@ pub(super) async fn handle_agent_event(
             let _ = assistant_message_event; // the snapshot is authoritative
             let a: &ice_ai::types::AssistantMessage = &message;
             let text = assistant_text(a);
+            state
+                .new_message_count
+                .assistant_message(!text.trim().is_empty());
             // The shared view creates/updates tool + bash panels from the
             // snapshot's finalized tool calls and streams the block list, so a
             // thinking block renders live exactly as the remote client does.
@@ -317,6 +622,9 @@ pub(super) async fn handle_agent_event(
 
         AgentEvent::MessageEnd { message } => {
             if let AgentMessage::Assistant(a) = &message {
+                state
+                    .new_message_count
+                    .assistant_message(!assistant_text(a).trim().is_empty());
                 let text = assistant_text(a);
                 state
                     .transcript_view()
@@ -345,10 +653,8 @@ pub(super) async fn handle_agent_event(
                         .footer
                         .set_cache_hit_rate(Some(usage.cache_read as f64 / denom as f64 * 100.0));
                 }
-                // Context-window badge (`?/512k` → `63.2%/512k`): the provider
-                // reports the prompt token count for this request, which is the
-                // context size the footer displays.
-                record_context_usage(&state.footer, a);
+                // Occupancy is refreshed from the active branch by the drain,
+                // rather than copied from this possibly stale event payload.
                 let miss = state
                     .cache_tracker
                     .lock()
@@ -452,25 +758,27 @@ pub(super) async fn handle_agent_event(
     }
 }
 
-/// Update the footer's context-window badge from one assistant response.
-///
-/// `Usage::context_tokens()` is the prompt size the provider reported for that
-/// request — the value pi's footer renders as `{percent}%/{window}`. Aborted
-/// and errored turns are skipped (their usage is not a real context
-/// measurement, mirroring pi's `lastAssistantUsageInfo`) so the last valid
-/// count stays on screen instead of flickering to `?`.
-pub(super) fn record_context_usage(
+/// Refresh occupancy from the selected branch, including compaction uncertainty.
+/// Event payloads may describe an abandoned branch and are never the authority.
+pub(super) async fn record_context_usage(
     footer: &ice_tui::FooterComponent,
-    message: &ice_ai::AssistantMessage,
+    harness: &AgentHarness,
 ) {
-    if message.stop_reason == ice_ai::StopReason::Aborted
-        || message.stop_reason == ice_ai::StopReason::Error
-    {
-        return;
-    }
-    let tokens = message.usage.context_tokens();
-    if tokens > 0 {
-        footer.set_context_tokens(Some(tokens));
+    // This read-only facade shares the existing harness; catalog/cwd are unused
+    // by current_context_usage and no configuration or provider is consulted.
+    let session = crate::agent_session::AgentSession::new(
+        harness.clone(),
+        Vec::new(),
+        Vec::new(),
+        std::path::PathBuf::new(),
+    );
+    match session.current_context_usage().await {
+        Ok(Some(usage)) => footer.set_context_estimate(
+            usage.tokens,
+            usage.context_window.min(i64::MAX as u64) as i64,
+        ),
+        Ok(None) => footer.set_context_estimate(None, 0),
+        Err(_) => footer.set_context_tokens(None),
     }
 }
 
@@ -506,4 +814,40 @@ pub(super) fn tool_result_requests_markdown(details: Option<&serde_json::Value>)
         .and_then(|details| details.get("markdown"))
         .and_then(|value| value.as_bool())
         .unwrap_or(false)
+}
+
+/// Verbs for the run-summary line, one picked per run (ice
+/// `RUN_SUMMARY_VERBS`).
+const RUN_SUMMARY_VERBS: [&str; 12] = [
+    "Worked", "Sautéed", "Simmered", "Brewed", "Baked", "Churned", "Cooked", "Crunched", "Whisked",
+    "Forged", "Pondered", "Tinkered",
+];
+
+/// A dim elapsed line, called only after an authoritative completed outcome.
+pub(super) fn add_run_summary(chat: &Arc<Container>, elapsed: std::time::Duration) {
+    let line = run_summary_line(elapsed);
+    chat.add_child(Arc::new(Spacer::new(1)));
+    chat.add_child(Arc::new(Text::new(
+        current_theme().colors.dim.fg(&line),
+        0,
+        0,
+    )));
+}
+
+pub(super) fn run_summary_line(elapsed: std::time::Duration) -> String {
+    let verb = RUN_SUMMARY_VERBS[(elapsed.subsec_nanos() as usize) % RUN_SUMMARY_VERBS.len()];
+    format!("✻ {verb} for {}", format_run_duration(elapsed))
+}
+
+/// `45s`, `3m 17s`, `1h 2m` (ice `formatShellRuntime`).
+fn format_run_duration(elapsed: std::time::Duration) -> String {
+    let seconds = elapsed.as_secs();
+    if seconds < 60 {
+        return format!("{seconds}s");
+    }
+    let minutes = seconds / 60;
+    if minutes < 60 {
+        return format!("{minutes}m {}s", seconds % 60);
+    }
+    format!("{}h {}m", minutes / 60, minutes % 60)
 }

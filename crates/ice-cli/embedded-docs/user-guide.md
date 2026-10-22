@@ -1,12 +1,12 @@
-# icers 使用手册
+# icers User Guide
 
-这是一份面向使用者和扩展作者的 icers 手册。icers 起步于对 Mario Zechner 的 [Pi TypeScript SDK](https://github.com/earendil-works/pi) 的 Rust 重新实现，核心能力以 crate 形式提供，`icers` 是开箱即用的 CLI。来源与许可说明见仓库根目录的 NOTICE。本文记录当前版本已经实现的命令和行为，随 `ice-cli` 一起发布。
+This is a guide to icers for users and extension authors. icers began as a Rust reimplementation of Mario Zechner’s [Pi TypeScript SDK](https://github.com/earendil-works/pi), with core capabilities provided as crates and `icers` as a ready-to-use CLI. See the NOTICE in the repository root for source and license information. This document describes the commands and behavior implemented in the current version and ships with `ice-cli`.
 
-## 1. 安装
+## 1. Installation
 
-### 直接安装 CLI
+### Install the CLI directly
 
-需要 Rust/Cargo：
+Rust/Cargo is required:
 
 ```bash
 cargo install ice-cli
@@ -14,7 +14,7 @@ icers --version
 icers --help
 ```
 
-从本仓库源码安装开发版本：
+Install a development version from this repository:
 
 ```bash
 git clone https://github.com/Zyk-Void/ice-rust.git
@@ -22,71 +22,71 @@ cd ice-rust
 cargo install --path crates/ice-cli --force
 ```
 
-`cargo install` 安装的是可执行文件；它不等同于 `icers install`。后者用于安装由 `ice-plugin-sdk` 构建的 Rust 动态库扩展。
+`cargo install` installs the executable; it is not the same as `icers install`, which installs Rust dynamic-library extensions built with `ice-plugin-sdk`.
 
-### 从源码启动与构建
+### Run and build from source
 
-本项目是 Rust Cargo workspace，不是 Node/npm 项目，根目录没有 `package.json`。在仓库根目录执行：
+This project is a Rust Cargo workspace, not a Node/npm project; there is no `package.json` in the root directory. Run these commands from the repository root:
 
 ```bash
-# 直接启动 CLI
+# Run the CLI directly
 cargo run -p ice-cli
 
-# 向 CLI 传递参数（`--` 后的内容属于 icers）
-cargo run -p ice-cli -- -p "总结 README.md"
-cargo run -p ice-cli -- --mode json -p "列出项目中的 crates"
+# Pass arguments to the CLI (arguments after `--` belong to icers)
+cargo run -p ice-cli -- -p "Summarize README.md"
+cargo run -p ice-cli -- --mode json -p "List the crates in the project"
 
-# 构建 release 版本
+# Build a release version
 cargo build -p ice-cli --release
 ```
 
-构建完成后，Windows 可执行文件位于 `target/release/icers.exe`，Linux/macOS 下通常为 `target/release/icers`。也可以把本地 CLI 安装到 Cargo 的 bin 目录后直接使用：
+After the build, the Windows executable is at `target/release/icers.exe`; on Linux/macOS it is usually at `target/release/icers`. You can also install the local CLI to Cargo’s bin directory and run it directly:
 
 ```bash
 cargo install --path crates/ice-cli --force
 icers
 ```
 
-离线示例（不需要 API Key 或网络）可以使用：
+For an offline example (no API key or network required), run:
 
 ```bash
 cargo run -p minimal
 ```
 
-### 第一次运行
+### First run
 
-交互模式：
+Interactive mode:
 
 ```bash
 icers
-icers "解释当前项目的目录结构"
+icers "Explain the directory structure of the current project"
 ```
 
-单次输出模式：
+Single-response mode:
 
 ```bash
-icers -p "总结 README.md"
-icers --mode json -p "列出项目的风险"
+icers -p "Summarize README.md"
+icers --mode json -p "List the project risks"
 ```
 
-通过 `@` 把文件放进第一条消息：
+Include files in the first message with `@`:
 
 ```bash
-icers @README.md "给出这个项目的改进建议"
+icers @README.md "Suggest improvements for this project"
 ```
 
-## 2. 模型和凭据
+## 2. Models and credentials
 
-### 凭据优先级
+### Credential precedence
 
-当多个来源同时存在时，优先级为：
+When multiple sources are present, they are used in this order:
 
 1. `--api-key`
-2. `~/.icers/auth.json`（由 `icers auth login` 写入）
-3. `~/.icers/agent/models.json` 中对应 provider 的 `apiKey`
-4. 环境变量
+2. `~/.icers/auth.json` (written by `icers auth login`)
+3. The corresponding provider’s `apiKey` in `~/.icers/agent/models.json`
+4. Environment variables
 
-Anthropic 使用 `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN`；OpenAI-compatible provider 使用 `OPENAI_API_KEY`。检查凭据时不会发起网络请求：
+Anthropic uses `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN`; OpenAI-compatible providers use `OPENAI_API_KEY`. Checking credentials does not make a network request:
 
 ```bash
 icers auth check
@@ -95,11 +95,11 @@ icers auth login
 icers auth logout
 ```
 
-不要把密钥写入 Git 仓库、项目文档或 package manifest。
+Do not put secrets in Git repositories, project documentation, or package manifests.
 
-### 自定义 Provider
+### Custom providers
 
-配置文件默认是 `~/.icers/agent/models.json`，也可以通过 `ICERS_CODING_AGENT_DIR` 指定 agent 配置目录：
+The default configuration file is `~/.icers/agent/models.json`. You can also set the agent configuration directory with `ICERS_CODING_AGENT_DIR`:
 
 ```jsonc
 {
@@ -124,7 +124,7 @@ icers auth logout
 }
 ```
 
-选择模型：
+Select a model:
 
 ```bash
 icers --model gateway/custom-claude -p "hello"
@@ -132,124 +132,132 @@ icers --model openai-gateway/custom-model -p "hello"
 icers --provider gateway --model custom-claude -p "hello"
 ```
 
-不传 `--model` 时，icers 会优先选择已经认证的模型。标准 Anthropic 凭据存在时使用内置默认模型；只有自定义 gateway 已认证时，会选择该 gateway 的第一个可用模型。
+If `--model` is omitted, icers prefers an authenticated model. When standard Anthropic credentials are present, it uses the built-in default model; if only a custom gateway is authenticated, it selects the first available model from that gateway.
 
-Anthropic 的兼容网关还可以使用：
+An Anthropic-compatible gateway can also be configured with:
 
 ```text
 ANTHROPIC_BASE_URL=https://gateway.example.com
 ANTHROPIC_AUTH_TOKEN=token
 ```
 
-## 3. CLI 命令
+## 3. CLI commands
 
-常用全局选项：
+Common global options:
 
 ```text
---provider <name>       Provider 名称
---model <pattern>       模型 ID，支持 provider/model 和 thinking 后缀
---api-key <key>         本次运行覆盖凭据
---base-url <url>        覆盖模型 endpoint
---timeout <seconds>     LLM API 请求超时（默认 600）
+--provider <name>       Provider name
+--model <pattern>       Model ID; supports provider/model and thinking suffixes
+--api-key <key>         Override credentials for this run
+--base-url <url>        Override the model endpoint
+--timeout <seconds>     LLM API request timeout (default: 600)
 --thinking <level>      off/minimal/low/medium/high/xhigh/max
---print, -p             单次运行并退出
---mode text|json|rpc    输出模式
---continue, -c          继续最近会话
---resume, -r            选择历史会话
---session <id|path>     指定会话
---session-dir <dir>     指定会话目录
---name, -n <name>       设置会话显示名称
---tools <list>          只允许指定工具
---exclude-tools <list>  禁用指定工具
---no-tools              禁用所有工具
---no-builtin-tools      禁用内置工具（read/bash/edit/write/docs）
---no-skills             跳过技能发现
---no-prompt-templates   跳过 prompt-template 发现
---no-context-files      跳过 AGENTS.md/CLAUDE.md 发现
---no-extensions         禁用扩展加载
---extensions-dir <dir>  额外扫描 Rust 扩展目录
---package-only         只加载当前项目 package/resource，排除全局资源
---project-only         `--package-only` 的等价别名
---list-models [search]  列出可用模型（可带模糊搜索）
---offline               禁用启动时的网络检查
---export <file>         把 JSONL 会话导出为 HTML
---tui-mode <mode>       TUI buffer：regular 或 fullscreen
---system-prompt <text>  替换默认系统提示词
---append-system-prompt <text>  追加系统提示词（可重复）
---debug-system-prompt   把解析后的系统提示词各段打印到 stderr
---verbose               显示启动警告（如被忽略的 flag）
+--print, -p             Run once and exit
+--mode text|json|rpc    Output mode
+--continue, -c          Continue the most recent session
+--resume, -r            Select a previous session
+--session <id|path>     Specify a session
+--session-dir <dir>     Specify the session directory
+--name, -n <name>       Set the session display name
+--tools <list>          Allow only the specified tools
+--exclude-tools <list>  Disable the specified tools
+--no-tools              Disable all tools
+--no-builtin-tools      Disable built-in tools (read/bash/edit/write/docs)
+--no-skills             Skip skill discovery
+--no-prompt-templates   Skip prompt-template discovery
+--no-context-files      Skip AGENTS.md/CLAUDE.md discovery
+--no-extensions         Disable extension loading
+--extensions-dir <dir>  Also scan this Rust extension directory
+--package-only         Load only the current project’s packages/resources; exclude global resources
+--project-only         Alias for `--package-only`
+--list-models [search]  List available models (optionally filter with fuzzy search)
+--offline               Disable network checks at startup
+--export <file>         Export a JSONL session as HTML
+--tui-mode <mode>       TUI buffer: regular or fullscreen
+--system-prompt <text>  Replace the default system prompt
+--append-system-prompt <text>  Append to the system prompt (repeatable)
+--debug-system-prompt   Print each parsed system-prompt section to stderr
+--verbose               Show startup warnings (such as ignored flags)
 --server [--port <n>] [--bind <ip>]
-                        无头服务端（启动时打印 token）
---connect <host:port>   远程客户端 TUI（零本地资源）
---token <token>         远程认证 token（也支持环境变量 ICERS_SERVER_TOKEN）
+                        Headless server (prints a token at startup)
+--connect <host:port>   Remote TUI client (no local resources)
+--token <token>         Remote authentication token (also accepts ICERS_SERVER_TOKEN)
 ```
 
-子命令：
+Subcommands:
 
 ```text
 icers auth login|check|logout
-icers events path|tail    检查扩展事件日志（需 ICERS_EVENT_LOG=1）
+icers events path|tail    Inspect the extension event log (requires ICERS_EVENT_LOG=1)
 icers install <crate>
 icers uninstall <crate>
-icers update                 # 更新 icers CLI 自身
-icers dev [options]          # 开发 Rust 扩展：编译、watch、热重载
-icers dev-local [options]    # 只调试当前 Rust 扩展（隔离模式）
+icers update                 # Update the icers CLI itself
+icers dev [options]          # Develop Rust extensions: compile, watch, and hot-reload
+icers dev-local [options]    # Debug only the current Rust extension (isolated mode)
 ```
 
-### CLI 自更新
+### CLI self-update
 
-`icers update` 默认从 GitHub Release 下载预编译的 CLI，不需要本地 Rust/Cargo。
-版本按 crates.io 的发布记录解析；`ice-release.json` 提供各平台下载地址、大小和
-压缩包/可执行文件的 SHA-256。校验目标平台、完整性和实际版本后，原子替换当前 CLI。
-Windows 会暂存更新，等待当前进程退出后完成替换。
+`icers update` downloads a prebuilt CLI from GitHub Releases by default; local Rust/Cargo is not required.
+The version is resolved from crates.io release records; `ice-release.json` provides download URLs and sizes for each platform, plus the SHA-256 hashes of archives/executables.
+After validating the target platform, integrity, and actual version, it atomically replaces the current CLI.
+On Windows, the update is staged and completed after the current process exits.
 
-`icers update --force` 重新安装已解析的版本；`icers update --build` 显式使用 Cargo 源码编译。
-缺少 manifest、下载失败或校验不通过都会报错并保留原版本，不会自动转为编译。
-`--offline` 仅报告缓存的版本信息，不下载也不编译。旧 Release 没有 manifest 时，
-可等待协议资产补齐，或显式使用 `icers update --build`。
+`icers update --force` reinstalls the resolved version; `icers update --build` explicitly builds from source with Cargo.
+A missing manifest, download failure, or failed verification results in an error and preserves the existing version; it does not fall back to a build.
+`--offline` reports cached version information only; it does not download or build. If an older Release has no manifest,
+wait for the protocol assets to be added, or explicitly run `icers update --build`.
 
-### TUI 历史消息滚动
+### Scrolling through TUI history
 
-交互式 TUI 默认使用 alternate screen，并由应用自己管理 transcript 滚动。可以使用 `PageUp` / `PageDown`、`Home` / `End`，或鼠标和触控板滚轮浏览历史消息。
+The interactive TUI uses the alternate screen by default and manages transcript scrolling itself. Browse messages with `PageUp` / `PageDown`, `Home` / `End`, or the mouse and trackpad scroll wheel.
 
-macOS 的行为与 main-screen 的终端原生 scrollback 不同：alternate-screen TUI 必须接收鼠标追踪事件，滚轮和触控板才能滚动历史消息。进入 raw mode 后，TUI 会在 alternate-screen 模式显式重新启用鼠标追踪；main-screen 模式则继续关闭鼠标追踪，以保留终端原生滚动和文本选择。
+On macOS, this differs from native terminal scrollback on the main screen: an alternate-screen TUI must receive mouse-tracking events for the scroll wheel and trackpad to scroll through history. After entering raw mode, the TUI explicitly re-enables mouse tracking in alternate-screen mode. In main-screen mode it keeps mouse tracking disabled so native terminal scrolling and text selection remain available.
 
-如果 macOS 上滚轮无法滚动历史消息，应检查 `TuiAltScreen::start_readerless` 是否包含 alternate-screen 的鼠标追踪初始化，不要直接修改 macOS 的全局默认值。
+If the scroll wheel cannot scroll through history on macOS, check that `TuiAltScreen::start_readerless` initializes mouse tracking for the alternate screen; do not change the global macOS default directly.
 
-### macOS 键盘与插件面板
+### Local sessions and context
 
-支持 Kitty 键盘协议的终端使用与 Pi 一致的 flags 7，启用修饰键识别及功能键重复、松键事件。普通文本保留 UTF-8 输入，保证 iTerm2 等终端的中文输入法可以正常提交文字；不启用把所有文本转成按键事件的 flag 8。普通字符键（例如空格）的松键事件不作保证，依赖按住操作的插件应使用终端支持松键事件的功能键。协议在切换到当前屏幕后开启，并在退出或挂起前恢复；恢复运行时也会重新启用全屏鼠标滚动。
+`/new` (alias `/clear`) creates a new persistent session instead of only clearing the screen. Before switching it waits for the old run and UI events to finish; it refuses to switch while a user shell command is still running, so the result is not written to another session.
 
-macOS 默认同样开启协议，因为 `Shift+Enter` 依赖它区分于 `Enter`；只有开启协议后输入法无法上屏的终端（如 Otty）退回传统输入。`ICERS_KITTY_KEYBOARD=1` 可强制开启，`ICERS_KITTY_KEYBOARD=0` 可强制回退传统输入。
+`/tree` offers three choices: no summary, a branch summary, or a branch summary with custom instructions. Escape in the custom editor returns to the options, and another Escape returns to the tree view. Cancelling keeps the draft and queued prompts. `branchSummary.skipPrompt: true` skips the prompt and produces no summary; `branchSummary.reserveTokens` controls the summary reserve budget (default 16384). If a summary was persisted but a later record write fails, the error says navigation was committed; retrying or reopening the session recovers the records without asking the provider to generate the same summary again.
 
-本地 Terminal.app 的 `Shift+Enter` 使用 macOS 原生 Shift 状态补足换行识别，普通 `Enter` 继续发送。SSH 会话不会读取本机 Shift 状态。未支持增强键盘协议的终端仍使用传统输入，按住快捷键等依赖松键事件的功能需要终端支持。
+`/context` shows the current model capacity, a 20×10 category grid, and the five largest estimated items. It reads only the current branch, uses the standard compaction projection, and counts project instructions, the skills listing, and enabled tool schemas from the loaded prompts. The total uses the latest valid provider input and cache usage plus estimated output and following messages. Categories are estimated independently, and private per-request transformations are outside the public API projection, so this is not an exact request token count. `/usage` still shows cumulative billed usage.
 
-插件输入框、编辑器、选择器和历史搜索打开时优先接收输入，插件全局快捷键不会抢走这些窗口的按键。已被插件接管的按键仍会收到对应的松键事件，避免按住状态卡住。浮层按实际宽度排版，并避开输入框和页脚；多个被动面板在空间足够时自动纵向避让，窗口过小时暂时隐藏放不下的面板。需要避免浮层遮住聊天正文时可关闭面板，或使用插件的 sidebar 布局。
+### macOS keyboard and plugin panels
 
-### 远程模式（`--server` / `--connect`）
+Terminals that support the Kitty keyboard protocol use the same flags 7 as Pi, enabling modifier-key recognition and key-repeat and key-release events for function keys. Regular text retains UTF-8 input so input methods in terminals such as iTerm2 can submit text correctly; flag 8, which converts all text into key events, is not enabled. Key-release events for ordinary character keys (such as Space) are not guaranteed, so plugins that depend on key holds should use function keys for which the terminal supports release events. The protocol is enabled after switching to the active screen and restored before exit or suspension; full-screen mouse scrolling is also re-enabled on resume.
 
-把 agent 跑在无头服务端，另一个进程用 TUI 远程驱动。客户端**无任何本地 agent 资源**。
+The protocol is also enabled by default on macOS because `Shift+Enter` relies on it to distinguish that key from `Enter`; terminals whose input method cannot enter text with the protocol enabled (such as Otty) fall back to traditional input. Set `ICERS_KITTY_KEYBOARD=1` to force it on, or `ICERS_KITTY_KEYBOARD=0` to force traditional input.
+
+In the local Terminal.app, `Shift+Enter` uses the native macOS Shift state to recognize a newline, while regular `Enter` still submits. SSH sessions do not read the local machine’s Shift state. Terminals without enhanced keyboard protocol support continue to use traditional input; features such as key-hold shortcuts require terminal support for key-release events.
+
+When a plugin input field, editor, selector, or history search is open, it receives input first; plugin-wide shortcuts do not steal keystrokes from these windows. Keys already handled by a plugin still receive their corresponding release events, preventing a held-key state from sticking. Overlays are laid out to fit their actual width and avoid the input field and footer. Multiple passive panels automatically avoid overlapping vertically when space permits; panels that do not fit are temporarily hidden when the window is too small. To prevent overlays from covering chat text, close the panels or use the plugin’s sidebar layout.
+
+### Remote mode (`--server` / `--connect`)
+
+Run the agent on a headless server and control it remotely from another process using the TUI. The client has **no local agent resources**.
 
 ```bash
-icers --server --port 9899          # 服务端：启动时打印 token
-icers --connect 127.0.0.1:9899 --token <token>   # 客户端
+icers --server --port 9899          # Server: prints a token at startup
+icers --connect 127.0.0.1:9899 --token <token>   # Client
 
-# 或通过环境变量传递 token
+# Or pass the token through an environment variable
 export ICERS_SERVER_TOKEN=<token>
 icers --connect 127.0.0.1:9899
 ```
 
-服务端默认开启 token 认证（`--no-token` 可关闭）。客户端支持 `/state`、`/model`、
-`/thinking`、`/tools`、`/abort` 等命令；`/tree`、`/fork`、`/switch`、`/export`、
-`/name`、`/reload` 依赖本地 harness，在远程模式下不可用。完整协议、可用命令与
-限制见 [`remote-mode.md`](remote-mode.md)。
+Token authentication is enabled on the server by default (`--no-token` disables it). The client supports commands such as `/state`, `/model`,
+`/thinking`, `/tools`, and `/abort`; `/tree`, `/fork`, `/switch`, and `/export`,
+`/name`, and `/reload` require the local harness and are unavailable in remote mode. For the full protocol, available commands, and
+limitations, see [`remote-mode.md`](remote-mode.md).
 
-## 4. 内置工具
+## 4. Built-in tools
 
-默认工具包含 Pi 的 `read`、`bash`、`edit`、`write`，以及 icers 自带的只读 `docs` 文档查询工具。Windows 上还会默认注册 `powershell`。`docs` 可以查询使用手册、扩展开发、Agent 项目结构、Rust 调试和架构说明；`grep`、`find`、`ls` 仍保留为库实现，但不由 CLI 默认注册。
+The default tools are Pi’s `read`, `bash`, `edit`, and `write`, plus icers’ built-in read-only `docs` documentation lookup tool. `powershell` is also registered by default on Windows. `docs` can search the user guide, extension development material, Agent project structure, Rust debugging, and architecture notes. `grep`, `find`, and `ls` remain available as library implementations but are not registered by the CLI by default.
 
-可以通过 `.icers/settings.json` 的 `defaultTools` 字段（或简写 `default_tools`）在未指定
-`--tools` 时限定启动工具集：
+You can use the `defaultTools` field (or its shorthand `default_tools`) in `.icers/settings.json` to limit the initial tool set when `--tools` is not specified:
+
 
 ```json
 {
@@ -257,18 +265,18 @@ icers --connect 127.0.0.1:9899
 }
 ```
 
-需要限制工具范围时，显式列出 Pi 的四个工具：
+To restrict the available tools, explicitly list Pi’s four tools:
 
 ```bash
-icers --tools read,bash,edit,write,docs -p "检查并修改项目文件"
+icers --tools read,bash,edit,write,docs -p "Inspect and modify project files"
 ```
 
-## 5. 项目目录和资源优先级
+## 5. Project directories and resource precedence
 
-icers 会优先使用 icers 自己的目录，同时兼容原 Pi 的 `.pi` 布局：
+icers prioritizes its own directories while also supporting Pi’s original `.pi` layout:
 
 ```text
-项目/
+Project/
 ├── .icers/
 │   ├── settings.json
 │   ├── SYSTEM.md
@@ -281,9 +289,9 @@ icers 会优先使用 icers 自己的目录，同时兼容原 Pi 的 `.pi` 布�
 └── themes/
 ```
 
-项目 `.icers` 优先于项目 `.pi`。全局资源默认位于 `~/.icers/agent/`，包括 `settings.json`、`models.json`、`skills/`、`prompts/`、`themes/`、`extensions/` 和 `packages/`。同名资源发生冲突时，项目资源优先于全局资源，`.icers` 优先于 `.pi`。
+Project `.icers` takes precedence over project `.pi`. Global resources are located in `~/.icers/agent/` by default and include `settings.json`, `models.json`, `skills/`, `prompts/`, `themes/`, `extensions/`, and `packages/`. When resources have the same name, project resources take precedence over global resources, and `.icers` takes precedence over `.pi`.
 
-项目级 `.icers/settings.json` 可以追加资源目录：
+Project-level `.icers/settings.json` can add resource directories:
 
 ```json
 {
@@ -294,123 +302,139 @@ icers 会优先使用 icers 自己的目录，同时兼容原 Pi 的 `.pi` 布�
 }
 ```
 
-路径相对于项目根目录；`skills`、`prompts`、`extensions` 是对应 `*Dirs` 字段的简写。自定义目录会与 `.icers`、`.pi` 和全局约定目录一起加载，`.icers` 优先。全局 `~/.icers/agent/settings.json` 也支持这些字段，相对路径相对于 agent 目录。
+Paths are relative to the project root; `skills`, `prompts`, and `extensions` are shorthand for the corresponding `*Dirs` fields. Custom directories are loaded along with `.icers`, `.pi`, and the conventional global directories; `.icers` takes precedence. The global `~/.icers/agent/settings.json` supports these fields too, with relative paths resolved against the agent directory.
 
-只加载当前项目的 package/resource、排除全局资源时，使用以下任一等价参数：
+To load only the current project’s packages/resources and exclude global resources, use either of these equivalent options:
 
 ```bash
 icers --package-only
 icers --project-only
 ```
 
-两者都会加载当前项目的 skills、prompts、themes、extensions 和 packages，并读取项目 `.icers/settings.json`；不会自动加载全局资源。`--local-only` 语义不同，只加载通过 `--extensions-dir` 或 `--extension` 显式指定的扩展。
+Both options load the current project’s skills, prompts, themes, extensions, and packages, and read the project’s `.icers/settings.json`; global resources are not loaded automatically. `--local-only` has different semantics: it loads only extensions explicitly specified with `--extensions-dir` or `--extension`.
 
-配置目录可以重定位：
+The configuration directory can be relocated:
 
 ```bash
 ICERS_CODING_AGENT_DIR=/work/ice-agent icers
 ```
 
-会话默认保存到 agent 配置目录下的 sessions；`--no-session` 可使用临时会话。
+Sessions are saved to `.icers/sessions/` in the current working directory by default. Use `--session-dir` (or the `sessionDir` setting) to specify another directory, or `--no-session` to use a temporary session. The chosen directory is used consistently for `--resume`, `/session`, and session switching.
 
-## 6. Rust 插件
+Interactive session operations:
 
-Rust 原生插件是 `cdylib`，只依赖 `ice-plugin-sdk`，由 `ice-extensions` 动态加载：
+- `/new` (alias `/clear`): Wait for the previous operation to finish, then create and activate a new persistent session; the previous session file and history are preserved.
+- `/import <path.jsonl>`: Validate the native v4 session header and entire log, then install and switch to the session ID in the header. Existing files are never overwritten and the source file is not modified. Duplicate IDs, corrupt logs, and v3 files produce explicit errors. The target filesystem must support hard links so an incomplete copy cannot appear as an available session.
+- Markdown/HTML exports and `/share` show only the current `main` branch (including compaction summaries). The raw JSONL entry archive still includes all branches, but omits the session header and recovery records, so it cannot be imported as a restorable session file. The SDK’s `ice_cli::export::export_native_branch_jsonl` can export the current branch as a reopenable native v4 session: it uses a new session ID, preserves compacted context, the name, and branch-local labels, and refuses to overwrite any existing target. It does not convert coding v3 format; exports and shares also do not automatically remove secrets or other sensitive text. `/export native` writes this reopenable branch export to `<name>.native.jsonl` in the working directory. `/export md|html|jsonl|native` never overwrites an existing file; choose another name or remove the old file first. `/share` does not send anything until you run `/share confirm`: it first states that the active `main` branch transcript will go to an external service and asks you to review it for secrets.
+- `-r` and `/session` list healthy sessions and also show how many files were skipped for an unreadable or malformed header, with their paths.
+- The footer context readout follows the active branch after fork, switch, tree navigation and compaction; `~` marks an estimate and `?` means unknown until the model replies after compaction.
+- Native JSONL sessions use exclusive OS locks when created, opened, repaired, written, and deleted; a second independent write handle returns an explicit error. The lock is released when the last shared storage handle is dropped, or by the OS if the process crashes. Keeping the `.lock` file is normal; do not delete it to forcibly take over. This guarantee depends on lock support from the local filesystem and on writers respecting the lock; hard-link aliases and distributed filesystems are not covered.
+- Duplicate sequence numbers are readable only when their decoded contents are identical; conflicting contents, identities, branches, or parent nodes cause the session to be rejected while preserving the original file. Conflicting entries are no longer silently discarded and parent links are not reset; a trailing partial line after a valid prefix can still be repaired. Recovery after process termination has been tested, but power-loss durability and `fsync` guarantees are not promised. Failure to perform a required final save returns an error instead of reporting success.
+- When a coding session receives an explicit context-overflow error, it attempts at most one compaction of older history and one continuation request; the latest user turn is preserved in full and is never replaced by a summary. If summarization fails, is cancelled, or the context still overflows, the run stops and suggests shortening the input, switching to a model with a larger context, or starting a new session. Failure or cancellation during pre-prompt compaction also preserves newly accepted input and does not make an extra model request to continue. By default, the safety net compacts and continues; explicit `pause` mode displays `compaction_paused` and does not mark the task as completed normally.
+- Automatic compaction estimates for coding sessions include the composed system prompt and active tool schemas. The larger of the new estimate and historical provider usage is used, avoiding double-counting prompt overhead that was already included. The input threshold also reserves space for the current model’s shared provider output limit and is recalculated after a model switch. This is a UTF-16-length heuristic, not an exact tokenizer; hooks and custom message conversions are not run in advance; when any are configured, the compaction threshold holds a bounded reserve (10% of the model window, at most 16,384 tokens) as an estimate, so content they add beyond that is not guaranteed to be included, and billing usage is unchanged. If the latest turn plus known fixed overhead already cannot fit, no futile overflow-recovery summary request is made.
+- `/model`, `/thinking`, and keyboard shortcuts change only the current session; only the default model/thinking-level selection in `/settings` is saved as the default for the next launch. The display updates only after the runtime accepts a change; an active operation, unregistered provider, or unsupported thinking level returns an explicit error. Failure to save a default does not undo a session choice that was already applied, but a save error is shown. Resuming history does not force a switch to the historical model; the model selected at launch remains in use.
+- `/unqueue [n]` moves one queued steering/follow-up message (1-based, in dock order; the newest when omitted) back into the editor and leaves the others queued; Alt+Q restores all of them. A message that was already sent to the model is reported as such and is not duplicated. Images attached to that message return to the editor after the queue entry is durably cancelled, alongside any images already in the draft; if the saved message cannot be read, it stays queued and an error is shown.
+- When a transient provider failure is not retried automatically because the failed response contained a tool call or tools had already run, the transcript says so; use the manual retry only if you are sure replaying is safe. `/usage` also shows all-history token totals and provider-reported cost, and labels active-context occupancy as an estimate (unknown right after compaction until the model replies).
+- A cancellation request and operation completion are distinct states: the underlying `abort` requests cancellation. If a compaction checkpoint has not yet been written, cancellation prevents it from being published. If storage has acknowledged the checkpoint write, the checkpoint is retained and is not rolled back, but the current run/manual compaction settles as aborted and makes no subsequent model request. Session switching waits for the old operation to finish and preserves the old session if that fails. SDK `AgentSession::retry()` explicitly resubmits the last user message and may execute tools or external operations again; it is not safe or exactly-once automatic replay.
+
+## 6. Rust plugins
+
+Native Rust plugins are `cdylib` libraries that depend only on `ice-plugin-sdk` and are dynamically loaded by `ice-extensions`:
 
 ```bash
 cargo build -p plugin-stub
 icers --extensions-dir target/debug -p 'echo "hi"'
 ```
 
-安装预编译扩展（默认，不需要 Rust/Cargo）：
+Install a prebuilt extension (the default; Rust/Cargo is not required):
 
 ```bash
 icers install ice-todo
 icers install ice-todo --version 0.2.0
-icers install ice-todo --force # 同版本重装
+icers install ice-todo --force # Reinstall the same version
 ```
 
-`icers install <包名>` 可直接安装或升级；目标版本已安装时会提示并跳过。同版本重装或降级需要 `--force`。源码构建也遵循这一规则，本地开发修改代码但未更改版本时，使用 `--force` 重装。
+`icers install <package-name>` installs or upgrades directly; if the target version is already installed, it prints a message and skips the operation. Reinstalling the same version or downgrading requires `--force`. Source builds follow the same rule; during local development, use `--force` to reinstall after changing code without changing the version.
 
-安装器从 crates.io 选择最新未撤回的稳定版本，并用包的 `repository` 元数据找到 GitHub 仓库，再读取 `<包名>-v<版本>` Release 中的 `ice-extension.json`。它按精确目标三元组匹配预编译文件，校验压缩包大小和 SHA-256、解压后的库文件 SHA-256、平台架构及声明的 SDK ABI。库文件名以 manifest 的 `library.path` 为准。同一仓库里的扩展可以独立版本发布。
+The installer selects the latest non-yanked stable version from crates.io, uses the package’s `repository` metadata to find its GitHub repository, then reads `ice-extension.json` from the `<package-name>-v<version>` Release. It matches prebuilt artifacts to the exact target triple and verifies archive size and SHA-256, the extracted library’s SHA-256, platform architecture, and declared SDK ABI. The library filename is taken from `library.path` in the manifest. Extensions in the same repository can be released independently.
 
-指定自定义 GitHub 仓库（也接受完整 HTTPS 仓库 URL）：
+Specify a custom GitHub repository (a complete HTTPS repository URL is also accepted):
 
 ```bash
 icers install my-extension --github owner/repo --version 1.2.3
 icers install my-extension --github https://github.com/owner/repo
 ```
 
-自定义仓库也须发布同一分发协议。显式仓库不依赖 crates.io；省略版本时，只在该仓库的 `<包名>-v<版本>` 标签中选择最新稳定版本。不会使用仓库的全局 latest Release。后续 `--force` 重装和启动更新检查会保留来源，并核对新版本的 manifest 是否适配当前平台。
+Custom repositories must publish the same distribution protocol. An explicitly specified repository does not depend on crates.io; if no version is provided, the latest stable version is selected only from that repository’s `<package-name>-v<version>` tags. The repository’s global latest Release is not used. Subsequent `--force` reinstalls and startup update checks retain the source and verify that the new version’s manifest supports the current platform.
 
-发布者必须先上传所声明平台的压缩包，最后上传 manifest。manifest 尚未发布、目标平台缺失或校验不通过时安装失败，不会自动编译或选择其他版本。需要源码编译时显式使用：
+Publishers must upload archives for all declared platforms first and the manifest last. Installation fails if the manifest has not been published, the target platform is missing, or verification fails; it does not automatically build from source or select another version. To build from source, explicitly use:
 
 ```bash
 icers install ice-todo --build
 icers install ice-todo --build --version 0.2.0 --force
 ```
 
-预编译安装记录包括版本、仓库、目标平台、源码提交、SDK ABI 和校验值；安装与卸载使用同一事务机制。加载时仍会验证实际插件入口与 API 结构大小。系统原生运行库依赖仍由操作系统提供。
+Prebuilt installation records include the version, repository, target platform, source commit, SDK ABI, and checksums; installation and uninstallation use the same transaction mechanism. The actual plugin entry point and API structure size are still validated when loading. Native system-library dependencies are provided by the operating system.
 
-本地开发：
+Local development:
 
 ```bash
 icers install my-extension --path ../my-ice-extension --force
 ```
 
-开发扩展项目时使用 watch 模式：
+Use watch mode when developing an extension project:
 
 ```bash
 cd ../my-ice-extension
 icers dev
-# 多扩展 workspace：icers dev --package my-extension
-# 只调试当前扩展：icers dev-local（隔离模式，不加载全局扩展）
+# Multi-extension workspace: icers dev --package my-extension
+# Debug only the current extension: icers dev-local (isolated mode; does not load global extensions)
 ```
 
-`icers dev` 会自动识别 Cargo `cdylib`、首次编译并从 `.icers/extensions/.dev` 加载版本化产物。源码变化会触发重新编译和热重载；手工执行 `/reload` 也会先重新编译。编译失败时继续保留当前已经加载的版本。完整模板和边界规则见在线扩展作者指南：<https://rpi.laofu.online/extension-authoring.md>，调试技巧见 `docs` 的 `debugging` 主题。
+`icers dev` automatically detects Cargo `cdylib` targets, builds them initially, and loads versioned artifacts from `.icers/extensions/.dev`. Source changes trigger recompilation and hot reload; manually running `/reload` also recompiles first. If compilation fails, the currently loaded version remains active. For the full template and boundary rules, see the online extension authoring guide: <https://rpi.laofu.online/extension-authoring.md>. For debugging tips, see the `debugging` topic in `docs`.
 
-安装后的动态库位于 `~/.icers/agent/extensions`（或 `ICERS_CODING_AGENT_DIR` 指定的目录），下次启动 icers 时加载。插件通过稳定 ABI 注册工具、Provider、事件处理器和资源处理器；不要直接依赖 `ice-cli` 的私有模块。
+Installed dynamic libraries are located in `~/.icers/agent/extensions` (or the directory specified by `ICERS_CODING_AGENT_DIR`) and load the next time icers starts. Plugins register tools, providers, event handlers, and resource handlers through the stable ABI; do not depend directly on private `ice-cli` modules.
 
-### 网页搜索与抓取
+### Web search and fetching
 
-联网工具由独立的 [ice-package 扩展](https://github.com/ice-rust/ice-package) 提供，
-不属于 CLI 默认内置工具。按需安装后重启 icers：
+Network tools are provided by the separate [ice-package extension](https://github.com/ice-rust/ice-package),
+not by the CLI’s built-in tools. Install them as needed, then restart icers:
 
 ```bash
 icers install ice-websearch
 icers install ice-webfetch
 ```
 
-- `websearch` 返回搜索结果的标题、链接和摘要。
-- `webfetch` 提取公开 HTTP(S) 网页的可读文本；会拒绝私有地址和超限响应。
-- 这两个扩展不是交互式浏览器，不提供点击、登录流程或网页 JavaScript 执行。
+- `websearch` returns search result titles, links, and snippets.
+- `webfetch` extracts readable text from public HTTP(S) pages; it rejects private addresses and oversized responses.
+- These extensions are not interactive browsers: they do not support clicking, login flows, or JavaScript execution on web pages.
 
-### 继承主会话配置的子 agent
+### Subagents that inherit the main session configuration
 
-安装兼容版本的 `ice-subagents` 并重启后，可通过 `delegate_task` 委派任务：
+After installing a compatible version of `ice-subagents` and restarting, delegate tasks using `delegate_task`:
 
 ```bash
 icers install ice-subagents
 ```
 
-子 agent 使用主会话当前有效配置的快照：模型/provider 及其私有凭据绑定、thinking、
-系统提示词、资源、请求选项、启用的工具、项目 cwd 和审批 hook。它不是重新读取默认
-配置启动的 `icers` 子进程；凭据不会通过插件 JSON 传递。
+A child agent uses a snapshot of the main session’s current effective configuration: model/provider and its private credential binding, thinking level,
+system prompt, resources, request options, enabled tools, project cwd, and approval hooks. It is not an `icers` subprocess started by rereading the defaults;
+credentials are not passed through plugin JSON.
 
-子任务使用独立的内存 Session，**不复制或修改父聊天历史**。宿主 API 可进一步缩小
-工具集合，但不能扩大；子工具集中移除 `delegate_task`，并禁止通过别名递归委派。
-审批与 `ask_user` 沿用父 UI；没有交互消费者时保留明确拒绝/报错，不会默认放行。
-父运行结束或取消、会话切换以及所属插件卸载/reload 会取消子任务。
-这不是 OS 安全沙箱，允许的 shell 等工具仍保有正常能力。
+The child task uses an independent in-memory Session; **it does not copy or modify the parent chat history**. The host API may further restrict
+the tool set but cannot expand it. `delegate_task` is removed from the child tool set, and recursive delegation through aliases is blocked.
+Approvals and `ask_user` use the parent UI; without an interactive consumer, explicit rejection/errors are preserved rather than defaulting to approval.
+Child tasks are cancelled when the parent run ends or is cancelled, the session switches, or the owning plugin is uninstalled/reloaded.
+This is not an OS security sandbox; allowed tools such as shell retain their normal capabilities.
 
-宿主与扩展需同时支持对应协议；旧宿主明确要求升级，不回退到默认配置的子进程。
-SDK 提供 `AgentHarness::create_child`，扩展通过 `GetExecutionContext` 和 `ChildAgent`
-runtime actions 接入。完整协议见仓库 `docs/extensions/subagents.md`：
+The host and extension must both support the corresponding protocol; an older host explicitly requests an upgrade and does not fall back to a subprocess using default configuration.
+The SDK provides `AgentHarness::create_child`; extensions integrate through `GetExecutionContext` and `ChildAgent`
+runtime actions. See the repository’s `docs/extensions/subagents.md` for the full protocol:
 <https://github.com/Zyk-Void/ice-rust/blob/main/docs/extensions/subagents.md>。
 
-## 7. SDK 集成
+## 7. SDK integration
 
-只需要嵌入 Agent 时，依赖 `ice-agent` 和 `ice-ai`；需要内置工具时再加入 `ice-tools`；需要会话、压缩、skills 和上下文文件时加入 `ice-harness`。
+If you only need to embed an Agent, depend on `ice-agent` and `ice-ai`; add `ice-tools` for built-in tools, and add `ice-harness` for sessions, compaction, skills, and context files.
 
 ```rust
 use ice_agent::{Agent, AgentEvent};
@@ -430,43 +454,47 @@ while let Some(event) = events.recv().await {
 }
 ```
 
-自定义工具实现 `ice-agent::AgentTool`；Provider 实现 `ice-ai::Provider`。使用 `faux provider` 和 `InMemoryExecutionEnv` 可以在没有网络、API key 或真实文件系统的情况下测试 Agent loop。
+Implement custom tools with `ice-agent::AgentTool` and providers with `ice-ai::Provider`. Use the faux provider and `InMemoryExecutionEnv` to test the Agent loop without a network, API key, or real filesystem.
 
-## 8. 故障排查
+Session read models distinguish billing from current context: `AgentSession::total_usage` aggregates embedded billing data across all branches (including tool, summary, and valid child-agent usage) and no longer adds native usage recovery records. `current_context_usage`, `context_breakdown`, and `last_assistant_text` read only the active branch, applying compaction and configured entry projections/transforms; after compaction, context usage remains unknown rather than zero until valid new usage is available. Category composition uses UTF-16-length estimates, not tokenizer or provider measurements; final rewrites by asynchronous request hooks are not included in this read snapshot. By default, the composed prompt is counted entirely as the system prompt. To break down context files, skills, and tool sources, call the pure function `compute_context_breakdown` with the actual resources and source snapshots; it does not reread files or infer sources automatically.
 
-### 找不到模型或接口报错
+The SQLite SDK continues to treat Rust `state_json` as the authoritative state. It adds cwd/application metadata queries, read-only discovery that does not create files, and lazily initialized FTS5 search. Writes, lease renewal, and index updates commit in the same transaction; only one writer with a fencing token is allowed per session. Writable storage requires a continuously running Tokio runtime with time enabled to send heartbeats. Explicit shutdown or dropping the last handle releases the lease; expired or taken-over handles can no longer write. Older Rust schemas can be migrated; unsupported schemas are explicitly rejected. This is not a TypeScript SQLite format converter.
 
-运行 `icers auth check`，确认 provider、`models.json`、环境变量和 `baseUrl`。使用 `--provider` 和完整的 `provider/model` 避免同名模型歧义。接口错误会保留 provider 返回的诊断文本；先检查 endpoint、认证头和模型 ID。
+## 8. Troubleshooting
 
-### 扩展加载失败
+### Model not found or API errors
 
-确认 Rust 插件是 `cdylib` 并与当前平台匹配；临时使用 `--extensions-dir` 指向生成目录。加载失败时保留宿主输出的完整错误信息，检查扩展是否声明了宿主未提供的能力。
+Run `icers auth check` and verify the provider, `models.json`, environment variables, and `baseUrl`. Use `--provider` and the full `provider/model` form to avoid ambiguity between models with the same name. API errors preserve diagnostic text returned by the provider; first check the endpoint, authentication headers, and model ID.
 
-### 扩展事件处理器没触发或启动被中止
+### Extension loading failures
+
+Confirm that the Rust plugin is a `cdylib` built for the current platform; temporarily point `--extensions-dir` to the output directory. Preserve the full error from the host when loading fails, and check whether the extension declares capabilities the host does not provide.
+
+### Extension event handlers do not fire or startup is aborted
 
 ```bash
 export ICERS_EVENT_LOG=1
-icers            # 记录所有扩展事件处理器调用
-icers events tail   # 跟踪日志；看 result 是 Continue 还是 Error/Abort/Panic/Timeout
+icers            # Log every extension event-handler invocation
+icers events tail   # Follow the log; inspect whether result is Continue or Error/Abort/Panic/Timeout
 ```
 
-日志默认在 `~/.icers/logs/events.jsonl`（可用 `ICERS_EVENT_LOG_PATH` 覆盖）。如果
-`BeforeTuiStart` 阶段有扩展返回 veto（`EVENT_HANDLER_ABORT`），CLI 以退出码 `3`
-中止启动并打印原因。
+The log is at `~/.icers/logs/events.jsonl` by default (override with `ICERS_EVENT_LOG_PATH`). If an extension returns a veto (`EVENT_HANDLER_ABORT`) during
+the `BeforeTuiStart` phase, the CLI aborts startup with exit code `3`
+and prints the reason.
 
-### 资源没有出现在欢迎页
+### Resources do not appear on the welcome screen
 
-确认文件位于 `.icers`（或兼容的 `.pi`）或全局 `~/.icers/agent`。使用 `icers --debug-system-prompt` 查看最终系统提示词、skills 和资源计数；同名资源优先检查 `.icers` 是否覆盖了 `.pi`。
+Confirm the files are in `.icers` (or the compatible `.pi`) directory or the global `~/.icers/agent`. Use `icers --debug-system-prompt` to inspect the final system prompt, skills, and resource counts; for duplicate resource names, check whether `.icers` is overriding `.pi`.
 
-### 远程模式连不上
+### Cannot connect in remote mode
 
-确认服务端已用 `icers --server --port <port>` 启动且 token 正确（或通过
-`ICERS_SERVER_TOKEN` 提供）。客户端是纯显示端，不加载任何本地 provider/工具/扩展；
-会话文件在服务端。
+Confirm that the server was started with `icers --server --port <port>` and that the token is correct (or supplied via
+`ICERS_SERVER_TOKEN`). The client is a display-only interface and does not load local providers/tools/extensions;
+session files reside on the server.
 
-## 9. 开发、测试和发布
+## 9. Development, testing, and releases
 
-运行格式化、检查和测试：
+Run formatting, checks, and tests:
 
 ```bash
 cargo fmt --all
@@ -474,31 +502,31 @@ cargo check --workspace
 cargo test --workspace
 ```
 
-发布 crate 时按依赖顺序：
+Publish crates in dependency order:
 
 ```text
 ice-telemetry → ice-ai → ice-agent → ice-tools → ice-harness →
 ice-plugin-sdk → ice-extensions → ice-tui → ice-cli
 ```
 
-日常贡献无需手动修改版本号。普通改动合并 `main` 并通过 CI 后，由自动化准备
-Release PR；只有合并符合条件的 Release PR 才会发布。发布记录统一维护在根目录
-`CHANGELOG.md`，不再新建 `docs/release-vX.Y.Z.md`。完整流程与纯文档不发布的处理方式
-见仓库 `docs/maintaining/releasing.md`：
+Routine contributions do not require manually changing version numbers. After a regular change is merged into `main` and passes CI, automation prepares a
+Release PR; a release is published only when an eligible Release PR is merged. Release notes are maintained in the root
+`CHANGELOG.md`; do not create new `docs/release-vX.Y.Z.md` files. For the full process and how documentation-only changes are handled,
+see the repository’s `docs/maintaining/releasing.md`:
 <https://github.com/Zyk-Void/ice-rust/blob/main/docs/maintaining/releasing.md>。
 
-修改模型可读文档源 `docs/ice-tool/` 后运行 `sh scripts/sync-embedded-docs.sh` 并提交
-生成的文档快照。仅更新文档不需要 bump 版本或打 tag。官网仍需单独部署，提交或合并
-文档不等于已经更新线上网站。
+After editing the model-readable documentation source in `docs/ice-tool/`, run `sh scripts/sync-embedded-docs.sh` and commit the
+generated documentation snapshot. Documentation-only updates do not require a version bump or tag. The website must still be deployed separately; committing or merging
+documentation does not mean the live website has been updated.
 
-## 10. 文档查询入口
+## 10. Documentation resources
 
-- 在线文档：<https://rpi.laofu.online/docs.html>
-- 源码仓库：<https://github.com/Zyk-Void/ice-rust>
+- Online documentation: <https://rpi.laofu.online/docs.html>
+- Source repository: <https://github.com/Zyk-Void/ice-rust>
 - Rust API：<https://docs.rs/ice-agent>、<https://docs.rs/ice-plugin-sdk>
 
-- Package 与扩展作者指南：<https://rpi.laofu.online/extension-authoring.md>
-- 远程模式：<docs/remote/user-guide.md>
-- Rust 扩展与 agent 调试：`icers` 内 `docs` 工具的 `debugging` 主题
+- Package and extension authoring guide: <https://rpi.laofu.online/extension-authoring.md>
+- Remote mode: <docs/remote/user-guide.md>
+- Rust extension and agent debugging: the `debugging` topic in the built-in `docs` tool
 
-当在线文档和已安装版本不一致时，以对应版本的 Git tag 和仓库内文档为准。
+When online documentation and the installed version differ, refer to the corresponding Git tag and the documentation in the repository.

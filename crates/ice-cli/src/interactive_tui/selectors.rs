@@ -2,6 +2,36 @@
 
 use super::*;
 
+pub(super) async fn apply_thinking_selection(
+    lane: &Arc<dyn AgentLane>,
+    state: &Arc<TuiState>,
+    chat: &Arc<Container>,
+    level: ice_ai::types::ThinkingLevel,
+    save_default: bool,
+) {
+    if let Err(error) = lane.set_thinking_level(level).await {
+        add_error_message(chat, &format!("Could not change thinking level: {error}"));
+        return;
+    }
+    let name = thinking_level_name(level);
+    state.footer.set_thinking_level(Some(name));
+    let saved = if save_default {
+        let result = crate::settings::load_settings()
+            .map_err(|error| error.to_string())
+            .and_then(|mut settings| {
+                settings.default_thinking_level = Some(name.to_string());
+                crate::settings::save_settings(&settings)
+            });
+        match result {
+            Ok(_) => " Default saved.".to_string(),
+            Err(error) => format!(" Changed for this session, but could not save default: {error}"),
+        }
+    } else {
+        String::new()
+    };
+    add_note_message(chat, &format!("Thinking set to {name}.{saved}"));
+}
+
 // ===========================================================================
 // Selectors — editor-container swap (TS showSelector pattern)
 // ===========================================================================
@@ -138,7 +168,11 @@ pub(super) fn open_model_selector(
         tui.request_render(false);
         return None;
     }
+    let current = current_model_index(&items);
     let list = Arc::new(SelectList::new(items, 10));
+    if let Some(index) = current {
+        list.set_selected_index(index);
+    }
 
     // Capture the catalog + lane so the on_select closure can resolve the
     // chosen Model and apply it. `on_select` fires on the blocking key thread,
@@ -168,25 +202,15 @@ pub(super) fn open_model_selector(
             .iter()
             .find(|m| m.id.eq_ignore_ascii_case(&lane_model_sel))
             .map(|m| m.provider.clone());
-        if current_provider
+        let mode = if current_provider
             .as_deref()
             .map_or(true, |cur| !model.provider.eq_ignore_ascii_case(cur))
         {
-            let _ = set_default_model(&model.provider, &model.id);
-        }
-
-        state_sel.set_current_model(&model);
-        let lane = lane_sel.clone();
-        tokio::spawn(async move {
-            let _ = lane.set_model(model).await;
-        });
-        add_note_message(
-            &chat_sel,
-            &format!(
-                "Model set to {} — applies to the next message.",
-                short_model_name(&item.value)
-            ),
-        );
+            ModelSwitchMode::PersistDefault
+        } else {
+            ModelSwitchMode::Session
+        };
+        spawn_set_model(&state_sel, &lane_sel, model, &chat_sel, &tui_sel, mode);
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();
@@ -211,6 +235,74 @@ pub(super) fn open_model_selector(
         searchable.set_search_text(term);
     }
     Some(searchable)
+}
+
+/// Index of the item `model_selector_items` marked as the current model, so
+/// `/model` opens on it.
+pub(super) fn current_model_index(items: &[SelectItem]) -> Option<usize> {
+    items.iter().position(|item| {
+        item.description
+            .as_deref()
+            .is_some_and(|d| d.ends_with(" (current)"))
+    })
+}
+
+/// The caller's requested behavior after a model switch has succeeded.
+#[derive(Clone, Copy)]
+pub(super) enum ModelSwitchMode {
+    Cycle,
+    Session,
+    PersistDefault,
+}
+
+/// Report only the accepted result. In particular a pending or rejected switch
+/// must not change the footer, context-window badge, or saved default. Keeping
+/// the previous state also works after the harness closes and get_model fails.
+pub(super) fn spawn_set_model(
+    state: &Arc<TuiState>,
+    lane: &Arc<dyn AgentLane>,
+    model: ice_ai::Model,
+    chat: &Arc<Container>,
+    tui: &Arc<TuiAltScreen>,
+    mode: ModelSwitchMode,
+) -> tokio::task::JoinHandle<()> {
+    let state = state.clone();
+    let lane = lane.clone();
+    let chat = chat.clone();
+    let tui = tui.clone();
+    tokio::spawn(async move {
+        match lane.set_model(model.clone()).await {
+            Ok(()) => {
+                state.set_current_model(&model);
+                if !matches!(mode, ModelSwitchMode::Cycle) {
+                    add_note_message(
+                        &chat,
+                        &format!(
+                            "Model set to {}/{} — applies to the next message.",
+                            model.provider, model.id
+                        ),
+                    );
+                }
+                if matches!(mode, ModelSwitchMode::PersistDefault) {
+                    match set_default_model(&model.provider, &model.id) {
+                        Ok(_) => add_note_message(&chat, "Model saved as the default."),
+                        Err(error) => add_error_message(
+                            &chat,
+                            &format!("Model is active, but could not save its default: {error}"),
+                        ),
+                    }
+                }
+            }
+            Err(error) => add_error_message(
+                &chat,
+                &format!(
+                    "Could not switch to {}/{}: {error}",
+                    model.provider, model.id
+                ),
+            ),
+        }
+        tui.request_render(false);
+    })
 }
 
 /// Cycle to the next catalog entry after `current_id`, wrapping to the first.
@@ -257,11 +349,7 @@ pub(super) fn cycle_prev_model(
     }
 }
 
-/// Build + open the `/session` selector. Lists JSONL session files under the
-/// default session dir (`<cwd>/.icers/sessions`
-/// fallback), newest-first, labelled with the session name or first prompt so
-/// two sessions are distinguishable. Header-only sessions are skipped: there is
-/// nothing to switch to.
+/// Browse current-project or indexed cross-project sessions without blocking input.
 pub(super) fn open_session_selector(
     state: &Arc<TuiState>,
     editor_container: &Arc<Container>,
@@ -269,81 +357,9 @@ pub(super) fn open_session_selector(
     tui: &Arc<TuiAltScreen>,
     cwd: &std::path::Path,
     tx: &mpsc::UnboundedSender<TuiMessage>,
+    active: Option<Arc<dyn ice_harness::session::types::SessionStorage>>,
 ) {
-    let dir = crate::session::default_session_dir(cwd);
-    let mut items: Vec<SelectItem> = Vec::new();
-    for path in crate::session::list_session_files_sync(&dir) {
-        let summary = crate::session::summarize_session_file(&path);
-        if summary.empty {
-            continue;
-        }
-        let stem = path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("(unnamed)")
-            .to_string();
-        let label = crate::session::session_display_label(&summary);
-        // The file stem is `<timestamp>_<uuid>`; the id tail disambiguates rows
-        // that share a timestamp.
-        let id_tail = stem.rsplit('_').next().unwrap_or(&stem);
-        let short_id = crate::session::short_session_id(id_tail);
-        let description = format!(
-            "{} · {}",
-            crate::session::format_session_bytes(summary.bytes),
-            short_id,
-        );
-        items.push(
-            SelectItem::new(&stem, &label)
-                .with_description(&description)
-                .with_search_text(&format!("{label} {short_id} {stem}")),
-        );
-    }
-    if items.is_empty() {
-        add_note_message(
-            &state.chat_container,
-            "No saved sessions found. Sessions are created automatically in interactive mode.",
-        );
-        tui.request_render(false);
-        return;
-    }
-    let mut list = SelectList::new(items, 10);
-    list.set_layout(ice_tui::SelectListLayoutOptions {
-        min_primary_column_width: Some(56),
-        max_primary_column_width: Some(72),
-        truncate_primary: None,
-    });
-    let list = Arc::new(list);
-
-    let state_sel = state.clone();
-    let ec_sel = editor_container.clone();
-    let editor_sel = editor.clone();
-    let tui_sel = tui.clone();
-    let tx_sel = tx.clone();
-    list.on_select(Arc::new(move |item| {
-        // Close the selector first, then ask the async loop to hot-switch:
-        // opening the session file + swapping the harness backing is async
-        // (repo list/open) and must not run on the blocking key thread.
-        close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
-        let _ = tx_sel.send(TuiMessage::SwitchSession(item.value.clone()));
-    }));
-    let state_cancel = state.clone();
-    let ec_cancel = editor_container.clone();
-    let editor_cancel = editor.clone();
-    let tui_cancel = tui.clone();
-    list.on_cancel(Arc::new(move || {
-        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
-    }));
-
-    open_searchable_selector(
-        state,
-        editor_container,
-        editor,
-        tui,
-        Some("Resume session"),
-        Some("Type to filter sessions"),
-        list,
-        SelectorKind::Session,
-    );
+    session_picker::open(state, editor_container, editor, tui, cwd, tx, active);
 }
 
 pub(super) fn custom_entry_display_text(
@@ -366,9 +382,222 @@ pub(super) fn custom_entry_display_text(
     Some(format!("{label}: {text}"))
 }
 
-/// Open a selector for the current session's persisted entry tree. Selecting a
-/// message moves the main lane leaf to that entry, then the caller reloads the
-/// visible branch from durable storage.
+/// Text-bearing user messages across the session, oldest first, as
+/// `(entry id, text)`: the fork points `/fork` offers (ice
+/// `getUserMessagesForForking`).
+pub(super) async fn user_messages_for_forking(harness: &AgentHarness) -> Vec<(String, String)> {
+    harness
+        .session()
+        .view("main")
+        .find_entries(&EntryQuery {
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|entry| match &entry {
+            Entry::Message(me) => match &me.message {
+                AgentMessage::User(u) => {
+                    let text = user_message_text(u);
+                    (!text.is_empty()).then(|| (entry.id().to_string(), text))
+                }
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect()
+}
+
+/// Text of the user message `entry_id`, to put back in the editor after
+/// forking before it.
+pub(super) async fn fork_message_text(harness: &AgentHarness, entry_id: &str) -> Option<String> {
+    user_messages_for_forking(harness)
+        .await
+        .into_iter()
+        .find(|(id, _)| id == entry_id)
+        .map(|(_, text)| text)
+}
+
+/// The file identity shown by the picker, so a queued selection cannot fork a
+/// different session after a resume, import, or extension-triggered switch.
+#[derive(Clone, Debug)]
+pub(super) struct ForkSelection {
+    pub(super) session_id: String,
+    pub(super) session_path: Option<String>,
+    pub(super) entry_id: String,
+}
+
+/// `/fork`: choose a prior user message (newest preselected). Selecting one
+/// forks the session before it and puts its text in the editor, so the
+/// prompt can be revised and sent again (ice `showUserMessageSelector`).
+pub(super) async fn open_fork_selector(
+    harness: &AgentHarness,
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    chat: &Arc<Container>,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+) {
+    if *state.status.lock().unwrap() != RunStatus::Idle {
+        add_note_message(chat, "Wait for the current run to finish before forking.");
+        tui.request_render(false);
+        return;
+    }
+    let session = harness.session();
+    let session_id = session.storage().metadata().id.clone();
+    let session_path = session.storage().persistence_path();
+    let messages = user_messages_for_forking(harness).await;
+    if messages.is_empty() {
+        add_note_message(chat, "No messages to fork from.");
+        tui.request_render(false);
+        return;
+    }
+    let items: Vec<SelectItem> = messages
+        .iter()
+        .enumerate()
+        .map(|(index, (id, text))| {
+            let label = text.split_whitespace().collect::<Vec<_>>().join(" ");
+            SelectItem::new(
+                id,
+                if label.is_empty() {
+                    "(empty message)"
+                } else {
+                    &label
+                },
+            )
+            .with_description(&format!("#{}", index + 1))
+            .with_search_text(text)
+        })
+        .collect();
+    let newest = items.len() - 1;
+    let list = Arc::new(SelectList::new(items, 10));
+    list.set_selected_index(newest);
+    let state_sel = state.clone();
+    let ec_sel = editor_container.clone();
+    let editor_sel = editor.clone();
+    let tui_sel = tui.clone();
+    let tx_sel = tx.clone();
+    list.on_select(Arc::new(move |item| {
+        close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
+        let _ = tx_sel.send(TuiMessage::ForkBefore(ForkSelection {
+            session_id: session_id.clone(),
+            session_path: session_path.clone(),
+            entry_id: item.value.clone(),
+        }));
+    }));
+    let state_cancel = state.clone();
+    let ec_cancel = editor_container.clone();
+    let editor_cancel = editor.clone();
+    let tui_cancel = tui.clone();
+    list.on_cancel(Arc::new(move || {
+        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
+    }));
+    open_searchable_selector(
+        state,
+        editor_container,
+        editor,
+        tui,
+        Some("Fork from message"),
+        Some("Forks before the chosen message and puts it in the editor"),
+        list,
+        SelectorKind::Fork,
+    );
+}
+
+/// Content and role used by tree search and preview formatting. Keep this full:
+/// a clipped row must not make words later in a message impossible to find.
+pub(super) fn tree_entry_text(entry: &Entry) -> String {
+    match entry {
+        Entry::Message(me) => match &me.message {
+            AgentMessage::User(user) => format!("user: {}", user_message_text(user)),
+            AgentMessage::Assistant(assistant) => {
+                let text = assistant_text(assistant);
+                let text = if !text.trim().is_empty() {
+                    text
+                } else if assistant.stop_reason == ice_ai::types::StopReason::Aborted {
+                    "(aborted)".into()
+                } else if let Some(error) = &assistant.error_message {
+                    error.clone()
+                } else {
+                    let tools = assistant
+                        .content
+                        .iter()
+                        .filter_map(|content| match content {
+                            Content::ToolCall(call) => Some(call.name.as_str()),
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>();
+                    if tools.is_empty() {
+                        "(no content)".into()
+                    } else {
+                        format!("(tool calls: {})", tools.join(", "))
+                    }
+                };
+                format!("assistant: {text}")
+            }
+            AgentMessage::ToolResult(result) => {
+                let text = result
+                    .content
+                    .iter()
+                    .filter_map(|content| match content {
+                        Content::Text(text) => Some(text.text.as_str()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                format!("tool result: {} {text}", result.tool_name)
+            }
+            AgentMessage::Custom(custom) => custom_message_fallback(custom),
+        },
+        Entry::ModelChange(model) => format!("model → {}/{}", model.provider, model.model_id),
+        Entry::ThinkingLevel(thinking) => format!("thinking: {}", thinking.thinking_level),
+        Entry::ActiveTools(tools) => {
+            format!("active tools: {}", tools.active_tool_names.join(", "))
+        }
+        Entry::Compaction(compaction) => format!("compaction: {}", compaction.summary),
+        Entry::BranchSummary(branch) => format!("branch summary: {}", branch.summary),
+        Entry::Custom(custom) => {
+            custom_entry_display_text(&custom.custom_type, custom.data.as_ref())
+                .unwrap_or_else(|| format!("custom: {}", custom.custom_type))
+        }
+    }
+}
+
+/// A bounded one-row preview that does not split wide graphemes or emit control
+/// characters from stored content. The selectable row retains the full entry ID.
+pub(super) fn tree_entry_summary(entry: &Entry) -> String {
+    let text = ice_tui::strip_ansi(&tree_entry_text(entry));
+    let line = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let line: String = line
+        .chars()
+        .filter(|character| !character.is_control())
+        .collect();
+    ice_tui::strip_ansi(&ice_tui::truncate_to_width(&line, 80, "…"))
+}
+
+pub(super) fn tree_entry_item(entry: &Entry, current: Option<&str>) -> SelectItem {
+    let summary = tree_entry_summary(entry);
+    let label = if current == Some(entry.id()) {
+        format!("{summary} (current)")
+    } else {
+        summary.clone()
+    };
+    let short_id: String = entry.id().chars().take(12).collect();
+    SelectItem::new(entry.id(), &label)
+        .with_description(&format!("#{} {short_id}", entry.seq()))
+        .with_search_text(&format!(
+            "{} {} {} {}",
+            tree_entry_text(entry),
+            entry.entry_type(),
+            entry.seq(),
+            entry.id()
+        ))
+}
+
+/// Open the persisted tree with branch hierarchy and filtering. The selected
+/// full entry ID is sent to the main loop only when the user confirms.
 pub(super) async fn open_tree_selector(
     harness: &AgentHarness,
     state: &Arc<TuiState>,
@@ -394,54 +623,77 @@ pub(super) async fn open_tree_selector(
             return;
         }
     };
-    let current = harness.session().get_leaf_id().await.ok().flatten();
-    let items: Vec<SelectItem> = entries
-        .iter()
-        .map(|entry| {
-            let label = if current.as_deref() == Some(entry.id()) {
-                format!("{} #{} (current)", entry.entry_type(), entry.seq())
-            } else {
-                format!("{} #{}", entry.entry_type(), entry.seq())
-            };
-            let short_id = &entry.id()[..entry.id().len().min(12)];
-            // Search on the entry type, sequence, and id so `/tree` stays
-            // usable in long sessions.
-            let search_text = format!("{} {} {}", entry.entry_type(), entry.seq(), entry.id());
-            SelectItem::new(entry.id(), &label)
-                .with_description(short_id)
-                .with_search_text(&search_text)
-        })
-        .collect();
-    if items.is_empty() {
+    if entries.is_empty() {
         add_note_message(chat, "The current session has no entries to navigate.");
         tui.request_render(false);
         return;
     }
-    let list = Arc::new(SelectList::new(items, 12));
+    let snapshot = match harness.lane("main").snapshot().await {
+        Ok(snapshot) => snapshot,
+        Err(error) => {
+            add_error_message(
+                chat,
+                &format!("Could not read current tree position: {error}"),
+            );
+            tui.request_render(false);
+            return;
+        }
+    };
     let state_sel = state.clone();
     let ec_sel = editor_container.clone();
     let editor_sel = editor.clone();
     let tui_sel = tui.clone();
     let tx_sel = tx.clone();
-    list.on_select(Arc::new(move |item| {
-        let _ = tx_sel.send(TuiMessage::NavigateTree(item.value.clone()));
-        close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
-    }));
     let state_cancel = state.clone();
     let ec_cancel = editor_container.clone();
     let editor_cancel = editor.clone();
     let tui_cancel = tui.clone();
-    list.on_cancel(Arc::new(move || {
-        close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
-    }));
-    open_searchable_selector(
+    // Keep the exact view (filter, query, folding and selected row) available
+    // when the summary chooser or operation returns to the tree. The callback
+    // holds only a weak reference so the selector cannot retain itself.
+    let return_view = Arc::new(Mutex::new(std::sync::Weak::<TreeSelector>::new()));
+    let view_sel = return_view.clone();
+    let selector = Arc::new(TreeSelector::new(
+        entries,
+        snapshot.leaf_id.as_deref(),
+        snapshot.labels,
+        ice_tui::get_keybindings().clone(),
+        Arc::new(move |entry_id| {
+            let view = view_sel.lock().unwrap().upgrade();
+            close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
+            if let Some(view) = view {
+                let _ = tx_sel.send(TuiMessage::NavigateTree(entry_id, view));
+            }
+        }),
+        Arc::new(move || {
+            close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
+        }),
+    ));
+    *return_view.lock().unwrap() = Arc::downgrade(&selector);
+    reopen_tree_selector(selector, state, editor_container, editor, tui);
+}
+
+/// Reuse the tree itself rather than reconstructing it at the current leaf:
+/// cancelling a chooser must not discard the user's search or folded branches.
+pub(super) fn reopen_tree_selector(
+    selector: Arc<TreeSelector>,
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+) {
+    let router = selector.clone();
+    let render = tui.clone();
+    open_selector_with_view(
         state,
         editor_container,
         editor,
         tui,
-        Some("Session tree"),
-        Some("Type to filter by entry type, sequence, or id"),
-        list,
+        SelectorView::Custom(Arc::new(move |key| {
+            router.handle_key(key);
+            render.request_render(false);
+        })),
+        selector,
         SelectorKind::Tree,
     );
 }
@@ -846,15 +1098,13 @@ pub(super) fn open_thinking_selector(
             return;
         };
         let lane = lane_sel.clone();
-        let footer_sel = state_sel.footer.clone();
+        let state = state_sel.clone();
+        let chat = chat_sel.clone();
+        let tui = tui_sel.clone();
         tokio::spawn(async move {
-            let _ = lane.set_thinking_level(level).await;
+            apply_thinking_selection(&lane, &state, &chat, level, false).await;
+            tui.request_render(false);
         });
-        // Reflect the chosen level in the footer's model suffix (pi parity:
-        // `model • thinking off` / `model • medium`). The shown text for the
-        // Off level is "off", matching the TS `thinkingLevel === "off"` branch.
-        footer_sel.set_thinking_level(Some(thinking_level_name(level)));
-        add_note_message(&chat_sel, &format!("Thinking set to {}.", item.label));
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();

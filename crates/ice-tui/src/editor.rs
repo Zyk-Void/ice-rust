@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
 
 use crossterm::event::{KeyCode, KeyModifiers};
-use unicode_width::UnicodeWidthStr;
+use unicode_segmentation::UnicodeSegmentation;
 
 use super::component::{Component, Focusable};
 use super::keybindings::Keybindings;
@@ -113,6 +113,15 @@ fn snap_boundary(s: &str, idx: usize) -> usize {
         .unwrap_or(0)
 }
 
+/// Apply a `word_navigation` helper, which works in char indices, to the
+/// byte-offset caret: convert the caret to a char index, then the result back
+/// to a byte offset on a char boundary.
+fn word_target(s: &str, byte_col: usize, find: fn(&str, usize) -> usize) -> usize {
+    let char_col = s[..snap_boundary(s, byte_col)].chars().count();
+    let target = find(s, char_col);
+    s.char_indices().nth(target).map_or(s.len(), |(b, _)| b)
+}
+
 /// A folded store of a large paste, keyed by the id rendered in its marker.
 /// The document (`EditorState::lines`) only ever carries the short
 /// `[paste #id …]` marker; the real text lives here until the draft is
@@ -189,55 +198,167 @@ fn decode_csi_u_ctrl(text: &str) -> String {
     .into_owned()
 }
 
-/// Split a logical editor line into terminal-width chunks. The editor keeps
-/// logical lines for editing and cursor movement; wrapping is strictly a
-/// rendering concern so a long draft cannot escape the bordered input box.
+/// A rendered segment of a logical editor line.
+#[derive(Debug, Clone, Copy)]
+struct VisualLine {
+    logical_row: usize,
+    start: usize,
+    end: usize,
+}
+
+/// Split a logical editor line into display-width chunks, preferring word
+/// boundaries and falling back to grapheme boundaries for overlong words.
+/// Rendering and vertical navigation share this layout.
 fn wrap_line_ranges(line: &str, max_width: usize) -> Vec<(usize, usize)> {
     if line.is_empty() {
         return vec![(0, 0)];
     }
     let max_width = max_width.max(1);
+    let graphemes: Vec<(usize, &str, usize, bool)> = line
+        .grapheme_indices(true)
+        .map(|(index, grapheme)| {
+            let width = crate::ansi::visible_width(grapheme);
+            let whitespace = grapheme.chars().all(char::is_whitespace);
+            (index, grapheme, width, whitespace)
+        })
+        .collect();
     let mut ranges = Vec::new();
-    let mut start = 0;
-    let mut width = 0;
-    for (idx, ch) in line.char_indices() {
-        let char_width = UnicodeWidthStr::width(ch.to_string().as_str());
-        if idx > start && width + char_width > max_width {
-            ranges.push((start, idx));
-            start = idx;
-            width = 0;
+    let mut chunk_start = 0;
+    let mut current_width = 0usize;
+    let mut wrap_opportunity: Option<(usize, usize)> = None;
+
+    for (position, (index, grapheme, grapheme_width, is_whitespace)) in
+        graphemes.iter().copied().enumerate()
+    {
+        if current_width.saturating_add(grapheme_width) > max_width {
+            if let Some((break_at, width_at_break)) = wrap_opportunity {
+                if current_width
+                    .saturating_sub(width_at_break)
+                    .saturating_add(grapheme_width)
+                    <= max_width
+                {
+                    ranges.push((chunk_start, break_at));
+                    chunk_start = break_at;
+                    current_width = current_width.saturating_sub(width_at_break);
+                } else if chunk_start < index {
+                    ranges.push((chunk_start, index));
+                    chunk_start = index;
+                    current_width = 0;
+                }
+            } else if chunk_start < index {
+                ranges.push((chunk_start, index));
+                chunk_start = index;
+                current_width = 0;
+            }
+            wrap_opportunity = None;
         }
-        width += char_width;
+
+        current_width = current_width.saturating_add(grapheme_width);
+        if let Some((next_index, next_grapheme, _, next_whitespace)) = graphemes.get(position + 1) {
+            if is_whitespace && !next_whitespace {
+                wrap_opportunity = Some((*next_index, current_width));
+            } else if !is_whitespace
+                && !next_whitespace
+                && (is_cjk_grapheme(grapheme) || is_cjk_grapheme(next_grapheme))
+            {
+                wrap_opportunity = Some((*next_index, current_width));
+            }
+        }
     }
-    ranges.push((start, line.len()));
+    ranges.push((chunk_start, line.len()));
     ranges
 }
 
-/// Insert the zero-width cursor marker at a visible column without slicing
-/// through ANSI escape sequences added for selection/placeholder styling.
+fn is_cjk_grapheme(grapheme: &str) -> bool {
+    grapheme.chars().any(|character| {
+        matches!(
+            character as u32,
+            0x2E80..=0x2FFF
+                | 0x3000..=0x30FF
+                | 0x31F0..=0x31FF
+                | 0x3200..=0x33FF
+                | 0x3400..=0x4DBF
+                | 0x4E00..=0x9FFF
+                | 0xA960..=0xA97F
+                | 0xAC00..=0xD7FF
+                | 0xF900..=0xFAFF
+                | 0xFE30..=0xFE4F
+                | 0xFF00..=0xFFEF
+                | 0x20000..=0x3134F
+        )
+    })
+}
+
+fn visual_lines(lines: &[String], width: usize) -> Vec<VisualLine> {
+    lines
+        .iter()
+        .enumerate()
+        .flat_map(|(logical_row, line)| {
+            wrap_line_ranges(line, width)
+                .into_iter()
+                .map(move |(start, end)| VisualLine {
+                    logical_row,
+                    start,
+                    end,
+                })
+        })
+        .collect()
+}
+
+fn visual_column(line: &str, start: usize, end: usize, byte_col: usize) -> usize {
+    crate::ansi::visible_width(&line[start..byte_col.min(end)])
+}
+
+/// Convert a display-cell column in one visual segment back to a valid byte
+/// offset. If the target falls inside a wide grapheme, stop before it.
+fn byte_column_at_visual_column(line: &str, start: usize, end: usize, column: usize) -> usize {
+    let mut width = 0usize;
+    for (idx, grapheme) in line[start..end].grapheme_indices(true) {
+        let grapheme_width = crate::ansi::visible_width(grapheme);
+        if width.saturating_add(grapheme_width) > column {
+            return start + idx;
+        }
+        width = width.saturating_add(grapheme_width);
+    }
+    end
+}
+
+/// Border row naming rows hidden above or below the editor viewport (ice
+/// `createScrollBorder`): `─── ↑ 3 more ─────`, cut to `width`.
+fn scroll_border(direction: &str, hidden: usize, width: usize) -> String {
+    let indicator = format!("─── {direction} {hidden} more ");
+    let used = crate::ansi::visible_width(&indicator);
+    if used <= width {
+        indicator + &"─".repeat(width - used)
+    } else {
+        crate::utils::truncate_to_width(&indicator, width, "")
+    }
+}
+
+/// Insert the zero-width cursor marker without slicing through ANSI styling.
 fn insert_cursor_marker(text: &str, column: usize) -> String {
     let mut out = String::with_capacity(text.len() + CURSOR_MARKER.len());
-    let mut visible = 0;
-    let mut chars = text.char_indices().peekable();
+    let mut visible = 0usize;
+    let mut cursor = 0usize;
     let mut inserted = false;
-    while let Some((idx, ch)) = chars.next() {
-        if ch == '\x1b' {
-            out.push(ch);
-            while let Some((_, esc)) = chars.next() {
-                out.push(esc);
-                if esc == '\x07' || ('@'..='~').contains(&esc) {
-                    break;
-                }
-            }
+    while cursor < text.len() {
+        if text[cursor..].starts_with('\x1b') {
+            let escape_len = crate::ansi::escape_len(&text[cursor..]);
+            out.push_str(&text[cursor..cursor + escape_len]);
+            cursor += escape_len;
             continue;
         }
+        let grapheme = text[cursor..]
+            .graphemes(true)
+            .next()
+            .expect("cursor is at a UTF-8 boundary");
         if !inserted && visible >= column {
             out.push_str(CURSOR_MARKER);
             inserted = true;
         }
-        out.push(ch);
-        visible += UnicodeWidthStr::width(ch.to_string().as_str());
-        let _ = idx;
+        out.push_str(grapheme);
+        visible = visible.saturating_add(crate::ansi::visible_width(grapheme));
+        cursor += grapheme.len();
     }
     if !inserted {
         out.push_str(CURSOR_MARKER);
@@ -248,10 +369,13 @@ fn insert_cursor_marker(text: &str, column: usize) -> String {
 /// Editor - A multi-line text editor component.
 pub struct Editor {
     state: Mutex<EditorState>,
+    /// Display width used to lay out visual rows, updated by `render`.
+    visual_width: Mutex<usize>,
+    /// Sticky display column for consecutive vertical cursor movements.
+    preferred_visual_column: Mutex<Option<usize>>,
     options: EditorOptions,
     #[allow(dead_code)]
     style: EditorStyle,
-    #[allow(dead_code)]
     keybindings: Arc<Keybindings>,
     on_submit: Mutex<Option<Arc<dyn Fn(&str) + Send + Sync>>>,
     on_change: Mutex<Option<Arc<dyn Fn(&str) + Send + Sync>>>,
@@ -281,6 +405,9 @@ pub struct Editor {
     pastes: Mutex<HashMap<u32, PasteEntry>>,
     /// Monotonic id source for [`Self::pastes`] (upstream's `pasteCounter`).
     paste_counter: Mutex<u32>,
+    /// Most text rows shown at once (ice: 30% of the terminal, at least 5);
+    /// longer drafts scroll inside the box. `None` shows every row.
+    max_visible_rows: Mutex<Option<usize>>,
 }
 
 /// State for the working indicator embedded in the editor's top border.
@@ -319,6 +446,8 @@ impl Editor {
 
         Self {
             state: Mutex::new(state),
+            visual_width: Mutex::new(79),
+            preferred_visual_column: Mutex::new(None),
             options,
             style,
             keybindings,
@@ -333,6 +462,7 @@ impl Editor {
             working: Mutex::new(None),
             pastes: Mutex::new(HashMap::new()),
             paste_counter: Mutex::new(0),
+            max_visible_rows: Mutex::new(None),
         }
     }
 
@@ -418,7 +548,10 @@ impl Editor {
             if pastes.remove(&id).is_none() {
                 return;
             }
-            let higher: Vec<u32> = pastes.keys().copied().filter(|k| *k > id).collect();
+            // Ascending, so each id moves into the slot its predecessor just
+            // vacated; HashMap order could overwrite a not-yet-moved entry.
+            let mut higher: Vec<u32> = pastes.keys().copied().filter(|k| *k > id).collect();
+            higher.sort_unstable();
             for old in higher {
                 if let Some(entry) = pastes.remove(&old) {
                     pastes.insert(old - 1, entry);
@@ -559,6 +692,7 @@ impl Editor {
             state.cursor_col = col;
             state.selection_anchor = None;
         }
+        self.reset_preferred_visual_column();
     }
 
     /// Snapshot the current text + caret state (for undo/redo), including the
@@ -948,6 +1082,7 @@ impl Editor {
 
     /// Move cursor left.
     fn cursor_left(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             if state.cursor_col > 0 {
                 let row = state.cursor_row;
@@ -975,6 +1110,7 @@ impl Editor {
 
     /// Move cursor right.
     fn cursor_right(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             let line = &state.lines[row];
@@ -1000,34 +1136,75 @@ impl Editor {
         }
     }
 
-    /// Move cursor up.
-    fn cursor_up(&self) {
-        if let Ok(mut state) = self.state.lock() {
-            if state.cursor_row > 0 {
-                state.cursor_row -= 1;
-                let new_row = state.cursor_row;
-                let max = state.lines[new_row].len();
-                // The byte column may fall mid-character in the new (shorter
-                // or differently-encoded) line; snap to a boundary.
-                state.cursor_col = snap_boundary(&state.lines[new_row], state.cursor_col.min(max));
-            }
-        }
+    fn move_cursor_vertical(&self, direction: isize) {
+        let Ok(mut state) = self.state.lock() else {
+            return;
+        };
+        let width = self.visual_width.lock().map(|w| *w).unwrap_or(79).max(1);
+        let visual = visual_lines(&state.lines, width);
+        let Some(current) = visual.iter().position(|line| {
+            line.logical_row == state.cursor_row
+                && (state.cursor_col >= line.start
+                    && (state.cursor_col < line.end
+                        || (line.end == state.lines[state.cursor_row].len()
+                            && state.cursor_col == line.end)))
+        }) else {
+            return;
+        };
+        let target = if direction < 0 {
+            current.checked_sub(1)
+        } else {
+            (current + 1 < visual.len()).then_some(current + 1)
+        };
+        let Some(target) = target else {
+            return;
+        };
+        let source = visual[current];
+        let destination = visual[target];
+        let source_text = &state.lines[source.logical_row];
+        let destination_text = &state.lines[destination.logical_row];
+        let current_column = visual_column(source_text, source.start, source.end, state.cursor_col);
+        let mut preferred = self.preferred_visual_column.lock().unwrap();
+        let preferred_column = *preferred.get_or_insert(current_column);
+        let destination_width =
+            crate::ansi::visible_width(&destination_text[destination.start..destination.end]);
+        let continues_on_next_visual_row = visual
+            .get(target + 1)
+            .is_some_and(|next| next.logical_row == destination.logical_row);
+        let max_column = if continues_on_next_visual_row {
+            destination_width.saturating_sub(1)
+        } else {
+            destination_width
+        };
+        let target_byte_column = byte_column_at_visual_column(
+            destination_text,
+            destination.start,
+            destination.end,
+            preferred_column.min(max_column),
+        );
+        state.cursor_row = destination.logical_row;
+        state.cursor_col = target_byte_column;
     }
 
-    /// Move cursor down.
+    /// Move cursor to the previous rendered row.
+    fn cursor_up(&self) {
+        self.move_cursor_vertical(-1);
+    }
+
+    /// Move cursor to the next rendered row.
     fn cursor_down(&self) {
-        if let Ok(mut state) = self.state.lock() {
-            if state.cursor_row < state.lines.len() - 1 {
-                state.cursor_row += 1;
-                let new_row = state.cursor_row;
-                let max = state.lines[new_row].len();
-                state.cursor_col = snap_boundary(&state.lines[new_row], state.cursor_col.min(max));
-            }
+        self.move_cursor_vertical(1);
+    }
+
+    fn reset_preferred_visual_column(&self) {
+        if let Ok(mut preferred) = self.preferred_visual_column.lock() {
+            *preferred = None;
         }
     }
 
     /// Move cursor to start of line.
     fn cursor_home(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             state.cursor_col = 0;
         }
@@ -1035,6 +1212,7 @@ impl Editor {
 
     /// Move cursor to end of line.
     fn cursor_end(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             state.cursor_col = state.lines[row].len();
@@ -1049,7 +1227,11 @@ impl Editor {
         let killed = if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
             let col = state.cursor_col;
-            let start = crate::word_navigation::find_word_backward(&state.lines[row], col);
+            let start = word_target(
+                &state.lines[row],
+                col,
+                crate::word_navigation::find_word_backward,
+            );
             let dead: String = state.lines[row].drain(start..col).collect();
             state.cursor_col = start;
             dead
@@ -1068,7 +1250,11 @@ impl Editor {
             let col = state.cursor_col;
             // Kill only the current word (not the trailing delimiter) —
             // `find_word_end` stops at the last word char.
-            let end = crate::word_navigation::find_word_end(&state.lines[row], col);
+            let end = word_target(
+                &state.lines[row],
+                col,
+                crate::word_navigation::find_word_end,
+            );
             let dead: String = state.lines[row].drain(col..end).collect();
             dead
         } else {
@@ -1082,8 +1268,11 @@ impl Editor {
     fn cursor_word_left(&self) {
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
-            state.cursor_col =
-                crate::word_navigation::find_word_backward(&state.lines[row], state.cursor_col);
+            state.cursor_col = word_target(
+                &state.lines[row],
+                state.cursor_col,
+                crate::word_navigation::find_word_backward,
+            );
         }
     }
 
@@ -1091,8 +1280,11 @@ impl Editor {
     fn cursor_word_right(&self) {
         if let Ok(mut state) = self.state.lock() {
             let row = state.cursor_row;
-            state.cursor_col =
-                crate::word_navigation::find_word_forward(&state.lines[row], state.cursor_col);
+            state.cursor_col = word_target(
+                &state.lines[row],
+                state.cursor_col,
+                crate::word_navigation::find_word_forward,
+            );
         }
     }
 
@@ -1117,7 +1309,9 @@ impl Editor {
     /// Jump the caret to the next/previous occurrence of `target` (pi
     /// `jumpToChar`): scan the current line from after/before the caret, then
     /// onward/backward line by line. Byte-safe: `find`/`rfind` return char
-    /// boundaries and all search offsets start on one.
+    /// boundaries and all search offsets start on one. On the caret's line a
+    /// forward search starts after the char under the caret and a backward
+    /// search accepts any match that starts before the caret.
     fn jump_to_char(&self, target: char, dir: i32) {
         let forward = dir > 0;
         let mut state = self.state.lock().unwrap();
@@ -1127,10 +1321,14 @@ impl Editor {
         loop {
             let line = &state.lines[row];
             let search_from = if row == start_row {
+                let caret = snap_boundary(line, state.cursor_col);
                 if forward {
-                    (state.cursor_col + target.len_utf8()).min(line.len())
+                    line[caret..]
+                        .chars()
+                        .next()
+                        .map_or(line.len(), |c| caret + c.len_utf8())
                 } else {
-                    state.cursor_col.saturating_sub(target.len_utf8())
+                    caret
                 }
             } else if forward {
                 0
@@ -1152,6 +1350,16 @@ impl Editor {
                 return;
             }
             row = next as usize;
+        }
+    }
+
+    /// Size the text viewport for a terminal `rows` tall: at most 30% of the
+    /// rows, never fewer than 5 (ice `editor.ts` `maxVisibleLines`). A draft
+    /// with more rows scrolls inside the box, following the caret, so a long
+    /// prompt no longer pushes the transcript off the screen.
+    pub fn set_terminal_rows(&self, rows: usize) {
+        if let Ok(mut max) = self.max_visible_rows.lock() {
+            *max = Some((rows.saturating_mul(3) / 10).max(5));
         }
     }
 
@@ -1206,6 +1414,7 @@ impl Editor {
 
     /// Notify change callback.
     fn notify_change(&self) {
+        self.reset_preferred_visual_column();
         if let Ok(cb) = self.on_change.lock() {
             if let Some(callback) = cb.as_ref() {
                 let text = self.get_text();
@@ -1214,8 +1423,87 @@ impl Editor {
         }
     }
 
-    /// Handle keyboard input.
-    pub fn handle_key(&self, key: crossterm::event::KeyEvent) -> bool {
+    /// Route configured editor actions before text input and selection handling.
+    pub fn handle_key(&self, mut key: crossterm::event::KeyEvent) -> bool {
+        use KeyCode::*;
+        use KeyModifiers as M;
+
+        // Terminal protocols can deliver Enter as a raw CR/LF codepoint.
+        if matches!(key.code, Char('\n' | '\r')) {
+            key.code = Enter;
+        }
+        let actions = [
+            ("tui.editor.cursorLeft", Left, M::NONE),
+            ("tui.editor.cursorRight", Right, M::NONE),
+            ("tui.editor.cursorUp", Up, M::NONE),
+            ("tui.editor.cursorDown", Down, M::NONE),
+            ("tui.editor.cursorLineStart", Home, M::NONE),
+            ("tui.editor.cursorLineEnd", End, M::NONE),
+            ("tui.editor.cursorWordLeft", Left, M::ALT),
+            ("tui.editor.cursorWordRight", Right, M::ALT),
+            ("tui.editor.deleteCharBackward", Backspace, M::NONE),
+            ("tui.editor.deleteCharForward", Delete, M::NONE),
+            ("tui.editor.deleteWordBackward", Backspace, M::ALT),
+            ("tui.editor.deleteWordForward", Delete, M::ALT),
+            ("tui.editor.deleteToLineStart", Char('u'), M::CONTROL),
+            ("tui.editor.deleteToLineEnd", Char('k'), M::CONTROL),
+            ("tui.editor.yank", Char('y'), M::CONTROL),
+            ("tui.editor.yankPop", Char('y'), M::ALT),
+            ("tui.editor.undo", Char('-'), M::CONTROL),
+            ("tui.editor.jumpForward", Char(']'), M::CONTROL),
+            ("tui.editor.jumpBackward", Char(']'), M::CONTROL | M::ALT),
+            ("tui.editor.pageUp", PageUp, M::CONTROL),
+            ("tui.editor.pageDown", PageDown, M::CONTROL),
+            ("tui.input.newLine", Enter, M::SHIFT),
+            ("tui.input.submit", Enter, M::NONE),
+            ("tui.input.copy", Char('c'), M::CONTROL),
+        ];
+        for &(id, code, modifiers) in &actions {
+            if self.keybindings.matches(&key, id) {
+                return self
+                    .handle_key_unconfigured(crossterm::event::KeyEvent::new(code, modifiers));
+            }
+        }
+        let is_default = |id, key: &crossterm::event::KeyEvent| {
+            self.keybindings
+                .get_definition(id)
+                .is_some_and(|definition| {
+                    definition
+                        .default_keys
+                        .iter()
+                        .any(|combo| combo.code == key.code && combo.modifiers == key.modifiers)
+                })
+        };
+        // Shift extends a configured cursor movement. A rebound movement must
+        // also release its former shifted selection shortcut.
+        if key.modifiers.contains(M::SHIFT) {
+            let mut movement = key;
+            movement.modifiers.remove(M::SHIFT);
+            if let Char(character) = movement.code {
+                movement.code = Char(character.to_ascii_lowercase());
+            }
+            for &(id, code, _) in &actions[..6] {
+                if self.keybindings.matches(&movement, id) {
+                    return self
+                        .handle_key_unconfigured(crossterm::event::KeyEvent::new(code, M::SHIFT));
+                }
+            }
+            if actions[..6]
+                .iter()
+                .any(|(id, _, _)| is_default(*id, &movement))
+            {
+                return false;
+            }
+        }
+        // Do not keep a default key active after rebinding or explicitly
+        // unbinding its action. Other keys retain the text/selection protocol.
+        if actions.iter().any(|(id, _, _)| is_default(*id, &key)) {
+            return false;
+        }
+        self.handle_key_unconfigured(key)
+    }
+
+    fn handle_key_unconfigured(&self, key: crossterm::event::KeyEvent) -> bool {
         match (key.modifiers, key.code) {
             // Navigation — plain movement clears any active selection;
             // Shift+movement extends it.
@@ -1391,6 +1679,8 @@ impl Component for Editor {
     fn render(&self, width: usize) -> Vec<String> {
         let state = self.state.lock().map(|s| s.clone()).unwrap_or_default();
         let mut content_lines = Vec::new();
+        // Visual row holding the caret, for the scrolling viewport.
+        let mut cursor_line: Option<usize> = None;
 
         let pad = " ".repeat(self.options.padding_x);
         // `prompt` is no longer rendered (mirrors the TS editor, which draws a
@@ -1398,19 +1688,15 @@ impl Component for Editor {
         // `editor.ts:539-578`). The `EditorStyle.prompt` field is retained for
         // API compatibility but unread here.
         let content_width = width.saturating_sub(self.options.padding_x).max(1);
-        // Leave one cell for the cursor marker on the active logical line so
-        // the terminal never performs an implicit wrap at the right border.
-        let active_width = content_width.saturating_sub(1).max(1);
+        // Reserve the final cell for the cursor on every visual row so wrap
+        // boundaries stay stable while navigating between logical lines.
+        let visual_width = content_width.saturating_sub(1).max(1);
+        if let Ok(mut stored_width) = self.visual_width.lock() {
+            *stored_width = visual_width;
+        }
         for (row_idx, line) in state.lines.iter().enumerate() {
-            let ranges = wrap_line_ranges(
-                line,
-                if row_idx == state.cursor_row {
-                    active_width
-                } else {
-                    content_width
-                },
-            );
-            for (chunk_start, chunk_end) in ranges {
+            let ranges = wrap_line_ranges(line, visual_width);
+            for (range_idx, (chunk_start, chunk_end)) in ranges.iter().copied().enumerate() {
                 let chunk = &line[chunk_start..chunk_end];
                 // Placeholder (dim) only on the single empty line at the cursor —
                 // honors callers that set `placeholder`; production drops it.
@@ -1467,17 +1753,24 @@ impl Component for Editor {
                 // and the prefix length is computed in *bytes* of the source line,
                 // snap the insertion point to the nearest preceding char boundary
                 // in `rendered` before byte-slicing — never slice mid-character.
+                let is_last_chunk = range_idx + 1 == ranges.len();
                 if state.focused
                     && row_idx == state.cursor_row
                     && state.cursor_col >= chunk_start
-                    && state.cursor_col <= chunk_end
+                    && (state.cursor_col < chunk_end
+                        || (is_last_chunk && state.cursor_col == chunk_end))
                 {
-                    let cursor_col = UnicodeWidthStr::width(
-                        line[chunk_start..state.cursor_col.min(chunk_end)]
-                            .to_string()
-                            .as_str(),
+                    let cursor_col = crate::ansi::visible_width(
+                        &line[chunk_start..state.cursor_col.min(chunk_end)],
                     );
                     rendered = insert_cursor_marker(&rendered, self.options.padding_x + cursor_col);
+                }
+                if row_idx == state.cursor_row
+                    && state.cursor_col >= chunk_start
+                    && (state.cursor_col < chunk_end
+                        || (is_last_chunk && state.cursor_col == chunk_end))
+                {
+                    cursor_line.get_or_insert(content_lines.len());
                 }
 
                 content_lines.push(rendered);
@@ -1556,6 +1849,49 @@ impl Component for Editor {
             border_color.fg(&horizontal)
         };
 
+        // Scroll the text rows so the caret stays visible (ice `editor.ts`).
+        let max_rows = self
+            .max_visible_rows
+            .lock()
+            .ok()
+            .and_then(|max| *max)
+            .unwrap_or(usize::MAX);
+        let (top_border, bottom_border) = if content_lines.len() > max_rows {
+            let cursor_line = cursor_line.unwrap_or(0);
+            let mut offset = state.scroll_offset;
+            if cursor_line < offset {
+                offset = cursor_line;
+            } else if cursor_line >= offset + max_rows {
+                offset = cursor_line + 1 - max_rows;
+            }
+            offset = offset.min(content_lines.len() - max_rows);
+            if let Ok(mut live) = self.state.lock() {
+                live.scroll_offset = offset;
+            }
+            let below = content_lines.len() - offset - max_rows;
+            content_lines = content_lines.split_off(offset);
+            content_lines.truncate(max_rows);
+            let top = if offset > 0 && working_state.is_none() {
+                border_color.fg(&scroll_border("↑", offset, width))
+            } else {
+                top_border
+            };
+            let bottom = if below > 0 {
+                border_color.fg(&scroll_border("↓", below, width))
+            } else {
+                bottom_border
+            };
+            (top, bottom)
+        } else {
+            // The draft fits again: start from the top next time it grows.
+            if state.scroll_offset != 0 {
+                if let Ok(mut live) = self.state.lock() {
+                    live.scroll_offset = 0;
+                }
+            }
+            (top_border, bottom_border)
+        };
+
         let mut lines = Vec::with_capacity(content_lines.len() + 2);
         lines.push(top_border);
         lines.extend(content_lines);
@@ -1593,6 +1929,93 @@ impl Focusable for Editor {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn capped_viewport_keeps_caret_at_a_wrap_boundary_visible() {
+        let editor = Editor::simple();
+        editor.set_focused(true);
+        editor.set_terminal_rows(17);
+        editor.set_text(&"abcdef".repeat(10));
+        // With padding and the reserved cursor cell, width 8 wraps at 6.
+        // Byte 30 belongs to the sixth row, not the end of the fifth row.
+        editor.set_cursor(0, 30);
+        let rows = editor.render(8);
+        assert_eq!(rows.len(), 7);
+        assert_eq!(
+            rows.iter()
+                .filter(|row| row.contains(CURSOR_MARKER))
+                .count(),
+            1
+        );
+        assert!(rows[5].contains(CURSOR_MARKER));
+    }
+
+    #[test]
+    fn capped_unicode_draft_keeps_caret_after_resize_and_visual_movement() {
+        use crossterm::event::KeyEvent;
+        let editor = Editor::simple();
+        editor.set_focused(true);
+        editor.set_terminal_rows(20);
+        let text = "界 e\u{301} 👩‍💻 wide words ".repeat(20);
+        editor.set_text(&text);
+        editor.set_cursor(0, text.len());
+        for (width, height) in [(22, 20), (38, 40), (18, 12)] {
+            editor.set_terminal_rows(height);
+            let rows = editor.render(width);
+            assert!(rows.len() <= (height * 3 / 10).max(5) + 2);
+            assert_eq!(
+                rows.iter()
+                    .filter(|row| row.contains(CURSOR_MARKER))
+                    .count(),
+                1
+            );
+            editor.handle_key(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+            let rows = editor.render(width);
+            assert_eq!(
+                rows.iter()
+                    .filter(|row| row.contains(CURSOR_MARKER))
+                    .count(),
+                1
+            );
+            assert!(text.is_char_boundary(editor.cursor_position().1));
+        }
+    }
+
+    /// A long draft used to render every row, pushing the transcript off the
+    /// screen. The editor now shows at most 30% of the terminal (at least 5
+    /// rows) and scrolls to keep the caret visible, with "N more" borders.
+    #[test]
+    fn long_draft_scrolls_inside_a_capped_viewport() {
+        use crate::component::Component;
+        let editor = Editor::simple();
+        editor.set_terminal_rows(20); // 30% of 20 = 6 rows
+        let text: Vec<String> = (0..12).map(|i| format!("line {i}")).collect();
+        editor.set_text(&text.join("\n"));
+        editor.set_cursor(11, 0);
+        let rows = editor.render(40);
+        let plain: Vec<String> = rows.iter().map(|r| crate::strip_ansi(r)).collect();
+        assert_eq!(plain.len(), 6 + 2, "{plain:?}");
+        assert!(plain[0].starts_with("─── ↑ 6 more "), "{plain:?}");
+        assert!(plain[6].contains("line 11"), "{plain:?}");
+        assert!(plain[7].chars().all(|c| c == '─'), "{plain:?}");
+
+        // Moving the caret to the top scrolls back up.
+        editor.set_cursor(0, 0);
+        let plain: Vec<String> = editor
+            .render(40)
+            .iter()
+            .map(|r| crate::strip_ansi(r))
+            .collect();
+        assert!(plain[1].contains("line 0"), "{plain:?}");
+        assert!(plain[7].starts_with("─── ↓ 6 more "), "{plain:?}");
+
+        // Small terminals still get 5 rows; no cap shows everything.
+        editor.set_terminal_rows(8);
+        assert_eq!(editor.render(40).len(), 5 + 2);
+        let uncapped = Editor::simple();
+        uncapped.set_text(&text.join("\n"));
+        assert_eq!(uncapped.render(40).len(), 12 + 2);
+    }
 
     #[test]
     fn working_spinner_advances_per_render_not_per_timer() {
@@ -1871,6 +2294,83 @@ l12",
         editor.handle_key(mk(KeyModifiers::CONTROL, KeyCode::Char('d')));
         assert_eq!(editor.get_text(), "ac");
     }
+
+    #[test]
+    fn word_ops_on_multibyte_text_use_byte_cursor() {
+        // Regression: word helpers return char indices but `cursor_col` is a
+        // byte offset; mixing them indexed past the char vector or drained
+        // inside a UTF-8 sequence. "你好 世界" is 13 bytes, 5 chars.
+        use crossterm::event::{KeyCode, KeyModifiers};
+        let mk = |m, c| crossterm::event::KeyEvent::new(c, m);
+        let editor = Editor::simple();
+
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 13);
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Left));
+        assert_eq!(editor.cursor_position(), (0, 7));
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Left));
+        assert_eq!(editor.cursor_position(), (0, 0));
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Right));
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
+        assert_eq!(editor.get_text(), "你好 ");
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 13);
+        editor.handle_key(mk(KeyModifiers::CONTROL, KeyCode::Char('w')));
+        assert_eq!(editor.get_text(), "你好 ");
+        assert_eq!(editor.cursor_position(), (0, 7));
+
+        // Kill forward from the start removes the whole first word.
+        editor.set_text("你好 世界");
+        editor.set_cursor(0, 0);
+        editor.handle_key(mk(KeyModifiers::ALT, KeyCode::Char('d')));
+        assert_eq!(editor.get_text(), " 世界");
+    }
+
+    #[test]
+    fn char_jump_steps_over_the_char_at_the_caret_not_the_target() {
+        // Regression: the search offset used the *target's* UTF-8 length, so
+        // a multibyte line sliced inside a char (panic) and a backward jump
+        // skipped a match directly before the caret. Mirrors ice
+        // `jumpToChar`: forward starts after the char under the caret,
+        // backward finds a match that starts before the caret.
+        use crossterm::event::{KeyCode, KeyModifiers};
+        let mk = |m, c| crossterm::event::KeyEvent::new(c, m);
+        let jump = |editor: &Editor, backward: bool, c: char| {
+            let mods = if backward {
+                KeyModifiers::CONTROL | KeyModifiers::ALT
+            } else {
+                KeyModifiers::CONTROL
+            };
+            editor.handle_key(mk(mods, KeyCode::Char(']')));
+            editor.handle_key(mk(KeyModifiers::NONE, KeyCode::Char(c)));
+        };
+        let editor = Editor::simple();
+
+        editor.set_text("你x");
+        editor.set_cursor(0, 0);
+        jump(&editor, false, 'x');
+        assert_eq!(editor.cursor_position(), (0, 3));
+
+        editor.set_text("x世");
+        editor.set_cursor(0, 0);
+        jump(&editor, false, '世');
+        assert_eq!(editor.cursor_position(), (0, 1));
+
+        editor.set_text("axb");
+        editor.set_cursor(0, 2);
+        jump(&editor, true, 'x');
+        assert_eq!(editor.cursor_position(), (0, 1));
+
+        editor.set_text("世x界");
+        editor.set_cursor(0, 7);
+        jump(&editor, true, '世');
+        assert_eq!(editor.cursor_position(), (0, 0));
+    }
+
     #[test]
     fn test_selection_cut_copy_paste() {
         let editor = Editor::simple();
@@ -2193,6 +2693,129 @@ l12",
     }
 
     #[test]
+    fn word_wrap_prefers_word_boundaries_and_keeps_the_separator_space() {
+        let line = "hello world test";
+        let ranges = wrap_line_ranges(line, 11);
+        let chunks: Vec<&str> = ranges
+            .iter()
+            .map(|(start, end)| &line[*start..*end])
+            .collect();
+        assert_eq!(chunks, ["hello ", "world test"]);
+    }
+
+    #[test]
+    fn word_wrap_breaks_long_words_only_when_required() {
+        let line = "abcde fghijklmnop q";
+        let ranges = wrap_line_ranges(line, 8);
+        let chunks: Vec<&str> = ranges
+            .iter()
+            .map(|(start, end)| &line[*start..*end])
+            .collect();
+        assert_eq!(chunks, ["abcde ", "fghijklm", "nop q"]);
+        assert_eq!(chunks.concat(), line);
+    }
+
+    #[test]
+    fn word_wrap_allows_breaks_between_cjk_graphemes() {
+        let line = "你好世界和平";
+        let ranges = wrap_line_ranges(line, 4);
+        let chunks: Vec<&str> = ranges
+            .iter()
+            .map(|(start, end)| &line[*start..*end])
+            .collect();
+        assert_eq!(chunks, ["你好", "世界", "和平"]);
+    }
+
+    #[test]
+    fn up_and_down_move_between_visual_rows_of_a_wrapped_line() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("abcdefghijklmnopqrst");
+        editor.render(10); // 8 text cells per visual line; active row reserves 1.
+        editor.set_cursor(0, 13);
+
+        editor.handle_key(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (0, 5));
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (0, 13));
+    }
+
+    #[test]
+    fn vertical_visual_column_is_sticky_across_short_logical_lines() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("abcdefghij\nxyz\nabcdefghij");
+        editor.render(12);
+        editor.set_cursor(0, 8);
+
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (1, 3));
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (2, 8));
+    }
+
+    #[test]
+    fn vertical_visual_movement_uses_grapheme_cell_widths() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("ab界defgh\n12345678");
+        editor.render(12);
+        editor.set_cursor(0, 5); // after `界`, at display column 4
+
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (1, 4));
+    }
+
+    #[test]
+    fn horizontal_movement_resets_visual_column_preference() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_focused(true);
+        editor.set_text("abcdefghij\nxyz\nabcdefghij");
+        editor.render(12);
+        editor.set_cursor(0, 8);
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        editor.handle_key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE));
+        editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        assert_eq!(editor.cursor_position(), (2, 2));
+    }
+
+    #[test]
     fn test_editor_preserves_trailing_newline() {
         let editor = Editor::simple();
         editor.set_text("first\n");
@@ -2342,6 +2965,28 @@ l12",
         // Only the second survives, renumbered to #1, and it still expands.
         assert_eq!(editor.get_text(), "[paste #1 +12 lines]");
         assert_eq!(editor.get_expanded_text(), second);
+    }
+
+    #[test]
+    fn deleting_a_marker_renumbers_many_higher_pastes_without_collisions() {
+        // Regression: renumbering walked the HashMap's higher ids in
+        // arbitrary order, so moving #3 to #2 before #2 had moved to #1
+        // overwrote #2's payload. Six pastes make that order near-certain.
+        let editor = Editor::simple();
+        let payloads: Vec<String> = (1..=6).map(|n| format!("{n}\n").repeat(11)).collect();
+        for p in &payloads {
+            editor.handle_paste(p);
+        }
+        let marker_one = "[paste #1 +12 lines]";
+        editor.set_cursor(0, marker_one.len());
+        let _ = editor.handle_key(crossterm::event::KeyEvent::new(
+            KeyCode::Backspace,
+            KeyModifiers::NONE,
+        ));
+
+        let expected_text: String = (1..=5).map(|n| format!("[paste #{n} +12 lines]")).collect();
+        assert_eq!(editor.get_text(), expected_text);
+        assert_eq!(editor.get_expanded_text(), payloads[1..].concat());
     }
 
     #[test]

@@ -29,10 +29,11 @@ use ice_agent::AgentMessage;
 use ice_ai::types::{AssistantMessage, Content, ImageContent, Usage};
 use ice_ai::{Model, ThinkingLevel};
 use ice_harness::agent_harness::{
-    AgentHarness, AgentLane, HarnessRunOutcome, LaneSnapshot, RunResult,
+    AgentHarness, AgentLane, CompactionOutcome, HarnessRunOutcome, LaneSnapshot, RunResult,
 };
+use ice_harness::compaction::estimate_context_tokens;
 use ice_harness::result::{HarnessError, HarnessResult};
-use ice_harness::session::types::{Entry, EntryOrder, EntryQuery};
+use ice_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery};
 
 use crate::export::{export_session, ExportFormat};
 
@@ -65,6 +66,52 @@ impl SessionUsageStats {
         }
         Some(self.cached_tokens as f64 / input as f64)
     }
+}
+
+/// Token components and billed cost projected from embedded coding-session entries.
+/// Unlike [`SessionUsageStats`], this is an all-history report and derives the
+/// token total from the four components instead of trusting `Usage.total_tokens`.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct CodingUsageTotals {
+    pub input: i64,
+    pub output: i64,
+    pub cache_read: i64,
+    pub cache_write: i64,
+    pub total_tokens: i64,
+    pub cost: f64,
+}
+
+/// Cost attribution bucket in a coding-session usage report.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodingUsageCostBreakdown {
+    /// `provider/response-model`, `Tools/summaries`, or `Subagents`.
+    pub key: String,
+    pub cost: f64,
+    pub tokens: i64,
+}
+
+/// Active-branch context occupancy. `tokens` and `percent` are unknown directly
+/// after compaction until a later non-error, non-aborted assistant reports usage.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodingContextUsage {
+    pub tokens: Option<i64>,
+    pub context_window: u64,
+    pub percent: Option<f64>,
+}
+
+/// Coding-agent statistics, deliberately separate from native session accounting.
+/// Usage covers every stored entry (including abandoned branches); context is
+/// calculated only from the active main-lane context.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct CodingSessionStats {
+    pub user_messages: u64,
+    pub assistant_messages: u64,
+    pub tool_calls: u64,
+    pub tool_results: u64,
+    pub total_messages: u64,
+    pub usage: CodingUsageTotals,
+    pub cost_breakdown: Vec<CodingUsageCostBreakdown>,
+    pub context_usage: Option<CodingContextUsage>,
 }
 
 /// One scoped-model entry: the routing id plus its human label.
@@ -227,14 +274,33 @@ impl AgentSession {
 
     // -- compaction / retry --------------------------------------------------
 
-    /// Explicit compaction. Mirrors TS `AgentSession.compact`.
+    /// Explicit compaction. A declined, aborted, or failed compaction is not a
+    /// successful save. Use [`Self::compact_entry`] to inspect the saved entry.
     pub async fn compact(&self, instructions: Option<&str>) -> HarnessResult<()> {
-        self.harness.compact(instructions).await?;
-        Ok(())
+        self.compact_entry(instructions).await.map(|_| ())
     }
 
-    /// Retry the last turn. The harness owns the retry policy; this re-runs the
-    /// last user message when one exists. Mirrors TS `AgentSession.retry`.
+    /// Compact and return the actual durable checkpoint, including its entry ID.
+    /// This never searches by summary text, which may be shared by checkpoints.
+    pub async fn compact_entry(&self, instructions: Option<&str>) -> HarnessResult<Entry> {
+        match self.harness.compact(instructions).await?.outcome {
+            CompactionOutcome::Completed { entry, .. } => Ok(entry),
+            CompactionOutcome::Declined { .. } => Err(HarnessError::NothingToCompact {
+                lane: "main".to_string(),
+                message: "There is no history available to compact".to_string(),
+            }),
+            CompactionOutcome::Aborted { .. } => Err(HarnessError::Compaction {
+                message: "Compaction was cancelled before saving a checkpoint".to_string(),
+            }),
+            CompactionOutcome::Failed { error, .. } => Err(HarnessError::Compaction {
+                message: error.message,
+            }),
+        }
+    }
+
+    /// Explicitly resubmit the last user message as a new turn, when one exists.
+    /// This is a user-requested rerun, not automatic provider recovery: it may
+    /// repeat tools or external side effects and is not a safe/exactly-once replay.
     pub async fn retry(&self) -> HarnessResult<Option<RunResult>> {
         let Some(last_user) = self.last_user_message().await? else {
             return Ok(None);
@@ -310,36 +376,143 @@ impl AgentSession {
         })
     }
 
-    /// The summed usage across every assistant message (for `/context`).
+    /// All-history coding-session usage for `/context` and billing display.
+    ///
+    /// This additive coding projection reads usage embedded in assistant and
+    /// tool-result messages, summaries, and validated `subagent_usage` custom
+    /// entries. It intentionally does not also add native `UsageRecord`s: those
+    /// records remain the authority for [`Self::usage_stats`], while embedded
+    /// records are the coding-session history projection. Token total is derived
+    /// from input/output/cache components; costs sum each usage's `cost.total`.
     pub async fn total_usage(&self) -> HarnessResult<Usage> {
-        let mut total = Usage::zero();
-        for entry in self.entries().await? {
-            if let Entry::Message(me) = entry {
-                if let AgentMessage::Assistant(a) = &me.message {
-                    total.input += a.usage.input;
-                    total.output += a.usage.output;
-                    total.cache_read += a.usage.cache_read;
-                    total.cache_write += a.usage.cache_write;
-                    total.total_tokens += a.usage.total_tokens;
-                }
-            }
-        }
-        Ok(total)
+        let projection = project_coding_history(&self.entries().await?)?;
+        Ok(projection.as_usage()?)
     }
 
-    /// The last finalized assistant text (for `/copy`). Mirrors TS
-    /// `AgentSession.getLastAssistantText`.
+    /// The all-history coding-agent usage and active-branch context report.
+    ///
+    /// Unlike [`Self::usage_stats`], this includes embedded assistant, tool,
+    /// summary and subagent usage from abandoned as well as active branches.
+    pub async fn coding_session_stats(&self) -> HarnessResult<CodingSessionStats> {
+        let projection = project_coding_history(&self.entries().await?)?;
+        let context_usage = self.current_context_usage().await?;
+        Ok(CodingSessionStats {
+            user_messages: projection.user_messages,
+            assistant_messages: projection.assistant_messages,
+            tool_calls: projection.tool_calls,
+            tool_results: projection.tool_results,
+            total_messages: projection.total_messages,
+            usage: projection.usage_totals()?,
+            cost_breakdown: projection.cost_breakdown()?,
+            context_usage,
+        })
+    }
+
+    /// Estimated occupancy of the active main-lane provider context.
+    ///
+    /// A positive-window model yields unknown (`None` tokens/percent) after
+    /// compaction until at least one later non-error/non-aborted assistant has
+    /// reported positive usage. A subsequent zero-usage assistant does not
+    /// invalidate that measurement gate. Percentages are deliberately not
+    /// clamped to the model window.
+    pub async fn current_context_usage(&self) -> HarnessResult<Option<CodingContextUsage>> {
+        let model = self.harness.get_model().await?;
+        if model.context_window == 0 {
+            return Ok(None);
+        }
+
+        let entries = self.active_branch_entries().await?;
+        let latest_compaction = entries
+            .iter()
+            .rposition(|entry| matches!(entry, Entry::Compaction(_)));
+        if let Some(compaction_index) = latest_compaction {
+            let has_post_compaction_usage = entries
+                .iter()
+                .skip(compaction_index + 1)
+                .any(entry_has_positive_assistant_usage);
+            if !has_post_compaction_usage {
+                return Ok(Some(CodingContextUsage {
+                    tokens: None,
+                    context_window: model.context_window,
+                    percent: None,
+                }));
+            }
+        }
+
+        // Use the canonical compaction-aware context projection, never the
+        // session-wide entry list, so abandoned branches cannot affect occupancy.
+        let context = self.active_context().await?;
+        let tokens = estimate_context_tokens(&context.messages).tokens;
+        Ok(Some(CodingContextUsage {
+            tokens: Some(tokens),
+            context_window: model.context_window,
+            percent: Some(tokens as f64 / model.context_window as f64 * 100.0),
+        }))
+    }
+
+    /// Explain the active configured context before per-request async hooks.
+    /// Provider usage is kept separate from estimated category composition, and
+    /// remains unknown immediately after compaction. The configured prompt is
+    /// counted as a whole: this read does not re-open resource files or invent
+    /// tool provenance. Hosts with captured resource/source snapshots can use
+    /// [`crate::context_breakdown::compute_context_breakdown`] for finer splits.
+    pub async fn context_breakdown(
+        &self,
+    ) -> HarnessResult<Option<crate::context_breakdown::ContextBreakdown>> {
+        let snapshot = self.harness.context_snapshot().await?;
+        if snapshot.model.context_window == 0 {
+            return Ok(None);
+        }
+        let known = self
+            .current_context_usage()
+            .await?
+            .and_then(|usage| usage.tokens)
+            .is_some();
+        let estimate = estimate_context_tokens(&snapshot.context.messages);
+        let measured_tokens = if known && estimate.usage_tokens > 0 {
+            u64::try_from(estimate.tokens).ok()
+        } else {
+            None
+        };
+        let mut breakdown = crate::context_breakdown::compute_context_breakdown(
+            &crate::context_breakdown::ContextBreakdownInput {
+                context: &snapshot.context.messages,
+                context_window: snapshot.model.context_window,
+                system_prompt: Some(&snapshot.system_prompt),
+                base_system_prompt: Some(&snapshot.system_prompt),
+                tools: Some(&snapshot.tools),
+                measured_tokens,
+                compaction: Some(&snapshot.compaction),
+                ..Default::default()
+            },
+        );
+        breakdown.compact_at_tokens = snapshot.compact_at_tokens;
+        Ok(Some(breakdown))
+    }
+
+    /// The last assistant's text in the active compacted context (for `/copy`).
+    /// Only an aborted assistant with no content is skipped. Once an assistant
+    /// is selected, its text blocks are concatenated without separators and
+    /// trimmed; a selected non-text-only message does not fall back to older text.
     pub async fn last_assistant_text(&self) -> HarnessResult<Option<String>> {
-        let entries = self.entries().await?;
-        for entry in entries.into_iter().rev() {
-            if let Entry::Message(me) = entry {
-                if let AgentMessage::Assistant(a) = me.message {
-                    let text = assistant_text(&a);
-                    if !text.is_empty() {
-                        return Ok(Some(text));
-                    }
+        let context = self.active_context().await?;
+        for message in context.messages.iter().rev() {
+            let AgentMessage::Assistant(assistant) = message else {
+                continue;
+            };
+            if assistant.stop_reason == ice_ai::types::StopReason::Aborted
+                && assistant.content.is_empty()
+            {
+                continue;
+            }
+            let mut text = String::new();
+            for block in &assistant.content {
+                if let Content::Text(text_block) = block {
+                    text.push_str(&text_block.text);
                 }
             }
+            let text = text.trim();
+            return Ok((!text.is_empty()).then(|| text.to_string()));
         }
         Ok(None)
     }
@@ -396,11 +569,13 @@ impl AgentSession {
 
     // -- fork / tree ---------------------------------------------------------
 
-    /// Fork the session at the current leaf into a labelled branch. The
-    /// navigation machinery creates the branch; the label tags its tip.
-    /// Mirrors TS `AgentSession.fork`.
+    /// Mark the current leaf as a fork point: the label (when given) tags the
+    /// leaf and the visible conversation is unchanged, so the next message
+    /// continues from it. Navigate elsewhere with `navigate_tree` to branch off.
     pub async fn fork(&self, label: Option<&str>) -> HarnessResult<()> {
-        self.harness.navigate_tree(None, false, None, label).await?;
+        if let (Some(label), Some(leaf)) = (label, self.tip_id().await?) {
+            self.harness.set_label(&leaf, Some(label)).await?;
+        }
         Ok(())
     }
 
@@ -412,17 +587,306 @@ impl AgentSession {
 
     // -- internals -----------------------------------------------------------
 
+    async fn active_branch_entries(&self) -> HarnessResult<Vec<Entry>> {
+        self.harness
+            .find_entries_on_branch(
+                &EntryQuery {
+                    order: Some(EntryOrder::OldestFirst),
+                    ..Default::default()
+                },
+                &BranchBounds::default(),
+            )
+            .await
+    }
+
+    async fn active_context(&self) -> HarnessResult<ice_harness::session::context::SessionContext> {
+        Ok(self.harness.context_snapshot().await?.context)
+    }
+
     async fn last_user_message(&self) -> HarnessResult<Option<AgentMessage>> {
-        let entries = self.entries().await?;
-        for entry in entries.into_iter().rev() {
-            if let Entry::Message(me) = entry {
-                if matches!(me.message, AgentMessage::User(_)) {
-                    return Ok(Some(me.message));
-                }
+        let context = self.active_context().await?;
+        Ok(context
+            .messages
+            .into_iter()
+            .rev()
+            .find(|message| matches!(message, AgentMessage::User(_))))
+    }
+}
+
+const MAX_SAFE_SUBAGENT_INTEGER: i64 = 9_007_199_254_740_991;
+
+#[derive(Debug, Clone, Default)]
+struct UsageAccumulator {
+    input: i64,
+    output: i64,
+    cache_read: i64,
+    cache_write: i64,
+    cost_input: f64,
+    cost_output: f64,
+    cost_cache_read: f64,
+    cost_cache_write: f64,
+    cost_total: f64,
+}
+
+impl UsageAccumulator {
+    fn add(&mut self, usage: &Usage) -> HarnessResult<()> {
+        self.input = checked_add_tokens(self.input, usage.input, "input")?;
+        self.output = checked_add_tokens(self.output, usage.output, "output")?;
+        self.cache_read = checked_add_tokens(self.cache_read, usage.cache_read, "cacheRead")?;
+        self.cache_write = checked_add_tokens(self.cache_write, usage.cache_write, "cacheWrite")?;
+        self.cost_input = checked_add_cost(self.cost_input, usage.cost.input, "input")?;
+        self.cost_output = checked_add_cost(self.cost_output, usage.cost.output, "output")?;
+        self.cost_cache_read =
+            checked_add_cost(self.cost_cache_read, usage.cost.cache_read, "cacheRead")?;
+        self.cost_cache_write =
+            checked_add_cost(self.cost_cache_write, usage.cost.cache_write, "cacheWrite")?;
+        self.cost_total = checked_add_cost(self.cost_total, usage.cost.total, "total")?;
+        Ok(())
+    }
+
+    fn total_tokens(&self) -> HarnessResult<i64> {
+        checked_add_tokens(
+            checked_add_tokens(
+                checked_add_tokens(self.input, self.output, "total")?,
+                self.cache_read,
+                "total",
+            )?,
+            self.cache_write,
+            "total",
+        )
+    }
+
+    fn coding_totals(&self) -> HarnessResult<CodingUsageTotals> {
+        Ok(CodingUsageTotals {
+            input: self.input,
+            output: self.output,
+            cache_read: self.cache_read,
+            cache_write: self.cache_write,
+            total_tokens: self.total_tokens()?,
+            cost: self.cost_total,
+        })
+    }
+
+    fn as_usage(&self) -> HarnessResult<Usage> {
+        Ok(Usage {
+            input: self.input,
+            output: self.output,
+            cache_read: self.cache_read,
+            cache_write: self.cache_write,
+            cache_write_1h: None,
+            reasoning: None,
+            total_tokens: self.total_tokens()?,
+            cost: ice_ai::types::UsageCost {
+                input: self.cost_input,
+                output: self.cost_output,
+                cache_read: self.cost_cache_read,
+                cache_write: self.cost_cache_write,
+                total: self.cost_total,
+            },
+        })
+    }
+}
+
+fn checked_add_tokens(left: i64, right: i64, component: &str) -> HarnessResult<i64> {
+    left.checked_add(right).ok_or_else(|| {
+        HarnessError::io(format!(
+            "coding-session {component} token total overflowed i64"
+        ))
+    })
+}
+
+fn checked_add_cost(left: f64, right: f64, component: &str) -> HarnessResult<f64> {
+    if !right.is_finite() {
+        return Err(HarnessError::io(format!(
+            "coding-session {component} cost must be finite"
+        )));
+    }
+    let sum = left + right;
+    if !sum.is_finite() {
+        return Err(HarnessError::io(format!(
+            "coding-session {component} cost total overflowed"
+        )));
+    }
+    Ok(sum)
+}
+
+#[derive(Debug, Default)]
+struct CodingHistoryProjection {
+    user_messages: u64,
+    assistant_messages: u64,
+    tool_calls: u64,
+    tool_results: u64,
+    total_messages: u64,
+    totals: UsageAccumulator,
+    groups: Vec<(String, UsageAccumulator)>,
+}
+
+impl CodingHistoryProjection {
+    fn add_usage(&mut self, group: Option<&str>, usage: &Usage) -> HarnessResult<()> {
+        self.totals.add(usage)?;
+        if let Some(group) = group {
+            let index = self
+                .groups
+                .iter()
+                .position(|(key, _)| key == group)
+                .unwrap_or_else(|| {
+                    self.groups
+                        .push((group.to_string(), UsageAccumulator::default()));
+                    self.groups.len() - 1
+                });
+            self.groups[index].1.add(usage)?;
+        }
+        Ok(())
+    }
+
+    fn usage_totals(&self) -> HarnessResult<CodingUsageTotals> {
+        self.totals.coding_totals()
+    }
+
+    fn as_usage(&self) -> HarnessResult<Usage> {
+        self.totals.as_usage()
+    }
+
+    fn cost_breakdown(&self) -> HarnessResult<Vec<CodingUsageCostBreakdown>> {
+        let mut entries = Vec::with_capacity(self.groups.len());
+        for (key, totals) in &self.groups {
+            let tokens = totals.total_tokens()?;
+            if totals.cost_total > 0.0 || tokens > 0 {
+                entries.push(CodingUsageCostBreakdown {
+                    key: key.clone(),
+                    cost: totals.cost_total,
+                    tokens,
+                });
             }
         }
-        Ok(None)
+        // Slice sorting is stable: equal-cost groups retain their first-seen
+        // order, matching the source Map's insertion order.
+        entries.sort_by(|left, right| {
+            right
+                .cost
+                .partial_cmp(&left.cost)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        Ok(entries)
     }
+}
+
+fn project_coding_history(entries: &[Entry]) -> HarnessResult<CodingHistoryProjection> {
+    let mut projection = CodingHistoryProjection::default();
+    for entry in entries {
+        match entry {
+            Entry::Message(message_entry) => {
+                projection.total_messages += 1;
+                match &message_entry.message {
+                    AgentMessage::User(_) => projection.user_messages += 1,
+                    AgentMessage::Assistant(assistant) => {
+                        projection.assistant_messages += 1;
+                        projection.tool_calls += assistant
+                            .content
+                            .iter()
+                            .filter(|block| matches!(block, Content::ToolCall(_)))
+                            .count() as u64;
+                        projection.add_usage(
+                            Some(&format!(
+                                "{}/{}",
+                                assistant.provider.as_str(),
+                                assistant
+                                    .response_model
+                                    .as_deref()
+                                    .unwrap_or(&assistant.model)
+                            )),
+                            &assistant.usage,
+                        )?;
+                    }
+                    AgentMessage::ToolResult(tool_result) => {
+                        projection.tool_results += 1;
+                        if let Some(usage) = &tool_result.usage {
+                            projection.add_usage(Some("Tools/summaries"), usage)?;
+                        }
+                    }
+                    AgentMessage::Custom(_) => {}
+                }
+            }
+            Entry::Compaction(compaction) => {
+                if let Some(usage) = &compaction.usage {
+                    projection.add_usage(Some("Tools/summaries"), usage)?;
+                }
+            }
+            Entry::BranchSummary(summary) => {
+                if let Some(usage) = &summary.usage {
+                    projection.add_usage(Some("Tools/summaries"), usage)?;
+                }
+            }
+            Entry::Custom(custom) if custom.custom_type == "subagent_usage" => {
+                if let Some(usage) = subagent_usage_from_entry(custom) {
+                    projection.add_usage(Some("Subagents"), &usage)?;
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(projection)
+}
+
+fn subagent_usage_from_entry(custom: &ice_harness::session::types::CustomEntry) -> Option<Usage> {
+    if custom.custom_type != "subagent_usage" {
+        return None;
+    }
+    let data = custom.data.as_ref()?.as_object()?;
+    let raw_usage = data.get("usage")?.as_object()?;
+    let input = safe_nonnegative_integer(raw_usage.get("input")?)?;
+    let output = safe_nonnegative_integer(raw_usage.get("output")?)?;
+    let cache_read = safe_nonnegative_integer(raw_usage.get("cacheRead")?)?;
+    let cache_write = safe_nonnegative_integer(raw_usage.get("cacheWrite")?)?;
+    let cost = raw_usage.get("cost")?.as_f64()?;
+    if !cost.is_finite() || cost < 0.0 {
+        return None;
+    }
+    let total_tokens = input
+        .checked_add(output)?
+        .checked_add(cache_read)?
+        .checked_add(cache_write)?;
+    if total_tokens > MAX_SAFE_SUBAGENT_INTEGER {
+        return None;
+    }
+    Some(Usage {
+        input,
+        output,
+        cache_read,
+        cache_write,
+        cache_write_1h: None,
+        reasoning: None,
+        total_tokens,
+        cost: ice_ai::types::UsageCost {
+            total: cost,
+            ..Default::default()
+        },
+    })
+}
+
+fn safe_nonnegative_integer(value: &serde_json::Value) -> Option<i64> {
+    let number = value.as_f64()?;
+    if !number.is_finite()
+        || number < 0.0
+        || number > MAX_SAFE_SUBAGENT_INTEGER as f64
+        || number.fract() != 0.0
+    {
+        return None;
+    }
+    Some(number as i64)
+}
+
+fn entry_has_positive_assistant_usage(entry: &Entry) -> bool {
+    let Entry::Message(message_entry) = entry else {
+        return false;
+    };
+    let AgentMessage::Assistant(assistant) = &message_entry.message else {
+        return false;
+    };
+    !matches!(
+        assistant.stop_reason,
+        ice_ai::types::StopReason::Error | ice_ai::types::StopReason::Aborted
+    ) && assistant.usage.context_tokens() > 0
 }
 
 /// The finalized text of an assistant message (text blocks only), joined with
@@ -472,7 +936,20 @@ mod tests {
     }
 
     async fn test_harness() -> AgentHarness {
-        AgentHarness::create(AgentHarnessOptions {
+        test_harness_with_models(vec![ice_ai::providers::faux::FauxProvider::new(
+            ice_ai::providers::faux::FauxScript::new(),
+        )])
+        .await
+    }
+
+    async fn test_harness_with_models(models: Vec<Arc<dyn ice_ai::Provider>>) -> AgentHarness {
+        AgentHarness::create(test_harness_options(models))
+            .await
+            .unwrap()
+    }
+
+    fn test_harness_options(models: Vec<Arc<dyn ice_ai::Provider>>) -> AgentHarnessOptions {
+        AgentHarnessOptions {
             model: Model::new("m", "m", Api::Faux, "faux", "http://x"),
             thinking_level: Default::default(),
             active_tool_names: Vec::new(),
@@ -488,7 +965,7 @@ mod tests {
             drive: DrivingMode::default(),
             session: test_session(),
             allow_existing_session: true,
-            models: Vec::new(),
+            models,
             to_provider_messages: None,
             entry_projectors: Default::default(),
             agent_emitter: None,
@@ -497,9 +974,71 @@ mod tests {
             transform_context: None,
             entry_transforms: Vec::new(),
             provider_hooks: None,
+        }
+    }
+
+    fn usage(input: i64, output: i64, cache_read: i64, cache_write: i64, cost: f64) -> Usage {
+        let mut usage = Usage::zero();
+        usage.input = input;
+        usage.output = output;
+        usage.cache_read = cache_read;
+        usage.cache_write = cache_write;
+        // Deliberately unrelated to the components: coding-session totals must
+        // derive this field rather than trust the provider-reported total.
+        usage.total_tokens = 999;
+        usage.cost.total = cost;
+        usage
+    }
+
+    fn assistant_message(content: Vec<Content>, usage: Usage) -> AssistantMessage {
+        let mut assistant = AssistantMessage::empty(Api::Faux, "provider", "model", 1);
+        assistant.content = content;
+        assistant.usage = usage;
+        assistant.stop_reason = ice_ai::types::StopReason::Stop;
+        assistant
+    }
+
+    async fn append_assistant(harness: &AgentHarness, message: AssistantMessage) -> String {
+        harness
+            .session()
+            .append_message(AgentMessage::Assistant(Box::new(message)))
+            .await
+            .unwrap()
+    }
+
+    async fn append_usage_entry(
+        harness: &AgentHarness,
+        id: &str,
+        kind: ice_harness::session::types::ProvisionedKind,
+    ) {
+        harness
+            .session()
+            .append_entry(
+                ice_harness::session::types::ProvisionedEntry {
+                    id: id.to_string(),
+                    kind,
+                },
+                "main",
+            )
+            .await
+            .unwrap();
+    }
+
+    fn text_block(text: &str) -> Content {
+        Content::Text(ice_ai::types::TextContent {
+            kind: ice_ai::types::TextContentType,
+            text: text.to_string(),
+            text_signature: None,
         })
-        .await
-        .unwrap()
+    }
+
+    fn custom_subagent_usage(
+        data: serde_json::Value,
+    ) -> ice_harness::session::types::ProvisionedKind {
+        ice_harness::session::types::ProvisionedKind::Custom {
+            custom_type: "subagent_usage".to_string(),
+            data: Some(data),
+        }
     }
 
     #[test]
@@ -548,6 +1087,695 @@ mod tests {
             }),
         ];
         assert_eq!(assistant_text(&msg), "hello\nworld");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn compact_entry_returns_the_actual_durable_checkpoint() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        let provider = FauxProvider::new(FauxScript::new().with_text("A saved summary"));
+        let harness = test_harness_with_models(vec![provider]).await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "A conversation to compact",
+                1,
+            )))
+            .await
+            .unwrap();
+        let entry = session.compact_entry(None).await.unwrap();
+        assert!(
+            matches!(&entry, Entry::Compaction(checkpoint) if checkpoint.summary == "A saved summary")
+        );
+        assert_eq!(session.tip_id().await.unwrap().as_deref(), Some(entry.id()));
+        assert_eq!(
+            session
+                .harness()
+                .session()
+                .get_entry(entry.id())
+                .await
+                .unwrap(),
+            Some(entry)
+        );
+        assert!(session.snapshot().await.unwrap().active.is_none());
+    }
+
+    #[tokio::test]
+    async fn compact_does_not_report_an_empty_session_as_success() {
+        let session = AgentSession::new(test_harness().await, Vec::new(), Vec::new(), ".");
+        let error = session
+            .compact(None)
+            .await
+            .expect_err("empty session declined");
+        assert!(matches!(error, HarnessError::NothingToCompact { .. }));
+    }
+
+    #[tokio::test]
+    async fn compact_propagates_a_failed_summary_instead_of_reporting_success() {
+        let session = AgentSession::new(
+            test_harness_with_models(Vec::new()).await,
+            Vec::new(),
+            Vec::new(),
+            ".",
+        );
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "A conversation to compact",
+                1,
+            )))
+            .await
+            .unwrap();
+        let error = session
+            .compact(None)
+            .await
+            .expect_err("provider is unavailable");
+        assert!(matches!(error, HarnessError::Compaction { .. }));
+        assert!(error.to_string().contains("No provider for compaction"));
+        assert!(session.snapshot().await.unwrap().active.is_none());
+    }
+
+    #[tokio::test]
+    async fn coding_usage_includes_every_embedded_billing_source_and_groups_it() {
+        let harness = test_harness().await;
+        let mut model = Model::new("m", "m", Api::Faux, "faux", "http://x");
+        model.context_window = 100;
+        harness.set_model(model).await.unwrap();
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+
+        let mut assistant = assistant_message(
+            vec![
+                text_block("answer"),
+                Content::ToolCall(ice_ai::types::ToolCall {
+                    kind: Default::default(),
+                    id: "call-1".to_string(),
+                    name: "test".to_string(),
+                    arguments: serde_json::json!({}),
+                    thought_signature: None,
+                    namespace: None,
+                }),
+            ],
+            usage(3, 2, 1, 1, 0.5),
+        );
+        assistant.response_model = Some("served-model".to_string());
+        append_assistant(session.harness(), assistant).await;
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("fallback model")], usage(1, 0, 0, 0, 0.2)),
+        )
+        .await;
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::ToolResult(Box::new(
+                ice_ai::types::ToolResultMessage {
+                    role: Default::default(),
+                    tool_call_id: "tool-call".to_string(),
+                    tool_name: "tool".to_string(),
+                    content: Vec::new(),
+                    details: None,
+                    usage: Some(usage(1, 2, 3, 4, 1.0)),
+                    added_tool_names: Vec::new(),
+                    is_error: false,
+                    timestamp: 2,
+                },
+            )))
+            .await
+            .unwrap();
+        append_usage_entry(
+            session.harness(),
+            "compact-usage",
+            ice_harness::session::types::ProvisionedKind::Compaction {
+                summary: "summary".to_string(),
+                retained_tail: Vec::new(),
+                tokens_before: 20,
+                details: None,
+                usage: Some(usage(2, 0, 1, 0, 0.25)),
+            },
+        )
+        .await;
+        append_usage_entry(
+            session.harness(),
+            "branch-usage",
+            ice_harness::session::types::ProvisionedKind::BranchSummary {
+                from_id: "root".to_string(),
+                summary: "branch summary".to_string(),
+                details: None,
+                usage: Some(usage(0, 1, 1, 0, 0.75)),
+            },
+        )
+        .await;
+        append_usage_entry(
+            session.harness(),
+            "subagent-usage",
+            custom_subagent_usage(serde_json::json!({"usage": {
+                "input": 2, "output": 1, "cacheRead": 2, "cacheWrite": 0, "cost": 3.0
+            }})),
+        )
+        .await;
+        // Native records are intentionally a separate accounting authority.
+        session
+            .harness()
+            .record_usage(usage(500, 0, 0, 0, 100.0), None, None)
+            .await
+            .unwrap();
+
+        let totals = session.total_usage().await.unwrap();
+        assert_eq!(
+            (
+                totals.input,
+                totals.output,
+                totals.cache_read,
+                totals.cache_write
+            ),
+            (9, 6, 8, 5)
+        );
+        assert_eq!(totals.total_tokens, 28);
+        assert_eq!(totals.cost.total, 5.7);
+        assert_eq!(session.usage_stats().await.unwrap().total_tokens, 999);
+
+        let stats = session.coding_session_stats().await.unwrap();
+        assert_eq!(stats.usage.total_tokens, 28);
+        assert_eq!(stats.usage.cost, 5.7);
+        assert_eq!(stats.total_messages, 3);
+        assert_eq!(stats.assistant_messages, 2);
+        assert_eq!(stats.tool_results, 1);
+        assert_eq!(stats.tool_calls, 1);
+        assert_eq!(
+            stats.cost_breakdown,
+            vec![
+                CodingUsageCostBreakdown {
+                    key: "Subagents".to_string(),
+                    cost: 3.0,
+                    tokens: 5,
+                },
+                CodingUsageCostBreakdown {
+                    key: "Tools/summaries".to_string(),
+                    cost: 2.0,
+                    tokens: 15,
+                },
+                CodingUsageCostBreakdown {
+                    key: "provider/served-model".to_string(),
+                    cost: 0.5,
+                    tokens: 7,
+                },
+                CodingUsageCostBreakdown {
+                    key: "provider/model".to_string(),
+                    cost: 0.2,
+                    tokens: 1,
+                },
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn coding_usage_skips_malformed_subagent_payloads() {
+        let harness = test_harness().await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        for (id, usage_payload) in [
+            (
+                "fractional",
+                serde_json::json!({"input": 1.5, "output": 0, "cacheRead": 0, "cacheWrite": 0, "cost": 1.0}),
+            ),
+            (
+                "negative",
+                serde_json::json!({"input": -1, "output": 0, "cacheRead": 0, "cacheWrite": 0, "cost": 1.0}),
+            ),
+            (
+                "unsafe",
+                serde_json::json!({"input": 9007199254740992u64, "output": 0, "cacheRead": 0, "cacheWrite": 0, "cost": 1.0}),
+            ),
+            (
+                "unsafe-sum",
+                serde_json::json!({"input": 9007199254740991u64, "output": 1, "cacheRead": 0, "cacheWrite": 0, "cost": 1.0}),
+            ),
+            (
+                "negative-cost",
+                serde_json::json!({"input": 1, "output": 0, "cacheRead": 0, "cacheWrite": 0, "cost": -0.1}),
+            ),
+            (
+                "bad-cost",
+                serde_json::json!({"input": 1, "output": 0, "cacheRead": 0, "cacheWrite": 0, "cost": "NaN"}),
+            ),
+        ] {
+            append_usage_entry(
+                session.harness(),
+                id,
+                custom_subagent_usage(serde_json::json!({"usage": usage_payload})),
+            )
+            .await;
+        }
+
+        let totals = session.total_usage().await.unwrap();
+        assert_eq!(totals.total_tokens, 0);
+        assert_eq!(totals.cost.total, 0.0);
+        assert!(session
+            .coding_session_stats()
+            .await
+            .unwrap()
+            .cost_breakdown
+            .is_empty());
+    }
+
+    #[tokio::test]
+    async fn coding_usage_counts_abandoned_branches_but_context_uses_active_branch() {
+        let harness = test_harness().await;
+        let mut model = Model::new("m", "m", Api::Faux, "faux", "http://x");
+        model.context_window = 100;
+        harness.set_model(model).await.unwrap();
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        let root = session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "root", 1,
+            )))
+            .await
+            .unwrap();
+        let mut abandoned_usage = usage(80, 0, 0, 0, 1.0);
+        abandoned_usage.total_tokens = 80;
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("abandoned")], abandoned_usage),
+        )
+        .await;
+        session
+            .harness()
+            .session()
+            .move_lane("main", Some(&root))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "active", 3,
+            )))
+            .await
+            .unwrap();
+        let mut active_usage = usage(120, 3, 0, 0, 2.0);
+        active_usage.total_tokens = 123;
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("active answer")], active_usage),
+        )
+        .await;
+
+        let stats = session.coding_session_stats().await.unwrap();
+        assert_eq!(stats.usage.total_tokens, 203);
+        assert_eq!(stats.usage.cost, 3.0);
+        let context = stats.context_usage.unwrap();
+        assert_eq!(context.tokens, Some(123));
+        assert_eq!(context.percent, Some(123.0));
+    }
+
+    #[tokio::test]
+    async fn context_reads_use_configured_projectors_and_entry_transforms() {
+        let mut options = test_harness_options(Vec::new());
+        options.model.context_window = 100;
+        options.entry_transforms.push(Arc::new(|entries| {
+            entries
+                .iter()
+                .filter(|entry| !matches!(entry, Entry::Message(_)))
+                .cloned()
+                .collect()
+        }));
+        options.entry_projectors.insert(
+            "visible".to_string(),
+            Arc::new(|_, _, _| {
+                let mut measured_usage = usage(16, 0, 0, 0, 0.0);
+                measured_usage.total_tokens = 16;
+                vec![AgentMessage::Assistant(Box::new(assistant_message(
+                    vec![text_block("projected answer")],
+                    measured_usage,
+                )))]
+            }),
+        );
+        let harness = AgentHarness::create(options).await.unwrap();
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "ignored".repeat(100),
+                1,
+            )))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .append_custom_entry("visible", Some(serde_json::json!({})))
+            .await
+            .unwrap();
+        assert_eq!(
+            session
+                .current_context_usage()
+                .await
+                .unwrap()
+                .unwrap()
+                .tokens,
+            Some(16)
+        );
+        assert_eq!(
+            session.last_assistant_text().await.unwrap().as_deref(),
+            Some("projected answer")
+        );
+        let breakdown = session.context_breakdown().await.unwrap().unwrap();
+        assert_eq!(breakdown.measured_tokens, Some(16));
+        assert!(breakdown.estimated_tokens < 16);
+        assert_eq!(breakdown.used_tokens, 16);
+        assert_eq!(session.total_usage().await.unwrap().total_tokens, 0);
+    }
+
+    #[tokio::test]
+    async fn context_breakdown_reads_live_configuration_and_distinguishes_estimates() {
+        use crate::context_breakdown::ContextCategoryKey;
+        let harness = test_harness().await;
+        let mut model = Model::new("m", "m", Api::Faux, "faux", "http://x");
+        model.context_window = 0;
+        harness.set_model(model.clone()).await.unwrap();
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        assert!(session.context_breakdown().await.unwrap().is_none());
+        model.context_window = 100;
+        session.set_model(model).await.unwrap();
+        session
+            .harness()
+            .set_system_prompt(Some("12345678".to_string()))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "中文😀",
+                1,
+            )))
+            .await
+            .unwrap();
+        let breakdown = session.context_breakdown().await.unwrap().unwrap();
+        assert_eq!(breakdown.context_window, 100);
+        assert_eq!(breakdown.measured_tokens, None);
+        assert_eq!(breakdown.estimated_tokens, 3);
+        assert_eq!(breakdown.free_tokens, 97);
+        assert_eq!(
+            breakdown
+                .categories
+                .iter()
+                .find(|row| row.key == ContextCategoryKey::SystemPrompt)
+                .unwrap()
+                .tokens,
+            2
+        );
+    }
+
+    #[tokio::test]
+    async fn context_is_unknown_after_compaction_until_positive_usage_and_zero_does_not_clear_gate()
+    {
+        let harness = test_harness().await;
+        let mut model = Model::new("m", "m", Api::Faux, "faux", "http://x");
+        model.context_window = 100;
+        harness.set_model(model).await.unwrap();
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        let mut before_compaction = usage(80, 0, 0, 0, 1.0);
+        before_compaction.total_tokens = 80;
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("before")], before_compaction),
+        )
+        .await;
+        append_usage_entry(
+            session.harness(),
+            "compact-boundary",
+            ice_harness::session::types::ProvisionedKind::Compaction {
+                summary: "compact".to_string(),
+                retained_tail: Vec::new(),
+                tokens_before: 80,
+                details: None,
+                usage: None,
+            },
+        )
+        .await;
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "after", 3,
+            )))
+            .await
+            .unwrap();
+        for stop_reason in [
+            ice_ai::types::StopReason::Aborted,
+            ice_ai::types::StopReason::Error,
+        ] {
+            let mut invalid_gate = assistant_message(
+                vec![text_block("not a valid measurement")],
+                usage(20, 0, 0, 0, 0.0),
+            );
+            invalid_gate.stop_reason = stop_reason;
+            append_assistant(session.harness(), invalid_gate).await;
+        }
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("zero")], Usage::zero()),
+        )
+        .await;
+
+        let unknown = session.current_context_usage().await.unwrap().unwrap();
+        assert_eq!(unknown.tokens, None);
+        assert_eq!(unknown.percent, None);
+        assert_eq!(
+            session
+                .context_breakdown()
+                .await
+                .unwrap()
+                .unwrap()
+                .measured_tokens,
+            None
+        );
+
+        let mut measured = usage(20, 5, 0, 0, 0.0);
+        measured.total_tokens = 25;
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("measured")], measured),
+        )
+        .await;
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("later zero")], Usage::zero()),
+        )
+        .await;
+        let known = session.current_context_usage().await.unwrap().unwrap();
+        assert!(known.tokens.is_some());
+        assert!(known.percent.is_some());
+        assert!(session
+            .context_breakdown()
+            .await
+            .unwrap()
+            .unwrap()
+            .measured_tokens
+            .is_some());
+    }
+
+    #[tokio::test]
+    async fn last_assistant_text_selects_active_context_message_before_extracting_text() {
+        let harness = test_harness().await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("older answer")], Usage::zero()),
+        )
+        .await;
+        append_usage_entry(
+            session.harness(),
+            "text-compaction",
+            ice_harness::session::types::ProvisionedKind::Compaction {
+                summary: "old answer is out of context".to_string(),
+                retained_tail: Vec::new(),
+                tokens_before: 5,
+                details: None,
+                usage: None,
+            },
+        )
+        .await;
+        let thinking_only = Content::Thinking(ice_ai::types::ThinkingContent {
+            kind: ice_ai::types::ThinkingContentType,
+            thinking: "private".to_string(),
+            thinking_signature: None,
+            redacted: false,
+        });
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![thinking_only], Usage::zero()),
+        )
+        .await;
+
+        assert_eq!(session.last_assistant_text().await.unwrap(), None);
+    }
+
+    #[tokio::test]
+    async fn last_assistant_text_ignores_assistants_on_abandoned_branches() {
+        let harness = test_harness().await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        let root = session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "root", 1,
+            )))
+            .await
+            .unwrap();
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("abandoned answer")], Usage::zero()),
+        )
+        .await;
+        session
+            .harness()
+            .session()
+            .move_lane("main", Some(&root))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "active", 3,
+            )))
+            .await
+            .unwrap();
+
+        assert_eq!(session.last_assistant_text().await.unwrap(), None);
+    }
+
+    #[tokio::test]
+    async fn last_assistant_text_skips_only_empty_aborted_messages_and_trims_concatenation() {
+        let harness = test_harness().await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        append_assistant(
+            session.harness(),
+            assistant_message(vec![text_block("  older answer  ")], Usage::zero()),
+        )
+        .await;
+        let mut empty_aborted = assistant_message(Vec::new(), Usage::zero());
+        empty_aborted.stop_reason = ice_ai::types::StopReason::Aborted;
+        append_assistant(session.harness(), empty_aborted).await;
+        assert_eq!(
+            session.last_assistant_text().await.unwrap().as_deref(),
+            Some("older answer")
+        );
+
+        let mut partial = assistant_message(
+            vec![text_block("  partial "), text_block("reply  ")],
+            Usage::zero(),
+        );
+        partial.stop_reason = ice_ai::types::StopReason::Aborted;
+        append_assistant(session.harness(), partial).await;
+        assert_eq!(
+            session.last_assistant_text().await.unwrap().as_deref(),
+            Some("partial reply")
+        );
+    }
+
+    #[tokio::test]
+    async fn retry_user_lookup_uses_only_active_branch_context() {
+        let harness = test_harness().await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        let root = session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "root", 1,
+            )))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "abandoned",
+                2,
+            )))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .move_lane("main", Some(&root))
+            .await
+            .unwrap();
+        session
+            .harness()
+            .session()
+            .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                "active", 3,
+            )))
+            .await
+            .unwrap();
+
+        let AgentMessage::User(last_user) = session.last_user_message().await.unwrap().unwrap()
+        else {
+            panic!("expected a user message");
+        };
+        assert_eq!(
+            last_user.content,
+            ice_ai::types::UserContent::Text("active".to_string())
+        );
+    }
+
+    fn user_texts(context: &ice_harness::session::context::SessionContext) -> Vec<String> {
+        context
+            .messages
+            .iter()
+            .filter_map(|message| match message {
+                AgentMessage::User(user) => match &user.content {
+                    ice_ai::types::UserContent::Text(text) => Some(text.clone()),
+                    _ => None,
+                },
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn active_context_follows_fork_and_tree_navigation() {
+        let harness = test_harness().await;
+        let session = AgentSession::new(harness, Vec::new(), Vec::new(), ".");
+        let append = |text: &'static str, ts: i64| {
+            let storage = session.harness().session();
+            async move {
+                storage
+                    .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+                        text, ts,
+                    )))
+                    .await
+                    .unwrap()
+            }
+        };
+        let root = append("root", 1).await;
+        append("implementation A", 2).await;
+
+        // Forking at the current leaf keeps the visible conversation intact.
+        session.fork(Some("checkpoint")).await.unwrap();
+        assert_eq!(
+            user_texts(&session.active_context().await.unwrap()),
+            vec!["root", "implementation A"]
+        );
+
+        // Navigating back to the root and continuing hides the A-only message.
+        session
+            .harness()
+            .navigate_tree(Some(&root), false, None, None)
+            .await
+            .unwrap();
+        append("implementation B", 3).await;
+        assert_eq!(
+            user_texts(&session.active_context().await.unwrap()),
+            vec!["root", "implementation B"]
+        );
     }
 
     #[tokio::test]

@@ -51,7 +51,7 @@ use ice_harness::session::types::{BranchBounds, EntryOrder, EntryQuery};
 use ice_harness::types::SendMessageOptions;
 use tokio::runtime::Handle;
 
-use crate::session::{default_session_dir, open_session_by_id};
+use crate::session::open_session_by_id;
 
 /// The `RuntimeActionHost` impl over an `AgentHarness`. Built once per session
 /// in [`crate::session::build`] — constructed **empty** before extension load
@@ -599,15 +599,8 @@ impl RuntimeActionHost for HarnessActionHost {
 
     async fn new_session(&self, _args: serde_json::Value) -> Result<serde_json::Value, String> {
         let harness = self.harness()?;
-        let cwd_str = self.cwd.to_string_lossy().to_string();
-        let dir = default_session_dir(&self.cwd);
-        std::fs::create_dir_all(&dir)
-            .map_err(|e| format!("create session dir {}: {e}", dir.display()))?;
-        let session = crate::session::create_jsonl_session(&dir, &cwd_str)
-            .await
-            .map_err(|e| format!("create session: {e}"))?;
-        let id = session.storage().metadata().id.clone();
-        crate::session::set_active_session(&harness, session, Some(&self.tool_context)).await?;
+        let id = crate::session::start_new_session(&harness, &self.cwd, Some(&self.tool_context))
+            .await?;
         Ok(serde_json::json!({ "sessionId": id }))
     }
 

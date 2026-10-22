@@ -2,6 +2,8 @@
 
 use super::*;
 
+mod context_usage;
+
 // ---- Built-in command implementations ----
 
 pub(super) struct HelpCommand;
@@ -21,23 +23,25 @@ impl SlashCommand for HelpCommand {
     }
 }
 
-pub(super) struct ClearChatCommand;
-impl SlashCommand for ClearChatCommand {
+/// `/new` (ice `handleClearCommand`) starts a new session. `/clear` is an
+/// alias: a "clear" that kept the agent's history would leave the model
+/// reading a conversation the screen claims is gone.
+pub(super) struct NewSessionCommand;
+impl SlashCommand for NewSessionCommand {
     fn name(&self) -> &'static str {
-        "/clear"
+        "/new"
     }
     fn aliases(&self) -> &'static [&'static str] {
-        &["/new"]
+        &["/clear"]
     }
-    // `/new` carries its own weight as a discoverable entry, so surface it.
     fn alias_visible(&self) -> &'static [&'static str] {
-        &["/new"]
+        &["/clear"]
     }
     fn description(&self) -> &'static str {
-        "Clear the conversation"
+        "Start a new session"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::ClearChat);
+        let _ = ctx.tx.send(TuiMessage::NewSession);
     }
 }
 
@@ -139,20 +143,14 @@ impl SlashCommand for ModelCommand {
                     .unwrap_or_else(|error| error.into_inner()),
                 term,
             ) {
-                let model_id = model.id.clone();
-                ctx.state.set_current_model(&model);
-                let lane = ctx.lane.clone();
-                tokio::spawn(async move {
-                    let _ = lane.set_model(model).await;
-                });
-                add_note_message(
+                spawn_set_model(
+                    &ctx.state,
+                    &ctx.lane,
+                    model,
                     &ctx.chat,
-                    &format!(
-                        "Model set to {} — applies to the next message.",
-                        short_model_name(&model_id)
-                    ),
+                    &ctx.tui,
+                    ModelSwitchMode::Session,
                 );
-                ctx.tui.request_render(false);
                 return;
             }
         }
@@ -230,12 +228,13 @@ impl SlashCommand for ThinkingCommand {
                 return;
             };
             let lane = ctx.lane.clone();
-            let footer = ctx.state.footer.clone();
+            let state = ctx.state.clone();
+            let chat = ctx.chat.clone();
+            let tui = ctx.tui.clone();
             tokio::spawn(async move {
-                let _ = lane.set_thinking_level(level).await;
+                apply_thinking_selection(&lane, &state, &chat, level, false).await;
+                tui.request_render(false);
             });
-            footer.set_thinking_level(Some(thinking_level_name(level)));
-            add_note_message(&ctx.chat, &format!("Thinking set to {level_name}."));
             ctx.tui.request_render(false);
             return;
         }
@@ -302,6 +301,9 @@ impl SlashCommand for SessionCommand {
     fn aliases(&self) -> &'static [&'static str] {
         &["/resume"]
     }
+    fn alias_visible(&self) -> &'static [&'static str] {
+        &["/resume"]
+    }
     fn description(&self) -> &'static str {
         "List saved sessions"
     }
@@ -313,6 +315,7 @@ impl SlashCommand for SessionCommand {
             &ctx.tui,
             &ctx.cwd,
             &ctx.tx,
+            Some(ctx.session.harness().session().storage()),
         );
     }
 }
@@ -387,7 +390,7 @@ impl SlashCommand for ExportCommand {
         "/export"
     }
     fn description(&self) -> &'static str {
-        "Export session (supports: md, html, jsonl)"
+        "Export session (supports: md, html, jsonl, native)"
     }
     fn execute(&self, ctx: &CommandContext, args: &str) {
         let format = args.trim().to_lowercase();
@@ -401,17 +404,52 @@ impl SlashCommand for ExportCommand {
             let _ = ctx.tx.send(TuiMessage::ExportSessionWithFormat(
                 crate::export::ExportFormat::Jsonl,
             ));
+        } else if format == "native" {
+            let _ = ctx.tx.send(TuiMessage::ExportNativeSession);
         } else {
             // Invalid format, show error
             add_error_message(
                 &ctx.chat,
                 &format!(
-                    "Unknown export format: {}. Supported: md, html, jsonl",
+                    "Unknown export format: {}. Supported: md, html, jsonl, native",
                     args.trim()
                 ),
             );
             ctx.tui.request_render(false);
         }
+    }
+}
+
+/// `/unqueue [n]` — take one queued steering/follow-up message back into the
+/// editor (1-based, in dock order; the newest when omitted). Unlike Alt+Q this
+/// leaves the other queued messages in place.
+pub(super) struct UnqueueCommand;
+impl SlashCommand for UnqueueCommand {
+    fn name(&self) -> &'static str {
+        "/unqueue"
+    }
+    fn description(&self) -> &'static str {
+        "Move one queued message back into the editor (/unqueue [n])"
+    }
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let position = match args.trim() {
+            "" => None,
+            text => match text.parse::<usize>() {
+                Ok(n) if n >= 1 => Some(n),
+                _ => {
+                    add_error_message(&ctx.chat, "Usage: /unqueue [n] (n starts at 1)");
+                    ctx.tui.request_render(false);
+                    return;
+                }
+            },
+        };
+        tokio::spawn(unqueue_message(
+            ctx.session.harness().clone(),
+            ctx.editor.clone(),
+            ctx.state.clone(),
+            ctx.tui.clone(),
+            position,
+        ));
     }
 }
 
@@ -421,10 +459,10 @@ impl SlashCommand for ForkCommand {
         "/fork"
     }
     fn description(&self) -> &'static str {
-        "Fork the session into a new one"
+        "Fork from an earlier message into a new session"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::ForkSession);
+        let _ = ctx.tx.send(TuiMessage::OpenForkSelector);
     }
 }
 
@@ -594,38 +632,65 @@ pub(super) fn set_project_trust_for_command(
     crate::config::set_project_trust(cwd, value)
 }
 
+/// `/trust [yes|no|clear]`. A bare `/trust` reports saved and effective trust:
+/// it used to mean "yes", so picking the command from autocomplete and
+/// pressing Enter silently trusted the project (ice opens a selector and
+/// changes nothing until a choice is made). Returns the note to show, or the
+/// error.
+pub(super) fn run_trust_command(
+    cwd: &std::path::Path,
+    args: &str,
+    project_trusted: bool,
+) -> Result<String, String> {
+    const USAGE: &str = "Change it with /trust yes, /trust no or /trust clear.";
+    let effective = if project_trusted {
+        "trusted"
+    } else {
+        "untrusted"
+    };
+    let value = match args.trim().to_ascii_lowercase().as_str() {
+        "" => {
+            let saved = crate::config::project_trust_decision(cwd)
+                .map_err(|error| format!("Could not read trust decision: {error}"))?;
+            let state = match saved {
+                Some(true) => "trusted (saved)",
+                Some(false) => "untrusted (saved)",
+                None => "no saved decision",
+            };
+            return Ok(format!(
+                "Project trust for {}: {state}. Current session: {effective}. {USAGE} Restart icers after changing the saved decision.",
+                cwd.display()
+            ));
+        }
+        "yes" | "y" | "true" => Some(true),
+        "no" | "n" | "false" => Some(false),
+        "clear" | "reset" | "none" => None,
+        _ => return Ok(format!("Usage: /trust [yes|no|clear]. {USAGE}")),
+    };
+    set_project_trust_for_command(cwd, value)
+        .map_err(|error| format!("Could not save trust decision: {error}"))?;
+    let label = match value {
+        Some(true) => "marked trusted",
+        Some(false) => "marked untrusted",
+        None => "trust decision cleared",
+    };
+    Ok(format!(
+        "Current project {label}. Current session: {effective}. Restart icers to apply it to project resources."
+    ))
+}
+
 pub(super) struct TrustCommand;
 impl SlashCommand for TrustCommand {
     fn name(&self) -> &'static str {
         "/trust"
     }
     fn description(&self) -> &'static str {
-        "Trust the current project"
+        "Show or set trust for the current project"
     }
     fn execute(&self, ctx: &CommandContext, args: &str) {
-        let value = match args.trim().to_ascii_lowercase().as_str() {
-            "" | "yes" | "y" | "true" => Some(true),
-            "no" | "n" | "false" => Some(false),
-            "clear" | "reset" | "none" => None,
-            _ => {
-                add_note_message(&ctx.chat, "Usage: /trust [yes|no|clear]");
-                ctx.tui.request_render(false);
-                return;
-            }
-        };
-        match set_project_trust_for_command(&ctx.cwd, value) {
-            Ok(()) => {
-                let label = match value {
-                    Some(true) => "trusted",
-                    Some(false) => "untrusted",
-                    None => "trust decision cleared",
-                };
-                add_note_message(&ctx.chat, &format!("Current project marked {label}."));
-            }
-            Err(error) => add_error_message(
-                &ctx.chat,
-                &format!("Could not save trust decision: {error}"),
-            ),
+        match run_trust_command(&ctx.cwd, args, ctx.reload_context.project_trusted) {
+            Ok(note) => add_note_message(&ctx.chat, &note),
+            Err(error) => add_error_message(&ctx.chat, &error),
         }
         ctx.tui.request_render(false);
     }
@@ -722,36 +787,38 @@ impl SlashCommand for ScopedModelsCommand {
     }
 }
 
+/// Shown instead of sharing until the user re-runs `/share confirm`.
+const SHARE_CONFIRMATION_NOTE: &str = "/share sends the active main branch transcript (including compaction summaries) to an external service (a gh gist, else the clipboard). Abandoned branches are not included. Review the transcript for secrets or sensitive text first; sharing does not redact anything. Run `/share confirm` to proceed.";
+
 pub(super) struct ShareCommand;
 impl SlashCommand for ShareCommand {
     fn name(&self) -> &'static str {
         "/share"
     }
     fn description(&self) -> &'static str {
-        "Share session (gist via gh, or clipboard)"
+        "Share session (gist via gh, or clipboard); `/share confirm` to proceed"
     }
-    fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::ShareSession);
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        if args.trim() == "confirm" {
+            let _ = ctx.tx.send(TuiMessage::ShareSession);
+        } else {
+            add_note_message(&ctx.chat, SHARE_CONFIRMATION_NOTE);
+            ctx.tui.request_render(false);
+        }
     }
 }
 
-/// `/context` — lists discovered context files, skills, and prompt templates.
-/// Hidden from autocomplete (needs the resources snapshot to be meaningful as a
-/// discovery surface; like `/name`, it's recognized-v1 but kept off the list).
+/// `/context` — read-only active-context estimates, category grid and largest entries.
 pub(super) struct ContextCommand;
 impl SlashCommand for ContextCommand {
     fn name(&self) -> &'static str {
         "/context"
     }
-    fn visible(&self) -> bool {
-        false
+    fn description(&self) -> &'static str {
+        "Show context usage by category"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let resources = ctx.resources.lock().unwrap().clone();
-        show_context_panel(&ctx.chat, &resources);
-        // Live session stats are async, so ask the main loop to append them.
-        let _ = ctx.tx.send(TuiMessage::ShowUsage);
-        ctx.tui.request_render(false);
+        context_usage::show(ctx);
     }
 }
 
@@ -807,7 +874,7 @@ impl SlashCommand for ReloadCommand {
 pub(super) fn build_builtin_registry() -> CommandRegistry {
     let mut r = CommandRegistry::new();
     r.register(Arc::new(HelpCommand));
-    r.register(Arc::new(ClearChatCommand));
+    r.register(Arc::new(NewSessionCommand));
     r.register(Arc::new(ExitCommand));
     r.register(Arc::new(VersionCommand));
     r.register(Arc::new(ChangelogCommand));
@@ -832,6 +899,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     r.register(Arc::new(ExportCommand));
     r.register(Arc::new(ImportCommand));
     r.register(Arc::new(ShareCommand));
+    r.register(Arc::new(UnqueueCommand));
     r.register(Arc::new(ForkCommand));
     r.register(Arc::new(CloneCommand));
     r.register(Arc::new(TreeCommand));

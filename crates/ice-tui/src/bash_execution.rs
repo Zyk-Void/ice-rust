@@ -216,6 +216,15 @@ impl BashExecutionComponent {
         *self.expanded.lock().unwrap()
     }
 
+    /// Current command and status used by compact exploration groups.
+    pub fn command(&self) -> String {
+        self.command.lock().unwrap().clone()
+    }
+
+    pub fn status(&self) -> BashStatus {
+        *self.status.lock().unwrap()
+    }
+
     /// Get the raw joined output.
     pub fn get_output(&self) -> String {
         self.output_lines

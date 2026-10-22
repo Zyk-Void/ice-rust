@@ -383,6 +383,30 @@ it has no `run_in_background` or `stdin` parameters.
 
 ## 6. Session, compaction, resources
 
+Native session-management work is tracked in
+[`docs/session-parity-progress.md`](docs/session-parity-progress.md), against the
+source baseline in [`docs/ice-gap/session.md`](docs/ice-gap/session.md). It covers
+branch/query correctness, safe search/import, SQLite ownership/indexing, usage
+and context projections, validated summaries, and active-branch exports. The
+checklist distinguishes tested implementations from helpers and pending runtime
+integration; it is not a claim of complete coding-session parity. Native v4 JSONL
+and canonical Rust SQLite snapshots remain deliberate format boundaries. Native
+JSONL now has storage-lifetime advisory ownership and conservative conflict
+rejection; coding overflow has one bounded recovery attempt; required final-save
+errors propagate; model/thinking UI changes follow successful runtime application;
+sharing follows the active branch. `goal.md` records acceptance evidence and the
+remaining budgeting, lifecycle, transport and review work. Known coding-request
+prompt/tool overhead and the shared provider output allowance are now included
+without double-counting measured usage; hook/custom-converter payloads and full
+tool-pair/reopen coverage remain open. Follow-up formatting, warning-as-error
+workspace checks/tests and documentation/tooling gates passed (2,125 tests
+passed, 5 ignored). MSRV and Windows runtime remain unverified. The reliable-session
+goal is not yet complete. Additional native resume-precedence, custom-root/cwd
+and disappearing-file regressions pass; private gist/clipboard stubs verify
+active-branch payloads without real transport. Full gates passed again after
+these additions (2,130 passed, 0 failed, 5 ignored); MSRV and Windows runtime
+remain unverified. No PR has been opened for this worktree yet.
+
 ### 6.1 Blackhole compaction extension
 - **ice:** `ice:coding-agent/examples/extensions/ice-blackhole/` (index + `src/{core,extract,hooks,om}`).
   It derives from `sting8k/ice-vcc`. **ice-rust:** missing. Rust compaction
@@ -509,6 +533,28 @@ dialogs, side questions and `ask_user`, own stdio, and run child agents
 passes to `main()` so global settings win over project ones.
 
 ### 7.5 Interactive TUI components missing
+
+**Phase 0 TUI parity landed 2026-10-21** (PRs [#1](https://github.com/Zyk-Void/ice-rust/pull/1), [#2](https://github.com/Zyk-Void/ice-rust/pull/2), [#27](https://github.com/Zyk-Void/ice-rust/pull/27), [#28](https://github.com/Zyk-Void/ice-rust/pull/28), [#29](https://github.com/Zyk-Void/ice-rust/pull/29)). This covers the reachable defects from TUI-226/244/248/254, grapheme width and wrapping (TUI-201/202), grapheme-cell slicing and OSC 8 handling (TUI-203/204), and Text/TruncatedText/Box/Spacer contracts (TUI-205). PR #29 changes the public `ice-tui` component API and rendering behavior. The detailed `docs/ice-gap/tui.md` audit is not present on this branch; this note records only the landed Phase 0 scope, not completion of the broader TUI parity audit.
+
+**Selected `goal.md` items landed 2026-10-21** (PR [#44](https://github.com/Zyk-Void/ice-rust/pull/44),
+squash-merged as `44072f0`, replacing the older stacked PRs #6-#24 and #33-#43).
+It adds cancellable, durable tree navigation summaries with a three-way/custom
+prompt chooser (TUI-067), a category grid and largest-entry context projection
+(TUI-058), an acknowledged old-event drain before shared session replacement,
+and run summaries driven by authoritative completed outcomes (TUI-043). Tree
+replay follows the active branch. `branchSummary.reserveTokens` is wired through
+CLI startup; the harness exposes additive reserve getter/setter methods without
+changing required options, plugin ABI, or persistence schemas. The public
+agent-event enum adds an ordered `RunSettled { run_id }` marker (not persisted;
+filtered from JSON/RPC output); downstream exhaustive matches must handle it.
+See `docs/guides/branch-summaries.md` and `docs/ice-gap/tui-goal-followup.md`.
+
+Known gaps after the merge: resuming a session created in another directory
+keeps tools in the current directory (a note says so); Ctrl+C, Ctrl+D, Esc, Tab
+and Up/Down are fixed keys, not rebindable; real-terminal checks (mouse copy,
+vim and `code --wait`, OSC 52 over SSH, light/dark detection) and Rust 1.78 are
+not run. This is not a claim that every parity-audit entry is complete.
+
 From `CA/modes/interactive/components/`:
 - **Appearance:** `appearance-customizer.ts` (3110 lines) edits semantic theme-token
   groups, one group per editor screen. `appearance-preview.ts` adds live preview
@@ -517,8 +563,9 @@ From `CA/modes/interactive/components/`:
   read/search/list calls into exploration summary rows (`toolStyle: compact`).
   `tool-toggle-link.ts` adds click-to-expand.
 - **Navigation:** `sticky-prompt.ts` pins the current prompt and clicks back to
-  it. `new-messages-pill.ts` scrolls to the end (Rust has `jump_to_end.rs`;
-  verify pill parity).
+  it. `new-messages-pill.ts` scrolls to the end and counts newly visible
+  assistant turns (ignoring blank/tool-only entries); Rust's `jump_to_end.rs`
+  displays that count with the configured bottom-navigation key.
 - **Panels:** `notices-view.ts` (NoticeCenter panel with a filter bar),
   `shells-panel.ts` (§3), `subagent-view-switcher.ts` and the Agent Hub (§1.9).
 - **Status:** `run-summary.ts` (dim "worked for …" line after a run),

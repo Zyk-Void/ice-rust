@@ -394,6 +394,10 @@ impl FileSystem for OsExecutionEnv {
         &self.cwd
     }
 
+    fn native_path(&self, path: &str) -> Option<PathBuf> {
+        Some(Self::resolve_path(&self.cwd, path))
+    }
+
     async fn absolute_path(
         &self,
         path: &str,
@@ -439,6 +443,12 @@ impl FileSystem for OsExecutionEnv {
         check_cancel_file(cancel, Some(path))?;
         if max_lines.map(|m| m == 0).unwrap_or(false) {
             return Ok(Vec::new());
+        }
+        if let Some(max) = max_lines {
+            // Bounded: never read past the requested lines (session discovery
+            // asks for the header line of every saved session).
+            let abs = Self::resolve_path(&self.cwd, path);
+            return read_lines_bounded(&abs, max, cancel).await;
         }
         let text = self.read_text_file(path, cancel).await?;
         let mut lines: Vec<String> = text.split('\n').map(|s| s.to_string()).collect();
@@ -764,6 +774,62 @@ async fn read_cancellable(
         None => read.await,
     };
     res.map_err(|e| io_to_file_error(e, Some(&path.to_string_lossy())))
+}
+
+/// Read at most `max` newline-terminated lines without loading the whole file.
+/// Longest single line `read_lines_bounded` will buffer.
+const MAX_BOUNDED_LINE_BYTES: u64 = 1024 * 1024;
+
+async fn read_lines_bounded(
+    path: &Path,
+    max: usize,
+    cancel: Option<&CancellationToken>,
+) -> Result<Vec<String>, FileError> {
+    use tokio::io::{AsyncBufReadExt, AsyncReadExt};
+    let display = path.to_string_lossy();
+    let read = async {
+        let file = tokio::fs::File::open(path).await?;
+        let mut reader = tokio::io::BufReader::new(file);
+        let mut lines = Vec::new();
+        while lines.len() < max {
+            let mut buf = Vec::new();
+            // Cap each line so one huge or newline-free line cannot exhaust memory.
+            let read = (&mut reader)
+                .take(MAX_BOUNDED_LINE_BYTES + 1)
+                .read_until(b'\n', &mut buf)
+                .await?;
+            if read == 0 {
+                break;
+            }
+            if buf.len() as u64 > MAX_BOUNDED_LINE_BYTES {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "line exceeds the bounded read limit",
+                ));
+            }
+            if buf.last() == Some(&b'\n') {
+                buf.pop();
+            }
+            lines.push(buf);
+        }
+        Ok::<_, std::io::Error>(lines)
+    };
+    let res = match cancel {
+        Some(t) => tokio::select! {
+            r = read => r,
+            _ = t.cancelled() => return Err(FileError::aborted().with_path(display.as_ref())),
+        },
+        None => read.await,
+    };
+    res.map_err(|e| io_to_file_error(e, Some(&display)))?
+        .into_iter()
+        .map(|bytes| {
+            String::from_utf8(bytes).map_err(|e| {
+                FileError::new(FileErrorCode::Invalid, format!("invalid utf-8: {e}"))
+                    .with_path(display.as_ref())
+            })
+        })
+        .collect()
 }
 
 /// Write bytes to a file (truncate), honoring cooperative cancellation.

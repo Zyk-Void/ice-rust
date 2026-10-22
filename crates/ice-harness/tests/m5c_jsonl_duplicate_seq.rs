@@ -1,11 +1,6 @@
-//! Duplicate-seq / divergent-writer recovery for `JsonlSessionStorage::load`.
-//!
-//! Two writers on one JSONL (e.g. a session resumed while still open in another
-//! process) diverge their `sequence` counters: a mutation lands with an
-//! already-consumed seq, and a later writer's seqs jump forward. The loader
-//! heals both — dropping the duplicate, accepting the gap, re-chaining an entry
-//! that no longer chains to the lane leaf — and republishes the file without the
-//! dropped duplicate. Before this, the session could not be opened at all.
+//! Conservative native JSONL replay: equal sequence numbers are not identities.
+//! Identical repeats and forward gaps remain readable; conflicting work and
+//! broken ancestry must be reported without rewriting the original bytes.
 
 use std::sync::Arc;
 
@@ -36,9 +31,8 @@ type Fixture = (Arc<dyn FileSystem>, Arc<FakeClock>, Arc<CounterIdGenerator>);
 
 fn fixture() -> Fixture {
     let env = ice_tools::InMemoryExecutionEnv::with_cwd("/".into());
-    let fs: Arc<dyn FileSystem> = Arc::new(env);
     (
-        fs,
+        Arc::new(env),
         Arc::new(FakeClock::new()),
         Arc::new(CounterIdGenerator::new()),
     )
@@ -54,7 +48,6 @@ fn message_provisioned(id: &str, text: &str) -> ProvisionedEntry {
     }
 }
 
-/// A stamped `Entry` mutation on the `main` lane, chained to `parent`.
 fn entry_mutation(seq: u64, id: &str, parent: Option<&str>) -> SessionMutation {
     let timestamp = 1_700_000_000_000i64 + seq as i64;
     SessionMutation::Entry {
@@ -78,93 +71,148 @@ fn lane_mutation(seq: u64) -> SessionMutation {
     }
 }
 
-fn line(mutation: &SessionMutation) -> String {
-    encode_mutation(mutation)
+async fn seed(fs: &Arc<dyn FileSystem>, mutations: &[SessionMutation]) {
+    JsonlSessionStorage::create(
+        fs.clone(),
+        "/s.jsonl",
+        header(),
+        Arc::new(FakeClock::new()),
+        Arc::new(CounterIdGenerator::new()),
+    )
+    .await
+    .unwrap();
+    for mutation in mutations {
+        fs.append_file(
+            "/s.jsonl",
+            FileContent::Text(encode_mutation(mutation)),
+            None,
+        )
+        .await
+        .unwrap();
+    }
 }
 
 #[tokio::test]
-async fn duplicate_seq_is_dropped_gap_is_accepted_and_file_is_republished() {
+async fn identical_repeat_and_valid_forward_gap_preserve_bytes_and_append_sequence() {
     let (fs, clock, ids) = fixture();
-    let path = "/s.jsonl";
-    let _ = JsonlSessionStorage::create(fs.clone(), path, header(), clock.clone(), ids.clone())
+    seed(
+        &fs,
+        &[
+            lane_mutation(1),
+            entry_mutation(2, "e1", None),
+            entry_mutation(3, "e2", Some("e1")),
+            entry_mutation(3, "e2", Some("e1")),
+            entry_mutation(10, "e3", Some("e2")),
+        ],
+    )
+    .await;
+    let before = fs.read_text_file("/s.jsonl", None).await.unwrap();
+    let storage = JsonlSessionStorage::load(fs.clone(), "/s.jsonl", clock, ids)
         .await
         .unwrap();
+    assert_eq!(fs.read_text_file("/s.jsonl", None).await.unwrap(), before);
+    assert_eq!(
+        storage.get_entry("e3").await.unwrap().unwrap().parent_id(),
+        Some("e2")
+    );
+    let next = storage
+        .append_entry(message_provisioned("e4", "new work"), "main")
+        .await
+        .unwrap();
+    assert_eq!(next.seq(), 11);
+}
 
-    // A valid prefix: lane, then e1 → e2.
-    for mutation in [
+async fn assert_rejected_without_rewrite(mutations: &[SessionMutation]) {
+    let (fs, clock, ids) = fixture();
+    seed(&fs, mutations).await;
+    let before = fs.read_text_file("/s.jsonl", None).await.unwrap();
+    let result = JsonlSessionStorage::load(fs.clone(), "/s.jsonl", clock, ids).await;
+    assert!(
+        result.is_err(),
+        "conflicting history must not be silently healed"
+    );
+    assert_eq!(fs.read_text_file("/s.jsonl", None).await.unwrap(), before);
+}
+
+#[tokio::test]
+async fn equal_sequence_with_different_identity_is_rejected_without_rewrite() {
+    assert_rejected_without_rewrite(&[
+        lane_mutation(1),
+        entry_mutation(2, "e1", None),
+        entry_mutation(2, "other-work", None),
+    ])
+    .await;
+}
+
+#[tokio::test]
+async fn equal_sequence_with_different_payload_is_rejected_without_rewrite() {
+    let timestamp = 1_700_000_000_002;
+    let changed = SessionMutation::Entry {
+        seq: 2,
+        timestamp,
+        lane: Some("main".into()),
+        entry: provisioned_into_entry(
+            message_provisioned("e1", "different work"),
+            2,
+            None,
+            timestamp,
+        ),
+    };
+    assert_rejected_without_rewrite(&[lane_mutation(1), entry_mutation(2, "e1", None), changed])
+        .await;
+}
+
+#[tokio::test]
+async fn equal_sequence_with_different_lane_is_rejected_without_rewrite() {
+    let mut changed = entry_mutation(2, "e1", None);
+    if let SessionMutation::Entry { lane, .. } = &mut changed {
+        *lane = Some("other".into());
+    }
+    assert_rejected_without_rewrite(&[lane_mutation(1), entry_mutation(2, "e1", None), changed])
+        .await;
+}
+
+#[tokio::test]
+async fn equal_sequence_with_different_parent_is_rejected_without_rewrite() {
+    assert_rejected_without_rewrite(&[
         lane_mutation(1),
         entry_mutation(2, "e1", None),
         entry_mutation(3, "e2", Some("e1")),
-        // Duplicate of seq 3 with a fresh id: what a second writer appends when
-        // its counter lagged. Must be dropped, not applied (and not fatal).
-        entry_mutation(3, "e2dup", Some("e1")),
-        // Chains to e2, which is only the leaf if the duplicate was dropped.
-        entry_mutation(4, "e3", Some("e2")),
-        // Forward gap: the other writer's counter was ahead. Accepted.
-        entry_mutation(10, "e4", Some("e3")),
-    ] {
-        fs.append_file(path, FileContent::Text(line(&mutation)), None)
-            .await
-            .unwrap();
-    }
-
-    let storage = JsonlSessionStorage::load(fs.clone(), path, clock.clone(), ids.clone())
-        .await
-        .expect("healed load");
-
-    assert!(storage.get_entry("e1").await.unwrap().is_some());
-    assert!(storage.get_entry("e2").await.unwrap().is_some());
-    assert!(storage.get_entry("e3").await.unwrap().is_some());
-    assert!(storage.get_entry("e4").await.unwrap().is_some());
-    assert!(
-        storage.get_entry("e2dup").await.unwrap().is_none(),
-        "the duplicated append must be dropped"
-    );
-
-    // The healed file no longer carries the duplicate.
-    let content = fs.read_text_file(path, None).await.unwrap();
-    assert!(
-        !content.contains("e2dup"),
-        "duplicate should be republished away"
-    );
-
-    // Appends resume consistently after the highest surviving seq (10).
-    let next = storage
-        .append_entry(message_provisioned("e5", "e5"), "main")
-        .await
-        .unwrap();
-    assert_eq!(
-        next.seq(),
-        11,
-        "next append continues from the resynced seq"
-    );
+        entry_mutation(3, "e2", None),
+    ])
+    .await;
 }
 
 #[tokio::test]
-async fn entry_that_does_not_chain_to_the_leaf_is_re_chained() {
-    let (fs, clock, ids) = fixture();
-    let path = "/s.jsonl";
-    let _ = JsonlSessionStorage::create(fs.clone(), path, header(), clock.clone(), ids.clone())
-        .await
-        .unwrap();
-    for mutation in [
+async fn stale_parent_is_rejected_instead_of_silently_reparented() {
+    assert_rejected_without_rewrite(&[
         lane_mutation(1),
         entry_mutation(2, "e1", None),
-        // Parent is stale (another writer's leaf), not the current leaf `e1`.
         entry_mutation(3, "e2", None),
-    ] {
-        fs.append_file(path, FileContent::Text(line(&mutation)), None)
-            .await
-            .unwrap();
-    }
+    ])
+    .await;
+}
 
-    let storage = JsonlSessionStorage::load(fs.clone(), path, clock.clone(), ids)
+#[tokio::test]
+async fn conflict_before_torn_tail_does_not_publish_a_repair() {
+    let (fs, clock, ids) = fixture();
+    seed(
+        &fs,
+        &[
+            lane_mutation(1),
+            entry_mutation(2, "e1", None),
+            entry_mutation(2, "different", None),
+        ],
+    )
+    .await;
+    fs.append_file("/s.jsonl", FileContent::Text("{torn".into()), None)
         .await
-        .expect("healed load");
-    let e2 = storage.get_entry("e2").await.unwrap().unwrap();
-    assert_eq!(
-        e2.parent_id(),
-        Some("e1"),
-        "an unchained entry is re-parented onto the lane leaf"
+        .unwrap();
+    let before = fs.read_text_file("/s.jsonl", None).await.unwrap();
+    assert!(
+        JsonlSessionStorage::load(fs.clone(), "/s.jsonl", clock, ids)
+            .await
+            .is_err()
     );
+    assert_eq!(fs.read_text_file("/s.jsonl", None).await.unwrap(), before);
 }

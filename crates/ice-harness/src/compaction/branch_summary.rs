@@ -12,7 +12,6 @@ use std::collections::BTreeSet;
 
 use ice_agent::message::AgentMessage;
 use ice_ai::types::{Content, Context, Message, StopReason, Usage, UserContent, UserMessage};
-use ice_ai::ThinkingLevel;
 use serde::{Deserialize, Serialize};
 
 use crate::compaction::compaction::{
@@ -69,7 +68,8 @@ pub struct CollectEntriesResult {
 /// Options for generating a branch summary. Mirrors
 /// `GenerateBranchSummaryOptions`; the `models`/`model`/`signal`/`retry` fields
 /// consolidate into [`CompactionLlmOptions`], and `reserveTokens` defaults to
-/// the compaction default.
+/// the compaction default. Use [`GenerateBranchSummaryOptions::new`] because a
+/// valid provider/model routing configuration has no meaningful `Default`.
 #[derive(Clone)]
 pub struct GenerateBranchSummaryOptions {
     pub llm: CompactionLlmOptions,
@@ -83,19 +83,6 @@ pub struct GenerateBranchSummaryOptions {
 impl GenerateBranchSummaryOptions {
     /// Default reserve tokens (mirrors TS `reserveTokens = 16384`).
     pub const DEFAULT_RESERVE_TOKENS: i64 = 16384;
-}
-
-impl Default for GenerateBranchSummaryOptions {
-    fn default() -> Self {
-        // `reserve_tokens` is resolved at call time; `replace_instructions`
-        // defaults false. `llm` has no default — callers must populate it, so
-        // this Default is a convenience that panics-free leaves `llm` to be
-        // built explicitly. We do NOT impl a usable Default for `CompactionLlm
-        // Options` (it has no sensible default), so this impl is intentionally
-        // minimal — tests/callers construct `GenerateBranchSummaryOptions`
-        // struct-literal with a real `llm`.
-        unreachable!("GenerateBranchSummaryOptions must be constructed struct-literal with `llm`")
-    }
 }
 
 /// `getMessageFromEntry` for branch summarization. Mirrors the local helper in
@@ -133,15 +120,15 @@ fn get_message_from_entry(entry: &Entry) -> Option<AgentMessage> {
 ///
 /// Walks `old_leaf_id` back toward the common ancestor with `target_id`'s path
 /// (exclusive of the ancestor), reversed into chronological order. Returns
-/// empty when `old_leaf_id` is `None`.
+/// empty when `old_leaf_id` is absent or the empty string.
 pub async fn collect_entries_for_branch_summary<S: SessionTree + ?Sized>(
     session: &S,
     old_leaf_id: Option<&str>,
     target_id: &str,
 ) -> SessionResult<CollectEntriesResult> {
     let old_leaf_id = match old_leaf_id {
-        Some(id) => id,
-        None => {
+        Some(id) if !id.is_empty() => id,
+        Some(_) | None => {
             return Ok(CollectEntriesResult {
                 entries: Vec::new(),
                 common_ancestor_id: None,
@@ -241,24 +228,26 @@ pub fn prepare_branch_entries(entries: &[Entry], token_budget: i64) -> BranchPre
             };
             extract_file_ops_from_message(&message, &mut file_ops);
             let tokens = estimate_tokens(&message);
-            if total_tokens + tokens > token_budget {
+            let exceeds_budget = (total_tokens as i128) + (tokens as i128) > token_budget as i128;
+            if exceeds_budget {
+                let within_summary_grace = (total_tokens as i128) * 10 < (token_budget as i128) * 9;
                 if matches!(entry, Entry::Compaction(_) | Entry::BranchSummary(_))
-                    && total_tokens < (token_budget as f64 * 0.9) as i64
+                    && within_summary_grace
                 {
                     messages.insert(0, message);
-                    total_tokens += tokens;
+                    total_tokens = total_tokens.saturating_add(tokens);
                 }
                 break;
             }
             messages.insert(0, message);
-            total_tokens += tokens;
+            total_tokens = total_tokens.saturating_add(tokens);
         }
     } else {
         // No budget → include everything in chronological order.
         for entry in entries {
             if let Some(message) = get_message_from_entry(entry) {
                 extract_file_ops_from_message(&message, &mut file_ops);
-                total_tokens += estimate_tokens(&message);
+                total_tokens = total_tokens.saturating_add(estimate_tokens(&message));
                 messages.push(message);
             }
         }
@@ -280,6 +269,28 @@ const BRANCH_SUMMARY_PREAMBLE: &str =
 
 const BRANCH_SUMMARY_PROMPT: &str = "Create a structured summary of this conversation branch for context when returning later.\n\nUse this EXACT format:\n\n## Goal\n[What was the user trying to accomplish in this branch?]\n\n## Constraints & Preferences\n- [Any constraints, preferences, or requirements mentioned]\n- [Or \"(none)\" if none were mentioned]\n\n## Progress\n### Done\n- [x] [Completed tasks/changes]\n\n### In Progress\n- [ ] [Work that was started but not finished]\n\n### Blocked\n- [Issues preventing progress, if any]\n\n## Key Decisions\n- **[Decision]**: [Brief rationale]\n\n## Next Steps\n1. [What should happen next to continue this work]\n\nKeep each section concise. Preserve exact file paths, function names, and error messages.";
 
+fn branch_summary_instructions(custom_instructions: Option<&str>, replace: bool) -> String {
+    match (
+        custom_instructions.filter(|instructions| !instructions.is_empty()),
+        replace,
+    ) {
+        (Some(instructions), true) => instructions.to_string(),
+        (Some(instructions), false) => {
+            format!("{BRANCH_SUMMARY_PROMPT}\n\nAdditional focus: {instructions}")
+        }
+        (None, _) => BRANCH_SUMMARY_PROMPT.to_string(),
+    }
+}
+
+fn branch_summary_stream_options(llm: &CompactionLlmOptions) -> ice_ai::SimpleStreamOptions {
+    let mut options = ice_ai::SimpleStreamOptions::default();
+    options.api_key = llm.api_key.clone();
+    options.signal = llm.signal.clone();
+    options.max_tokens = Some(2048);
+    // Branch summaries intentionally do not forward reasoning settings.
+    options
+}
+
 /// `generateBranchSummary`. Mirrors TS: budget = `context_window − reserve`
 /// (context_window 0 → 128000); empty messages → `"No content to summarize"`;
 /// single user message with the conversation+instructions prompt; `maxTokens:
@@ -294,7 +305,7 @@ pub async fn generate_branch_summary(
     } else {
         128_000
     };
-    let token_budget = context_window - options.reserve_tokens;
+    let token_budget = context_window.saturating_sub(options.reserve_tokens);
 
     let prep = prepare_branch_entries(entries, token_budget);
 
@@ -310,14 +321,10 @@ pub async fn generate_branch_summary(
     let llm_messages = convert_to_llm(prep.messages.clone());
     let conversation_text = serialize_conversation(&llm_messages);
 
-    let instructions: String = match (
-        &options.llm.custom_instructions,
+    let instructions = branch_summary_instructions(
+        options.llm.custom_instructions.as_deref(),
         options.replace_instructions,
-    ) {
-        (Some(ci), true) => ci.clone(),
-        (Some(ci), false) => format!("{BRANCH_SUMMARY_PROMPT}\n\nAdditional focus: {ci}"),
-        (None, _) => BRANCH_SUMMARY_PROMPT.to_string(),
-    };
+    );
     let prompt_text =
         format!("<conversation>\n{conversation_text}\n</conversation>\n\n{instructions}");
 
@@ -331,18 +338,7 @@ pub async fn generate_branch_summary(
         tools: Vec::new(),
     };
 
-    let mut req_opts = ice_ai::SimpleStreamOptions::default();
-    req_opts.api_key = options.llm.api_key.clone();
-    req_opts.signal = options.llm.signal.clone();
-    req_opts.max_tokens = Some(2048);
-    if options.llm.model.reasoning {
-        if let Some(tl) = options.llm.thinking_level {
-            if tl != ThinkingLevel::Off {
-                req_opts.reasoning = Some(tl);
-            }
-        }
-    }
-
+    let req_opts = branch_summary_stream_options(&options.llm);
     let response = complete_simple_with_retries(
         options.llm.provider.clone(),
         options.llm.model.clone(),
@@ -357,13 +353,18 @@ pub async fn generate_branch_summary(
             response
                 .error_message
                 .as_deref()
+                .filter(|message| !message.is_empty())
                 .unwrap_or("Branch summary aborted"),
         ));
     }
     if response.stop_reason == StopReason::Error {
         return Err(BranchSummaryError::summarization_failed(format!(
             "Branch summary failed: {}",
-            response.error_message.as_deref().unwrap_or("Unknown error")
+            response
+                .error_message
+                .as_deref()
+                .filter(|message| !message.is_empty())
+                .unwrap_or("Unknown error")
         )));
     }
 
@@ -403,12 +404,21 @@ mod tests {
     use crate::session::types::EntryBase;
 
     fn user_msg(text: &str, seq: u64) -> Entry {
+        user_msg_with_parent(text, format!("e{seq}"), None, seq)
+    }
+
+    fn user_msg_with_parent(
+        text: &str,
+        id: impl Into<String>,
+        parent_id: Option<String>,
+        seq: u64,
+    ) -> Entry {
         Entry::Message(crate::session::types::MessageEntry {
             base: EntryBase {
                 entry_type: "message".into(),
-                id: format!("e{seq}"),
+                id: id.into(),
                 seq,
-                parent_id: None,
+                parent_id,
                 timestamp: seq as i64,
             },
             message: AgentMessage::User(UserMessage::new(
@@ -419,11 +429,169 @@ mod tests {
         })
     }
 
+    #[derive(Default)]
+    struct StubSession {
+        entries: std::collections::BTreeMap<String, Entry>,
+        paths: std::collections::BTreeMap<String, Vec<Entry>>,
+    }
+
+    #[async_trait::async_trait]
+    impl SessionTree for StubSession {
+        async fn get_leaf_id(&self) -> crate::error::SessionResult<Option<String>> {
+            unreachable!()
+        }
+        async fn get_entry(&self, id: &str) -> crate::error::SessionResult<Option<Entry>> {
+            Ok(self.entries.get(id).cloned())
+        }
+        async fn get_stats(
+            &self,
+        ) -> crate::error::SessionResult<crate::session::types::SessionStats> {
+            unreachable!()
+        }
+        async fn get_name(&self) -> crate::error::SessionResult<Option<String>> {
+            unreachable!()
+        }
+        async fn set_name(&self, _name: Option<&str>) -> crate::error::SessionResult<()> {
+            unreachable!()
+        }
+        async fn get_label(&self, _target_id: &str) -> crate::error::SessionResult<Option<String>> {
+            unreachable!()
+        }
+        async fn set_label(
+            &self,
+            _target_id: &str,
+            _label: Option<&str>,
+        ) -> crate::error::SessionResult<()> {
+            unreachable!()
+        }
+        async fn find_entries(
+            &self,
+            _query: &EntryQuery,
+        ) -> crate::error::SessionResult<Vec<Entry>> {
+            unreachable!()
+        }
+        async fn find_entry(
+            &self,
+            _query: &EntryQuery,
+        ) -> crate::error::SessionResult<Option<Entry>> {
+            unreachable!()
+        }
+        async fn find_entries_on_branch(
+            &self,
+            _query: &EntryQuery,
+            bounds: &BranchBounds,
+        ) -> crate::error::SessionResult<Vec<Entry>> {
+            Ok(bounds
+                .start
+                .as_ref()
+                .and_then(|start| self.paths.get(start))
+                .cloned()
+                .unwrap_or_default())
+        }
+        async fn find_entry_on_branch(
+            &self,
+            _query: &EntryQuery,
+            _bounds: &BranchBounds,
+        ) -> crate::error::SessionResult<Option<Entry>> {
+            unreachable!()
+        }
+        async fn append_message(
+            &self,
+            _message: AgentMessage,
+        ) -> crate::error::SessionResult<String> {
+            unreachable!()
+        }
+        async fn append_custom_entry(
+            &self,
+            _custom_type: &str,
+            _data: Option<crate::session::types::JsonValue>,
+        ) -> crate::error::SessionResult<String> {
+            unreachable!()
+        }
+    }
+
+    #[tokio::test]
+    async fn collect_branch_treats_empty_old_leaf_as_empty_without_session_reads() {
+        let result =
+            collect_entries_for_branch_summary(&StubSession::default(), Some(""), "target")
+                .await
+                .unwrap();
+        assert!(result.entries.is_empty());
+        assert_eq!(result.common_ancestor_id, None);
+    }
+
+    #[tokio::test]
+    async fn collect_branch_excludes_deepest_common_ancestor() {
+        let root = user_msg_with_parent("root", "root", None, 1);
+        let common = user_msg_with_parent("common", "common", Some("root".into()), 2);
+        let old_leaf = user_msg_with_parent("old", "old", Some("common".into()), 3);
+        let target_leaf = user_msg_with_parent("target", "target", Some("common".into()), 4);
+        let entries = [&root, &common, &old_leaf, &target_leaf];
+        let mut session = StubSession::default();
+        for entry in entries {
+            session
+                .entries
+                .insert(entry.id().to_string(), entry.clone());
+        }
+        session.paths.insert(
+            "old".into(),
+            vec![old_leaf.clone(), common.clone(), root.clone()],
+        );
+        session
+            .paths
+            .insert("target".into(), vec![target_leaf, common.clone(), root]);
+
+        let result = collect_entries_for_branch_summary(&session, Some("old"), "target")
+            .await
+            .unwrap();
+        assert_eq!(result.common_ancestor_id.as_deref(), Some("common"));
+        assert_eq!(
+            result.entries.iter().map(Entry::id).collect::<Vec<_>>(),
+            ["old"]
+        );
+    }
+
+    #[test]
+    fn empty_branch_instructions_fall_back_and_reasoning_is_not_forwarded() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript};
+        use ice_ai::ThinkingLevel;
+
+        assert_eq!(
+            branch_summary_instructions(Some(""), true),
+            BRANCH_SUMMARY_PROMPT
+        );
+        assert_eq!(
+            branch_summary_instructions(Some(""), false),
+            BRANCH_SUMMARY_PROMPT
+        );
+
+        let provider = FauxProvider::new(FauxScript::new());
+        let mut model = provider.default_model().clone();
+        model.reasoning = true;
+        let llm = CompactionLlmOptions {
+            provider,
+            model,
+            api_key: None,
+            signal: tokio_util::sync::CancellationToken::new(),
+            thinking_level: Some(ThinkingLevel::High),
+            retry: None,
+            custom_instructions: None,
+        };
+        let request = branch_summary_stream_options(&llm);
+        assert_eq!(request.max_tokens, Some(2048));
+        assert_eq!(request.reasoning, None);
+        assert_eq!(
+            GenerateBranchSummaryOptions::new(llm).reserve_tokens,
+            GenerateBranchSummaryOptions::DEFAULT_RESERVE_TOKENS
+        );
+    }
+
     #[test]
     fn prepare_branch_entries_no_budget_includes_all_non_toolresult() {
         let entries = vec![user_msg("a", 1), user_msg("b", 2)];
         let p = prepare_branch_entries(&entries, 0);
         assert_eq!(p.messages.len(), 2);
+        assert_eq!(prepare_branch_entries(&entries, -1).messages.len(), 2);
     }
 
     #[test]
@@ -442,6 +610,57 @@ mod tests {
             &p.messages[0],
             AgentMessage::User(u) if matches!(u.content, UserContent::Text(ref t) if t == "XYZ")
         ));
+    }
+
+    #[test]
+    fn fractional_ninety_percent_grace_includes_checkpoint_at_budget_three() {
+        let checkpoint = Entry::BranchSummary(crate::session::types::BranchSummaryEntry {
+            base: EntryBase {
+                entry_type: "branch_summary".into(),
+                id: "branch".into(),
+                seq: 1,
+                parent_id: None,
+                timestamp: 1,
+            },
+            from_id: "leaf".into(),
+            summary: "abcdefgh".into(), // two estimated tokens
+            details: None,
+            usage: None,
+        });
+        let preparation = prepare_branch_entries(&[checkpoint, user_msg("abcdefgh", 2)], 3);
+        assert_eq!(preparation.total_tokens, 4);
+        assert_eq!(preparation.messages.len(), 2);
+    }
+
+    #[test]
+    fn rejected_entry_still_contributes_file_attribution_and_empty_paths_are_ignored() {
+        let mut assistant =
+            ice_ai::types::AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux", 1);
+        assistant.content.push(Content::tool_call(
+            "read-empty",
+            "read",
+            serde_json::json!({"path": ""}),
+        ));
+        assistant.content.push(Content::tool_call(
+            "read-file",
+            "read",
+            serde_json::json!({"path": "/rejected.txt"}),
+        ));
+        let rejected = Entry::Message(crate::session::types::MessageEntry {
+            base: EntryBase {
+                entry_type: "message".into(),
+                id: "rejected".into(),
+                seq: 1,
+                parent_id: None,
+                timestamp: 1,
+            },
+            message: AgentMessage::Assistant(Box::new(assistant)),
+            terminate: None,
+        });
+        let preparation = prepare_branch_entries(&[rejected, user_msg("ok", 2)], 1);
+        assert_eq!(preparation.messages.len(), 1);
+        assert!(preparation.file_ops.read.contains("/rejected.txt"));
+        assert!(!preparation.file_ops.read.contains(""));
     }
 
     #[test]

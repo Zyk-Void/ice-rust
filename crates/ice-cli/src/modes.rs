@@ -15,6 +15,7 @@
 //!
 //! All three drive the same `AgentHarness` via `AgentLane::prompt_text`.
 
+use std::collections::VecDeque;
 use std::io::{BufRead, IsTerminal, Write};
 use std::sync::{Arc, Mutex};
 
@@ -38,12 +39,12 @@ pub fn assistant_text(msg: &AssistantMessage) -> String {
         .collect()
 }
 
-/// The exit code a run's outcome maps to. Mirrors TS print mode: error/aborted
-/// ⇒ exit 1; everything else ⇒ 0.
+/// Only a completed run is successful. Failed, aborted, or suspended runs
+/// stop positional batches and return a nonzero exit code.
 pub fn outcome_exit_code(outcome: &HarnessRunOutcome) -> i32 {
     match outcome {
-        HarnessRunOutcome::Failed { .. } | HarnessRunOutcome::Aborted { .. } => 1,
-        _ => 0,
+        HarnessRunOutcome::Completed { .. } => 0,
+        _ => 1,
     }
 }
 
@@ -105,6 +106,11 @@ pub async fn print(
                         eprintln!("run suspended (deferred) — resume is not supported in v1");
                         last_exit = 1;
                     }
+                }
+                // Positional prompts are one submission. Cancellation or failure
+                // must not silently admit the remaining prompts as fresh runs.
+                if last_exit != 0 {
+                    break;
                 }
             }
             Err(e) => {
@@ -218,6 +224,9 @@ pub async fn json(
                 .await;
                 last_exit = outcome_exit_code(&result.outcome);
                 final_outcome = Some(result.outcome);
+                if last_exit != 0 {
+                    break;
+                }
             }
             Err(e) => {
                 // Emit a structured error line + exit.
@@ -262,7 +271,20 @@ pub async fn json(
 }
 
 fn emit_agent_event(event: &AgentEvent) {
-    println!("{}", agent_event_json(event));
+    if let Some(value) = wire_agent_event_json(event) {
+        println!("{value}");
+    }
+}
+
+/// The harness finalization barrier is process-local TUI metadata. Keep it out
+/// of default JSON/RPC streams so older strict --connect clients retain their
+/// existing event schema. All wire emission paths use this filter.
+fn wire_agent_event_json(event: &AgentEvent) -> Option<serde_json::Value> {
+    if matches!(event, AgentEvent::RunSettled { .. }) {
+        None
+    } else {
+        Some(agent_event_json(event))
+    }
 }
 
 /// `rpc` mode: a headless JSONL command loop (the server-side agent).
@@ -342,7 +364,11 @@ where
                     event = rx.recv() => event,
                 };
                 match received {
-                    Ok(event) => write_line(&out, &agent_event_json(&event)).await,
+                    Ok(event) => {
+                        if let Some(value) = wire_agent_event_json(&event) {
+                            write_line(&out, &value).await;
+                        }
+                    }
                     Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                     Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
                 }
@@ -491,6 +517,18 @@ where
                 break;
             }
             "prompt" => {
+                if msg.get("images").is_some() {
+                    write_line(
+                        &stdout,
+                        &RemoteResponse::error(
+                            id.clone(),
+                            "RPC prompts do not support image attachments",
+                        )
+                        .to_json(),
+                    )
+                    .await;
+                    continue;
+                }
                 if run_active.swap(true, std::sync::atomic::Ordering::AcqRel) {
                     write_line(
                         &stdout,
@@ -640,7 +678,11 @@ async fn drain_rpc_events(
 ) {
     loop {
         match events.try_recv() {
-            Ok(event) => write_line(out, &agent_event_json(&event)).await,
+            Ok(event) => {
+                if let Some(value) = wire_agent_event_json(&event) {
+                    write_line(out, &value).await;
+                }
+            }
             Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => continue,
             Err(_) => break,
         }
@@ -649,7 +691,7 @@ async fn drain_rpc_events(
 
 /// Cancellation is delivered even if abort/stop arrives before prompt_text has
 /// registered a run. Once active, await its normal aborted outcome and cleanup.
-async fn rpc_prompt_cancellable(
+pub(crate) async fn rpc_prompt_cancellable(
     lane: &Arc<dyn AgentLane>,
     content: &str,
     cancel: tokio_util::sync::CancellationToken,
@@ -924,19 +966,38 @@ pub async fn interactive_repl(
         }
     }
 
-    // Then read lines from stdin until EOF / `/exit`.
-    let mut line = String::new();
+    // Then read lines from stdin until EOF / `/exit`. A reader thread feeds a
+    // channel so a typed `/abort` can be serviced while a prompt is running.
+    let (tx, mut input) = tokio::sync::mpsc::unbounded_channel::<String>();
+    std::thread::spawn(move || {
+        let mut line = String::new();
+        loop {
+            line.clear();
+            match std::io::stdin().lock().read_line(&mut line) {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {
+                    if tx.send(line.clone()).is_err() {
+                        break;
+                    }
+                }
+            }
+        }
+    });
+    let mut pending: VecDeque<String> = VecDeque::new();
     loop {
-        if is_tty {
-            print!("> ");
-            let _ = std::io::stdout().flush();
-        }
-        line.clear();
-        match stdin.lock().read_line(&mut line) {
-            Ok(0) => break, // EOF
-            Ok(_) => {}
-            Err(_) => break,
-        }
+        let line = match pending.pop_front() {
+            Some(line) => line,
+            None => {
+                if is_tty {
+                    print!("> ");
+                    let _ = std::io::stdout().flush();
+                }
+                match input.recv().await {
+                    Some(line) => line,
+                    None => break, // EOF
+                }
+            }
+        };
         let trimmed = line.trim();
         if trimmed.is_empty() {
             continue;
@@ -945,20 +1006,49 @@ pub async fn interactive_repl(
             break;
         }
         if trimmed == "/abort" {
-            let _ = lane.abort().await;
-            eprintln!("(aborted)");
+            abort_ack(&lane).await;
             continue;
         }
-        if let Err(code) = run_one(&lane, trimmed, Vec::new()).await {
+        if let Err(code) = run_one_abortable(&lane, trimmed, &mut input, &mut pending).await {
             return code;
         }
     }
     0
 }
 
+async fn abort_ack(lane: &Arc<dyn AgentLane>) {
+    match lane.abort().await {
+        Ok(_) => eprintln!("(aborted)"),
+        Err(error) => eprintln!("(nothing to abort: {error})"),
+    }
+}
+
+/// Run one prompt while still reading typed lines: `/abort` cancels the run;
+/// any other line is held in `pending` and handled after the run settles.
+async fn run_one_abortable(
+    lane: &Arc<dyn AgentLane>,
+    prompt: &str,
+    input: &mut tokio::sync::mpsc::UnboundedReceiver<String>,
+    pending: &mut VecDeque<String>,
+) -> Result<(), i32> {
+    let run = run_one(lane, prompt, Vec::new());
+    tokio::pin!(run);
+    let mut open = true;
+    loop {
+        tokio::select! {
+            result = &mut run => return result,
+            line = input.recv(), if open => match line {
+                Some(line) if line.trim() == "/abort" => abort_ack(lane).await,
+                Some(line) => pending.push_back(line),
+                None => open = false,
+            },
+        }
+    }
+}
+
 /// Run a single prompt in interactive mode, printing the assistant reply (or
-/// the error). Returns `Ok(())` on success/soft-failure, `Err(exit_code)` on a
-/// hard rejection.
+/// the error). Returns `Ok(())` only after normal completion; every other
+/// outcome stops the REPL before another prompt is admitted.
 async fn run_one(
     lane: &Arc<dyn AgentLane>,
     prompt: &str,
@@ -990,7 +1080,10 @@ async fn run_one(
                     eprintln!("run suspended (deferred) — resume not supported in v1");
                 }
             }
-            Ok(())
+            match outcome_exit_code(&result.outcome) {
+                0 => Ok(()),
+                code => Err(code),
+            }
         }
         Err(e) => {
             eprintln!("prompt rejected: {e}");
@@ -1008,6 +1101,154 @@ mod tests {
         AssistantMessage, Content, StopReason, TextContent, TextContentType, Usage,
     };
     use ice_harness::session::types::OperationError;
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn repl_abort_returns_a_stopping_exit_code() {
+        let (harness, provider) = rpc_test_harness("still streaming the response", 20.0).await;
+        let active = harness.clone();
+        let task =
+            tokio::spawn(async move { run_one(&active.lane("main"), "first", Vec::new()).await });
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == 0
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        harness.lane("main").abort().await.unwrap();
+        let outcome = task.await.unwrap();
+        // interactive_repl returns on Err before consuming another initial/stdin prompt.
+        assert_eq!(outcome, Err(1));
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            1
+        );
+        assert!(harness
+            .session()
+            .find_open_operations("main", None)
+            .await
+            .unwrap()
+            .is_empty());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn repl_typed_abort_cancels_the_running_prompt() {
+        let (harness, provider) = rpc_test_harness("still streaming the response", 20.0).await;
+        let lane = harness.lane("main");
+        let (tx, mut input) = tokio::sync::mpsc::unbounded_channel::<String>();
+        let mut pending = VecDeque::new();
+        let sender = tokio::spawn({
+            let provider = provider.clone();
+            async move {
+                while provider
+                    .state()
+                    .call_count
+                    .load(std::sync::atomic::Ordering::SeqCst)
+                    == 0
+                {
+                    tokio::task::yield_now().await;
+                }
+                tx.send("queued later\n".into()).unwrap();
+                tx.send("/abort\n".into()).unwrap();
+            }
+        });
+        let outcome = tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            run_one_abortable(&lane, "first", &mut input, &mut pending),
+        )
+        .await
+        .expect("typed /abort must end the run");
+        sender.await.unwrap();
+        assert_eq!(outcome, Err(1));
+        assert_eq!(pending, VecDeque::from(["queued later\n".to_string()]));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn print_abort_does_not_start_extra_prompts() {
+        assert_abort_stops_positionals(false).await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn json_abort_does_not_start_extra_prompts() {
+        assert_abort_stops_positionals(true).await;
+    }
+
+    async fn assert_abort_stops_positionals(json_mode: bool) {
+        let (harness, provider) = rpc_test_harness("still streaming the response", 20.0).await;
+        let active = harness.clone();
+        let task = tokio::spawn(async move {
+            if json_mode {
+                json(
+                    &active,
+                    &Args::default(),
+                    Some("first".into()),
+                    &["must not start".into()],
+                    Vec::new(),
+                    None,
+                )
+                .await
+            } else {
+                print(
+                    &active,
+                    &Args::default(),
+                    Some("first".into()),
+                    &["must not start".into()],
+                    Vec::new(),
+                )
+                .await
+            }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == 0
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        harness.lane("main").abort().await.unwrap();
+        let exit = tokio::time::timeout(std::time::Duration::from_secs(3), task)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            1
+        );
+        assert_ne!(exit, 0);
+        assert!(harness
+            .session()
+            .find_open_operations("main", None)
+            .await
+            .unwrap()
+            .is_empty());
+        let entries = harness
+            .session()
+            .find_entries(&Default::default())
+            .await
+            .unwrap();
+        assert!(!entries.iter().any(|entry| {
+            matches!(entry, ice_harness::session::types::Entry::Message(message)
+                if matches!(&message.message, ice_agent::AgentMessage::User(user)
+                    if matches!(&user.content, ice_ai::types::UserContent::Text(text)
+                        if text == "must not start")))
+        }));
+    }
 
     #[derive(Clone, Default)]
     struct RpcOutput(Arc<Mutex<Vec<u8>>>);
@@ -1349,6 +1590,259 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_rejects_image_prompt_without_starting_a_run() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_test_harness("must not run", 100.0).await;
+        let lane = harness.lane("main");
+        let (mut client, output, task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+
+        let prompt = serde_json::json!({
+            "type": "prompt",
+            "id": 1,
+            "content": "look at this",
+            "images": [{"mimeType": "image/png", "data": "not-an-image"}],
+        })
+        .to_string()
+            + "\n";
+        client.write_all(prompt.as_bytes()).await.unwrap();
+        let rejected = output.wait_for(|message| message["id"] == 1).await;
+        assert_eq!(rejected["status"], "error");
+        assert_eq!(
+            rejected["error"],
+            "RPC prompts do not support image attachments"
+        );
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+        assert!(lane.queued_messages().await.unwrap().is_empty());
+        assert!(harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap()
+            .is_empty());
+
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":2,\"content\":\"text still works\"}\n")
+            .await
+            .unwrap();
+        let accepted = output.wait_for(|message| message["id"] == 2).await;
+        assert_eq!(accepted["status"], "ok", "{accepted}");
+        assert_eq!(accepted["result"]["outcome"], "completed");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            1
+        );
+
+        client
+            .write_all(b"{\"type\":\"stop\",\"id\":3}\n")
+            .await
+            .unwrap();
+        assert_eq!(
+            tokio::time::timeout(std::time::Duration::from_secs(3), task)
+                .await
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        assert!(output
+            .messages()
+            .iter()
+            .any(|message| message["id"] == 3 && message["result"]["stopped"] == true));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_accepted_prompt_survives_automatic_overflow_compaction() {
+        use ice_agent::message::AgentMessage;
+        use ice_ai::providers::faux::{faux_assistant_message, FauxProvider, FauxScript, FauxStep};
+        use ice_ai::types::{StopReason, UserContent, UserMessage};
+        use ice_harness::compaction::settings::CodingAgentCompactionPolicy;
+        use tokio::io::AsyncWriteExt;
+
+        let mut model = FauxProvider::new(FauxScript::new()).default_model().clone();
+        model.context_window = 1_000;
+        model.max_tokens = 200;
+        let retry_saw_prompt = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let retry_saw_prompt_from_factory = Arc::clone(&retry_saw_prompt);
+        let recovered = FauxStep::factory(move |context| {
+            retry_saw_prompt_from_factory.store(
+                context.messages.iter().any(|message| matches!(
+                    message,
+                    ice_ai::types::Message::User(user)
+                        if matches!(&user.content, UserContent::Text(text) if text == "RPC_ACCEPTED_PROMPT")
+                )),
+                std::sync::atomic::Ordering::SeqCst,
+            );
+            faux_assistant_message("recovered RPC answer", StopReason::Stop)
+        });
+        let provider = FauxProvider::with_models(FauxScript::new(), vec![model.clone()]);
+        let mut overflow = faux_assistant_message("", StopReason::Error);
+        overflow.error_message = Some("context_length_exceeded: prompt is too long".into());
+        provider.script().set_responses(vec![
+            FauxStep::message(overflow),
+            FauxStep::text("Useful overflow checkpoint."),
+            recovered,
+        ]);
+        let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+            model,
+            models: vec![provider.clone()],
+            compaction: ice_harness::types::CompactionSettings {
+                enabled: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+        harness
+            .set_coding_compaction_policy(Some(CodingAgentCompactionPolicy {
+                keep_recent_tokens: 50,
+                ..Default::default()
+            }))
+            .await
+            .unwrap();
+        for (text, timestamp) in [("older session history", 1), ("recent history", 2)] {
+            harness
+                .append_message(AgentMessage::User(UserMessage::new(
+                    UserContent::Text(text.into()),
+                    timestamp,
+                )))
+                .await
+                .unwrap();
+        }
+
+        let lane = harness.lane("main");
+        let (mut client, output, task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+        let prompt = serde_json::json!({
+            "type": "prompt",
+            "id": 1,
+            "content": "RPC_ACCEPTED_PROMPT",
+        })
+        .to_string()
+            + "\n";
+        client.write_all(prompt.as_bytes()).await.unwrap();
+        let response = output.wait_for(|message| message["id"] == 1).await;
+        assert_eq!(response["status"], "ok", "{response}");
+        assert_eq!(response["result"]["outcome"], "completed");
+        assert_eq!(response["result"]["finalText"], "recovered RPC answer");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            3
+        );
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let checkpoint = entries
+            .iter()
+            .find_map(|entry| match entry {
+                ice_harness::session::types::Entry::Compaction(checkpoint) => Some(checkpoint),
+                _ => None,
+            })
+            .expect("overflow recovery commits a checkpoint");
+        assert!(checkpoint.retained_tail.iter().any(|message| matches!(
+            message,
+            AgentMessage::User(user)
+                if matches!(&user.content, UserContent::Text(text) if text == "RPC_ACCEPTED_PROMPT")
+        )));
+        assert!(retry_saw_prompt.load(std::sync::atomic::Ordering::SeqCst));
+        assert!(lane.queued_messages().await.unwrap().is_empty());
+
+        client
+            .write_all(b"{\"type\":\"stop\",\"id\":2}\n")
+            .await
+            .unwrap();
+        assert_eq!(
+            tokio::time::timeout(std::time::Duration::from_secs(3), task)
+                .await
+                .unwrap()
+                .unwrap(),
+            0
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_rejects_a_second_prompt_without_queueing_it() {
+        use tokio::io::AsyncWriteExt;
+        let long_response = "ordinary rpc response ".repeat(120);
+        let (harness, provider) = rpc_test_harness(&long_response, 20.0).await;
+        let lane = harness.lane("main");
+        let (mut client, output, task) =
+            start_test_rpc(harness, ice_extensions::UiDialogMailbox::new());
+
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"content\":\"accepted prompt\"}\n")
+            .await
+            .unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == 0
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("first prompt reaches the faux provider");
+
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":2,\"content\":\"must not queue\"}\n")
+            .await
+            .unwrap();
+        let rejected = output.wait_for(|message| message["id"] == 2).await;
+        assert_eq!(rejected["status"], "error");
+        assert_eq!(rejected["error"], "a run is already active");
+        assert!(lane.queued_messages().await.unwrap().is_empty());
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            1
+        );
+
+        client
+            .write_all(b"{\"type\":\"stop\",\"id\":3}\n")
+            .await
+            .unwrap();
+        assert_eq!(
+            tokio::time::timeout(std::time::Duration::from_secs(3), task)
+                .await
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        let messages = output.messages();
+        assert_eq!(
+            messages.iter().find(|message| message["id"] == 1).unwrap()["result"]["outcome"],
+            "aborted"
+        );
+        assert_eq!(
+            messages.iter().find(|message| message["id"] == 3).unwrap()["result"]["stopped"],
+            true
+        );
+        assert!(
+            lane.abort().await.is_err(),
+            "RPC return means no active run remains"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn rpc_immediate_stop_cancels_prompt_before_or_after_lane_start() {
         use tokio::io::AsyncWriteExt;
         let (harness, _) = rpc_test_harness("not completed", 20.0).await;
@@ -1508,6 +2002,24 @@ mod tests {
     }
 
     #[test]
+    fn suspended_outcome_has_a_non_success_exit_code() {
+        let outcome = HarnessRunOutcome::Suspended {
+            leaf_id: "leaf".into(),
+            final_entry_id: "entry".into(),
+            deferred: ice_ai::types::DeferredHandle {
+                provider: "faux".into(),
+                model_id: "faux".into(),
+                api: "faux".into(),
+                id: "deferred".into(),
+                expires_at: None,
+                poll_after_ms: None,
+                data: None,
+            },
+        };
+        assert_eq!(outcome_exit_code(&outcome), 1);
+    }
+
+    #[test]
     fn outcome_exit_code_maps_failed_aborted_to_1() {
         let failed = HarnessRunOutcome::Failed {
             leaf_id: "l".into(),
@@ -1532,6 +2044,18 @@ mod tests {
         assert_eq!(run_end_outcome_str(RunEndOutcome::Completed), "completed");
         assert_eq!(run_end_outcome_str(RunEndOutcome::Aborted), "aborted");
         assert_eq!(run_end_outcome_str(RunEndOutcome::Failed), "failed");
+    }
+
+    #[test]
+    fn wire_projection_filters_local_settled_barrier_but_retains_agent_end() {
+        assert!(wire_agent_event_json(&AgentEvent::RunSettled {
+            run_id: "local-run".into(),
+        })
+        .is_none());
+        let end = wire_agent_event_json(&AgentEvent::AgentEnd { messages: vec![] })
+            .expect("legacy terminal event must remain on the wire");
+        assert_eq!(end["type"], "agent_end");
+        assert_eq!(end["messages"], serde_json::json!([]));
     }
 
     #[test]

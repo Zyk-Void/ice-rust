@@ -45,12 +45,22 @@ pub enum RemoteEvent {
         message_count: usize,
         messages: Value,
     },
+    /// Forward-compatible representation of the local harness barrier. Default
+    /// JSON/RPC emission filters it in `modes` to preserve legacy wire schemas;
+    /// raw-loop AgentEnd remains the transmitted terminal lifecycle event.
+    RunSettled {
+        #[serde(rename = "runId")]
+        run_id: String,
+    },
     RetryScheduled {
         attempt: u32,
         #[serde(rename = "maxRetries")]
         max_retries: u32,
         #[serde(rename = "delayMs")]
         delay_ms: u64,
+        error: String,
+    },
+    RetryRefused {
         error: String,
     },
     TurnStart,
@@ -126,7 +136,9 @@ impl RemoteEvent {
             RemoteEvent::UiDialogClosed { .. } => "ui_dialog_closed",
             RemoteEvent::AgentStart => "agent_start",
             RemoteEvent::AgentEnd { .. } => "agent_end",
+            RemoteEvent::RunSettled { .. } => "run_settled",
             RemoteEvent::RetryScheduled { .. } => "retry_scheduled",
+            RemoteEvent::RetryRefused { .. } => "retry_refused",
             RemoteEvent::TurnStart => "turn_start",
             RemoteEvent::TurnEnd { .. } => "turn_end",
             RemoteEvent::MessageStart { .. } => "message_start",
@@ -148,6 +160,9 @@ impl RemoteEvent {
         use ice_ai::types::AssistantMessageEvent;
         match event {
             AgentEvent::AgentStart => RemoteEvent::AgentStart,
+            AgentEvent::RunSettled { run_id } => RemoteEvent::RunSettled {
+                run_id: run_id.clone(),
+            },
             AgentEvent::AgentEnd { messages } => RemoteEvent::AgentEnd {
                 message_count: messages.len(),
                 messages: serde_json::to_value(messages).unwrap_or(Value::Null),
@@ -161,6 +176,9 @@ impl RemoteEvent {
                 attempt: *attempt,
                 max_retries: *max_retries,
                 delay_ms: *delay_ms,
+                error: error.clone(),
+            },
+            AgentEvent::RetryRefused { error } => RemoteEvent::RetryRefused {
                 error: error.clone(),
             },
             AgentEvent::TurnStart => RemoteEvent::TurnStart,
@@ -286,7 +304,9 @@ pub enum RemoteCommand {
         #[serde(default)]
         cancelled: bool,
     },
-    /// Run a prompt on the remote `main` lane; events stream until `agent_end`.
+    /// Run a text-only prompt on the remote `main` lane; events stream until
+    /// `agent_end`. Image attachments and a second concurrent prompt are not
+    /// supported by this RPC command.
     Prompt { content: String },
     /// Abort the in-flight run.
     Abort,
@@ -431,6 +451,22 @@ mod tests {
             "type":"ui_dialog_closed", "requestId":"q",
         })).unwrap(), RemoteEvent::UiDialogClosed { request_id } if request_id == "q")
         );
+    }
+
+    #[test]
+    fn settled_barrier_projects_run_id_without_changing_raw_loop_terminal_semantics() {
+        let event = RemoteEvent::from_agent_event(&AgentEvent::RunSettled {
+            run_id: "run-a".into(),
+        });
+        assert_eq!(event.type_tag(), "run_settled");
+        assert!(!event.is_terminal());
+        let value = serde_json::to_value(event).unwrap();
+        assert_eq!(
+            value,
+            serde_json::json!({"type":"run_settled", "runId":"run-a"})
+        );
+        let decoded: RemoteEvent = serde_json::from_value(value).unwrap();
+        assert!(matches!(decoded, RemoteEvent::RunSettled { run_id } if run_id == "run-a"));
     }
 
     #[test]

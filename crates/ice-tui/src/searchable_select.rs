@@ -82,6 +82,24 @@ impl SearchableSelectList {
         }
     }
 
+    /// Route configured selection keys while retaining ordinary search editing.
+    pub fn handle_key_with_bindings(
+        &self,
+        key: KeyEvent,
+        bindings: &crate::keybindings::Keybindings,
+    ) {
+        if let Some(normalized) = bindings.selection_key(&key) {
+            self.list.handle_key(normalized);
+        } else if self.list.is_multi_select()
+            && key.code == KeyCode::Char(' ')
+            && key.modifiers == KeyModifiers::NONE
+        {
+            self.list.handle_key(key);
+        } else {
+            self.input.handle_key(key);
+        }
+    }
+
     /// Whether `key` should drive the list instead of the search box.
     fn key_belongs_to_list(key: KeyEvent, multi_select: bool) -> bool {
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);

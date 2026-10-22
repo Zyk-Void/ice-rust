@@ -6,6 +6,16 @@ sync mechanics, `ICE_PORTING.md` the feature gaps, and `CONTRIBUTING.md` the
 inherited upstream conventions. Where they disagree, this file wins for this
 fork.
 
+## Language
+
+- Use English for assistant replies and user-facing documentation.
+- When work encounters non-English prose in a file, translate the prose into
+  English as part of the same focused change. Preserve source meaning and keep
+  code, commands, identifiers, configuration keys, URLs and intentional quoted
+  user content unchanged unless they themselves are the translation target.
+- Translate source documentation first, then regenerate any embedded copies with
+  `sh scripts/sync-embedded-docs.sh`.
+
 ## 1. What this repo is
 
 - **ice-rust** (`github.com/Zyk-Void/ice-rust`) is a fork of
