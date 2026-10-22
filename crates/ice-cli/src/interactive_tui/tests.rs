@@ -1287,8 +1287,7 @@ pub(super) fn test_tui_state() -> Arc<TuiState> {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     })
 }
 
@@ -2730,8 +2729,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     });
 
     // The drain handler takes `Arc<TuiAltScreen>`, which needs a real
@@ -4149,8 +4147,7 @@ fn test_autocomplete_slash_suggestions_render() {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -4245,8 +4242,7 @@ fn test_select_list_swap_restores_editor() {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     });
     let editor_container = Arc::new(Container::new());
     let editor = Arc::new(Editor::simple());
@@ -4344,8 +4340,7 @@ fn test_message_history_browse_restores_draft() {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     });
     let editor = Arc::new(Editor::simple());
 
@@ -4446,8 +4441,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     });
     {
         let mut combined = CombinedAutocompleteProvider::new();
@@ -4599,8 +4593,7 @@ fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     })
 }
 
@@ -5610,6 +5603,217 @@ fn selection_copies_the_painted_cells_as_plain_text() {
             .lines()
             .count(),
         3
+    );
+
+    let image_row = format!("left\x1b_Ga=T,f=100,t=d,i=42;HIDDEN_IMAGE_PAYLOAD\x1b\\right");
+    assert_eq!(
+        extract_selected_text(&[image_row], (0, 0), (8, 0)).as_deref(),
+        Some("leftright")
+    );
+}
+
+struct SelectionTestTerminal {
+    width: usize,
+    height: usize,
+}
+
+impl ice_tui::terminal::Terminal for SelectionTestTerminal {
+    fn info(&self) -> ice_tui::terminal::TerminalInfo {
+        ice_tui::terminal::TerminalInfo {
+            columns: self.width,
+            rows: self.height,
+            ..Default::default()
+        }
+    }
+    fn write(&self, _: &str) {}
+    fn hide_cursor(&self) {}
+    fn show_cursor(&self) {}
+    fn move_cursor(&self, _: usize, _: usize) {}
+    fn clear_screen(&self) {}
+    fn set_title(&self, _: &str) {}
+    fn enable_mouse(&self) {}
+    fn disable_mouse(&self) {}
+    fn enter_raw_mode(&self) {}
+    fn exit_raw_mode(&self) {}
+    fn refresh_size(&self) {}
+    fn start(
+        &self,
+        _: Box<dyn Fn(ice_tui::terminal::InputEvent) + Send + Sync>,
+        _: Box<dyn Fn() + Send + Sync>,
+    ) {
+    }
+    fn stop(&self) {}
+    fn is_tty(&self) -> bool {
+        false
+    }
+    fn set_progress(&self, _: bool) {}
+    fn flush(&self) {}
+}
+
+fn selection_test_tui(root: Arc<dyn Component>, width: usize, height: usize) -> Arc<TuiAltScreen> {
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(SelectionTestTerminal { width, height }),
+        false,
+        None,
+    ));
+    tui.set_layout_root(Some(root));
+    tui.start_readerless();
+    tui
+}
+
+#[test]
+fn screen_drag_crosses_from_transcript_into_prompt_and_freezes_live_updates() {
+    let transcript_text = Arc::new(Text::new("TRANSCRIPT-ROW", 0, 0));
+    let prompt_text = Arc::new(Text::new("PROMPT-ROW\n+-------+\nFOOTER-ROW", 0, 0));
+    let scroll = Arc::new(ScrollView::new(
+        transcript_text.clone(),
+        ScrollViewOptions {
+            primary: true,
+            ..Default::default()
+        },
+    ));
+    let root: Arc<dyn Component> = Arc::new(VStack::from_children(vec![
+        StackChild::Entry(StackEntry::new(scroll.clone()).basis(0).grow(1).min_size(1)),
+        StackChild::Entry(StackEntry::new(prompt_text.clone()).basis(3).shrink(0)),
+    ]));
+    let tui = selection_test_tui(root, 32, 9);
+    let transcript = tui.transcript_snapshot().unwrap();
+    let start = (transcript.viewport.x, transcript.viewport.y);
+    let pending = begin_mouse_selection(&tui, start);
+    assert!(finish_mouse_selection(&pending, &tui, (10, 8)).is_none());
+
+    let mut gesture = pending;
+    assert!(update_mouse_selection(&mut gesture, &tui, (31, 8)));
+    assert!(matches!(
+        gesture,
+        SelectionGesture::Dragging {
+            source: SelectionSource::Screen { .. }
+        }
+    ));
+    let captured = tui.screen_snapshot().unwrap();
+    let copied = mouse_selection_text_for_copy(true, &gesture, &tui, (31, 8)).unwrap();
+    assert!(copied.contains("TRANSCRIPT-ROW"), "{copied:?}");
+    assert!(copied.contains("PROMPT-ROW"), "{copied:?}");
+    assert!(copied.contains("+-------+"), "{copied:?}");
+    assert!(copied.contains("FOOTER-ROW"), "{copied:?}");
+    assert!(mouse_selection_text_for_copy(false, &gesture, &tui, (31, 8)).is_none());
+
+    transcript_text.set_text("UPDATED-TRANSCRIPT");
+    prompt_text.set_text("UPDATED-PROMPT\n+-------+\nUPDATED-FOOTER");
+    tui.request_render(false);
+    assert_eq!(tui.screen_snapshot().unwrap().rows, captured.rows);
+    assert!(mouse_selection_text_for_copy(true, &gesture, &tui, (31, 8))
+        .unwrap()
+        .contains("TRANSCRIPT-ROW"));
+
+    tui.clear_screen_selection();
+    tui.request_render(true);
+    let updated = tui.screen_snapshot().unwrap();
+    let updated_text = updated
+        .rows
+        .iter()
+        .map(|row| ice_tui::strip_ansi(row))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(updated_text.contains("UPDATED-TRANSCRIPT"));
+    assert!(updated_text.contains("UPDATED-PROMPT"));
+}
+
+#[test]
+fn transcript_selection_allows_only_append_only_row_updates() {
+    let original = vec!["row one".to_owned(), "row two".to_owned()];
+    assert!(transcript_rows_unchanged(
+        &original,
+        &[
+            "row one".to_owned(),
+            "row two".to_owned(),
+            "row three".to_owned()
+        ]
+    ));
+    assert!(!transcript_rows_unchanged(
+        &original,
+        &["row one".to_owned(), "reflowed row".to_owned()]
+    ));
+    assert!(!transcript_rows_unchanged(
+        &original,
+        &["row one".to_owned()]
+    ));
+}
+
+#[test]
+fn screen_selection_click_candidates_do_not_copy_and_lifecycle_changes_cancel() {
+    let text = Arc::new(Text::new("PROMPT draft", 0, 0));
+    let root: Arc<dyn Component> = text.clone();
+    let tui = selection_test_tui(root, 24, 5);
+    let pending = begin_mouse_selection(&tui, (2, 0));
+    assert!(mouse_selection_text_for_copy(true, &pending, &tui, (8, 0)).is_none());
+    assert!(mouse_selection_cancels_for_wheel(&pending));
+
+    let mut drag = pending;
+    assert!(update_mouse_selection(&mut drag, &tui, (8, 0)));
+    assert!(mouse_selection_text_for_copy(true, &drag, &tui, (8, 0)).is_some());
+    assert!(mouse_selection_cancels_for_wheel(&drag));
+    tui.note_resize();
+    assert!(mouse_selection_text_for_copy(true, &drag, &tui, (8, 0)).is_none());
+    assert!(!update_mouse_selection(&mut drag, &tui, (9, 0)));
+
+    let overlay = tui.show_overlay(
+        Arc::new(Text::new("VISIBLE", 0, 0)),
+        Some(ice_tui::OverlayOptions {
+            width: Some(ice_tui::tui::SizeValue::Absolute(7)),
+            max_height: Some(ice_tui::tui::SizeValue::Absolute(1)),
+            anchor: ice_tui::OverlayAnchor::TopLeft,
+            ..Default::default()
+        }),
+    );
+    let mut overlay_drag = begin_mouse_selection(&tui, (0, 0));
+    assert!(update_mouse_selection(&mut overlay_drag, &tui, (6, 0)));
+    let overlay_text = mouse_selection_text_for_copy(true, &overlay_drag, &tui, (6, 0)).unwrap();
+    assert_eq!(overlay_text, "VISIBLE");
+    overlay.hide();
+    assert!(mouse_selection_text_for_copy(true, &overlay_drag, &tui, (6, 0)).is_none());
+
+    let transcript = SelectionGesture::Dragging {
+        source: SelectionSource::Transcript {
+            logical_anchor: (1, 1),
+            content_width: 24,
+            original_lines: Arc::new(Vec::new()),
+            generation: tui.screen_generation(),
+        },
+    };
+    assert!(!mouse_selection_cancels_for_wheel(&transcript));
+}
+
+#[test]
+fn prompt_click_mapping_places_the_editor_caret_without_editing_text() {
+    let editor = Arc::new(Editor::simple());
+    editor.set_prompt("> ");
+    editor.set_text("hello world");
+    let root: Arc<dyn Component> = editor.clone();
+    let tui = selection_test_tui(root, 24, 5);
+    let rect = tui.component_rect(editor.as_ref()).unwrap();
+
+    assert!(
+        place_editor_caret_from_screen_click(&tui, &editor, rect.x + 2 + 3, rect.y + 1,),
+        "editor rect {rect:?}"
+    );
+    assert_eq!(editor.cursor_position(), (0, 3));
+    assert_eq!(editor.get_text(), "hello world");
+
+    let cursor = editor.cursor_position();
+    let mut drag = begin_mouse_selection(&tui, (rect.x, rect.y + 1));
+    assert!(update_mouse_selection(
+        &mut drag,
+        &tui,
+        (rect.x + 10, rect.y + 1),
+    ));
+    assert_eq!(editor.cursor_position(), cursor);
+    assert_eq!(editor.get_text(), "hello world");
+    assert!(!editor.has_selection());
+    assert!(
+        mouse_selection_text_for_copy(true, &drag, &tui, (rect.x + 10, rect.y + 1))
+            .unwrap()
+            .contains("hello")
     );
 }
 

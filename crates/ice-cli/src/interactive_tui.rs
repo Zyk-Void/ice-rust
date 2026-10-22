@@ -1506,8 +1506,7 @@ pub async fn interactive_tui(
         pending_snapshot: std::sync::Mutex::new(
             ice_harness::agent_harness::QueuedMessages::default(),
         ),
-        selection_start: std::sync::Mutex::new(None),
-        selection_end: std::sync::Mutex::new(None),
+        selection_gesture: std::sync::Mutex::new(SelectionGesture::Idle),
     });
 
     let _compaction_watcher = harness.watch({
@@ -2010,9 +2009,7 @@ pub async fn interactive_tui(
             // Windows they carry the console buffer size, not the window).
             if let Event::Resize(..) = ev {
                 sync_editor_viewport(&editor_for_key);
-                *state_for_key.selection_start.lock().unwrap() = None;
-                *state_for_key.selection_end.lock().unwrap() = None;
-                tui_for_key.set_selection(None);
+                cancel_mouse_selection(&state_for_key, &tui_for_key);
                 tui_for_key.note_resize();
                 continue;
             }
@@ -2020,6 +2017,27 @@ pub async fn interactive_tui(
             // scrolling). Previously every non-Key event was dropped, so a
             // wheel had zero effect
             if let Event::Mouse(m) = ev {
+                use crossterm::event::{MouseButton, MouseEventKind};
+                let cancels_screen_drag = matches!(
+                    m.kind,
+                    MouseEventKind::ScrollUp | MouseEventKind::ScrollDown
+                ) && mouse_selection_cancels_for_wheel(
+                    &state_for_key.selection_gesture.lock().unwrap(),
+                );
+                if cancels_screen_drag {
+                    cancel_mouse_selection(&state_for_key, &tui_for_key);
+                    tui_for_key.request_render(true);
+                }
+                let cancels_for_right_click =
+                    matches!(m.kind, MouseEventKind::Down(MouseButton::Right))
+                        && !matches!(
+                            &*state_for_key.selection_gesture.lock().unwrap(),
+                            SelectionGesture::Idle
+                        );
+                if cancels_for_right_click {
+                    cancel_mouse_selection(&state_for_key, &tui_for_key);
+                    tui_for_key.request_render(true);
+                }
                 if side_questions::input_allowed(&state_for_key)
                     && side_for_key
                         .lock()
@@ -2028,13 +2046,6 @@ pub async fn interactive_tui(
                 {
                     continue;
                 }
-                if tui_for_key.handle_scroll_to_end_indicator_mouse_event(&m) {
-                    *state_for_key.selection_start.lock().unwrap() = None;
-                    *state_for_key.selection_end.lock().unwrap() = None;
-                    tui_for_key.set_selection(None);
-                    continue;
-                }
-                use crossterm::event::MouseEventKind;
                 match m.kind {
                     MouseEventKind::ScrollUp => {
                         let delta = -MOUSE_WHEEL_SCROLL_LINES;
@@ -2048,7 +2059,7 @@ pub async fn interactive_tui(
                             tui_for_key.request_render_reusing_scroll_content();
                         }
                     }
-                    MouseEventKind::Down(crossterm::event::MouseButton::Right) if cfg!(windows) => {
+                    MouseEventKind::Down(MouseButton::Right) if cfg!(windows) => {
                         // upstream treats Windows right-click as a clipboard
                         // paste, rather than letting the console deliver the
                         // clipboard contents as individual key events. This is
@@ -2062,93 +2073,116 @@ pub async fn interactive_tui(
                             }
                         }
                     }
-                    MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
-                        // Start selection tracking. `selection_end` doubles as the
-                        // "a real drag happened" marker: a plain tap never sets
-                        // it, so it can never overwrite the clipboard.
-                        *state_for_key.selection_start.lock().unwrap() =
-                            tui_for_key.transcript_snapshot().and_then(|snapshot| {
-                                snapshot
-                                    .content_position(m.column as usize, m.row as usize, false)
-                                    .map(|(column, row)| (column, row, snapshot.content_width))
-                            });
-                        *state_for_key.selection_end.lock().unwrap() = None;
+                    MouseEventKind::Down(MouseButton::Left) => {
+                        tui_for_key.set_selection(None);
+                        tui_for_key.clear_screen_selection();
+                        *state_for_key.selection_gesture.lock().unwrap() = begin_mouse_selection(
+                            &tui_for_key,
+                            (m.column as usize, m.row as usize),
+                        );
                     }
-                    MouseEventKind::Drag(crossterm::event::MouseButton::Left) => {
-                        // Motion with the button held = a genuine selection drag.
-                        // (Terminals only report this with button-event mouse
-                        // tracking, which `ProcessTerminal` enables.)
-                        let start = *state_for_key.selection_start.lock().unwrap();
-                        if let Some((column, row, width)) = start {
-                            *state_for_key.selection_end.lock().unwrap() = Some((m.column, m.row));
-                            // Show the range being dragged (upstream
-                            // `applySelection`); the copy still happens on Up.
-                            let end = tui_for_key.transcript_snapshot().and_then(|snapshot| {
-                                (snapshot.content_width == width)
-                                    .then(|| {
-                                        snapshot.content_position(
-                                            m.column as usize,
-                                            m.row as usize,
-                                            true,
-                                        )
-                                    })
-                                    .flatten()
-                            });
-                            tui_for_key.set_selection(end.map(|end| ((column, row), end)));
+                    MouseEventKind::Moved => {
+                        let hovered = tui_for_key.screen_snapshot().and_then(|snapshot| {
+                            expand_link_at(&snapshot, (m.column as usize, m.row as usize))
+                        });
+                        if state_for_key.transcript_view().set_hover(hovered) {
+                            tui_for_key.request_render(false);
+                        }
+                    }
+                    MouseEventKind::Drag(MouseButton::Left) => {
+                        let mut gesture = state_for_key.selection_gesture.lock().unwrap();
+                        if update_mouse_selection(
+                            &mut gesture,
+                            &tui_for_key,
+                            (m.column as usize, m.row as usize),
+                        ) {
                             tui_for_key.request_render_reusing_scroll_content();
                         }
                     }
-                    MouseEventKind::Up(crossterm::event::MouseButton::Left) => {
-                        // End selection and auto-copy if enabled
-                        if let Some(start) = *state_for_key.selection_start.lock().unwrap() {
-                            let end = (m.column, m.row);
-
-                            // Only auto-copy when the pointer actually MOVED with
-                            // the button held (`Drag` set `selection_end`). A plain
-                            // click/tap — even one whose Down/Up cells differ by a
-                            // pixel over RDP — must not touch the clipboard: it used
-                            // to fire `extract_selected_text`, which copies whatever
-                            // rendered TUI line sat under the pointer, silently
-                            // clobbering the user's real clipboard so the next paste
-                            // returned that stale text.
-                            let is_drag = state_for_key.selection_end.lock().unwrap().is_some();
-                            *state_for_key.selection_end.lock().unwrap() = Some(end);
-
-                            // Check if auto-copy is enabled
-                            let auto_copy = crate::settings::load_settings()
-                                .ok()
-                                .and_then(|s| s.fullscreen_copy_on_select)
-                                .unwrap_or(true);
-
-                            if auto_copy && is_drag {
-                                // Preserve the logical start even if the viewport
-                                // moved while dragging, and exclude the dock.
-                                if let Some(selected_text) =
-                                    tui_for_key.transcript_snapshot().and_then(|snapshot| {
-                                        extract_transcript_selection(&snapshot, start, end)
-                                    })
+                    MouseEventKind::Up(MouseButton::Left) => {
+                        let gesture = state_for_key.selection_gesture.lock().unwrap().clone();
+                        match gesture {
+                            SelectionGesture::PendingClick {
+                                origin, generation, ..
+                            } if generation == tui_for_key.screen_generation() => {
+                                if tui_for_key.handle_scroll_to_end_indicator_click(
+                                    origin.0.min(u16::MAX as usize) as u16,
+                                    origin.1.min(u16::MAX as usize) as u16,
+                                ) {
+                                    cancel_mouse_selection(&state_for_key, &tui_for_key);
+                                    continue;
+                                }
+                                if let Some(snapshot) = tui_for_key
+                                    .screen_snapshot()
+                                    .filter(|snapshot| snapshot.generation == generation)
                                 {
-                                    if !selected_text.trim().is_empty()
-                                        && copy_to_clipboard(&selected_text)
-                                    {
-                                        let line_count = selected_text.split('\n').count();
-                                        show_copy_notice(
+                                    if !snapshot.has_capturing_overlay {
+                                        if click_link_at(&snapshot, origin).is_some_and(|id| {
+                                            state_for_key.transcript_view().toggle_cell(id)
+                                        }) {
+                                            cancel_mouse_selection(&state_for_key, &tui_for_key);
+                                            tui_for_key.request_render(false);
+                                            continue;
+                                        }
+                                        if side_questions::input_allowed(&state_for_key)
+                                            && side_for_key.lock().unwrap().click(
+                                                origin.0,
+                                                origin.1,
+                                                &tui_for_key,
+                                            )
+                                        {
+                                            cancel_mouse_selection(&state_for_key, &tui_for_key);
+                                            continue;
+                                        }
+                                        place_editor_caret_from_screen_click(
                                             &tui_for_key,
-                                            &runtime_for_key,
-                                            line_count,
+                                            &editor_for_key,
+                                            origin.0,
+                                            origin.1,
                                         );
                                     }
                                 }
                             }
+                            SelectionGesture::Dragging { .. } => {
+                                let end = (m.column as usize, m.row as usize);
+                                let auto_copy = crate::settings::load_settings()
+                                    .ok()
+                                    .and_then(|settings| settings.fullscreen_copy_on_select)
+                                    .unwrap_or(true);
+                                if let Some(selected_text) = mouse_selection_text_for_copy(
+                                    auto_copy,
+                                    &gesture,
+                                    &tui_for_key,
+                                    end,
+                                ) {
+                                    if !selected_text.trim().is_empty()
+                                        && copy_to_clipboard(&selected_text)
+                                    {
+                                        show_copy_notice(
+                                            &tui_for_key,
+                                            &runtime_for_key,
+                                            selected_text.split('\n').count(),
+                                        );
+                                    }
+                                }
+                            }
+                            SelectionGesture::Idle | SelectionGesture::PendingClick { .. } => {}
                         }
-                        *state_for_key.selection_start.lock().unwrap() = None;
-                        *state_for_key.selection_end.lock().unwrap() = None;
-                        tui_for_key.set_selection(None);
-                        tui_for_key.request_render_reusing_scroll_content();
+                        cancel_mouse_selection(&state_for_key, &tui_for_key);
+                        tui_for_key.request_render(true);
                     }
                     _ => {}
                 }
                 continue;
+            }
+            if matches!(&ev, Event::Key(_) | Event::Paste(_))
+                && !matches!(
+                    &*state_for_key.selection_gesture.lock().unwrap(),
+                    SelectionGesture::Idle
+                )
+            {
+                cancel_mouse_selection(&state_for_key, &tui_for_key);
+                tui_for_key.request_render_reusing_scroll_content();
             }
             let Event::Key(key) = ev else {
                 if let Event::Paste(text) = ev {

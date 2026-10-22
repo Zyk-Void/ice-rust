@@ -431,6 +431,7 @@ impl SideQuestionUi {
         }
         let geometry = (width, suspended, self.active.clone());
         if self.geometry.as_ref() != Some(&geometry) {
+            tui.invalidate_screen_selection();
             self.workspace.clear();
             if let Some(view) = self.view().filter(|_| !suspended) {
                 if !side_only {
@@ -538,12 +539,6 @@ impl SideQuestionUi {
                 tui.request_render(false);
                 true
             }
-            MouseEventKind::Down(MouseButton::Left) => {
-                self.focus(over_side, tui);
-                tui.request_render(false);
-                // Main's existing selection code assumes full-width coordinates.
-                true
-            }
             MouseEventKind::Down(MouseButton::Right) if over_side && cfg!(windows) => {
                 if let Some(text) = read_clipboard_text() {
                     view.editor.handle_paste(&text);
@@ -551,8 +546,52 @@ impl SideQuestionUi {
                 tui.request_render(false);
                 true
             }
+            MouseEventKind::Down(MouseButton::Left)
+            | MouseEventKind::Drag(MouseButton::Left)
+            | MouseEventKind::Up(MouseButton::Left) => false,
             _ => over_side,
         }
+    }
+
+    /// Route a confirmed left click after the selection dispatcher has ruled
+    /// out a drag. Focus changes and prompt caret placement therefore cannot
+    /// fire while the user is selecting across the pane.
+    pub(super) fn click(&mut self, column: usize, row: usize, tui: &Arc<TuiAltScreen>) -> bool {
+        if self.suspended {
+            return false;
+        }
+        let Some(view) = self.view() else {
+            return false;
+        };
+        let width = tui.width();
+        let side_only = self.regular || width < 100;
+        let over_side = side_only || column > width / 2;
+        self.focus(over_side, tui);
+        let editor = if over_side {
+            view.editor.clone()
+        } else {
+            self.main_editor.clone()
+        };
+        if let Some(rect) = tui.component_rect(editor.as_ref()) {
+            if column >= rect.x
+                && column < rect.x.saturating_add(rect.width)
+                && row >= rect.y
+                && row < rect.y.saturating_add(rect.height)
+            {
+                let visible_rows = rect.height.saturating_sub(2).max(1);
+                let rendered_row = row
+                    .saturating_sub(rect.y)
+                    .saturating_sub(1)
+                    .min(visible_rows - 1);
+                editor.set_cursor_at_visual_position(
+                    rendered_row,
+                    column.saturating_sub(rect.x),
+                    rect.width,
+                );
+            }
+        }
+        tui.request_render_reusing_scroll_content();
+        true
     }
 }
 

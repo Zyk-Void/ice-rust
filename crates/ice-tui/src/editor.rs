@@ -698,6 +698,60 @@ impl Editor {
         self.reset_preferred_visual_column();
     }
 
+    /// Place the caret from a zero-based rendered content row and display-cell
+    /// column. `width` is the editor's actual render width; wrapping and wide
+    /// graphemes use the same layout as rendering and vertical navigation.
+    pub fn set_cursor_at_visual_position(
+        &self,
+        visual_row: usize,
+        display_column: usize,
+        width: usize,
+    ) -> bool {
+        let width = width.max(1);
+        let prompt = self
+            .prompt
+            .lock()
+            .map(|prompt| prompt.clone())
+            .unwrap_or_default();
+        let prompt_width = crate::ansi::visible_width(&prompt);
+        let prompt_width = if prompt_width > 0
+            && prompt_width + 2 <= width.saturating_sub(self.options.padding_x * 2)
+        {
+            prompt_width
+        } else {
+            0
+        };
+        let text_left = self.options.padding_x + prompt_width;
+        let content_width = width.saturating_sub(text_left).max(1);
+        let visual_width = content_width.saturating_sub(1).max(1);
+
+        let Ok(mut state) = self.state.lock() else {
+            return false;
+        };
+        let visual = visual_lines(&state.lines, visual_width);
+        let Some(line) = visual.get(
+            state
+                .scroll_offset
+                .saturating_add(visual_row)
+                .min(visual.len().saturating_sub(1)),
+        ) else {
+            return false;
+        };
+        let target_column = display_column.saturating_sub(text_left);
+        let byte_column = byte_column_at_visual_column(
+            &state.lines[line.logical_row],
+            line.start,
+            line.end,
+            target_column,
+        );
+        state.cursor_row = line.logical_row;
+        state.cursor_col = byte_column;
+        state.selection_anchor = None;
+        drop(state);
+        self.reset_preferred_visual_column();
+        true
+    }
+
     /// Snapshot the current text + caret state (for undo/redo), including the
     /// folded-paste store so undo can bring a dropped paste back.
     fn snapshot_state(&self) -> EditorSnapshot {
@@ -2818,6 +2872,39 @@ l12",
         assert_eq!(editor.cursor_position(), (0, 5));
         editor.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
         assert_eq!(editor.cursor_position(), (0, 13));
+    }
+
+    #[test]
+    fn display_cell_click_uses_prompt_wrapping_and_grapheme_layout() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let editor = Editor::new(
+            EditorOptions {
+                padding_x: 1,
+                ..Default::default()
+            },
+            EditorStyle::default(),
+            Arc::new(Keybindings::new()),
+        );
+        editor.set_prompt("❯ ");
+        editor.set_text("abcdefghijklmnop");
+        editor.render(10); // prompt + padding leave six cells per visual row.
+        editor.handle_key(KeyEvent::new(KeyCode::Home, KeyModifiers::NONE));
+        editor.handle_key(KeyEvent::new(KeyCode::Right, KeyModifiers::SHIFT));
+        assert!(editor.has_selection());
+
+        assert!(editor.set_cursor_at_visual_position(1, 1 + 2 + 2, 10));
+        assert_eq!(editor.cursor_position(), (0, 8));
+        assert!(!editor.has_selection());
+
+        editor.set_text("e\u{301}👩‍💻x");
+        editor.render(20);
+        // The second cell of the joined emoji maps before the whole grapheme.
+        assert!(editor.set_cursor_at_visual_position(0, 1 + 2 + 2, 20));
+        assert_eq!(editor.cursor_position(), (0, 3));
+        // The cell after the joined emoji maps to its byte end.
+        assert!(editor.set_cursor_at_visual_position(0, 1 + 2 + 3, 20));
+        assert_eq!(editor.cursor_position(), (0, 14));
     }
 
     #[test]

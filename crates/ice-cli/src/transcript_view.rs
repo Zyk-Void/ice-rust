@@ -353,22 +353,66 @@ impl TranscriptView {
             return "No tool output yet".to_string();
         };
         let from = self.expand_from_index(&cells);
-        let id = cell_id(newest);
+        let expanded = self.flip_cell(cell_id(newest), cells.len() - 1, from);
+        format!(
+            "Newest tool call: {}",
+            if expanded { "expanded" } else { "collapsed" }
+        )
+    }
+
+    /// Toggle one tool cell by address (a click on its collapsed row). Returns
+    /// false when no such cell is in the transcript any more.
+    pub fn toggle_cell(&self, id: usize) -> bool {
+        let children = self.chat.get_children();
+        // Bash panels are not cells (the global toggle owns them) but a click
+        // opens or closes just the one under the pointer.
+        if let Some(bash) = children
+            .iter()
+            .filter(|c| cell_id(c) == id)
+            .find_map(|c| c.as_any().downcast_ref::<BashExecutionComponent>())
+        {
+            bash.set_expanded(!bash.is_expanded());
+            return true;
+        }
+        let cells: Vec<_> = children.iter().filter(|c| is_tool_cell(c)).collect();
+        let Some(index) = cells.iter().position(|c| cell_id(c) == id) else {
+            return false;
+        };
+        let from = self.expand_from_index(&cells);
+        self.flip_cell(id, index, from);
+        true
+    }
+
+    /// Highlight the collapsed hint of the cell at `id` (the one under the
+    /// pointer) and clear it everywhere else. Returns whether anything changed.
+    pub fn set_hover(&self, id: Option<usize>) -> bool {
+        let mut changed = false;
+        for child in self.chat.get_children() {
+            let hovered = id == Some(cell_id(&child));
+            let any = child.as_any();
+            if let Some(tool) = any.downcast_ref::<ToolExecutionComponent>() {
+                changed |= tool.set_hovered(hovered);
+            } else if let Some(bash) = any.downcast_ref::<BashExecutionComponent>() {
+                changed |= bash.set_hovered(hovered);
+            }
+        }
+        changed
+    }
+
+    /// Flip the cell at `index` against its effective state and apply it.
+    fn flip_cell(&self, id: usize, index: usize, from: Option<usize>) -> bool {
         let expanded = {
             let mut state = self.expanded.lock().unwrap();
             let current = state
                 .overrides
                 .get(&id)
                 .copied()
-                .unwrap_or_else(|| from.is_some_and(|from| cells.len() - 1 >= from));
+                .unwrap_or_else(|| from.is_some_and(|from| index >= from));
             state.overrides.insert(id, !current);
             !current
         };
         self.apply_expansion();
-        format!(
-            "Newest tool call: {}",
-            if expanded { "expanded" } else { "collapsed" }
-        )
+        expanded
     }
 
     /// Index of the first open cell: `None` when collapsed, `Some(0)` for
@@ -1485,6 +1529,45 @@ mod tests {
 
         let (empty, _) = cells(0);
         assert_eq!(empty.toggle_newest(), "No tool output yet");
+    }
+
+    #[test]
+    fn toggle_cell_flips_only_the_addressed_cell_and_rejects_unknown_ids() {
+        let (view, tools) = cells(3);
+        let id = Arc::as_ptr(&tools[1]) as usize;
+        assert!(view.toggle_cell(id));
+        assert_eq!(open(&tools), [false, true, false]);
+        assert!(view.toggle_cell(id));
+        assert_eq!(open(&tools), [false, false, false]);
+        assert!(!view.toggle_cell(id + 1));
+    }
+
+    #[test]
+    fn click_toggles_one_bash_panel_and_hover_tracks_the_pointer_cell() {
+        let chat = Arc::new(Container::new());
+        let bashes: Vec<_> = (0..2)
+            .map(|i| {
+                let bash = Arc::new(BashExecutionComponent::new(format!("cmd{i}")));
+                chat.add_child(bash.clone());
+                bash
+            })
+            .collect();
+        let view = TranscriptView::new(chat);
+        let id = Arc::as_ptr(&bashes[1]) as usize;
+        assert!(view.toggle_cell(id));
+        assert_eq!(
+            [bashes[0].is_expanded(), bashes[1].is_expanded()],
+            [false, true]
+        );
+        assert!(view.toggle_cell(id));
+        assert!(!bashes[1].is_expanded());
+
+        assert!(view.set_hover(Some(id)));
+        assert!(
+            !view.set_hover(Some(id)),
+            "unchanged hover must not repaint"
+        );
+        assert!(view.set_hover(None));
     }
 
     #[test]

@@ -113,6 +113,8 @@ pub struct ToolExecutionComponent {
     /// Standalone transcript items are separated by a blank row; members of a
     /// tool group are not (ice `setLeadingSpacer`).
     leading_spacer: AtomicBool,
+    /// Pointer is over the collapsed hint row (see `set_hovered`).
+    hovered: AtomicBool,
     /// Memoized render of a `Completed`/`Failed` panel. Mirrors upstream's
     /// per-component render cache (`tool-execution.ts` + `layout.ts
     /// renderCached`), which is what keeps a transcript repaint from
@@ -148,6 +150,7 @@ impl ToolExecutionComponent {
             plan_state: Mutex::new(None),
             revision: AtomicU64::new(0),
             leading_spacer: AtomicBool::new(true),
+            hovered: AtomicBool::new(false),
             cache: Mutex::new(None),
         }
     }
@@ -156,6 +159,16 @@ impl ToolExecutionComponent {
     pub fn set_leading_spacer(&self, enabled: bool) {
         self.leading_spacer.store(enabled, Ordering::Release);
         self.bump();
+    }
+
+    /// Highlight the collapsed hint row while the pointer is over it. Returns
+    /// whether the state changed, so callers repaint only then.
+    pub fn set_hovered(&self, hovered: bool) -> bool {
+        let changed = self.hovered.swap(hovered, Ordering::AcqRel) != hovered;
+        if changed {
+            self.bump();
+        }
+        changed
     }
 
     /// Invalidate the memoized render (state changed).
@@ -312,7 +325,12 @@ impl ToolExecutionComponent {
         self.render_panel_with(width, theme, tool_style())
     }
 
-    fn render_panel_with(&self, width: usize, theme: &Theme, style: ToolStyle) -> Vec<String> {
+    pub(crate) fn render_panel_with(
+        &self,
+        width: usize,
+        theme: &Theme,
+        style: ToolStyle,
+    ) -> Vec<String> {
         if width == 0 {
             return Vec::new();
         }
@@ -455,6 +473,8 @@ impl ToolExecutionComponent {
                 markdown: *result_markdown,
                 expanded: *expanded,
                 leading_spacer: self.leading_spacer.load(Ordering::Acquire),
+                expand_id: Some(self as *const Self as usize),
+                hovered: self.hovered.load(Ordering::Acquire),
             };
             return render_compact(colors, &compact, width);
         }
@@ -831,6 +851,30 @@ pub(crate) fn format_elapsed(duration: std::time::Duration) -> String {
     }
 }
 
+/// Link scheme of the collapsed "… +N lines" row; the rest is the cell address.
+const EXPAND_LINK_PREFIX: &str = "ice://expand/";
+
+/// Link scheme wrapped around every row of an expanded cell. Unlike the hint,
+/// it is found by row alone so a click on blank space beside the text counts.
+const COLLAPSE_LINK_PREFIX: &str = "ice://collapse/";
+
+/// Cell address of the expand link covering `column` of a painted screen row.
+pub fn expand_link_id(row: &str, column: usize) -> Option<usize> {
+    crate::get_osc8_link_at_column(row, column)?
+        .strip_prefix(EXPAND_LINK_PREFIX)?
+        .parse()
+        .ok()
+}
+
+/// Cell address of the expanded cell a painted screen row belongs to.
+pub fn collapse_link_id(row: &str) -> Option<usize> {
+    let rest = &row[row.find(COLLAPSE_LINK_PREFIX)? + COLLAPSE_LINK_PREFIX.len()..];
+    let digits = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
+    rest[..digits].parse().ok()
+}
+
 /// Borrowed view of a tool call for [`render_compact`].
 pub(crate) struct CompactTool<'a> {
     pub(crate) name: &'a str,
@@ -842,6 +886,11 @@ pub(crate) struct CompactTool<'a> {
     pub(crate) markdown: bool,
     pub(crate) expanded: bool,
     pub(crate) leading_spacer: bool,
+    /// Transcript cell address making the collapsed "… +N lines" row
+    /// clickable; `None` for panels that are not transcript cells.
+    pub(crate) expand_id: Option<usize>,
+    /// Highlight the hint row (pointer hover).
+    pub(crate) hovered: bool,
 }
 
 fn is_blank_row(line: &str) -> bool {
@@ -868,6 +917,16 @@ fn diff_stats(diff: &[String]) -> String {
         }
     }
     format!("+{added} -{removed}")
+}
+
+fn link_expanded_rows(lines: &mut [String], leading_spacer: bool, id: usize) {
+    let open = format!("\x1b]8;;{COLLAPSE_LINK_PREFIX}{id}\x07");
+    for (index, line) in lines.iter_mut().enumerate() {
+        if leading_spacer && index == 0 {
+            continue;
+        }
+        *line = format!("{open}{line}\x1b]8;;\x07");
+    }
 }
 
 /// Port of ice `ToolExecutionComponent.renderCompact`: a bullet row, then the
@@ -909,6 +968,9 @@ pub(crate) fn render_compact(colors: &ThemeColors, t: &CompactTool, width: usize
             "{prefix}{}",
             truncate_to_width(row, body_width, "…")
         ));
+    }
+    if let (true, Some(id)) = (t.expanded, t.expand_id) {
+        link_expanded_rows(&mut lines, t.leading_spacer, id);
     }
     lines
 }
@@ -1005,10 +1067,24 @@ fn compact_body(colors: &ThemeColors, t: &CompactTool, body_width: usize) -> Vec
 
     let dim = |row: &str| colors.dim.fg(row);
     let more = |hidden: usize| {
-        dim(&format!(
+        let text = format!(
             "… +{hidden} lines{}",
             crate::keybindings::tools_expand_paren("expand")
-        ))
+        );
+        let hint = if t.hovered && t.expand_id.is_some() {
+            // Marker-pen look: accent fill with true black text (palette black is often grey).
+            colors
+                .accent
+                .bg(&crate::theme::Color::Rgb(0, 0, 0).fg(&text))
+        } else {
+            dim(&text)
+        };
+        match t.expand_id {
+            // An OSC 8 link carries the click target through the screen
+            // snapshot without layout bookkeeping; see `expand_link_id`.
+            Some(id) => format!("\x1b]8;;{EXPAND_LINK_PREFIX}{id}\x07{hint}\x1b]8;;\x07"),
+            None => hint,
+        }
     };
     if matches!(t.status, ToolStatus::Pending | ToolStatus::Running) {
         let tail: Vec<String> = text
@@ -1913,6 +1989,71 @@ mod tests {
             .map(|line| format!("line {line}"))
             .collect::<Vec<_>>()
             .join("\n")
+    }
+
+    #[test]
+    fn collapsed_compact_hint_is_a_click_target_carrying_the_cell_address() {
+        let tool = ToolExecutionComponent::new("bash", r#"{"command":"ls"}"#);
+        tool.set_result(&numbered(20), false);
+        let lines = tool.render_panel_with(120, &theme(), ToolStyle::Compact);
+        let hint = lines
+            .iter()
+            .find(|line| crate::ansi::strip_ansi(line).contains("+17 lines"))
+            .unwrap();
+        let column = crate::ansi::strip_ansi(hint).find("+17").unwrap();
+        assert_eq!(
+            expand_link_id(hint, column),
+            Some(&tool as *const ToolExecutionComponent as usize)
+        );
+        // The gutter and every other row are not click targets.
+        assert_eq!(expand_link_id(hint, 0), None);
+        assert!(lines
+            .iter()
+            .filter(|line| *line != hint)
+            .all(|line| expand_link_id(line, column).is_none()));
+
+        tool.set_expanded(true);
+        let expanded = tool.render_panel_with(120, &theme(), ToolStyle::Compact);
+        assert!(expanded
+            .iter()
+            .all(|line| !line.contains(EXPAND_LINK_PREFIX)));
+    }
+
+    #[test]
+    fn expanded_compact_empty_output_rows_keep_collapse_targets() {
+        let mut rows = vec![String::new(), "✓ Ran ls".to_string()];
+        rows.extend(normalized_output_lines("a\n\nb"));
+        link_expanded_rows(&mut rows, true, 17);
+
+        assert!(rows[0].is_empty(), "leading spacer is not a tool row");
+        assert_eq!(collapse_link_id(&rows[3]), Some(17));
+        for row in rows[1..].iter().filter(|row| !row.is_empty()) {
+            assert_eq!(collapse_link_id(row), Some(17), "{row:?}");
+        }
+    }
+
+    #[test]
+    fn expanded_compact_rows_are_found_by_row_for_collapsing() {
+        let tool = ToolExecutionComponent::new("bash", r#"{"command":"ls"}"#);
+        tool.set_result("a\n\nb", false);
+        let id = &tool as *const ToolExecutionComponent as usize;
+
+        let collapsed = tool.render_panel_with(80, &theme(), ToolStyle::Compact);
+        assert!(collapsed
+            .iter()
+            .all(|line| collapse_link_id(line).is_none()));
+
+        tool.set_expanded(true);
+        let rows = tool.render_panel_with(80, &theme(), ToolStyle::Compact);
+        // Spacer excluded; title, text, the blank body row and the last row
+        // all resolve to the cell, wherever the pointer is on the row.
+        assert!(rows[0].is_empty());
+        assert!(rows.len() >= 4, "{rows:?}");
+        for row in &rows[1..] {
+            assert_eq!(collapse_link_id(row), Some(id), "{row:?}");
+        }
+        assert_eq!(collapse_link_id("plain row"), None);
+        assert_eq!(collapse_link_id("\x1b]8;;ice://collapse/12x\x07"), Some(12));
     }
 
     /// ice compact: `✓ Ran <first line> …`, then the first 3 output rows under

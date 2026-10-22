@@ -187,7 +187,19 @@ async fn resize_focus_and_paste_preserve_independent_drafts_and_restore_main() {
         row: 22,
         modifiers: KeyModifiers::NONE,
     };
-    assert!(f.ui.mouse(&click, &f.tui, &f.main_scroll));
+    assert!(!f.ui.mouse(&click, &f.tui, &f.main_scroll));
+    assert!(f.ui.focused(), "mouse-down remains a selection candidate");
+    let drag = MouseEvent {
+        kind: MouseEventKind::Drag(MouseButton::Left),
+        column: 118,
+        ..click
+    };
+    assert!(!f.ui.mouse(&drag, &f.tui, &f.main_scroll));
+    assert!(
+        f.ui.focused(),
+        "dragging across the split must not change focus"
+    );
+    assert!(f.ui.click(2, 22, &f.tui));
     assert!(!f.ui.focused());
     assert!(!f.ui.paste("not a side paste", &f.tui));
     assert_eq!(view.editor.get_expanded_text(), "side draft");
