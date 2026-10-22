@@ -666,18 +666,25 @@ async fn harness_fires_provider_hooks_before_request_per_call() {
     // One hook fire per stream_simple call. The script has 2 turns
     // (tool-call + final text), so we expect 2 provider calls == 2 hook fires.
     let fires: Arc<std::sync::Mutex<Vec<String>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let session_ids: Arc<std::sync::Mutex<Vec<Option<String>>>> =
+        Arc::new(std::sync::Mutex::new(Vec::new()));
 
     struct CountingHooks {
         fires: Arc<std::sync::Mutex<Vec<String>>>,
+        session_ids: Arc<std::sync::Mutex<Vec<Option<String>>>>,
     }
     impl ProviderHooks for CountingHooks {
         fn before_request(
             &self,
             model: &ice_ai::Model,
             _ctx: &ice_ai::types::Context,
-            _opts: &SimpleStreamOptions,
+            opts: &SimpleStreamOptions,
         ) -> Option<SimpleStreamOptionsPatch> {
             self.fires.lock().unwrap().push(model.id.clone());
+            self.session_ids
+                .lock()
+                .unwrap()
+                .push(opts.session_id.clone());
             // Return a no-op patch (None would also work; exercise the apply path).
             None
         }
@@ -685,6 +692,7 @@ async fn harness_fires_provider_hooks_before_request_per_call() {
 
     let hooks: Arc<dyn ProviderHooks> = Arc::new(CountingHooks {
         fires: Arc::clone(&fires),
+        session_ids: Arc::clone(&session_ids),
     });
 
     let script = FauxScript::new()
@@ -762,6 +770,13 @@ async fn harness_fires_provider_hooks_before_request_per_call() {
         .call_count
         .load(std::sync::atomic::Ordering::Relaxed);
     let hook_fires = fires.lock().unwrap().clone();
+    // Provider prompt caches (`prompt_cache_key`, session headers) are keyed by
+    // the session id; without it every turn re-sends an uncached prompt.
+    assert_eq!(
+        *session_ids.lock().unwrap(),
+        vec![Some("b4-hooks".to_string()); 2],
+        "every provider call must carry the session id"
+    );
     assert_eq!(provider_calls, 2, "two-turn script = two provider calls");
     assert_eq!(
         hook_fires.len(),

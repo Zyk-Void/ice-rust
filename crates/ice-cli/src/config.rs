@@ -19,11 +19,11 @@
 //!
 //! # Concurrency
 //!
-//! v1 is a single-process CLI, so we use **atomic rename** instead of upstream's
-//! `proper-lockfile`: write a sibling temp file, `fs::rename` over the target,
-//! then `chmod 0o600` on Unix (Windows chmod is a no-op, matching Node).
-//! Concurrent `icers auth login` from two shells could lose one update — that's
-//! accepted and documented; adding a file lock is deferred.
+//! Credential mutations take an exclusive cross-process lock on a stable
+//! sibling lock file, reread the store, and then use **atomic rename** to write
+//! it. The lock is held for the whole read-modify-write transaction; refresh
+//! callers can retain the guard across a network request. The data file is
+//! written through a sibling temp file and is mode 0o600 on Unix.
 //!
 //! # Config-value expansion
 //!
@@ -34,10 +34,11 @@
 //! (auth.json key, models.json bearer apiKey, provider/model `headers`).
 
 use std::collections::BTreeMap;
+use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use ice_ai::{Api, InputModality, Model, ModelCost, StreamingProtocolCompat, ThinkingLevelMap};
+use ice_ai::{InputModality, Model, ModelCost, ThinkingLevelMap, WireProtocol};
 
 /// The config directory name under the home dir.
 pub const CONFIG_DIR_NAME: &str = ".icers";
@@ -70,6 +71,12 @@ pub enum ConfigError {
     },
     #[error("could not write {path}: {source}")]
     Write {
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
+    #[error("could not lock {path}: {source}")]
+    Lock {
         path: PathBuf,
         #[source]
         source: std::io::Error,
@@ -247,21 +254,160 @@ pub enum Credential {
         access: String,
         #[serde(default)]
         refresh: String,
-        /// Unix epoch seconds. `0` means no known expiry.
-        #[serde(default)]
+        /// Unix epoch seconds. `0` means no known expiry. Imported TS
+        /// millisecond values are normalized to seconds while deserializing.
+        #[serde(default, deserialize_with = "deserialize_oauth_expiry")]
         expires: i64,
+        /// Optional account metadata used by Codex subscription auth. The
+        /// camelCase storage spelling matches the TypeScript auth store.
+        #[serde(default, rename = "accountId", skip_serializing_if = "Option::is_none")]
+        account_id: Option<String>,
     },
+}
+
+fn deserialize_oauth_expiry<'de, D>(deserializer: D) -> Result<i64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let expires = <i64 as serde::Deserialize>::deserialize(deserializer)?;
+    if expires > 1_000_000_000_000 {
+        Ok(expires / 1_000)
+    } else {
+        Ok(expires)
+    }
 }
 
 /// The auth store: `providerId -> Credential`. Mirrors upstream
 /// `Record<providerId, Credential>`.
 pub type AuthStore = BTreeMap<String, Credential>;
 
+/// A cross-process exclusive transaction on `auth.json`.
+///
+/// Acquire this guard before reading credentials that will be mutated. It can
+/// be held across async work (the guard is `Send`); callers should acquire it
+/// on a blocking thread because opening or waiting for the file lock is
+/// synchronous. Methods on the guard do not acquire the lock recursively.
+pub struct AuthStoreTransaction {
+    _lock_file: File,
+    auth_path: PathBuf,
+}
+
+impl AuthStoreTransaction {
+    /// Reread the current store while this transaction owns the lock.
+    pub fn read_auth(&self) -> Result<AuthStore, ConfigError> {
+        read_auth_from_path(&self.auth_path)
+    }
+
+    /// Atomically replace the store while retaining this transaction's lock.
+    pub fn write_auth(&self, store: &AuthStore) -> Result<(), ConfigError> {
+        let dir = self.auth_path.parent().ok_or_else(|| ConfigError::Write {
+            path: self.auth_path.clone(),
+            source: std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no parent"),
+        })?;
+        ensure_dir(dir)?;
+        let json = serde_json::to_string_pretty(store).unwrap();
+        atomic_write(&self.auth_path, json.as_bytes())?;
+        set_owner_only(&self.auth_path);
+        Ok(())
+    }
+
+    /// Reread and upsert one provider entry under this transaction's lock.
+    pub fn upsert_credential(
+        &self,
+        provider_id: &str,
+        credential: Credential,
+    ) -> Result<(), ConfigError> {
+        let mut store = self.read_auth()?;
+        store.insert(provider_id.to_string(), credential);
+        self.write_auth(&store)
+    }
+
+    /// Reread and remove one provider entry under this transaction's lock.
+    pub fn delete_credential(&self, provider_id: &str) -> Result<bool, ConfigError> {
+        let mut store = self.read_auth()?;
+        if store.remove(provider_id).is_some() {
+            self.write_auth(&store)?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
+/// Acquire the cross-process credential-store lock.
+///
+/// Lock acquisition is synchronous. The returned guard owns the lock file and
+/// releases the lock on drop. The lock file is intentionally persistent so
+/// every process locks the same inode across atomic replacements of auth.json.
+pub fn lock_auth_store() -> Result<AuthStoreTransaction, ConfigError> {
+    let auth_path = auth_path()?;
+    let (lock_path, lock_file) = open_auth_lock_file(&auth_path)?;
+    fs2::FileExt::lock_exclusive(&lock_file).map_err(|source| ConfigError::Lock {
+        path: lock_path,
+        source,
+    })?;
+
+    Ok(AuthStoreTransaction {
+        _lock_file: lock_file,
+        auth_path,
+    })
+}
+
+/// Try to acquire the auth-store lock without blocking.
+///
+/// Returns `Ok(None)` only when another process currently owns the lock.
+/// Callers that need cancellable async waiting can poll this method with a
+/// delay between attempts instead of leaving a blocking task waiting forever.
+pub fn try_lock_auth_store() -> Result<Option<AuthStoreTransaction>, ConfigError> {
+    let auth_path = auth_path()?;
+    let (lock_path, lock_file) = open_auth_lock_file(&auth_path)?;
+    match fs2::FileExt::try_lock_exclusive(&lock_file) {
+        Ok(()) => Ok(Some(AuthStoreTransaction {
+            _lock_file: lock_file,
+            auth_path,
+        })),
+        Err(source) if source.kind() == std::io::ErrorKind::WouldBlock => Ok(None),
+        Err(source) => Err(ConfigError::Lock {
+            path: lock_path,
+            source,
+        }),
+    }
+}
+
+fn open_auth_lock_file(auth_path: &Path) -> Result<(PathBuf, File), ConfigError> {
+    let dir = auth_path.parent().ok_or_else(|| ConfigError::Write {
+        path: auth_path.to_path_buf(),
+        source: std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no parent"),
+    })?;
+    ensure_dir(dir)?;
+
+    let mut lock_path = auth_path.as_os_str().to_os_string();
+    lock_path.push(".lock");
+    let lock_path = PathBuf::from(lock_path);
+    let mut options = std::fs::OpenOptions::new();
+    options.create(true).read(true).write(true);
+    #[cfg(unix)]
+    options.mode(0o600);
+    let lock_file = options
+        .open(&lock_path)
+        .map_err(|source| ConfigError::Lock {
+            path: lock_path.clone(),
+            source,
+        })?;
+    set_owner_only(&lock_path);
+    Ok((lock_path, lock_file))
+}
+
 /// Read the auth store. Missing file ⇒ empty store (not an error). Malformed
 /// JSON ⇒ `ConfigError::Json` (we do not silently swallow a corrupt auth file).
+/// This is an unlocked snapshot, not a read-modify-write transaction. Use
+/// [`lock_auth_store`] before reading data that will be mutated.
 pub fn read_auth() -> Result<AuthStore, ConfigError> {
-    let path = auth_path()?;
-    match read_text_with_fallback(path, None)? {
+    read_auth_from_path(&auth_path()?)
+}
+
+fn read_auth_from_path(path: &Path) -> Result<AuthStore, ConfigError> {
+    match read_text_with_fallback(path.to_path_buf(), None)? {
         Some((path, text)) => {
             serde_json::from_str(&text).map_err(|source| ConfigError::Json { path, source })
         }
@@ -271,21 +417,16 @@ pub fn read_auth() -> Result<AuthStore, ConfigError> {
 
 /// Atomically write the whole auth store (ensures the dir exists, writes a
 /// temp sibling, `rename`s over the target, then `chmod 0o600` on Unix).
+/// This replaces the entire store; it does not merge an earlier [`read_auth`]
+/// snapshot with concurrent updates. For mutations, prefer [`upsert_credential`],
+/// [`delete_credential`], or read and write through one [`AuthStoreTransaction`].
 pub fn write_auth(store: &AuthStore) -> Result<(), ConfigError> {
-    let path = auth_path()?;
-    let dir = agent_dir()?;
-    ensure_dir(&dir)?;
-    let json = serde_json::to_string_pretty(store).unwrap();
-    atomic_write(&path, json.as_bytes())?;
-    set_owner_only(&path);
-    Ok(())
+    lock_auth_store()?.write_auth(store)
 }
 
 /// Read-modify-write: upsert a credential for `provider_id`.
 pub fn upsert_credential(provider_id: &str, cred: Credential) -> Result<(), ConfigError> {
-    let mut store = read_auth()?;
-    store.insert(provider_id.to_string(), cred);
-    write_auth(&store)
+    lock_auth_store()?.upsert_credential(provider_id, cred)
 }
 
 /// Store an OAuth token under exactly one provider id using the atomic auth
@@ -296,12 +437,26 @@ pub fn upsert_oauth_token(
     refresh: String,
     expires: i64,
 ) -> Result<(), ConfigError> {
+    upsert_oauth_token_with_account(provider_id, access, refresh, expires, None)
+}
+
+/// Store OAuth tokens and optional account metadata under one provider id.
+/// Prefer [`AuthStoreTransaction::upsert_credential`] when a caller already
+/// holds the auth-store lock across a larger refresh transaction.
+pub fn upsert_oauth_token_with_account(
+    provider_id: &str,
+    access: String,
+    refresh: String,
+    expires: i64,
+    account_id: Option<String>,
+) -> Result<(), ConfigError> {
     upsert_credential(
         provider_id,
         Credential::Oauth {
             access,
             refresh,
             expires,
+            account_id,
         },
     )
 }
@@ -313,10 +468,12 @@ pub fn read_oauth_token(provider_id: &str) -> Result<Option<Credential>, ConfigE
             access,
             refresh,
             expires,
+            account_id,
         }) => Some(Credential::Oauth {
             access: access.clone(),
             refresh: refresh.clone(),
             expires: *expires,
+            account_id: account_id.clone(),
         }),
         _ => None,
     })
@@ -327,13 +484,7 @@ pub fn read_oauth_token(provider_id: &str) -> Result<Option<Credential>, ConfigE
 /// the file when the provider existed (so `auth logout` reflects the new state
 /// on disk even if the map isn't empty).
 pub fn delete_credential(provider_id: &str) -> Result<bool, ConfigError> {
-    let mut store = read_auth()?;
-    if store.remove(provider_id).is_some() {
-        write_auth(&store)?;
-        Ok(true)
-    } else {
-        Ok(false)
-    }
+    lock_auth_store()?.delete_credential(provider_id)
 }
 
 // ---------------------------------------------------------------------------
@@ -352,8 +503,8 @@ pub struct ModelsConfig {
 }
 
 /// A provider entry in `models.json`. The fields mirror the TS `ProviderConfig`
-/// one-for-one; v1 honors `base_url`/`api_key`/`headers`/`auth_header`/`models`,
-/// and **ignores** `api` values other than `anthropic-messages` (documented).
+/// one-for-one. `api` stays a string because provider packages may declare
+/// their own api style; [`ProviderConfig::protocol`] is the typed view.
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProviderConfig {
@@ -373,6 +524,18 @@ pub struct ProviderConfig {
     pub auth_header: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub models: Vec<ModelDefinition>,
+}
+
+impl ProviderConfig {
+    /// The built-in wire protocol this provider speaks. An omitted or empty
+    /// `api` means `anthropic-messages`; a custom or package api style is
+    /// `None`, because no built-in protocol serves it.
+    pub fn protocol(&self) -> Option<WireProtocol> {
+        match self.api.as_deref() {
+            None | Some("") => Some(WireProtocol::AnthropicMessages),
+            Some(api) => WireProtocol::parse(api),
+        }
+    }
 }
 
 /// One model under a provider. `id` is required (mirrors TS `ModelDefinition`).
@@ -805,26 +968,6 @@ fn resolve_command_uncached(cmd: &str) -> Option<String> {
     }
 }
 
-/// (`anthropic-messages`, or omitted/unknown). Unknown `api` is allowed through
-/// for forward-compat but flagged ignored-in-v1 in the docs. Public so
-/// [`crate::provider`] can scan models.json providers for an `authHeader:true`
-/// gateway bearer source.
-pub fn provider_is_anthropic_compatible(cfg: &ProviderConfig) -> bool {
-    match cfg.api.as_deref() {
-        None | Some("") | Some("anthropic-messages") => true,
-        _ => false,
-    }
-}
-
-/// Whether a configured provider uses the OpenAI Chat Completions protocol.
-pub fn provider_is_openai_completions(cfg: &ProviderConfig) -> bool {
-    matches!(cfg.api.as_deref(), Some("openai-completions"))
-}
-
-pub fn provider_is_openai_responses(cfg: &ProviderConfig) -> bool {
-    matches!(cfg.api.as_deref(), Some("openai-responses"))
-}
-
 /// Resolve an OpenAI-compatible provider key from its explicit config or a
 /// known provider's canonical environment variable. Arbitrary custom provider
 /// ids must declare `apiKey: "$ENV"`: deriving an env name by normalizing the
@@ -852,20 +995,15 @@ fn native_provider_api_key_env_var(provider_id: &str) -> Option<&'static str> {
 
 /// Convert a `(provider_id, ProviderConfig)` pair into a list of library
 /// [`Model`]s. Provider-level `base_url`/`headers`/`auth_header` fold into each
-/// model. Returns `None` for protocols that do not have a runtime provider.
+/// model. Returns `None` when no built-in protocol serves the provider's `api`.
 pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec<Model>> {
-    let api = if provider_is_anthropic_compatible(cfg) {
-        Api::AnthropicMessages
-    } else if provider_is_openai_completions(cfg) {
-        Api::OpenaiCompletions
-    } else if provider_is_openai_responses(cfg) {
-        Api::OpenaiResponses
-    } else {
-        return None;
-    };
-    let provider_base = cfg.base_url.clone().unwrap_or_else(|| match api {
-        Api::OpenaiCompletions | Api::OpenaiResponses => "https://api.openai.com".to_string(),
-        _ => default_anthropic_base_url(),
+    let protocol = cfg.protocol()?;
+    let provider_base = cfg.base_url.clone().unwrap_or_else(|| match protocol {
+        WireProtocol::OpenaiCompletions | WireProtocol::OpenaiResponses => {
+            "https://api.openai.com".to_string()
+        }
+        WireProtocol::OpenaiCodexResponses => "https://chatgpt.com/backend-api".to_string(),
+        WireProtocol::AnthropicMessages => default_anthropic_base_url(),
     });
     let mut merged: Vec<Model> = Vec::with_capacity(cfg.models.len());
     for def in &cfg.models {
@@ -877,7 +1015,7 @@ pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec
         let mut m = Model::new(
             def.id.clone(),
             name,
-            api.clone(),
+            protocol.api(),
             provider_id.to_string(),
             base_url,
         );
@@ -914,17 +1052,12 @@ pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec
                 headers.insert(k, v);
             }
         }
-        if matches!(api, Api::OpenaiCompletions | Api::OpenaiResponses) {
-            if let Some(value) = def.compat.clone() {
-                if matches!(api, Api::OpenaiResponses) {
-                    if let Ok(compat) = serde_json::from_value(value) {
-                        m.compat = Some(StreamingProtocolCompat::OpenaiResponses(compat));
-                    }
-                } else if let Ok(compat) = serde_json::from_value(value) {
-                    m.compat = Some(StreamingProtocolCompat::OpenaiCompletions(compat));
-                }
-            }
-        }
+        // A malformed `compat` block is dropped rather than failing the whole
+        // provider, matching how unknown keys inside it are ignored.
+        m.compat = def
+            .compat
+            .clone()
+            .and_then(|value| protocol.parse_compat(value).ok());
         if !headers.is_empty() {
             m.headers = Some(headers);
         }
@@ -1078,6 +1211,7 @@ pub(crate) mod test_support {
 mod tests {
     use super::*;
     use crate::config::test_support::env_lock;
+    use ice_ai::{Api, StreamingProtocolCompat};
 
     /// Point `ICERS_CODING_AGENT_DIR` at a fresh temp dir for the duration of the
     /// test (cleaned up on drop). Holds the prior value of the env var to
@@ -1143,10 +1277,181 @@ mod tests {
         upsert_oauth_token("acme", "access".into(), "refresh".into(), 123).unwrap();
         assert!(matches!(
             read_oauth_token("acme").unwrap(),
-            Some(Credential::Oauth { access, refresh, expires })
+            Some(Credential::Oauth { access, refresh, expires, .. })
                 if access == "access" && refresh == "refresh" && expires == 123
         ));
         assert!(read_oauth_token("other").unwrap().is_none());
+
+        upsert_oauth_token_with_account(
+            "codex",
+            "codex-access".into(),
+            "codex-refresh".into(),
+            456,
+            Some("acct_test".into()),
+        )
+        .unwrap();
+        assert!(matches!(
+            read_oauth_token("codex").unwrap(),
+            Some(Credential::Oauth {
+                account_id: Some(account_id),
+                expires: 456,
+                ..
+            }) if account_id == "acct_test"
+        ));
+    }
+
+    #[test]
+    fn imported_oauth_account_id_and_millisecond_expiry_are_normalized() {
+        let imported: AuthStore = serde_json::from_str(
+            r#"{
+                "codex": {
+                    "type": "oauth",
+                    "access": "access-token",
+                    "refresh": "refresh-token",
+                    "expires": 1770000000123,
+                    "accountId": "acct_test"
+                },
+                "extension": {
+                    "type": "oauth",
+                    "access": "extension-access",
+                    "refresh": "extension-refresh",
+                    "expires": 1234567890
+                },
+                "unknown_expiry": {
+                    "type": "oauth",
+                    "access": "no-expiry",
+                    "refresh": "",
+                    "expires": 0
+                }
+            }"#,
+        )
+        .unwrap();
+
+        assert!(matches!(
+            imported.get("codex"),
+            Some(Credential::Oauth {
+                expires: 1770000000,
+                account_id: Some(account_id),
+                ..
+            }) if account_id == "acct_test"
+        ));
+        assert!(matches!(
+            imported.get("extension"),
+            Some(Credential::Oauth {
+                expires: 1234567890,
+                account_id: None,
+                ..
+            })
+        ));
+        assert!(matches!(
+            imported.get("unknown_expiry"),
+            Some(Credential::Oauth {
+                expires: 0,
+                account_id: None,
+                ..
+            })
+        ));
+
+        let encoded = serde_json::to_value(&imported).unwrap();
+        assert_eq!(encoded["codex"]["expires"], 1770000000);
+        assert_eq!(encoded["codex"]["accountId"], "acct_test");
+        assert!(encoded["extension"].get("accountId").is_none());
+    }
+
+    #[test]
+    fn oauth_expiry_normalization_uses_strict_millisecond_threshold() {
+        for (value, expected) in [
+            (0_i64, 0_i64),
+            (1_000_000_000_i64, 1_000_000_000_i64),
+            (1_000_000_000_000_i64, 1_000_000_000_000_i64),
+            (1_000_000_000_001_i64, 1_000_000_000_i64),
+        ] {
+            let input =
+                format!(r#"{{"type":"oauth","access":"a","refresh":"r","expires":{value}}}"#);
+            let credential: Credential = serde_json::from_str(&input).unwrap();
+            assert!(matches!(credential, Credential::Oauth { expires, .. } if expires == expected));
+        }
+    }
+
+    #[test]
+    fn auth_store_transaction_guard_is_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<AuthStoreTransaction>();
+    }
+
+    #[test]
+    fn try_lock_auth_store_reports_contention_and_releases_with_guard() {
+        let _cfg = TempConfig::new();
+        let transaction = lock_auth_store().unwrap();
+        assert!(try_lock_auth_store().unwrap().is_none());
+
+        drop(transaction);
+        assert!(try_lock_auth_store().unwrap().is_some());
+    }
+
+    #[test]
+    fn auth_transaction_child_process_writer() {
+        let Ok(provider_id) = std::env::var("ICERS_AUTH_LOCK_CHILD_PROVIDER") else {
+            return;
+        };
+        let Some(config_dir) = std::env::var_os(CONFIG_DIR_ENV).map(PathBuf::from) else {
+            return;
+        };
+        // This helper is spawned only by the parent test with a fresh temp
+        // config directory. Refuse to touch any ambient user config if a
+        // similarly named environment variable happens to be set.
+        if !config_dir.starts_with(std::env::temp_dir())
+            || !config_dir.join(".auth-lock-process-test").is_file()
+        {
+            return;
+        }
+        let transaction = lock_auth_store().unwrap();
+        let mut store = transaction.read_auth().unwrap();
+        // Keep the lock across a pause so the peer process attempts to update
+        // the same snapshot and would overwrite this entry without locking.
+        std::thread::sleep(std::time::Duration::from_millis(150));
+        store.insert(
+            provider_id,
+            Credential::ApiKey {
+                key: Some("process-test-key".into()),
+                env: None,
+            },
+        );
+        transaction.write_auth(&store).unwrap();
+    }
+
+    #[test]
+    fn auth_store_transactions_serialize_independent_process_updates() {
+        let cfg = TempConfig::new();
+        let config_dir = std::env::var_os(CONFIG_DIR_ENV).unwrap();
+        std::fs::write(
+            PathBuf::from(&config_dir).join(".auth-lock-process-test"),
+            "temporary test config",
+        )
+        .unwrap();
+        let test_exe = std::env::current_exe().unwrap();
+        let spawn_writer = |provider_id: &str| {
+            std::process::Command::new(&test_exe)
+                .args([
+                    "--exact",
+                    "config::tests::auth_transaction_child_process_writer",
+                    "--nocapture",
+                ])
+                .env(CONFIG_DIR_ENV, &config_dir)
+                .env("ICERS_AUTH_LOCK_CHILD_PROVIDER", provider_id)
+                .spawn()
+                .unwrap()
+        };
+
+        let mut first = spawn_writer("provider-a");
+        let mut second = spawn_writer("provider-b");
+        assert!(first.wait().unwrap().success());
+        assert!(second.wait().unwrap().success());
+
+        let store = read_auth().unwrap();
+        assert!(store.contains_key("provider-a"));
+        assert!(store.contains_key("provider-b"));
+        drop(cfg);
     }
 
     #[test]
@@ -1442,6 +1747,59 @@ mod tests {
         .unwrap();
         let plain_models = provider_to_models("qwen", &plain.providers["qwen"]).unwrap();
         assert!(plain_models[0].compat.is_none());
+    }
+
+    #[test]
+    fn provider_protocol_is_typed_and_custom_api_styles_are_not_built_in() {
+        let config: ModelsConfig = serde_json::from_str(
+            r#"{
+                "providers": {
+                    "implicit": { "models": [{"id":"m"}] },
+                    "empty": { "api": "", "models": [{"id":"m"}] },
+                    "chat": { "api": "openai-completions", "models": [{"id":"m"}] },
+                    "responses": { "api": "openai-responses", "models": [{"id":"m"}] },
+                    "package": { "api": "google-generative-ai", "models": [{"id":"m"}] }
+                }
+            }"#,
+        )
+        .unwrap();
+        let protocol = |id: &str| config.providers[id].protocol();
+        assert_eq!(protocol("implicit"), Some(WireProtocol::AnthropicMessages));
+        assert_eq!(protocol("empty"), Some(WireProtocol::AnthropicMessages));
+        assert_eq!(protocol("chat"), Some(WireProtocol::OpenaiCompletions));
+        assert_eq!(protocol("responses"), Some(WireProtocol::OpenaiResponses));
+        assert_eq!(protocol("package"), None);
+        assert!(provider_to_models("package", &config.providers["package"]).is_none());
+        let models = provider_to_models("responses", &config.providers["responses"]).unwrap();
+        assert_eq!(models[0].api, Api::OpenaiResponses);
+    }
+
+    #[test]
+    fn models_json_compat_reaches_the_model_for_anthropic_messages() {
+        let config: ModelsConfig = serde_json::from_str(
+            r#"{
+                "providers": {
+                    "proxy": {
+                        "api": "anthropic-messages",
+                        "baseUrl": "https://proxy.example.com",
+                        "models": [
+                            { "id": "a", "compat": { "supportsCacheControlOnTools": false } },
+                            { "id": "b", "compat": { "supportsCacheControlOnTools": "no" } }
+                        ]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+        let models = provider_to_models("proxy", &config.providers["proxy"]).unwrap();
+        match models[0].compat.as_ref().expect("compat must survive") {
+            StreamingProtocolCompat::AnthropicMessages(compat) => {
+                assert!(!compat.cache_control_on_tools());
+            }
+            other => panic!("expected AnthropicMessages compat, got {other:?}"),
+        }
+        // A wrongly typed flag drops that model's compat, not the provider.
+        assert!(models[1].compat.is_none());
     }
 
     #[test]

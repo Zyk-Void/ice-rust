@@ -1,6 +1,7 @@
 //! Settings selectors, model catalog filtering, and setting changes.
 
 use super::*;
+use ice_ai::WireProtocol;
 
 /// Resolve the runtime scope in its chosen order. Legacy empty scope means all.
 pub(super) fn scoped_catalog(
@@ -656,6 +657,24 @@ pub(super) fn current_oauth_providers(
         .unwrap_or_default()
 }
 
+/// Whether an installed extension claims this provider through either its
+/// provider manifest or OAuth action registration.
+pub(super) fn extension_owns_provider(
+    session: &crate::session::ExtensionSessionCell,
+    provider_id: &str,
+) -> bool {
+    let session = session.lock().unwrap_or_else(|error| error.into_inner());
+    let manifest_owner = crate::provider::manifests_from_session(&session)
+        .iter()
+        .any(|manifest| manifest.id.eq_ignore_ascii_case(provider_id));
+    let oauth_owner = session.snapshot_arc().is_some_and(|snapshot| {
+        ice_extensions::list_oauth_providers(&snapshot)
+            .iter()
+            .any(|oauth| oauth.id.eq_ignore_ascii_case(provider_id))
+    });
+    manifest_owner || oauth_owner
+}
+
 /// Build `/provider` rows from the full catalog, including packages without
 /// credentials. Label each with its model count, origin, protocol and key policy.
 pub(super) fn provider_selector_items(
@@ -691,18 +710,21 @@ pub(super) fn provider_selector_items(
             let credential =
                 crate::credentials::resolve(&id, models_cfg.providers.get(&id), &auth, manifest);
             let key_status = match credential.source {
-                crate::credentials::CredentialSource::Anonymous => "无需 key",
+                crate::credentials::CredentialSource::Anonymous => "no key required",
                 crate::credentials::CredentialSource::Missing => {
                     if execution_catalog.iter().any(|model| {
                         model.provider == id
                             && crate::credentials::has_header_auth(model.headers.as_ref())
                     }) {
-                        "已配置认证头"
+                        "authentication headers configured"
+                    } else if id == crate::codex_auth::PROVIDER_ID && manifest.is_none() {
+                        "OAuth login required"
                     } else {
-                        "未配置 key"
+                        "key not configured"
                     }
                 }
-                _ => "已配置 key",
+                crate::credentials::CredentialSource::StoredOauth => "OAuth configured",
+                _ => "key configured",
             };
             let description =
                 format!("{count} model(s) · {origin} · {protocol} · {key_status}{marker}");
@@ -751,13 +773,19 @@ pub(super) fn login_provider_items_with_oauth(
             ids.push(oauth.id.clone());
         }
     }
+    add_builtin_codex_login_id(&mut ids, manifests, oauth_providers);
 
     ids.into_iter()
         .filter_map(|id| {
             let manifest = manifests.iter().find(|manifest| manifest.id == id);
-            let oauth = oauth_providers.iter().find(|oauth| oauth.id == id);
+            let oauth = oauth_providers
+                .iter()
+                .find(|oauth| oauth.id.eq_ignore_ascii_case(&id));
+            let builtin_codex = id.eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID)
+                && builtin_codex_login_available(manifests, oauth_providers);
             let configured = models_cfg.providers.get(&id);
             let requires_auth = oauth.is_some()
+                || builtin_codex
                 || manifest.map_or_else(
                     || {
                         crate::credentials::builtin_api_key_env(&id).is_some()
@@ -788,6 +816,19 @@ pub(super) fn login_provider_items_with_oauth(
                     }
                     _ => "已配置 · API key / OAuth".to_string(),
                 }
+            } else if builtin_codex {
+                match source {
+                    crate::credentials::CredentialSource::Missing => {
+                        "Not configured · OAuth login".to_string()
+                    }
+                    crate::credentials::CredentialSource::StoredOauth => {
+                        "Configured · OAuth".to_string()
+                    }
+                    crate::credentials::CredentialSource::Environment(name) => {
+                        format!("Environment variable {name} · OAuth login available")
+                    }
+                    _ => "Configured · API key / OAuth".to_string(),
+                }
             } else {
                 let status = match source {
                     crate::credentials::CredentialSource::Missing => "未配置".to_string(),
@@ -813,6 +854,35 @@ pub(super) fn login_provider_items_with_oauth(
         .collect()
 }
 
+fn builtin_codex_login_available(
+    manifests: &[ice_extensions::ProviderManifest],
+    oauth_providers: &[ice_extensions::OAuthProviderInfo],
+) -> bool {
+    !manifests.iter().any(|manifest| {
+        manifest
+            .id
+            .eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID)
+    }) && !oauth_providers.iter().any(|oauth| {
+        oauth
+            .id
+            .eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID)
+    })
+}
+
+fn add_builtin_codex_login_id(
+    ids: &mut Vec<String>,
+    manifests: &[ice_extensions::ProviderManifest],
+    oauth_providers: &[ice_extensions::OAuthProviderInfo],
+) {
+    if builtin_codex_login_available(manifests, oauth_providers)
+        && !ids
+            .iter()
+            .any(|id| id.eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID))
+    {
+        ids.push(crate::codex_auth::PROVIDER_ID.to_string());
+    }
+}
+
 /// Dispatch without holding the input-slot lock: submit and escape callbacks
 /// clear or replace that same slot synchronously (API-key and OAuth login).
 pub(super) fn handle_provider_login_key(state: &TuiState, key: KeyEvent) -> bool {
@@ -836,11 +906,17 @@ pub(super) fn begin_provider_login(
     extension_session: &crate::session::ExtensionSessionCell,
     provider_id: &str,
 ) {
-    if current_oauth_providers(extension_session)
+    let manifests = current_provider_manifests(extension_session);
+    let oauth_providers = current_oauth_providers(extension_session);
+    if oauth_providers
         .iter()
         .any(|provider| provider.id.eq_ignore_ascii_case(provider_id))
     {
         begin_provider_oauth_login(state, editor_container, editor, tui, tx, provider_id);
+    } else if provider_id.eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID)
+        && builtin_codex_login_available(&manifests, &oauth_providers)
+    {
+        begin_builtin_codex_oauth_login(state, editor_container, editor, tui, tx, provider_id);
     } else {
         begin_api_key_login(state, editor_container, editor, tui, tx, provider_id);
     }
@@ -854,6 +930,13 @@ fn begin_api_key_login(
     tx: &mpsc::UnboundedSender<TuiMessage>,
     provider_id: &str,
 ) {
+    let flow_id = state
+        .provider_auth_generation
+        .fetch_add(1, std::sync::atomic::Ordering::AcqRel)
+        .wrapping_add(1);
+    state
+        .provider_auth_flow_id
+        .store(flow_id, std::sync::atomic::Ordering::Release);
     let provider_id = provider_id.to_string();
     let input = Arc::new(Input::with_placeholder("Paste API key, then press Enter"));
     input.set_masked(true);
@@ -873,12 +956,12 @@ fn begin_api_key_login(
     tui.set_focus(Some(input.clone()));
 
     let state_submit = state.clone();
-    let ec_submit = editor_container.clone();
-    let editor_submit = editor.clone();
     let tui_submit = tui.clone();
     let tx_submit = tx.clone();
     let provider_submit = provider_id.clone();
+    let input_submit = input.clone();
     input.on_submit(Arc::new(move |text| {
+        *state_submit.active_provider_input.lock().unwrap() = Some(input_submit.clone());
         let key = text.trim();
         if key.is_empty() {
             add_error_message(
@@ -888,25 +971,21 @@ fn begin_api_key_login(
             tui_submit.request_render(false);
             return;
         }
-        match crate::config::upsert_credential(
-            &provider_submit,
-            crate::config::Credential::ApiKey {
-                key: Some(key.to_string()),
-                env: None,
-            },
-        ) {
-            Ok(()) => {
-                add_note_message(
-                    &state_submit.chat_container,
-                    &format!("Saved credentials for {provider_submit}; reloading providers…"),
-                );
-                let _ = tx_submit.send(TuiMessage::ReloadExtensions);
-                finish_provider_login(&state_submit, &ec_submit, &editor_submit, &tui_submit);
-            }
-            Err(error) => add_error_message(
+        if tx_submit
+            .send(TuiMessage::AuthStoreMutation(AuthStoreMutationRequest {
+                provider: provider_submit.clone(),
+                operation: AuthStoreMutationOperation::Upsert(crate::config::Credential::ApiKey {
+                    key: Some(key.to_string()),
+                    env: None,
+                }),
+                purpose: AuthStoreMutationPurpose::ApiKeyPrompt { flow_id },
+            }))
+            .is_err()
+        {
+            add_error_message(
                 &state_submit.chat_container,
-                &format!("Could not save {provider_submit} credentials: {error}"),
-            ),
+                "Could not queue the credential save.",
+            );
         }
         tui_submit.request_render(false);
     }));
@@ -949,6 +1028,34 @@ fn begin_provider_oauth_login(
         action: "begin".to_string(),
         input: serde_json::json!({}),
         purpose: ProviderOAuthPurpose::Login,
+        flow_id,
+    });
+}
+
+fn begin_builtin_codex_oauth_login(
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+    provider_id: &str,
+) {
+    let flow_id = state
+        .provider_auth_generation
+        .fetch_add(1, std::sync::atomic::Ordering::AcqRel)
+        .wrapping_add(1);
+    state
+        .provider_auth_flow_id
+        .store(flow_id, std::sync::atomic::Ordering::Release);
+    show_provider_auth_status(
+        state,
+        editor_container,
+        editor,
+        tui,
+        &format!("Starting OAuth login for {provider_id}…"),
+    );
+    let _ = tx.send(TuiMessage::CodexOAuthStart {
+        provider: crate::codex_auth::PROVIDER_ID.to_string(),
         flow_id,
     });
 }
@@ -1025,30 +1132,35 @@ pub(super) fn handle_provider_oauth_result(
         }
         (ProviderOAuthPurpose::Login, ice_extensions::OAuthResponseKind::Credential) => {
             match response.credential() {
-                Ok(Some(token)) => match crate::config::upsert_oauth_token(
-                    provider,
-                    token.access,
-                    token.refresh,
-                    token.expires_at,
-                ) {
-                    Ok(()) => {
-                        finish_provider_login(state, editor_container, editor, tui);
-                        add_note_message(
-                            &state.chat_container,
-                            &format!(
-                                "OAuth credentials saved for {provider}; reloading providers…"
-                            ),
-                        );
-                        let _ = tx.send(TuiMessage::ReloadExtensions);
-                    }
-                    Err(error) => {
+                Ok(Some(token)) => {
+                    let credential = crate::config::Credential::Oauth {
+                        access: token.access,
+                        refresh: token.refresh,
+                        expires: token.expires_at,
+                        account_id: oauth_account_id(provider, &response.payload),
+                    };
+                    show_provider_auth_status(
+                        state,
+                        editor_container,
+                        editor,
+                        tui,
+                        &format!("Saving OAuth credentials for {provider}…"),
+                    );
+                    if tx
+                        .send(TuiMessage::AuthStoreMutation(AuthStoreMutationRequest {
+                            provider: provider.to_string(),
+                            operation: AuthStoreMutationOperation::Upsert(credential),
+                            purpose: AuthStoreMutationPurpose::ProviderOAuthLogin { flow_id },
+                        }))
+                        .is_err()
+                    {
                         finish_provider_login(state, editor_container, editor, tui);
                         add_error_message(
                             &state.chat_container,
-                            &format!("Could not save OAuth credentials for {provider}: {error}"),
+                            &format!("Could not queue OAuth credentials for {provider}."),
                         );
                     }
-                },
+                }
                 Ok(None) | Err(_) => {
                     finish_provider_login(state, editor_container, editor, tui);
                     add_error_message(
@@ -1069,23 +1181,19 @@ pub(super) fn handle_provider_oauth_result(
             tui.request_render(false);
         }
         (ProviderOAuthPurpose::Logout, ice_extensions::OAuthResponseKind::Success) => {
-            finish_provider_login(state, editor_container, editor, tui);
-            match crate::config::delete_credential(provider) {
-                Ok(true) => {
-                    add_note_message(
-                        &state.chat_container,
-                        &format!("OAuth credentials revoked for {provider}; reloading providers…"),
-                    );
-                    let _ = tx.send(TuiMessage::ReloadExtensions);
-                }
-                Ok(false) => add_note_message(
+            if tx
+                .send(TuiMessage::AuthStoreMutation(AuthStoreMutationRequest {
+                    provider: provider.to_string(),
+                    operation: AuthStoreMutationOperation::Delete,
+                    purpose: AuthStoreMutationPurpose::ProviderOAuthLogout { flow_id },
+                }))
+                .is_err()
+            {
+                finish_provider_login(state, editor_container, editor, tui);
+                add_error_message(
                     &state.chat_container,
-                    &format!("No saved credentials found for {provider}."),
-                ),
-                Err(error) => add_error_message(
-                    &state.chat_container,
-                    &format!("Could not remove {provider} credentials: {error}"),
-                ),
+                    &format!("Could not queue removal of {provider} credentials."),
+                );
             }
             tui.request_render(false);
         }
@@ -1102,6 +1210,210 @@ pub(super) fn handle_provider_oauth_result(
     }
 }
 
+pub(super) fn handle_auth_store_mutation_result(
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+    result: AuthStoreMutationResult,
+) {
+    let AuthStoreMutationResult {
+        provider,
+        purpose,
+        result,
+    } = result;
+    match purpose {
+        AuthStoreMutationPurpose::ApiKeyCommand => match result {
+            Ok(AuthStoreMutationOutcome::Changed(_)) => {
+                add_note_message(
+                    &state.chat_container,
+                    &format!("Saved credentials for {provider}; reloading providers…"),
+                );
+                let _ = tx.send(TuiMessage::ReloadExtensions);
+            }
+            Ok(AuthStoreMutationOutcome::Logout(_)) => add_error_message(
+                &state.chat_container,
+                "Unexpected credential worker result while saving credentials.",
+            ),
+            Err(error) => add_error_message(
+                &state.chat_container,
+                &format!("Could not save {provider} credentials: {error}"),
+            ),
+        },
+        AuthStoreMutationPurpose::ApiKeyPrompt { flow_id } => match result {
+            Ok(AuthStoreMutationOutcome::Changed(_)) => {
+                add_note_message(
+                    &state.chat_container,
+                    &format!("Saved credentials for {provider}; reloading providers…"),
+                );
+                let _ = tx.send(TuiMessage::ReloadExtensions);
+                if state
+                    .provider_auth_flow_id
+                    .load(std::sync::atomic::Ordering::Acquire)
+                    == flow_id
+                {
+                    finish_provider_login(state, editor_container, editor, tui);
+                }
+            }
+            Ok(AuthStoreMutationOutcome::Logout(_)) => add_error_message(
+                &state.chat_container,
+                "Unexpected credential worker result while saving credentials.",
+            ),
+            Err(error) => add_error_message(
+                &state.chat_container,
+                &format!("Could not save {provider} credentials: {error}"),
+            ),
+        },
+        AuthStoreMutationPurpose::ProviderOAuthLogin { flow_id } => {
+            if state
+                .provider_auth_flow_id
+                .load(std::sync::atomic::Ordering::Acquire)
+                == flow_id
+            {
+                finish_provider_login(state, editor_container, editor, tui);
+            }
+            match result {
+                Ok(AuthStoreMutationOutcome::Changed(_)) => {
+                    add_note_message(
+                        &state.chat_container,
+                        &format!("OAuth credentials saved for {provider}; reloading providers…"),
+                    );
+                    let _ = tx.send(TuiMessage::ReloadExtensions);
+                }
+                Ok(AuthStoreMutationOutcome::Logout(_)) => add_error_message(
+                    &state.chat_container,
+                    "Unexpected credential worker result while saving OAuth credentials.",
+                ),
+                Err(error) => add_error_message(
+                    &state.chat_container,
+                    &format!("Could not save OAuth credentials for {provider}: {error}"),
+                ),
+            }
+        }
+        AuthStoreMutationPurpose::ProviderOAuthLogout { flow_id } => {
+            if state
+                .provider_auth_flow_id
+                .load(std::sync::atomic::Ordering::Acquire)
+                == flow_id
+            {
+                finish_provider_login(state, editor_container, editor, tui);
+            }
+            match result {
+                Ok(AuthStoreMutationOutcome::Changed(true)) => {
+                    add_note_message(
+                        &state.chat_container,
+                        &format!("OAuth credentials revoked for {provider}; reloading providers…"),
+                    );
+                    let _ = tx.send(TuiMessage::ReloadExtensions);
+                }
+                Ok(AuthStoreMutationOutcome::Changed(false)) => add_note_message(
+                    &state.chat_container,
+                    &format!("No saved credentials found for {provider}."),
+                ),
+                Ok(AuthStoreMutationOutcome::Logout(_)) => add_error_message(
+                    &state.chat_container,
+                    "Unexpected credential worker result while removing credentials.",
+                ),
+                Err(error) => add_error_message(
+                    &state.chat_container,
+                    &format!("Could not remove {provider} credentials: {error}"),
+                ),
+            }
+        }
+        AuthStoreMutationPurpose::LocalLogout => match result {
+            Ok(AuthStoreMutationOutcome::Logout(AuthStoreLogoutOutcome::NoCredential)) => {
+                add_note_message(
+                    &state.chat_container,
+                    &format!("No saved credentials found for {provider}."),
+                );
+            }
+            Ok(AuthStoreMutationOutcome::Logout(AuthStoreLogoutOutcome::Removed(true))) => {
+                add_note_message(
+                    &state.chat_container,
+                    &format!("Removed saved credentials for {provider}; reloading providers…"),
+                );
+                let _ = tx.send(TuiMessage::ReloadExtensions);
+            }
+            Ok(AuthStoreMutationOutcome::Logout(AuthStoreLogoutOutcome::Removed(false)))
+            | Ok(AuthStoreMutationOutcome::Changed(false)) => {
+                add_note_message(
+                    &state.chat_container,
+                    &format!("No saved credentials found for {provider}."),
+                );
+            }
+            Ok(AuthStoreMutationOutcome::Changed(true)) => {
+                add_note_message(
+                    &state.chat_container,
+                    &format!("Removed saved credentials for {provider}; reloading providers…"),
+                );
+                let _ = tx.send(TuiMessage::ReloadExtensions);
+            }
+            Ok(AuthStoreMutationOutcome::Logout(AuthStoreLogoutOutcome::OAuthCredential(
+                crate::config::Credential::Oauth {
+                    access, refresh, ..
+                },
+            ))) => {
+                show_provider_auth_status(
+                    state,
+                    editor_container,
+                    editor,
+                    tui,
+                    &format!("Revoking OAuth credentials for {provider}…"),
+                );
+                let flow_id = state
+                    .provider_auth_generation
+                    .fetch_add(1, std::sync::atomic::Ordering::AcqRel)
+                    .wrapping_add(1);
+                state
+                    .provider_auth_flow_id
+                    .store(flow_id, std::sync::atomic::Ordering::Release);
+                if tx
+                    .send(TuiMessage::ProviderOAuthAction {
+                        provider: provider.clone(),
+                        action: "revoke".to_string(),
+                        input: serde_json::json!({
+                            "credential": {"access": access, "refresh": refresh}
+                        }),
+                        purpose: ProviderOAuthPurpose::Logout,
+                        flow_id,
+                    })
+                    .is_err()
+                {
+                    finish_provider_login(state, editor_container, editor, tui);
+                    add_error_message(
+                        &state.chat_container,
+                        &format!("Could not start OAuth revocation for {provider}."),
+                    );
+                }
+            }
+            Ok(AuthStoreMutationOutcome::Logout(AuthStoreLogoutOutcome::OAuthCredential(
+                crate::config::Credential::ApiKey { .. },
+            ))) => add_error_message(
+                &state.chat_container,
+                "Unexpected API-key credential in OAuth logout result.",
+            ),
+            Err(error) => add_error_message(
+                &state.chat_container,
+                &format!("Could not remove {provider} credentials: {error}"),
+            ),
+        },
+    }
+    tui.request_render(false);
+}
+
+fn oauth_account_id(provider: &str, payload: &serde_json::Value) -> Option<String> {
+    if !provider.eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID) {
+        return None;
+    }
+    payload
+        .get("accountId")
+        .or_else(|| payload.get("account_id"))
+        .and_then(serde_json::Value::as_str)
+        .filter(|account_id| !account_id.is_empty())
+        .map(str::to_string)
+}
+
 fn begin_provider_oauth_input(
     state: &Arc<TuiState>,
     editor_container: &Arc<Container>,
@@ -1111,6 +1423,83 @@ fn begin_provider_oauth_input(
     provider: &str,
     payload: serde_json::Value,
     flow_id: u64,
+) {
+    begin_provider_oauth_input_with_route(
+        state,
+        editor_container,
+        editor,
+        tui,
+        tx,
+        provider,
+        payload,
+        flow_id,
+        ProviderOAuthInputRoute::Extension,
+    );
+}
+
+pub(super) fn begin_builtin_codex_oauth_input(
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+    provider: &str,
+    authorization_url: &str,
+    callback_available: bool,
+    browser_error: Option<&str>,
+    manual_input: mpsc::Sender<String>,
+    flow_id: u64,
+) {
+    let mut instructions = if callback_available {
+        vec![
+            "Complete sign-in in your browser; the local callback will finish automatically."
+                .into(),
+            "You may also paste the redirected URL or authorization code below.".into(),
+        ]
+    } else {
+        vec![
+            "Automatic callback is unavailable; paste the redirected URL or authorization code below.".into(),
+        ]
+    };
+    if let Some(error) = browser_error {
+        instructions.push(format!("Could not open the browser automatically: {error}"));
+    }
+    let payload = serde_json::json!({
+        "display": {
+            "title": "Sign in to ChatGPT",
+            "url": authorization_url,
+            "instructions": instructions,
+        }
+    });
+    begin_provider_oauth_input_with_route(
+        state,
+        editor_container,
+        editor,
+        tui,
+        tx,
+        provider,
+        payload,
+        flow_id,
+        ProviderOAuthInputRoute::BuiltinCodex(manual_input),
+    );
+}
+
+#[derive(Clone)]
+enum ProviderOAuthInputRoute {
+    Extension,
+    BuiltinCodex(mpsc::Sender<String>),
+}
+
+fn begin_provider_oauth_input_with_route(
+    state: &Arc<TuiState>,
+    editor_container: &Arc<Container>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    tx: &mpsc::UnboundedSender<TuiMessage>,
+    provider: &str,
+    payload: serde_json::Value,
+    flow_id: u64,
+    route: ProviderOAuthInputRoute,
 ) {
     let display = payload.get("display").unwrap_or(&payload);
     let title = display
@@ -1159,6 +1548,7 @@ fn begin_provider_oauth_input(
     let tui_submit = tui.clone();
     let tx_submit = tx.clone();
     let provider_submit = provider.to_string();
+    let route_submit = route.clone();
     input.on_submit(Arc::new(move |text| {
         let value = text.trim();
         if value.is_empty() {
@@ -1166,32 +1556,62 @@ fn begin_provider_oauth_input(
             tui_submit.request_render(false);
             return;
         }
-        show_provider_auth_status(
-            &state_submit,
-            &ec_submit,
-            &editor_submit,
-            &tui_submit,
-            &format!("Completing OAuth login for {provider_submit}…"),
-        );
-        add_note_message(
-            &state_submit.chat_container,
-            &format!("Completing OAuth login for {provider_submit}…"),
-        );
-        let _ = tx_submit.send(TuiMessage::ProviderOAuthAction {
-            provider: provider_submit.clone(),
-            action: "exchange".to_string(),
-            input: serde_json::json!({"value": value}),
-            purpose: ProviderOAuthPurpose::Login,
-            flow_id,
-        });
+        match &route_submit {
+            ProviderOAuthInputRoute::Extension => {
+                show_provider_auth_status(
+                    &state_submit,
+                    &ec_submit,
+                    &editor_submit,
+                    &tui_submit,
+                    &format!("Completing OAuth login for {provider_submit}…"),
+                );
+                add_note_message(
+                    &state_submit.chat_container,
+                    &format!("Completing OAuth login for {provider_submit}…"),
+                );
+                let _ = tx_submit.send(TuiMessage::ProviderOAuthAction {
+                    provider: provider_submit.clone(),
+                    action: "exchange".to_string(),
+                    input: serde_json::json!({"value": value}),
+                    purpose: ProviderOAuthPurpose::Login,
+                    flow_id,
+                });
+            }
+            ProviderOAuthInputRoute::BuiltinCodex(manual_input) => {
+                if manual_input.try_send(value.to_string()).is_ok() {
+                    show_provider_auth_status(
+                        &state_submit,
+                        &ec_submit,
+                        &editor_submit,
+                        &tui_submit,
+                        &format!("Completing OAuth login for {provider_submit}…"),
+                    );
+                    add_note_message(
+                        &state_submit.chat_container,
+                        &format!("Completing OAuth login for {provider_submit}…"),
+                    );
+                } else {
+                    add_error_message(
+                        &state_submit.chat_container,
+                        "The OAuth flow is no longer accepting manual input.",
+                    );
+                }
+            }
+        }
     }));
 
     let state_cancel = state.clone();
     let ec_cancel = editor_container.clone();
     let editor_cancel = editor.clone();
     let tui_cancel = tui.clone();
+    let route_cancel = route;
+    let tx_cancel = tx.clone();
     input.on_escape(Arc::new(move || {
+        let cancel_builtin = matches!(route_cancel, ProviderOAuthInputRoute::BuiltinCodex(_));
         finish_provider_login(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
+        if cancel_builtin {
+            let _ = tx_cancel.send(TuiMessage::CodexOAuthCancel { flow_id });
+        }
         add_note_message(&state_cancel.chat_container, "OAuth login cancelled.");
     }));
     tui.request_render(false);
@@ -1261,29 +1681,37 @@ fn provider_origin_protocol(
             .get(id)
             .and_then(|provider| provider.api.as_deref())
             .or_else(|| manifest.models.first().map(|model| model.api.as_str()));
-        let protocol = match api {
-            Some("anthropic-messages") => "Anthropic 兼容",
-            Some("openai-completions" | "openai-responses") => "OpenAI 兼容",
-            _ => "自定义协议",
-        };
-        return ("package", protocol);
+        return (
+            "package",
+            protocol_family(api.and_then(WireProtocol::parse)),
+        );
     }
     match id.to_ascii_lowercase().as_str() {
-        "anthropic" => ("内置", "Anthropic"),
-        "openai" => ("内置", "OpenAI"),
+        "anthropic" => ("built-in", "Anthropic"),
+        "openai" => ("built-in", "OpenAI"),
+        "openai-codex" => ("built-in", "ChatGPT subscription"),
+        // Only an explicit `api` counts here: an entry without one is listed
+        // as a custom protocol rather than as Anthropic-compatible.
         _ => {
             let protocol = cfg
                 .providers
                 .get(id)
                 .and_then(|p| p.api.as_deref())
-                .map(|api| match api {
-                    "anthropic-messages" => "Anthropic 兼容",
-                    "openai-completions" | "openai-responses" => "OpenAI 兼容",
-                    _ => "自定义协议",
-                })
-                .unwrap_or("自定义协议");
-            ("自定义", protocol)
+                .and_then(WireProtocol::parse);
+            ("custom", protocol_family(protocol))
         }
+    }
+}
+
+/// The `/provider` label for a protocol family.
+fn protocol_family(protocol: Option<WireProtocol>) -> &'static str {
+    match protocol {
+        Some(WireProtocol::AnthropicMessages) => "Anthropic-compatible",
+        Some(WireProtocol::OpenaiCompletions | WireProtocol::OpenaiResponses) => {
+            "OpenAI-compatible"
+        }
+        Some(WireProtocol::OpenaiCodexResponses) => "ChatGPT subscription",
+        None => "custom protocol",
     }
 }
 
@@ -1465,15 +1893,28 @@ fn show_provider_api_selector(
     editor: &Arc<Editor>,
     tui: &Arc<TuiAltScreen>,
 ) {
-    let items = vec![
-        SelectItem::new("openai-completions", "OpenAI Completions")
-            .with_description("OpenAI Chat Completions 兼容接口"),
-        SelectItem::new("anthropic-messages", "Anthropic Messages")
-            .with_description("Anthropic Messages 兼容接口"),
-        SelectItem::new("openai-responses", "OpenAI Responses")
-            .with_description("OpenAI Responses 接口"),
-    ];
-    let list = Arc::new(SelectList::new(items, 3));
+    let items: Vec<SelectItem> = WireProtocol::ALL
+        .into_iter()
+        .map(|protocol| {
+            let (label, description) = match protocol {
+                WireProtocol::OpenaiCompletions => (
+                    "OpenAI Completions",
+                    "OpenAI Chat Completions-compatible endpoint",
+                ),
+                WireProtocol::AnthropicMessages => (
+                    "Anthropic Messages",
+                    "Anthropic Messages-compatible endpoint",
+                ),
+                WireProtocol::OpenaiResponses => ("OpenAI Responses", "OpenAI Responses endpoint"),
+                WireProtocol::OpenaiCodexResponses => (
+                    "ChatGPT Codex Responses",
+                    "ChatGPT subscription endpoint (OAuth login required)",
+                ),
+            };
+            SelectItem::new(protocol.as_str(), label).with_description(description)
+        })
+        .collect();
+    let list = Arc::new(SelectList::new(items, WireProtocol::ALL.len()));
 
     let frame = provider_form_frame(
         "Add provider · step 2/6",
@@ -1869,4 +2310,79 @@ pub(super) fn open_settings_thinking_selector(
         list,
         SelectorKind::Settings,
     );
+}
+
+#[cfg(test)]
+mod builtin_codex_oauth_tests {
+    use super::{add_builtin_codex_login_id, builtin_codex_login_available, oauth_account_id};
+
+    fn provider_manifest(id: &str) -> ice_extensions::ProviderManifest {
+        ice_extensions::ProviderManifest {
+            id: id.into(),
+            models: Vec::new(),
+            api_key_env: None,
+            requires_auth: true,
+        }
+    }
+
+    fn oauth_provider(id: &str) -> ice_extensions::OAuthProviderInfo {
+        ice_extensions::OAuthProviderInfo {
+            plugin: "test-oauth".into(),
+            id: id.into(),
+            manifest: serde_json::json!({}).as_object().expect("object").clone(),
+        }
+    }
+
+    #[test]
+    fn builtin_codex_is_discoverable_without_an_extension_owner() {
+        let mut ids = Vec::new();
+        add_builtin_codex_login_id(&mut ids, &[], &[]);
+        assert_eq!(ids, vec!["openai-codex".to_string()]);
+        assert!(builtin_codex_login_available(&[], &[]));
+    }
+
+    #[test]
+    fn extension_oauth_owner_takes_priority_over_builtin_codex() {
+        assert!(!builtin_codex_login_available(
+            &[],
+            &[oauth_provider("OPENAI-CODEX")]
+        ));
+        assert!(!builtin_codex_login_available(
+            &[provider_manifest("OpenAI-Codex")],
+            &[]
+        ));
+        assert!(builtin_codex_login_available(
+            &[provider_manifest("other-provider")],
+            &[]
+        ));
+
+        let mut ids = Vec::new();
+        add_builtin_codex_login_id(&mut ids, &[], &[oauth_provider("openai-codex")]);
+        assert!(ids.is_empty());
+        add_builtin_codex_login_id(&mut ids, &[provider_manifest("openai-codex")], &[]);
+        assert!(ids.is_empty());
+    }
+
+    #[test]
+    fn account_id_is_read_only_for_codex_and_never_inherited_when_missing() {
+        assert_eq!(
+            oauth_account_id("OPENAI-CODEX", &serde_json::json!({"accountId": "acct-1"})),
+            Some("acct-1".to_string())
+        );
+        assert_eq!(
+            oauth_account_id("openai-codex", &serde_json::json!({"account_id": "acct-2"})),
+            Some("acct-2".to_string())
+        );
+        assert_eq!(
+            oauth_account_id("openai-codex", &serde_json::json!({})),
+            None
+        );
+        assert_eq!(
+            oauth_account_id(
+                "other-provider",
+                &serde_json::json!({"accountId": "acct-1"})
+            ),
+            None
+        );
+    }
 }

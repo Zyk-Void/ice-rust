@@ -812,6 +812,7 @@ pub async fn build_prepared(
         ),
         stream_options: AgentHarnessStreamOptions {
             timeout: args.timeout,
+            cache_retention: crate::args::cache_retention_from_env(),
             ..Default::default()
         },
         // Settings-backed harness options: upstream lets users tune retry,
@@ -1370,7 +1371,23 @@ where
     };
     let packaged = has_package_providers(&extension_session)
         || has_package_providers(&ctx.extension_session.lock().unwrap());
-    let refreshed = if packaged {
+    // Re-fetch the signed-in ChatGPT account's model list so newly granted
+    // models appear and unavailable ones disappear. A failure keeps the cached
+    // list and is reported with the reload outcome.
+    let (codex_models_changed, mut codex_models_error) = if crate::args::offline_env_enabled() {
+        (false, None)
+    } else {
+        match crate::codex_models::refresh(
+            crate::provider::OPENAI_CODEX_BASE_URL,
+            tokio_util::sync::CancellationToken::new(),
+        )
+        .await
+        {
+            Ok(changed) => (changed, None),
+            Err(error) => (false, Some(error)),
+        }
+    };
+    let refreshed = if packaged || codex_models_changed {
         let mut args = effective_args.clone();
         if let Ok(current) = harness.lane("main").get_model().await {
             let was_package = ctx
@@ -1410,6 +1427,12 @@ where
             &extension_session,
         ) {
             Ok(resolved) => Some(resolved),
+            // The refreshed list may no longer include the active model; that
+            // must not fail a reload that has no provider packages to apply.
+            Err(error) if !packaged => {
+                codex_models_error = Some(error.to_string());
+                None
+            }
             Err(error) => {
                 return ReloadOutcome {
                     summary: "Reload failed while resolving provider packages".into(),
@@ -1683,6 +1706,12 @@ where
     active = filter_active_tool_names(active, &effective_args);
     let _ = harness.set_tools(tools, Some(active)).await;
 
+    if let Some(error) = codex_models_error {
+        warnings = true;
+        details.push(format!(
+            "Could not refresh the ChatGPT Codex model list; keeping the cached list: {error}"
+        ));
+    }
     if let Some(error) = model_refresh_error {
         warnings = true;
         details.push(format!(

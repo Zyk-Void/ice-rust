@@ -1,10 +1,10 @@
 //! Provider + model resolution. Mirrors the provider/model selection and
 //! request-auth portions of upstream's model runtime.
 //!
-//! The built-in lane uses Anthropic's protocol, while `models.json` may add
-//! named Anthropic-compatible, OpenAI Completions, and OpenAI Responses
-//! providers. OAuth/Copilot remains deferred. This module resolves one provider
-//! identity and its isolated model catalog for each run.
+//! Built-in lanes use Anthropic, OpenAI Responses, and ChatGPT Codex protocols,
+//! while `models.json` may add named compatible providers. Built-in Codex OAuth
+//! is bound privately per request; other OAuth providers remain deferred. This
+//! module resolves one provider identity and its isolated model catalog per run.
 //!
 //! # Auth resolution and isolation
 //!
@@ -74,7 +74,8 @@ use ice_ai::providers::openai_completions::OpenAiCompletionsProvider;
 use ice_ai::providers::openai_responses::openai_responses_models;
 use ice_ai::providers::openai_responses::OpenAiResponsesProvider;
 use ice_ai::{
-    AssistantMessageEventStream, Context, Model, Provider, SimpleStreamOptions, ThinkingLevel,
+    AssistantMessageEventStream, Context, InputModality, Model, ModelCost, ModelCostRates,
+    ModelCostTier, Provider, SimpleStreamOptions, ThinkingLevel, ThinkingLevelMap,
 };
 
 mod binding;
@@ -83,19 +84,21 @@ use binding::{ExecutionBinding, RequestAuth};
 use factories::RuntimeFactories;
 
 use crate::args::parse_thinking_level;
-#[cfg(test)]
-use crate::config::Credential;
-use crate::config::{self, DEFAULT_PROVIDER_ID};
+use crate::codex_models::DiscoveredModel;
+use crate::config::{self, Credential, DEFAULT_PROVIDER_ID};
 use crate::settings;
 
 /// The default Anthropic model when `--model` is absent. Kept in sync with the
 /// current upstream `defaultModelPerProvider.anthropic` entry.
 pub const DEFAULT_MODEL_ID: &str = "claude-opus-4-8";
 
-/// Core provider defaults, checked before the first authenticated catalog entry.
-/// Other providers own their default catalog ordering through their package.
-const DEFAULT_MODELS_PER_PROVIDER: &[(&str, &str)] =
-    &[("anthropic", DEFAULT_MODEL_ID), ("openai", "gpt-5.5")];
+/// Built-in provider defaults, checked before the first authenticated catalog
+/// entry. Keep them in the same declaration order as the TS resolver.
+const DEFAULT_MODELS_PER_PROVIDER: &[(&str, &str)] = &[
+    ("anthropic", DEFAULT_MODEL_ID),
+    ("openai", "gpt-5.5"),
+    ("openai-codex", "gpt-5.5"),
+];
 
 /// The default thinking level when neither `--thinking` nor a `:level` suffix
 /// is present. Mirrors the TS `DEFAULT_THINKING_LEVEL` (`"medium"`, clamped to
@@ -172,7 +175,7 @@ pub const NO_API_KEY_HINT: &str =
 /// exit) except `NoApiKey`, which prints guidance then exits.
 #[derive(Debug, thiserror::Error)]
 pub enum ResolveError {
-    #[error("Unknown provider \"{0}\". Supported: anthropic, openai-completions, openai-responses, a models.json provider id, or an installed provider package")]
+    #[error("Unknown provider \"{0}\". Supported: anthropic, openai-completions, openai-responses, openai-codex, a models.json provider id, or an installed provider package")]
     UnknownProvider(String),
     #[error(
         "Provider \"{requested}\" is ambiguous: {matches}. Use the exact provider id to select one."
@@ -192,6 +195,8 @@ pub enum ResolveError {
     InvalidThinkingLevel(String, String),
     #[error("No API key. Set one of: {hint}")]
     NoApiKey { hint: &'static str },
+    #[error("Could not initialize Codex OAuth: {0}")]
+    CodexAuth(String),
     #[error("Could not read config: {0}")]
     Config(#[from] config::ConfigError),
 }
@@ -320,7 +325,7 @@ fn resolve_with_factories(
     let anthropic_credentials =
         resolve_anthropic_credentials(&models_cfg, &auth_store, &factories.manifests);
     let openai_credentials =
-        resolve_openai_credentials(&models_cfg, &auth_store, &factories.manifests);
+        resolve_openai_credentials(&models_cfg, &auth_store, &factories.manifests, factories);
     // The CLI override is intentionally not inserted into either provider map:
     // it is applied only after the final model/provider identity is selected.
     let cli_api_key = cli_api_key
@@ -527,7 +532,7 @@ fn resolve_with_factories(
                     return None;
                 }
                 find_model(id, saved_provider, &catalog, &models_cfg).filter(|m| {
-                    model_is_authed_for_resolution(
+                    model_is_requestable(
                         m,
                         &anthropic_credentials,
                         &openai_credentials,
@@ -581,20 +586,33 @@ fn resolve_with_factories(
     } else {
         None
     };
-    let selected_openai_key = if selected_api != ice_ai::Api::AnthropicMessages {
-        cli_api_key
-            .clone()
-            .or_else(|| openai_credential_for(&openai_credentials, &selected_provider).cloned())
+    let selected_codex_oauth = if selected_api == ice_ai::Api::OpenaiCodexResponses
+        && cli_api_key.is_none()
+        && !factories.extension_owns(&selected_provider, &selected_api)
+    {
+        openai_codex_oauth_for(&openai_credentials, &selected_provider)
     } else {
         None
     };
-    let selected_is_authed = openai_credentials.contains_key(&selected_provider)
+    let selected_openai_key = if selected_api != ice_ai::Api::AnthropicMessages {
+        cli_api_key.clone().or_else(|| {
+            if selected_codex_oauth.is_none() {
+                openai_credential_for(&openai_credentials, &selected_provider).cloned()
+            } else {
+                None
+            }
+        })
+    } else {
+        None
+    };
+    let selected_is_authed = openai_credential_is_ready(&openai_credentials, &selected_provider)
+        || selected_codex_oauth.is_some()
         || model_has_header_auth(&model)
         || match selected_api {
             ice_ai::Api::AnthropicMessages => selected_anthropic_credential.is_some(),
-            ice_ai::Api::OpenaiCompletions | ice_ai::Api::OpenaiResponses => {
-                selected_openai_key.is_some()
-            }
+            ice_ai::Api::OpenaiCompletions
+            | ice_ai::Api::OpenaiResponses
+            | ice_ai::Api::OpenaiCodexResponses => selected_openai_key.is_some(),
             _ => false,
         };
     if !selected_is_authed {
@@ -609,9 +627,10 @@ fn resolve_with_factories(
         &full_catalog,
         selected_anthropic_credential.as_ref(),
         selected_openai_key.as_deref(),
+        selected_codex_oauth,
         &settings,
         factories,
-    );
+    )?;
 
     // Build runtimes for every OTHER authenticated provider so the harness can
     // hot-switch providers by `model.provider` (its lazy resolve matches by
@@ -643,7 +662,9 @@ fn resolve_with_factories(
                         None,
                     )
                 }
-                ice_ai::Api::OpenaiCompletions | ice_ai::Api::OpenaiResponses => (
+                ice_ai::Api::OpenaiCompletions
+                | ice_ai::Api::OpenaiResponses
+                | ice_ai::Api::OpenaiCodexResponses => (
                     None,
                     openai_credential_for(&openai_credentials, &candidate.provider).cloned(),
                 ),
@@ -652,13 +673,22 @@ fn resolve_with_factories(
                     openai_credential_for(&openai_credentials, &candidate.provider).cloned(),
                 ),
             };
-            let authed = openai_credentials.contains_key(&candidate.provider)
+            let codex_oauth = if candidate.api == ice_ai::Api::OpenaiCodexResponses
+                && openai_key.is_none()
+                && !factories.extension_owns(&candidate.provider, &candidate.api)
+            {
+                openai_codex_oauth_for(&openai_credentials, &candidate.provider)
+            } else {
+                None
+            };
+            let authed = openai_credential_is_ready(&openai_credentials, &candidate.provider)
+                || codex_oauth.is_some()
                 || model_has_header_auth(candidate)
                 || match candidate.api {
                     ice_ai::Api::AnthropicMessages => anth.is_some(),
-                    ice_ai::Api::OpenaiCompletions | ice_ai::Api::OpenaiResponses => {
-                        openai_key.is_some()
-                    }
+                    ice_ai::Api::OpenaiCompletions
+                    | ice_ai::Api::OpenaiResponses
+                    | ice_ai::Api::OpenaiCodexResponses => openai_key.is_some(),
                     _ => false,
                 };
             if !authed {
@@ -670,9 +700,10 @@ fn resolve_with_factories(
                 &full_catalog,
                 anth.as_ref(),
                 openai_key.as_deref(),
+                codex_oauth,
                 &settings,
                 factories,
-            );
+            )?;
             providers.push(runtime);
         }
     }
@@ -720,14 +751,18 @@ fn build_runtime(
     catalog: &[Model],
     anthropic_credential: Option<&AnthropicCredential>,
     openai_key: Option<&str>,
+    codex_oauth: Option<&Credential>,
     settings: &settings::Settings,
     factories: &RuntimeFactories,
-) -> (Arc<dyn Provider>, Arc<ExecutionBinding>, bool) {
+) -> Result<(Arc<dyn Provider>, Arc<ExecutionBinding>, bool), ResolveError> {
     let anonymous = factories
         .manifests
         .iter()
         .any(|manifest| manifest.id == provider_id && !manifest.requires_auth);
-    let provider_has_auth = anthropic_credential.is_some() || openai_key.is_some() || anonymous;
+    let provider_has_auth = anthropic_credential.is_some()
+        || openai_key.is_some()
+        || codex_oauth.is_some()
+        || anonymous;
     let models = catalog
         .iter()
         .filter(|model| model.api == *api && model.provider == provider_id)
@@ -737,13 +772,20 @@ fn build_runtime(
     let auth = match anthropic_credential {
         Some(AnthropicCredential::ProviderKey(key)) => RequestAuth::ApiKey(key.clone()),
         Some(AnthropicCredential::Headers(headers)) => RequestAuth::Headers(headers.clone()),
-        None => openai_key.map_or(RequestAuth::None, |key| RequestAuth::ApiKey(key.into())),
+        None => match (openai_key, codex_oauth) {
+            (Some(key), _) => RequestAuth::ApiKey(key.into()),
+            (None, Some(credential)) => RequestAuth::Oauth(
+                crate::codex_auth::CodexToken::new(credential.clone())
+                    .map_err(ResolveError::CodexAuth)?,
+            ),
+            (None, None) => RequestAuth::None,
+        },
     };
     let has_provider_key = matches!(auth, RequestAuth::ApiKey(_)) || anonymous;
     let (provider, binding) = factories
         .configure(provider_id, api, models, auth, settings)
         .expect("supported protocol or registered provider factory");
-    (provider, binding, has_provider_key)
+    Ok((provider, binding, has_provider_key))
 }
 
 /// Credential-free descriptors for the selected provider. Authentication was
@@ -856,12 +898,200 @@ fn apply_manifest_defaults(
     }
 }
 
+pub(crate) const OPENAI_CODEX_BASE_URL: &str = "https://chatgpt.com/backend-api";
+
+#[derive(Clone, Copy)]
+struct CodexModelDefinition<'a> {
+    id: &'a str,
+    name: &'a str,
+    context_window: u64,
+    supports_images: bool,
+    rates: ModelCostRates,
+    tier: Option<(i64, ModelCostRates)>,
+    supports_max_thinking: bool,
+    cost_configured: bool,
+}
+
+const fn codex_rates(input: f64, output: f64, cache_read: f64, cache_write: f64) -> ModelCostRates {
+    ModelCostRates {
+        input,
+        output,
+        cache_read,
+        cache_write,
+    }
+}
+
+/// Built-in ChatGPT Codex catalog, aligned with entries marked
+/// `visibility: "list"` in OpenAI Codex's public
+/// `codex-rs/models-manager/models.json`. The project TypeScript list is
+/// static and no longer matches the visible Codex catalog. Cost metadata is
+/// retained where the project TypeScript source defines it; newer Codex models
+/// have no subscription cost data in the official catalog.
+///
+/// When the signed-in account's model list is cached (see [`crate::codex_models`])
+/// the catalog is exactly that list: unlisted built-ins are dropped and listed
+/// models without a built-in entry are added with no cost data.
+fn openai_codex_models(discovered: Option<&[DiscoveredModel]>) -> Vec<Model> {
+    const MODELS: &[CodexModelDefinition<'static>] = &[
+        CodexModelDefinition {
+            id: "gpt-6-astra",
+            name: "GPT-6-Astra",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(0.0, 0.0, 0.0, 0.0),
+            tier: None,
+            supports_max_thinking: true,
+            cost_configured: false,
+        },
+        CodexModelDefinition {
+            id: "gpt-6.1-sol",
+            name: "GPT-6.1-Sol",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(0.0, 0.0, 0.0, 0.0),
+            tier: None,
+            supports_max_thinking: true,
+            cost_configured: false,
+        },
+        CodexModelDefinition {
+            id: "gpt-6-sol",
+            name: "GPT-6-Sol",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(0.0, 0.0, 0.0, 0.0),
+            tier: None,
+            supports_max_thinking: true,
+            cost_configured: false,
+        },
+        CodexModelDefinition {
+            id: "gpt-6-luna",
+            name: "GPT-6-Luna",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(0.0, 0.0, 0.0, 0.0),
+            tier: None,
+            supports_max_thinking: true,
+            cost_configured: false,
+        },
+        CodexModelDefinition {
+            id: "gpt-5.6-sol",
+            name: "GPT-5.6-Sol",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(5.0, 30.0, 0.5, 6.25),
+            tier: Some((272_000, codex_rates(10.0, 45.0, 1.0, 12.5))),
+            supports_max_thinking: true,
+            cost_configured: true,
+        },
+        CodexModelDefinition {
+            id: "gpt-5.6-terra",
+            name: "GPT-5.6-Terra",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(2.0, 12.0, 0.2, 2.5),
+            tier: Some((272_000, codex_rates(4.0, 18.0, 0.4, 5.0))),
+            supports_max_thinking: true,
+            cost_configured: true,
+        },
+        CodexModelDefinition {
+            id: "gpt-5.6-luna",
+            name: "GPT-5.6-Luna",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(0.2, 1.2, 0.02, 0.25),
+            tier: Some((272_000, codex_rates(0.4, 1.8, 0.04, 0.5))),
+            supports_max_thinking: true,
+            cost_configured: true,
+        },
+        CodexModelDefinition {
+            id: "gpt-5.5",
+            name: "GPT-5.5",
+            context_window: 272_000,
+            supports_images: true,
+            rates: codex_rates(5.0, 30.0, 0.5, 0.0),
+            tier: Some((272_000, codex_rates(10.0, 45.0, 1.0, 0.0))),
+            supports_max_thinking: false,
+            cost_configured: true,
+        },
+    ];
+
+    match discovered {
+        None => MODELS.iter().map(codex_model).collect(),
+        Some(discovered) => discovered
+            .iter()
+            .map(
+                |found| match MODELS.iter().find(|known| known.id == found.id) {
+                    Some(known) => codex_model(known),
+                    None => codex_model(&CodexModelDefinition {
+                        id: &found.id,
+                        name: &found.name,
+                        context_window: found.context_window,
+                        supports_images: found.supports_images,
+                        rates: codex_rates(0.0, 0.0, 0.0, 0.0),
+                        tier: None,
+                        supports_max_thinking: found.supports_max_thinking,
+                        cost_configured: false,
+                    }),
+                },
+            )
+            .collect(),
+    }
+}
+
+fn codex_model(definition: &CodexModelDefinition<'_>) -> Model {
+    let mut model = Model::new(
+        definition.id,
+        definition.name,
+        ice_ai::Api::OpenaiCodexResponses,
+        "openai-codex",
+        OPENAI_CODEX_BASE_URL,
+    );
+    model.reasoning = true;
+    model.context_window = definition.context_window;
+    model.max_tokens = 128_000;
+    model.input = if definition.supports_images {
+        vec![InputModality::Text, InputModality::Image]
+    } else {
+        vec![InputModality::Text]
+    };
+    if definition.cost_configured {
+        model.cost = ModelCost {
+            rates: definition.rates,
+            tiers: definition
+                .tier
+                .map(|(input_tokens_above, rates)| ModelCostTier {
+                    rates,
+                    input_tokens_above,
+                })
+                .into_iter()
+                .collect(),
+        };
+        model.cost_configured = true;
+    }
+    let mut thinking_level_map: ThinkingLevelMap = BTreeMap::from([
+        (ThinkingLevel::Xhigh, Some("xhigh".to_string())),
+        (ThinkingLevel::Minimal, Some("low".to_string())),
+    ]);
+    if definition.supports_max_thinking {
+        thinking_level_map.insert(ThinkingLevel::Max, Some("max".to_string()));
+    }
+    model.thinking_level_map = Some(thinking_level_map);
+    model.compat = Some(ice_ai::StreamingProtocolCompat::OpenaiResponses(
+        ice_ai::model::OpenaiResponsesCompat {
+            supports_openai_grammar_tools: Some(true),
+            ..Default::default()
+        },
+    ));
+    model
+}
+
 fn build_catalog(
     cfg: &config::ModelsConfig,
     manifests: &[ice_extensions::ProviderManifest],
 ) -> Vec<Model> {
     let mut catalog = anthropic_models();
     catalog.extend(openai_responses_models());
+    catalog.extend(openai_codex_models(crate::codex_models::load().as_deref()));
     for manifest in manifests {
         let config = cfg.providers.get(&manifest.id);
         for mut model in manifest.models.clone() {
@@ -913,8 +1143,29 @@ enum AnthropicCredential {
 type AnthropicCredentials = BTreeMap<String, AnthropicCredential>;
 enum OpenAiCredential {
     Key(String),
+    /// Retained for the Codex request binding so it can refresh an expired
+    /// access token. `ready` records strict local readiness; request selection
+    /// may still route through the refreshable binding.
+    StoredOauth {
+        credential: Credential,
+        ready: bool,
+    },
     Anonymous,
 }
+
+impl OpenAiCredential {
+    fn is_ready(&self) -> bool {
+        match self {
+            OpenAiCredential::Key(_) | OpenAiCredential::Anonymous => true,
+            OpenAiCredential::StoredOauth { ready, .. } => *ready,
+        }
+    }
+
+    fn refreshable(&self) -> bool {
+        matches!(self, OpenAiCredential::StoredOauth { .. })
+    }
+}
+
 type OpenAiCredentials = BTreeMap<String, OpenAiCredential>;
 
 /// Resolve one independent Anthropic-wire credential for each provider id.
@@ -927,7 +1178,7 @@ fn resolve_anthropic_credentials(
 ) -> AnthropicCredentials {
     let mut provider_ids = vec![DEFAULT_PROVIDER_ID.to_string()];
     for (provider_id, provider_cfg) in &cfg.providers {
-        if config::provider_is_anthropic_compatible(provider_cfg)
+        if provider_cfg.protocol() == Some(ice_ai::WireProtocol::AnthropicMessages)
             && !provider_ids.iter().any(|known| known == provider_id)
         {
             provider_ids.push(provider_id.clone());
@@ -986,12 +1237,18 @@ fn resolve_openai_credentials(
     cfg: &config::ModelsConfig,
     auth_store: &config::AuthStore,
     manifests: &[ice_extensions::ProviderManifest],
+    factories: &RuntimeFactories,
 ) -> OpenAiCredentials {
-    let mut provider_ids = vec!["openai".to_string()];
+    let mut provider_ids = vec!["openai".to_string(), "openai-codex".to_string()];
     for (provider_id, provider_cfg) in &cfg.providers {
-        if (config::provider_is_openai_completions(provider_cfg)
-            || config::provider_is_openai_responses(provider_cfg))
-            && !provider_ids.contains(provider_id)
+        if matches!(
+            provider_cfg.protocol(),
+            Some(
+                ice_ai::WireProtocol::OpenaiCompletions
+                    | ice_ai::WireProtocol::OpenaiResponses
+                    | ice_ai::WireProtocol::OpenaiCodexResponses
+            )
+        ) && !provider_ids.contains(provider_id)
         {
             provider_ids.push(provider_id.clone());
         }
@@ -1005,21 +1262,58 @@ fn resolve_openai_credentials(
     for provider_id in provider_ids {
         let provider_cfg = cfg.providers.get(&provider_id);
         let manifest = manifests.iter().find(|manifest| manifest.id == provider_id);
-        let resolved =
+        let request_credential = crate::credentials::resolve_for_request(
+            &provider_id,
+            provider_cfg,
+            auth_store,
+            manifest,
+        );
+        let ready_credential =
             crate::credentials::resolve(&provider_id, provider_cfg, auth_store, manifest);
         // Anthropic keys are represented by their own map, preserving bearer vs
         // x-api-key semantics. Anonymous declarations apply to every protocol.
-        if provider_cfg.is_some_and(config::provider_is_anthropic_compatible) {
+        if provider_cfg
+            .is_some_and(|cfg| cfg.protocol() == Some(ice_ai::WireProtocol::AnthropicMessages))
+        {
             if matches!(
-                resolved.source,
+                ready_credential.source,
                 crate::credentials::CredentialSource::Anonymous
             ) {
                 credentials.insert(provider_id, OpenAiCredential::Anonymous);
             }
-        } else if let Some(key) = resolved.key {
+        } else if provider_id == "openai-codex"
+            && matches!(
+                request_credential.source,
+                crate::credentials::CredentialSource::StoredOauth
+            )
+        {
+            if provider_cfg.is_none()
+                && manifest.is_none()
+                && !factories.extension_owns(&provider_id, &ice_ai::Api::OpenaiCodexResponses)
+            {
+                if let Some(credential @ Credential::Oauth { .. }) = auth_store.get(&provider_id) {
+                    credentials.insert(
+                        provider_id,
+                        OpenAiCredential::StoredOauth {
+                            credential: credential.clone(),
+                            ready: ready_credential.key.is_some(),
+                        },
+                    );
+                    continue;
+                }
+            }
+            // Request resolution keeps expired built-in Codex OAuth available
+            // for refresh, so it can shadow a usable models.json key. If this
+            // provider is configured or extension-owned, the OAuth value is
+            // not registered as the built-in Codex credential; retain the
+            // ready resolver's fallback instead of dropping both credentials.
+            if let Some(key) = ready_credential.key {
+                credentials.insert(provider_id, OpenAiCredential::Key(key));
+            }
+        } else if let Some(key) = request_credential.key {
             credentials.insert(provider_id, OpenAiCredential::Key(key));
         } else if matches!(
-            resolved.source,
+            request_credential.source,
             crate::credentials::CredentialSource::Anonymous
         ) {
             credentials.insert(provider_id, OpenAiCredential::Anonymous);
@@ -1036,6 +1330,32 @@ fn openai_credential_for<'a>(
         Some(OpenAiCredential::Key(key)) => Some(key),
         _ => None,
     }
+}
+
+fn openai_codex_oauth_for<'a>(
+    credentials: &'a OpenAiCredentials,
+    provider_id: &str,
+) -> Option<&'a Credential> {
+    if provider_id != "openai-codex" {
+        return None;
+    }
+    match credentials.get(provider_id) {
+        Some(OpenAiCredential::StoredOauth { credential, .. }) => Some(credential),
+        _ => None,
+    }
+}
+
+fn openai_credential_is_ready(credentials: &OpenAiCredentials, provider_id: &str) -> bool {
+    credentials
+        .get(provider_id)
+        .is_some_and(OpenAiCredential::is_ready)
+}
+
+fn openai_credential_is_requestable(credentials: &OpenAiCredentials, provider_id: &str) -> bool {
+    openai_credential_is_ready(credentials, provider_id)
+        || credentials
+            .get(provider_id)
+            .is_some_and(OpenAiCredential::refreshable)
 }
 
 fn merge_auth_headers(model: &mut Model, auth_headers: &BTreeMap<String, String>) {
@@ -1171,12 +1491,7 @@ fn find_cli_model(
                 .iter()
                 .copied()
                 .filter(|model| {
-                    model_is_authed_for_resolution(
-                        model,
-                        anthropic_credentials,
-                        openai_credentials,
-                        false,
-                    )
+                    model_is_requestable(model, anthropic_credentials, openai_credentials, false)
                 })
                 .collect();
             if let [model] = authenticated.as_slice() {
@@ -1206,8 +1521,10 @@ fn provider_is_known(requested: &str, cfg: &config::ModelsConfig) -> bool {
     cfg.providers.contains_key(requested)
         || requested.eq_ignore_ascii_case("anthropic")
         || requested.eq_ignore_ascii_case("openai")
+        || requested.eq_ignore_ascii_case("openai-codex")
         || requested.eq_ignore_ascii_case("openai-completions")
         || requested.eq_ignore_ascii_case("openai-responses")
+        || requested.eq_ignore_ascii_case("openai-codex-responses")
 }
 
 /// Canonicalize user-facing `--provider` input without weakening provider
@@ -1225,8 +1542,10 @@ fn canonicalize_cli_provider(
     const BUILTIN_PROVIDER_IDS: &[&str] = &[
         "anthropic",
         "openai",
+        "openai-codex",
         "openai-completions",
         "openai-responses",
+        "openai-codex-responses",
     ];
     if BUILTIN_PROVIDER_IDS.contains(&requested) {
         return Ok(requested.to_string());
@@ -1277,11 +1596,17 @@ fn provider_matches(model: &Model, requested: &str, cfg: &config::ModelsConfig) 
     if requested.eq_ignore_ascii_case("openai") {
         return model.provider == "openai";
     }
+    if requested.eq_ignore_ascii_case("openai-codex") {
+        return model.provider == "openai-codex";
+    }
     if requested.eq_ignore_ascii_case("openai-completions") {
         return matches!(model.api, ice_ai::Api::OpenaiCompletions);
     }
     if requested.eq_ignore_ascii_case("openai-responses") {
         return matches!(model.api, ice_ai::Api::OpenaiResponses);
+    }
+    if requested.eq_ignore_ascii_case("openai-codex-responses") {
+        return matches!(model.api, ice_ai::Api::OpenaiCodexResponses);
     }
     false
 }
@@ -1311,18 +1636,38 @@ fn model_is_authed_for_resolution(
     openai_credentials: &OpenAiCredentials,
     has_cli_key: bool,
 ) -> bool {
-    openai_credentials.contains_key(&model.provider)
+    openai_credential_is_ready(openai_credentials, &model.provider)
         || model_has_header_auth(model)
         || has_cli_key
         || match model.api {
             ice_ai::Api::AnthropicMessages => {
                 anthropic_credential_for(anthropic_credentials, &model.provider).is_some()
             }
-            ice_ai::Api::OpenaiCompletions | ice_ai::Api::OpenaiResponses => {
+            ice_ai::Api::OpenaiCompletions
+            | ice_ai::Api::OpenaiResponses
+            | ice_ai::Api::OpenaiCodexResponses => {
                 openai_credential_for(openai_credentials, &model.provider).is_some()
             }
             _ => false,
         }
+}
+
+/// Whether a model can service a request now. Codex OAuth may need to refresh
+/// at request time, so it can be selected even though strict readiness remains
+/// false until the stored access token is fresh.
+fn model_is_requestable(
+    model: &Model,
+    anthropic_credentials: &AnthropicCredentials,
+    openai_credentials: &OpenAiCredentials,
+    has_cli_key: bool,
+) -> bool {
+    model_is_authed_for_resolution(
+        model,
+        anthropic_credentials,
+        openai_credentials,
+        has_cli_key,
+    ) || (model.api == ice_ai::Api::OpenaiCodexResponses
+        && openai_credential_is_requestable(openai_credentials, &model.provider))
 }
 
 /// Same three-name check as ice-ai's `has_header_auth`, but called from the
@@ -1353,7 +1698,7 @@ fn pick_default_model(
         if let Some(model) = catalog.iter().find(|model| {
             model.id.eq_ignore_ascii_case(model_id)
                 && model_belongs_to_default_provider(model, provider, models_cfg)
-                && model_is_authed_for_resolution(
+                && model_is_requestable(
                     model,
                     anthropic_credentials,
                     openai_credentials,
@@ -1367,9 +1712,10 @@ fn pick_default_model(
     // 2. First authed model (TS `availableModels[0]`). Provider and model array
     //    declaration order is preserved while loading models.json.
     //    this is the gateway model (Bearer folded onto it, base_url = gateway).
-    if let Some(m) = catalog.iter().find(|m| {
-        model_is_authed_for_resolution(m, anthropic_credentials, openai_credentials, has_cli_key)
-    }) {
+    if let Some(m) = catalog
+        .iter()
+        .find(|m| model_is_requestable(m, anthropic_credentials, openai_credentials, has_cli_key))
+    {
         return m.clone();
     }
     // 3. Last resort: the built-in Anthropic default, authed or not. The auth gate above
@@ -1457,6 +1803,394 @@ mod tests {
         let _env = TestEnv::new();
         std::env::set_var(ANTHROPIC_API_KEY_ENV, "test-key");
         resolve(provider, model, thinking, None, None)
+    }
+
+    #[test]
+    fn cached_account_models_replace_the_builtin_codex_list() {
+        let _env = TestEnv::new();
+        crate::codex_models::store_for_test(&[
+            DiscoveredModel {
+                id: "gpt-6-luna".into(),
+                name: "GPT-6-Luna".into(),
+                context_window: 272_000,
+                supports_images: true,
+                supports_max_thinking: true,
+            },
+            DiscoveredModel {
+                id: "gpt-7-new".into(),
+                name: "GPT-7-New".into(),
+                context_window: 400_000,
+                supports_images: false,
+                supports_max_thinking: false,
+            },
+        ]);
+
+        let catalog = catalog_all().unwrap();
+        let codex: Vec<_> = catalog
+            .iter()
+            .filter(|model| model.provider == "openai-codex")
+            .collect();
+        let mut ids: Vec<_> = codex.iter().map(|model| model.id.as_str()).collect();
+        ids.sort_unstable();
+        // Models the account does not list (`gpt-5.5`, ...) are gone and a
+        // model unknown to the built-in list appears without cost data.
+        assert_eq!(ids, ["gpt-6-luna", "gpt-7-new"]);
+        let new = codex.iter().find(|model| model.id == "gpt-7-new").unwrap();
+        assert_eq!(new.name, "GPT-7-New");
+        assert_eq!(new.context_window, 400_000);
+        assert_eq!(new.input, vec![InputModality::Text]);
+        assert!(!new.cost_configured);
+    }
+
+    #[test]
+    fn openai_codex_builtin_catalog_preserves_reference_metadata() {
+        let _env = TestEnv::new();
+        let catalog = catalog_all().unwrap();
+        let codex: Vec<_> = catalog
+            .iter()
+            .filter(|model| model.provider == "openai-codex")
+            .collect();
+        // Mirror the visible Codex entries from OpenAI's model manager catalog.
+        const EXPECTED: [(
+            &str,
+            &str,
+            u64,
+            [f64; 4],
+            Option<(i64, [f64; 4])>,
+            bool,
+            bool,
+        ); 8] = [
+            (
+                "gpt-6-astra",
+                "GPT-6-Astra",
+                272_000,
+                [0.0, 0.0, 0.0, 0.0],
+                None,
+                true,
+                false,
+            ),
+            (
+                "gpt-6.1-sol",
+                "GPT-6.1-Sol",
+                272_000,
+                [0.0, 0.0, 0.0, 0.0],
+                None,
+                true,
+                false,
+            ),
+            (
+                "gpt-6-sol",
+                "GPT-6-Sol",
+                272_000,
+                [0.0, 0.0, 0.0, 0.0],
+                None,
+                true,
+                false,
+            ),
+            (
+                "gpt-6-luna",
+                "GPT-6-Luna",
+                272_000,
+                [0.0, 0.0, 0.0, 0.0],
+                None,
+                true,
+                false,
+            ),
+            (
+                "gpt-5.6-sol",
+                "GPT-5.6-Sol",
+                272_000,
+                [5.0, 30.0, 0.5, 6.25],
+                Some((272_000, [10.0, 45.0, 1.0, 12.5])),
+                true,
+                true,
+            ),
+            (
+                "gpt-5.6-terra",
+                "GPT-5.6-Terra",
+                272_000,
+                [2.0, 12.0, 0.2, 2.5],
+                Some((272_000, [4.0, 18.0, 0.4, 5.0])),
+                true,
+                true,
+            ),
+            (
+                "gpt-5.6-luna",
+                "GPT-5.6-Luna",
+                272_000,
+                [0.2, 1.2, 0.02, 0.25],
+                Some((272_000, [0.4, 1.8, 0.04, 0.5])),
+                true,
+                true,
+            ),
+            (
+                "gpt-5.5",
+                "GPT-5.5",
+                272_000,
+                [5.0, 30.0, 0.5, 0.0],
+                Some((272_000, [10.0, 45.0, 1.0, 0.0])),
+                false,
+                true,
+            ),
+        ];
+
+        assert_eq!(codex.len(), EXPECTED.len());
+        for (id, name, context, rates, tier, supports_max, cost_configured) in EXPECTED.iter() {
+            let model = codex
+                .iter()
+                .find(|model| model.id == *id)
+                .unwrap_or_else(|| panic!("missing Codex model {id}"));
+            assert_eq!(model.id, *id);
+            assert_eq!(model.name, *name);
+            assert_eq!(model.provider, "openai-codex");
+            assert_eq!(model.api, ice_ai::Api::OpenaiCodexResponses);
+            assert_eq!(model.base_url, OPENAI_CODEX_BASE_URL);
+            assert!(model.reasoning);
+            assert_eq!(model.context_window, *context);
+            assert_eq!(model.max_tokens, 128_000);
+            assert_eq!(
+                model.input.as_slice(),
+                &[InputModality::Text, InputModality::Image]
+            );
+            assert_eq!(
+                [
+                    model.cost.rates.input,
+                    model.cost.rates.output,
+                    model.cost.rates.cache_read,
+                    model.cost.rates.cache_write,
+                ],
+                *rates
+            );
+            assert_eq!(model.cost_configured, *cost_configured);
+            match tier {
+                Some((input_tokens_above, tier_rates)) => {
+                    assert_eq!(model.cost.tiers.len(), 1);
+                    let model_tier = &model.cost.tiers[0];
+                    assert_eq!(model_tier.input_tokens_above, *input_tokens_above);
+                    assert_eq!(
+                        [
+                            model_tier.rates.input,
+                            model_tier.rates.output,
+                            model_tier.rates.cache_read,
+                            model_tier.rates.cache_write,
+                        ],
+                        *tier_rates
+                    );
+                }
+                None => assert!(model.cost.tiers.is_empty()),
+            }
+
+            let thinking_levels = model.thinking_level_map.as_ref().unwrap();
+            assert_eq!(
+                thinking_levels
+                    .get(&ThinkingLevel::Minimal)
+                    .and_then(Option::as_deref),
+                Some("low")
+            );
+            assert_eq!(
+                thinking_levels
+                    .get(&ThinkingLevel::Xhigh)
+                    .and_then(Option::as_deref),
+                Some("xhigh")
+            );
+            assert_eq!(
+                thinking_levels
+                    .get(&ThinkingLevel::Max)
+                    .and_then(Option::as_deref),
+                if *supports_max { Some("max") } else { None }
+            );
+            assert!(matches!(
+                model.compat.as_ref(),
+                Some(ice_ai::StreamingProtocolCompat::OpenaiResponses(compat))
+                    if compat.supports_openai_grammar_tools == Some(true)
+            ));
+        }
+    }
+
+    #[test]
+    fn openai_codex_cli_dispatch_uses_its_builtin_protocol() {
+        let _env = TestEnv::new();
+        let resolved = resolve(
+            Some("OPENAI-CODEX"),
+            Some("openai-codex/gpt-5.6-luna:max"),
+            None,
+            Some("codex-cli-token"),
+            None,
+        )
+        .unwrap();
+        assert_eq!(resolved.provider.id(), "openai-codex");
+        assert_eq!(resolved.model.provider, "openai-codex");
+        assert_eq!(resolved.model.api, ice_ai::Api::OpenaiCodexResponses);
+        assert_eq!(resolved.model.id, "gpt-5.6-luna");
+        assert_eq!(resolved.model.base_url, OPENAI_CODEX_BASE_URL);
+        assert_eq!(resolved.thinking_level, ThinkingLevel::Max);
+        assert_eq!(
+            resolved.execution.request_model(&resolved.model).headers,
+            Some(BTreeMap::from([(
+                "authorization".to_string(),
+                "Bearer codex-cli-token".to_string(),
+            )]))
+        );
+    }
+
+    #[test]
+    fn codex_gateway_auth_stays_scoped_and_openai_env_does_not_authenticate_builtin_codex() {
+        let _env = TestEnv::new();
+        std::env::set_var(OPENAI_API_KEY_ENV, "unrelated-openai-key");
+        std::fs::write(
+            config::models_path().unwrap(),
+            r#"{
+  "providers": {
+    "codex-gateway": {
+      "api": "openai-codex-responses",
+      "baseUrl": "https://codex-gateway.example/v1",
+      "apiKey": "gateway-only-key",
+      "models": [{"id":"gateway-model"}]
+    }
+  }
+}"#,
+        )
+        .unwrap();
+
+        let gateway = resolve(
+            Some("codex-gateway"),
+            Some("codex-gateway/gateway-model"),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(gateway.model.api, ice_ai::Api::OpenaiCodexResponses);
+        assert_eq!(gateway.model.base_url, "https://codex-gateway.example/v1");
+        assert_eq!(
+            gateway
+                .execution
+                .request_model(&gateway.model)
+                .headers
+                .as_ref()
+                .unwrap()["authorization"],
+            "Bearer gateway-only-key"
+        );
+
+        let error = resolve(Some("openai-codex"), Some("gpt-5.5"), None, None, None).unwrap_err();
+        assert!(matches!(error, ResolveError::NoApiKey { .. }));
+    }
+
+    #[test]
+    fn expired_codex_oauth_is_retained_for_request_but_not_marked_ready() {
+        let _env = TestEnv::new();
+        config::upsert_oauth_token(
+            "openai-codex",
+            "expired-access-token".into(),
+            "refresh-token".into(),
+            1,
+        )
+        .unwrap();
+        let models_cfg = config::load_models_config().unwrap();
+        let auth_store = config::read_auth().unwrap();
+        let credentials =
+            resolve_openai_credentials(&models_cfg, &auth_store, &[], &RuntimeFactories::default());
+
+        assert!(matches!(
+            credentials.get("openai-codex"),
+            Some(OpenAiCredential::StoredOauth {
+                credential: Credential::Oauth { access, .. },
+                ready: false
+            }) if access == "expired-access-token"
+        ));
+        assert!(!openai_credential_is_ready(&credentials, "openai-codex"));
+        assert!(openai_credential_for(&credentials, "openai-codex").is_none());
+        let mut catalog = build_catalog(&models_cfg, &[]);
+        catalog.push(Model::new(
+            "gpt-5.5",
+            "Duplicate OpenAI model",
+            ice_ai::Api::OpenaiResponses,
+            "openai",
+            "https://api.openai.com/v1",
+        ));
+        assert_eq!(
+            catalog.iter().filter(|model| model.id == "gpt-5.5").count(),
+            2
+        );
+        let selected = find_cli_model(
+            "gpt-5.5",
+            None,
+            &catalog,
+            &models_cfg,
+            &AnthropicCredentials::new(),
+            &credentials,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(selected.provider, "openai-codex");
+    }
+
+    #[test]
+    fn expired_codex_oauth_keeps_a_configured_models_json_key() {
+        let provider_cfg: config::ProviderConfig = serde_json::from_value(serde_json::json!({
+            "api": "openai-codex-responses",
+            "apiKey": "models-json-codex-key",
+            "models": [{"id": "configured-codex-model"}]
+        }))
+        .unwrap();
+        let models_cfg = config::ModelsConfig {
+            providers: indexmap::IndexMap::from([("openai-codex".into(), provider_cfg)]),
+        };
+        let auth_store = config::AuthStore::from([(
+            "openai-codex".into(),
+            Credential::Oauth {
+                access: "expired-access-token".into(),
+                refresh: "refresh-token".into(),
+                expires: 1,
+                account_id: None,
+            },
+        )]);
+
+        let credentials =
+            resolve_openai_credentials(&models_cfg, &auth_store, &[], &RuntimeFactories::default());
+
+        assert_eq!(
+            openai_credential_for(&credentials, "openai-codex").map(String::as_str),
+            Some("models-json-codex-key")
+        );
+        assert!(openai_credential_is_ready(&credentials, "openai-codex"));
+    }
+
+    #[tokio::test]
+    async fn expired_codex_oauth_reaches_async_binding_and_errors_as_provider_event() {
+        let _env = TestEnv::new();
+        config::upsert_credential(
+            "openai-codex",
+            Credential::Oauth {
+                access: "expired-access-token".into(),
+                refresh: "refresh-token".into(),
+                expires: 1,
+                account_id: Some("test-account".into()),
+            },
+        )
+        .unwrap();
+
+        let resolved = resolve(None, None, None, None, None).unwrap();
+        assert_eq!(resolved.provider.id(), "openai-codex");
+        assert_eq!(resolved.model.provider, "openai-codex");
+        assert!(!resolved.has_provider_key);
+
+        let signal = tokio_util::sync::CancellationToken::new();
+        signal.cancel();
+        let events = resolved
+            .provider
+            .stream_simple(
+                &resolved.model,
+                &Context::new(vec![]),
+                &SimpleStreamOptions {
+                    signal,
+                    ..Default::default()
+                },
+            )
+            .await;
+        let result = events.result().await.unwrap();
+        assert_eq!(result.stop_reason, ice_ai::types::StopReason::Error);
+        assert_eq!(result.error_message.as_deref(), Some("Request aborted"));
     }
 
     #[test]

@@ -2,6 +2,8 @@
 //! Authentication and model binding are applied once, outside every factory.
 use super::binding::{ExecutionBinding, RequestAuth};
 use super::*;
+use ice_ai::providers::openai_codex_responses::OpenAiCodexResponsesProvider;
+use ice_ai::WireProtocol;
 use ice_extensions::{ExtensionSession, ProviderManifest};
 
 trait ProviderFactory: Send + Sync {
@@ -13,7 +15,7 @@ trait ProviderFactory: Send + Sync {
     ) -> Arc<dyn Provider>;
 }
 
-struct ProtocolFactory(ice_ai::Api);
+struct ProtocolFactory(WireProtocol);
 impl ProviderFactory for ProtocolFactory {
     fn create(
         &self,
@@ -21,17 +23,19 @@ impl ProviderFactory for ProtocolFactory {
         models: Vec<Model>,
         settings: &settings::Settings,
     ) -> Arc<dyn Provider> {
-        let fallback = if self.0 == ice_ai::Api::AnthropicMessages {
-            "https://api.anthropic.com"
-        } else {
-            "https://api.openai.com/v1"
+        let fallback = match self.0 {
+            WireProtocol::AnthropicMessages => "https://api.anthropic.com",
+            WireProtocol::OpenaiCompletions | WireProtocol::OpenaiResponses => {
+                "https://api.openai.com/v1"
+            }
+            WireProtocol::OpenaiCodexResponses => "https://chatgpt.com/backend-api",
         };
         let http = provider_http_client(&models, fallback, settings);
         match self.0 {
-            ice_ai::Api::AnthropicMessages => Arc::new(
+            WireProtocol::AnthropicMessages => Arc::new(
                 AnthropicProvider::with_models_without_env_api_key(None, http, models),
             ),
-            ice_ai::Api::OpenaiCompletions => {
+            WireProtocol::OpenaiCompletions => {
                 Arc::new(OpenAiCompletionsProvider::with_models_without_env_api_key(
                     provider_id,
                     None,
@@ -39,7 +43,7 @@ impl ProviderFactory for ProtocolFactory {
                     models,
                 ))
             }
-            ice_ai::Api::OpenaiResponses => {
+            WireProtocol::OpenaiResponses => {
                 Arc::new(OpenAiResponsesProvider::with_models_without_env_api_key(
                     provider_id,
                     None,
@@ -47,7 +51,14 @@ impl ProviderFactory for ProtocolFactory {
                     models,
                 ))
             }
-            _ => unreachable!("only supported wire protocols are registered"),
+            WireProtocol::OpenaiCodexResponses => Arc::new(
+                OpenAiCodexResponsesProvider::with_models_without_env_api_key(
+                    provider_id,
+                    None,
+                    http,
+                    models,
+                ),
+            ),
         }
     }
 }
@@ -68,19 +79,15 @@ pub(super) struct RuntimeFactories {
 
 impl Default for RuntimeFactories {
     fn default() -> Self {
-        let protocols = [
-            ice_ai::Api::AnthropicMessages,
-            ice_ai::Api::OpenaiCompletions,
-            ice_ai::Api::OpenaiResponses,
-        ]
-        .into_iter()
-        .map(|api| {
-            (
-                api.as_str().to_string(),
-                Arc::new(ProtocolFactory(api)) as Arc<dyn ProviderFactory>,
-            )
-        })
-        .collect();
+        let protocols = WireProtocol::ALL
+            .into_iter()
+            .map(|protocol| {
+                (
+                    protocol.as_str().to_string(),
+                    Arc::new(ProtocolFactory(protocol)) as Arc<dyn ProviderFactory>,
+                )
+            })
+            .collect();
         Self {
             protocols,
             providers: BTreeMap::new(),
@@ -141,6 +148,16 @@ impl RuntimeFactories {
             binding: binding.clone(),
         });
         Some((provider, binding))
+    }
+
+    /// Whether a registered extension owns this provider identity and wire API.
+    /// Built-in provider credentials must not be attached to extension routes.
+    pub fn extension_owns(&self, provider_id: &str, api: &ice_ai::Api) -> bool {
+        self.providers.contains_key(provider_id)
+            && self
+                .provider_apis
+                .get(provider_id)
+                .map_or(true, |declared| declared == api.as_str())
     }
 }
 
@@ -218,7 +235,7 @@ impl Provider for RoutedProvider {
     }
 }
 
-fn unbound_model_error(model: &Model, provider_id: &str) -> AssistantMessageEventStream {
+fn provider_error(model: &Model, provider_id: &str, message: &str) -> AssistantMessageEventStream {
     let (mut producer, stream) = ice_ai::event_stream::create_assistant_message_event_stream();
     producer.push(ice_ai::AssistantMessageEvent::Error {
         reason: ice_ai::types::ErrorReason::Error,
@@ -227,11 +244,19 @@ fn unbound_model_error(model: &Model, provider_id: &str) -> AssistantMessageEven
             provider_id,
             model.id.clone(),
             ice_ai::types::StopReason::Error,
-            "model is not registered in this provider execution binding",
+            message,
             0,
         ),
     });
     stream
+}
+
+fn unbound_model_error(model: &Model, provider_id: &str) -> AssistantMessageEventStream {
+    provider_error(
+        model,
+        provider_id,
+        "model is not registered in this provider execution binding",
+    )
 }
 
 #[async_trait::async_trait]
@@ -248,8 +273,10 @@ impl Provider for ConfiguredProvider {
         context: &Context,
         options: &SimpleStreamOptions,
     ) -> AssistantMessageEventStream {
-        let Some((model, options)) = self.binding.prepare(model, options) else {
-            return unbound_model_error(model, &self.id);
+        let (model, options) = match self.binding.prepare_request(model, options).await {
+            Ok(Some(prepared)) => prepared,
+            Ok(None) => return unbound_model_error(model, &self.id),
+            Err(error) => return provider_error(model, &self.id, &error),
         };
         self.inner.stream_simple(&model, context, &options).await
     }
@@ -313,7 +340,11 @@ mod tests {
     async fn one_provider_routes_duplicate_model_ids_by_api_with_private_credentials() {
         let calls = Calls::default();
         let mut factories = RuntimeFactories::default();
-        for api in [Api::OpenaiCompletions, Api::OpenaiResponses] {
+        for api in [
+            Api::OpenaiCompletions,
+            Api::OpenaiResponses,
+            Api::OpenaiCodexResponses,
+        ] {
             factories.protocols.insert(
                 api.as_str().into(),
                 Arc::new(RecordingFactory(calls.clone())),
@@ -323,6 +354,7 @@ mod tests {
         for (api, token) in [
             (Api::OpenaiCompletions, "completions-token"),
             (Api::OpenaiResponses, "responses-token"),
+            (Api::OpenaiCodexResponses, "codex-token"),
         ] {
             let mut model = Model::new(
                 "same-model",
@@ -348,7 +380,7 @@ mod tests {
         let providers = combine_provider_runtimes(runtimes);
         assert_eq!(providers.len(), 1);
         let provider = &providers[0];
-        assert_eq!(provider.models().len(), 2);
+        assert_eq!(provider.models().len(), 3);
         assert!(provider
             .models()
             .iter()
@@ -374,10 +406,11 @@ mod tests {
                 .unwrap();
         }
         let recorded = calls.lock().unwrap();
-        assert_eq!(recorded.len(), 2);
+        assert_eq!(recorded.len(), 3);
         for (call, (api, token)) in recorded.iter().zip([
             (Api::OpenaiCompletions, "completions-token"),
             (Api::OpenaiResponses, "responses-token"),
+            (Api::OpenaiCodexResponses, "codex-token"),
         ]) {
             assert_eq!(call.0.api, api);
             assert_eq!(
@@ -391,7 +424,7 @@ mod tests {
         for (provider_id, api, id) in [
             ("other", Api::OpenaiCompletions, "same-model"),
             ("deepseek", Api::AnthropicMessages, "same-model"),
-            ("deepseek", Api::OpenaiResponses, "unknown-model"),
+            ("deepseek", Api::OpenaiCodexResponses, "unknown-model"),
         ] {
             let requested = Model::new(id, id, api, provider_id, "https://untrusted.example");
             let result = provider
@@ -406,7 +439,7 @@ mod tests {
                 .unwrap();
             assert_eq!(result.stop_reason, StopReason::Error);
         }
-        assert_eq!(calls.lock().unwrap().len(), 2);
+        assert_eq!(calls.lock().unwrap().len(), 3);
     }
 
     #[tokio::test]
@@ -462,6 +495,74 @@ mod tests {
         assert_eq!(
             protocol_calls.lock().unwrap()[0].0.api,
             Api::OpenaiResponses
+        );
+    }
+
+    #[test]
+    fn codex_protocol_factory_constructs_a_codex_runtime() {
+        let model = Model::new(
+            "gpt-5.5",
+            "GPT-5.5",
+            Api::OpenaiCodexResponses,
+            "openai-codex",
+            "https://chatgpt.com/backend-api",
+        );
+        let (provider, _) = RuntimeFactories::default()
+            .configure(
+                "openai-codex",
+                &Api::OpenaiCodexResponses,
+                vec![model],
+                RequestAuth::None,
+                &settings::Settings::default(),
+            )
+            .unwrap();
+        assert_eq!(provider.id(), "openai-codex");
+        assert_eq!(provider.models().len(), 1);
+        assert_eq!(provider.models()[0].api, Api::OpenaiCodexResponses);
+    }
+
+    #[tokio::test]
+    async fn codex_extension_factory_keeps_priority_over_the_builtin_protocol() {
+        let extension_calls = Calls::default();
+        let mut factories = RuntimeFactories::default();
+        factories.providers.insert(
+            "codex-account".into(),
+            Arc::new(RecordingFactory(extension_calls.clone())),
+        );
+        factories
+            .provider_apis
+            .insert("codex-account".into(), "openai-codex-responses".into());
+        let model = Model::new(
+            "account-model",
+            "Account model",
+            Api::OpenaiCodexResponses,
+            "codex-account",
+            "https://codex-account.example/v1",
+        );
+        let (provider, _) = factories
+            .configure(
+                "codex-account",
+                &Api::OpenaiCodexResponses,
+                vec![model],
+                RequestAuth::None,
+                &settings::Settings::default(),
+            )
+            .unwrap();
+        provider
+            .stream_simple(
+                &provider.models()[0],
+                &Context::new(vec![]),
+                &SimpleStreamOptions::default(),
+            )
+            .await
+            .result()
+            .await
+            .unwrap();
+
+        assert_eq!(extension_calls.lock().unwrap().len(), 1);
+        assert_eq!(
+            extension_calls.lock().unwrap()[0].0.api,
+            Api::OpenaiCodexResponses
         );
     }
 

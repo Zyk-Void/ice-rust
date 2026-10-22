@@ -1262,7 +1262,7 @@ Estimated Rust implementation: **380-620 lines** (estimate, not measured source)
 
 ### 1. Title and status
 
-Codex account-bound Responses request and cache-affinity dialect. **Status: missing.**
+Codex account-bound Responses request and cache-affinity dialect. **Status: partial — native account-bound SSE adapter implemented; direct-only option parity remains.**
 
 ### 2. ice source
 
@@ -1298,11 +1298,13 @@ AUTH-017 owns OAuth credentials; this entry owns the backend payload and account
 
 ### 7. ice-rust today
 
-Native has a substantial generic Responses request encoder at rust:crates/ice-ai/src/providers/openai_responses.rs:1484-1798 and replay/grammar/schema helpers; these should be reused where compatible. Its endpoint/header construction and common options do not supply this account claim, Codex URL, verbosity, tier, header precedence or Codex-specific strict defaults. The fully read production registry at rust:crates/ice-cli/src/provider/factories.rs:16-145 registers Anthropic, OpenAI Completions and OpenAI Responses protocols and can consult a matching external provider extension; it has no built-in Codex protocol factory. Native module exports at rust:crates/ice-ai/src/providers/mod.rs:1-47 confirm the same boundary. An OAuth entry or user-configured base URL is not this complete wire adapter; a matching installed external package was not assumed.
+Native now registers `openai-codex-responses` as a closed wire-protocol variant and provides an account-bound SSE adapter in `crates/ice-ai/src/providers/openai_codex_responses.rs`. It reuses the Responses transcript/event machinery and concrete request DTOs in `providers/openai_responses/request.rs`. The adapter supplies the Codex URL, required privacy/streaming fields, default instructions and low verbosity, encrypted reasoning inclusion, Codex strict defaults, authoritative account/authentication headers, and Unicode-bounded session/cache affinity. Cache retention `none` suppresses generated identity. The CLI supplies a built-in Codex catalog, PKCE login and coordinated request-time refresh without exposing credentials in public model descriptors. Extension ownership retains priority.
+
+This is not full direct-options parity: separate service-tier/pricing, reasoning-summary, text-verbosity, tool-choice and prompt-cache-key override options, deferred tool search, WebSockets and pooling remain outside this implementation. Codex deliberately does not inherit ordinary Responses sampling-parameter overrides or its 16-token floor.
 
 ### 8. Port notes
 
-Add a dedicated Codex request/configuration layer around the native Responses history and event machinery. Keep session identity, prompt affinity and account identity distinct. Add explicit direct options and immutable output authority; preserve provider protocol header names and make native product attribution a conscious compatibility choice. Review off:null and absent samplingParams as source behavior rather than silently claiming uniform provider semantics.
+Keep the implemented shared history/event machinery and distinct session, prompt-affinity and account identities. Remaining parity work should add explicit direct options at their owning request boundary rather than inject untyped fields, preserve authoritative output limits and protocol headers, and retain the reference's `off:null` and absent `samplingParams` behavior. See `docs/guides/chatgpt-subscription.md` for the implemented login and request scope.
 
 ### 9. Size and priority
 

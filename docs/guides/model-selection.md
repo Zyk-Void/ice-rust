@@ -1,6 +1,8 @@
 # Selecting a model
 
-Use `/model` to open the model picker on the currently active model. Type to
+Use `/model` to open the model picker. Favorites (toggle with `shift+f`) are pinned
+at the top and the picker opens there; without favorites it opens on the
+currently active model. Type to
 filter by model name, provider, or ID; a new query selects its first match.
 `/model provider/model` selects an exact model directly. A query without an
 exact match opens the picker with that query filled in.
@@ -12,11 +14,12 @@ and reports that it applies to the next message. A run already in progress
 continues using its existing model. A rejected switch reports the error and
 leaves the active model and saved default unchanged.
 
-The default-model picker in `/settings` saves an accepted choice for the next
-launch. Choosing another provider in `/model` also retains that existing saved
-default behavior. Saving happens after the live switch succeeds. If saving
-fails, the UI reports that the model is active but the default was not saved.
-Model cycling updates its footer only after acceptance and reports failures.
+A model chosen in `/model` or in the default-model picker in `/settings` is
+saved as the default for the next launch, whichever provider it belongs to.
+Saving happens after the live switch succeeds. If saving fails, the UI reports
+that the model is active but the default was not saved.
+Model cycling updates its footer only after acceptance and reports failures; it
+does not change the saved default.
 
 These changes use the existing `defaultProvider` and `defaultModel` settings;
 they add no on-disk fields or session-record format changes.

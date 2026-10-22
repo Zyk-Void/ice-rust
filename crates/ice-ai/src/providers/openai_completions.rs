@@ -16,12 +16,14 @@ use crate::event_stream::{
 };
 use crate::model::{MaxTokensField, Model, StreamingProtocolCompat};
 use crate::provider::{
-    enforce_hard_max_tokens_in_record, request_max_tokens, Provider, SimpleStreamOptions,
+    enforce_hard_max_tokens_in_record, request_max_tokens, CacheRetention, Provider,
+    SimpleStreamOptions,
 };
 use crate::providers::anthropic::cost::calculate_cost;
 use crate::providers::anthropic::json_parse::parse_streaming_json;
 use crate::providers::anthropic::retry::retry_provider_request;
 use crate::providers::anthropic::sse::SseEventStream;
+use crate::providers::openai_responses::request::clamp_cache_key;
 use crate::providers::{DELTA_FLUSH_BYTES, DELTA_FLUSH_INTERVAL};
 use crate::types::{
     Api, AssistantMessage, AssistantMessageEvent, Content, Context, DoneReason, ErrorReason,
@@ -147,6 +149,11 @@ async fn run_stream(
     let api_key = resolve_api_key(&provider_key, opts, allow_env_api_key);
 
     let mut headers = model.headers.clone().unwrap_or_default();
+    // Session affinity first so explicit caller headers can still override it.
+    for (name, value) in session_affinity_headers(model, opts) {
+        headers.retain(|existing, _| !existing.eq_ignore_ascii_case(name));
+        headers.insert(name.to_string(), value);
+    }
     if let Some(extra) = &opts.headers {
         for (name, value) in extra {
             headers.insert(name.clone(), value.clone());
@@ -446,6 +453,14 @@ fn build_request(model: &Model, ctx: &Context, opts: &SimpleStreamOptions) -> Va
     body.insert("model".into(), Value::String(model.id.clone()));
     body.insert("messages".into(), Value::Array(messages));
     body.insert("stream".into(), Value::Bool(true));
+    // Prompt caching: key the cached prefix by session, and ask for 24h
+    // retention when requested and supported (TS `prompt_cache_key` rules).
+    if let Some(key) = prompt_cache_key(model, opts) {
+        body.insert("prompt_cache_key".into(), Value::String(key));
+    }
+    if opts.cache_retention == CacheRetention::Long && supports_long_cache_retention(model) {
+        body.insert("prompt_cache_retention".into(), Value::String("24h".into()));
+    }
     if supports_streaming_usage(model) {
         body.insert("stream_options".into(), json!({ "include_usage": true }));
     }
@@ -570,6 +585,54 @@ fn compat(model: &Model) -> Option<&crate::model::OpenaiCompletionsCompat> {
         StreamingProtocolCompat::OpenaiCompletions(compat) => Some(compat),
         _ => None,
     })
+}
+
+fn is_openai_api(model: &Model) -> bool {
+    model.base_url.contains("api.openai.com")
+}
+
+/// `prompt_cache_retention` is only sent where it is known to be accepted:
+/// OpenAI itself, or an endpoint whose model config opts in. (TS assumes it for
+/// most gateways; an unknown parameter can be a hard error, so this is opt-in.)
+fn supports_long_cache_retention(model: &Model) -> bool {
+    compat(model)
+        .and_then(|compat| compat.supports_long_cache_retention)
+        .unwrap_or_else(|| is_openai_api(model))
+}
+
+fn prompt_cache_key(model: &Model, opts: &SimpleStreamOptions) -> Option<String> {
+    let wanted = (is_openai_api(model) && opts.cache_retention != CacheRetention::None)
+        || (opts.cache_retention == CacheRetention::Long && supports_long_cache_retention(model));
+    wanted
+        .then(|| opts.session_id.as_deref())
+        .flatten()
+        .map(clamp_cache_key)
+}
+
+/// Affinity headers are opt-in per model (`sendSessionAffinityHeaders`): they
+/// pin a session to one backend behind a gateway so its cached prefix is reused.
+fn session_affinity_headers(
+    model: &Model,
+    opts: &SimpleStreamOptions,
+) -> Vec<(&'static str, String)> {
+    let enabled =
+        compat(model).and_then(|compat| compat.send_session_affinity_headers) == Some(true);
+    let Some(session_id) = opts
+        .session_id
+        .as_deref()
+        .filter(|_| enabled && opts.cache_retention != CacheRetention::None)
+    else {
+        return Vec::new();
+    };
+    if model.provider == "openrouter" || model.base_url.contains("openrouter.ai") {
+        vec![("x-session-id", session_id.to_string())]
+    } else {
+        vec![
+            ("session_id", session_id.to_string()),
+            ("x-client-request-id", session_id.to_string()),
+            ("x-session-affinity", session_id.to_string()),
+        ]
+    }
 }
 
 fn supports_streaming_usage(model: &Model) -> bool {
@@ -1405,6 +1468,113 @@ mod tests {
         model.max_tokens = 1024;
         model.reasoning = true;
         model
+    }
+
+    fn cache_context() -> Context {
+        Context {
+            system_prompt: None,
+            messages: Vec::new(),
+            tools: Vec::new(),
+        }
+    }
+
+    fn with_session(retention: CacheRetention) -> SimpleStreamOptions {
+        let mut options = SimpleStreamOptions::default();
+        options.session_id = Some("session-1".into());
+        options.cache_retention = retention;
+        options
+    }
+
+    #[test]
+    fn openai_hosted_completions_key_the_prompt_cache_by_session() {
+        let mut openai = model();
+        openai.base_url = "https://api.openai.com/v1".into();
+        let body = build_request(
+            &openai,
+            &cache_context(),
+            &with_session(CacheRetention::Short),
+        );
+        assert_eq!(body["prompt_cache_key"], "session-1");
+        assert!(body.get("prompt_cache_retention").is_none());
+
+        let body = build_request(
+            &openai,
+            &cache_context(),
+            &with_session(CacheRetention::Long),
+        );
+        assert_eq!(body["prompt_cache_key"], "session-1");
+        assert_eq!(body["prompt_cache_retention"], "24h");
+
+        let body = build_request(
+            &openai,
+            &cache_context(),
+            &with_session(CacheRetention::None),
+        );
+        assert!(body.get("prompt_cache_key").is_none());
+        assert!(body.get("prompt_cache_retention").is_none());
+    }
+
+    #[test]
+    fn gateways_get_cache_fields_only_when_long_retention_is_supported() {
+        // An unknown gateway is never sent parameters it may reject.
+        let body = build_request(
+            &model(),
+            &cache_context(),
+            &with_session(CacheRetention::Long),
+        );
+        assert!(body.get("prompt_cache_key").is_none());
+        assert!(body.get("prompt_cache_retention").is_none());
+
+        let mut opted_in = model();
+        opted_in.compat = Some(StreamingProtocolCompat::OpenaiCompletions(
+            crate::model::OpenaiCompletionsCompat {
+                supports_long_cache_retention: Some(true),
+                ..Default::default()
+            },
+        ));
+        let body = build_request(
+            &opted_in,
+            &cache_context(),
+            &with_session(CacheRetention::Long),
+        );
+        assert_eq!(body["prompt_cache_key"], "session-1");
+        assert_eq!(body["prompt_cache_retention"], "24h");
+        let body = build_request(
+            &opted_in,
+            &cache_context(),
+            &with_session(CacheRetention::Short),
+        );
+        assert!(body.get("prompt_cache_key").is_none());
+    }
+
+    #[test]
+    fn session_affinity_headers_are_opt_in_and_follow_the_endpoint_format() {
+        let options = with_session(CacheRetention::Short);
+        assert!(session_affinity_headers(&model(), &options).is_empty());
+
+        let mut enabled = model();
+        enabled.compat = Some(StreamingProtocolCompat::OpenaiCompletions(
+            crate::model::OpenaiCompletionsCompat {
+                send_session_affinity_headers: Some(true),
+                ..Default::default()
+            },
+        ));
+        let names: Vec<_> = session_affinity_headers(&enabled, &options)
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect();
+        assert_eq!(
+            names,
+            ["session_id", "x-client-request-id", "x-session-affinity"]
+        );
+
+        enabled.provider = "openrouter".into();
+        let router = session_affinity_headers(&enabled, &options);
+        assert_eq!(router, vec![("x-session-id", "session-1".to_string())]);
+
+        let off = with_session(CacheRetention::None);
+        assert!(session_affinity_headers(&enabled, &off).is_empty());
+        assert!(session_affinity_headers(&enabled, &SimpleStreamOptions::default()).is_empty());
     }
 
     #[test]

@@ -32,6 +32,7 @@ tokio-util = { workspace = true }
 async-trait = { workspace = true }
 futures = { workspace = true }
 fs2 = { workspace = true }
+getrandom = "0.2"
 globset = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }

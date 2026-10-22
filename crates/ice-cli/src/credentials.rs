@@ -60,6 +60,27 @@ pub(crate) fn resolve(
     store: &AuthStore,
     manifest: Option<&ProviderManifest>,
 ) -> ResolvedCredential {
+    resolve_inner(provider, config, store, manifest, false)
+}
+
+/// Request binding retains expired built-in Codex credentials for refresh.
+/// Local readiness checks deliberately use `resolve` instead.
+pub(crate) fn resolve_for_request(
+    provider: &str,
+    config: Option<&ProviderConfig>,
+    store: &AuthStore,
+    manifest: Option<&ProviderManifest>,
+) -> ResolvedCredential {
+    resolve_inner(provider, config, store, manifest, true)
+}
+
+fn resolve_inner(
+    provider: &str,
+    config: Option<&ProviderConfig>,
+    store: &AuthStore,
+    manifest: Option<&ProviderManifest>,
+    allow_refresh: bool,
+) -> ResolvedCredential {
     let bearer = config
         .and_then(|config| config.auth_header)
         .unwrap_or(false);
@@ -78,13 +99,20 @@ pub(crate) fn resolve(
             }
         }
         Some(Credential::Oauth {
-            access, expires, ..
+            access,
+            refresh,
+            expires,
+            ..
         }) if !access.trim().is_empty() => {
             let now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|duration| duration.as_secs() as i64)
                 .unwrap_or(i64::MAX);
-            if *expires == 0 || *expires > now {
+            let refreshable_codex = allow_refresh
+                && provider == "openai-codex"
+                && manifest.is_none()
+                && !refresh.trim().is_empty();
+            if *expires == 0 || *expires > now || refreshable_codex {
                 return credential(access.clone(), CredentialSource::StoredOauth, true);
             }
         }
@@ -187,6 +215,37 @@ mod tests {
         }
         assert_eq!(resolved.source, CredentialSource::Missing);
         assert!(resolved.key.is_none());
+    }
+
+    #[test]
+    fn expired_codex_is_refreshable_for_requests_but_not_locally_ready() {
+        let store = AuthStore::from([(
+            "openai-codex".into(),
+            Credential::Oauth {
+                access: "expired-access".into(),
+                refresh: "refresh-token".into(),
+                expires: 1,
+                account_id: Some("account".into()),
+            },
+        )]);
+        assert_eq!(
+            resolve("openai-codex", None, &store, None).source,
+            CredentialSource::Missing
+        );
+        assert_eq!(
+            resolve_for_request("openai-codex", None, &store, None).source,
+            CredentialSource::StoredOauth
+        );
+        let manifest = ProviderManifest {
+            id: "openai-codex".into(),
+            models: vec![],
+            api_key_env: None,
+            requires_auth: true,
+        };
+        assert_eq!(
+            resolve_for_request("openai-codex", None, &store, Some(&manifest)).source,
+            CredentialSource::Missing
+        );
     }
 
     #[test]

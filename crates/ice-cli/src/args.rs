@@ -42,6 +42,25 @@ pub(crate) fn is_truthy_env_flag(value: Option<&str>) -> bool {
     })
 }
 
+pub(crate) const ICERS_CACHE_RETENTION_ENV: &str = "ICERS_CACHE_RETENTION";
+
+/// `ICERS_CACHE_RETENTION` (`long`, `short` or `none`, ASCII case-insensitive).
+/// Unset or unrecognized keeps the provider default (`short`). `long` asks for
+/// 1h Anthropic and 24h OpenAI prompt caching, which survives idle gaps longer
+/// than the default few minutes.
+pub(crate) fn cache_retention_from_env() -> Option<ice_ai::CacheRetention> {
+    parse_cache_retention(std::env::var(ICERS_CACHE_RETENTION_ENV).ok().as_deref())
+}
+
+fn parse_cache_retention(value: Option<&str>) -> Option<ice_ai::CacheRetention> {
+    match value?.trim().to_ascii_lowercase().as_str() {
+        "long" => Some(ice_ai::CacheRetention::Long),
+        "short" => Some(ice_ai::CacheRetention::Short),
+        "none" => Some(ice_ai::CacheRetention::None),
+        _ => None,
+    }
+}
+
 pub(crate) fn offline_env_enabled() -> bool {
     is_truthy_env_flag(std::env::var(ICERS_OFFLINE_ENV).ok().as_deref())
 }
@@ -717,6 +736,18 @@ pub fn print_version() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn cache_retention_env_parses_known_values_only() {
+        use ice_ai::CacheRetention::{Long, None as Off, Short};
+        assert_eq!(parse_cache_retention(None), None);
+        assert_eq!(parse_cache_retention(Some("long")), Some(Long));
+        assert_eq!(parse_cache_retention(Some(" LONG ")), Some(Long));
+        assert_eq!(parse_cache_retention(Some("Short")), Some(Short));
+        assert_eq!(parse_cache_retention(Some("none")), Some(Off));
+        assert_eq!(parse_cache_retention(Some("24h")), None);
+        assert_eq!(parse_cache_retention(Some("")), None);
+    }
+
     use super::*;
 
     struct RestoreOfflineEnv(Option<std::ffi::OsString>);

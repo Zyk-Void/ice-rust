@@ -413,20 +413,16 @@ impl StopReason {
     }
 }
 
-/// Pi known APIs. The string fallback covers custom APIs; we keep a typed enum for
-/// the common ones and expose `Api::Other(String)` for the rest.
+/// The API label carried by models and assistant messages. Named variants are
+/// the wire protocols icers implements (see [`crate::WireProtocol`]) plus the
+/// test-only `faux` provider. Everything else (plugin api styles, labels in
+/// older sessions) round-trips as `Api::Other(String)` with its exact string.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Api {
     OpenaiCompletions,
-    MistralConversations,
     OpenaiResponses,
-    AzureOpenaiResponses,
     OpenaiCodexResponses,
     AnthropicMessages,
-    BedrockConverseStream,
-    GoogleGenerativeAi,
-    GoogleVertex,
-    PiMessages,
     Faux,
     Other(String),
 }
@@ -435,15 +431,9 @@ impl Api {
     pub fn as_str(&self) -> &str {
         match self {
             Api::OpenaiCompletions => "openai-completions",
-            Api::MistralConversations => "mistral-conversations",
             Api::OpenaiResponses => "openai-responses",
-            Api::AzureOpenaiResponses => "azure-openai-responses",
             Api::OpenaiCodexResponses => "openai-codex-responses",
             Api::AnthropicMessages => "anthropic-messages",
-            Api::BedrockConverseStream => "bedrock-converse-stream",
-            Api::GoogleGenerativeAi => "google-generative-ai",
-            Api::GoogleVertex => "google-vertex",
-            Api::PiMessages => "pi-messages",
             Api::Faux => "faux",
             Api::Other(s) => s.as_str(),
         }
@@ -460,15 +450,9 @@ impl<'de> Deserialize<'de> for Api {
         let s = String::deserialize(d)?;
         Ok(match s.as_str() {
             "openai-completions" => Api::OpenaiCompletions,
-            "mistral-conversations" => Api::MistralConversations,
             "openai-responses" => Api::OpenaiResponses,
-            "azure-openai-responses" => Api::AzureOpenaiResponses,
             "openai-codex-responses" => Api::OpenaiCodexResponses,
             "anthropic-messages" => Api::AnthropicMessages,
-            "bedrock-converse-stream" => Api::BedrockConverseStream,
-            "google-generative-ai" => Api::GoogleGenerativeAi,
-            "google-vertex" => Api::GoogleVertex,
-            "pi-messages" => Api::PiMessages,
             "faux" => Api::Faux,
             other => Api::Other(other.to_string()),
         })

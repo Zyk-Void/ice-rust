@@ -571,24 +571,19 @@ impl SlashCommand for LoginCommand {
                 ("anthropic".to_string(), args.to_string())
             }
         };
-        match crate::config::upsert_credential(
-            &provider,
-            crate::config::Credential::ApiKey {
-                key: Some(key.to_string()),
-                env: None,
-            },
-        ) {
-            Ok(()) => {
-                add_note_message(
-                    &ctx.chat,
-                    &format!("Saved credentials for {provider}; reloading providers…"),
-                );
-                let _ = ctx.tx.send(TuiMessage::ReloadExtensions);
-            }
-            Err(error) => add_error_message(
-                &ctx.chat,
-                &format!("Could not save {provider} credentials: {error}"),
-            ),
+        if ctx
+            .tx
+            .send(TuiMessage::AuthStoreMutation(AuthStoreMutationRequest {
+                provider: provider.clone(),
+                operation: AuthStoreMutationOperation::Upsert(crate::config::Credential::ApiKey {
+                    key: Some(key.to_string()),
+                    env: None,
+                }),
+                purpose: AuthStoreMutationPurpose::ApiKeyCommand,
+            }))
+            .is_err()
+        {
+            add_error_message(&ctx.chat, "Could not queue the credential save.");
         }
         ctx.tui.request_render(false);
     }
@@ -831,7 +826,7 @@ impl SlashCommand for UsageCommand {
         "/usage"
     }
     fn description(&self) -> &'static str {
-        "Show token, cost, and cache totals for this session"
+        "Show ChatGPT plan limits and session token, cost, and cache totals"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
         let _ = ctx.tx.send(TuiMessage::ShowUsage);
@@ -855,7 +850,7 @@ impl SlashCommand for ReloadCommand {
         "/reload"
     }
     fn description(&self) -> &'static str {
-        "Reload extensions, skills, prompts"
+        "Reload extensions, skills, prompts, provider models"
     }
     fn execute(&self, ctx: &CommandContext, _args: &str) {
         // Signal the main loop. It owns the `&AgentHarness` borrow the

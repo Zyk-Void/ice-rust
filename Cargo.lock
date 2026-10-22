@@ -1131,6 +1131,7 @@ dependencies = [
  "flate2",
  "fs2",
  "futures",
+ "getrandom 0.2.17",
  "globset",
  "ice-agent",
  "ice-ai",

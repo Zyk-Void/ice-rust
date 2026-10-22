@@ -61,6 +61,7 @@ use session_header::*;
 mod panels;
 mod pet;
 mod side_questions;
+mod usage_panel;
 
 #[cfg(all(test, unix))]
 mod closeout_tui_smoke;
@@ -739,6 +740,144 @@ fn show_copy_notice(tui: &Arc<TuiAltScreen>, runtime: &tokio::runtime::Handle, l
 
 /// Message type for communication between the key/callback threads and the
 /// main async loop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AuthStoreMutationPurpose {
+    ApiKeyCommand,
+    ApiKeyPrompt { flow_id: u64 },
+    ProviderOAuthLogin { flow_id: u64 },
+    ProviderOAuthLogout { flow_id: u64 },
+    LocalLogout,
+}
+
+enum AuthStoreMutationOperation {
+    Upsert(crate::config::Credential),
+    Delete,
+    Logout { extension_owns_codex: bool },
+}
+
+enum AuthStoreMutationOutcome {
+    Changed(bool),
+    Logout(AuthStoreLogoutOutcome),
+}
+
+enum AuthStoreLogoutOutcome {
+    NoCredential,
+    Removed(bool),
+    OAuthCredential(crate::config::Credential),
+}
+
+struct AuthStoreMutationRequest {
+    provider: String,
+    operation: AuthStoreMutationOperation,
+    purpose: AuthStoreMutationPurpose,
+}
+
+struct AuthStoreMutationResult {
+    provider: String,
+    purpose: AuthStoreMutationPurpose,
+    result: Result<AuthStoreMutationOutcome, String>,
+}
+
+fn spawn_auth_store_mutation_worker(
+    result_tx: mpsc::UnboundedSender<TuiMessage>,
+) -> mpsc::UnboundedSender<AuthStoreMutationRequest> {
+    let (mutation_tx, mut mutation_rx) = mpsc::unbounded_channel();
+    tokio::spawn(async move {
+        while let Some(request) = mutation_rx.recv().await {
+            let AuthStoreMutationRequest {
+                provider,
+                operation,
+                purpose,
+            } = request;
+            let provider_for_write = provider.clone();
+            let write = tokio::task::spawn_blocking(move || match operation {
+                AuthStoreMutationOperation::Upsert(credential) => {
+                    crate::config::upsert_credential(&provider_for_write, credential)
+                        .map(|()| AuthStoreMutationOutcome::Changed(true))
+                }
+                AuthStoreMutationOperation::Delete => {
+                    crate::config::delete_credential(&provider_for_write)
+                        .map(AuthStoreMutationOutcome::Changed)
+                }
+                AuthStoreMutationOperation::Logout {
+                    extension_owns_codex,
+                } => {
+                    let transaction = crate::config::lock_auth_store()?;
+                    let auth = transaction.read_auth()?;
+                    match auth.get(&provider_for_write) {
+                        None => Ok(AuthStoreMutationOutcome::Logout(
+                            AuthStoreLogoutOutcome::NoCredential,
+                        )),
+                        Some(crate::config::Credential::Oauth { .. })
+                            if provider_for_write
+                                .eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID)
+                                && !extension_owns_codex =>
+                        {
+                            transaction
+                                .delete_credential(&provider_for_write)
+                                .map(|removed| {
+                                    AuthStoreMutationOutcome::Logout(
+                                        AuthStoreLogoutOutcome::Removed(removed),
+                                    )
+                                })
+                        }
+                        Some(crate::config::Credential::ApiKey { .. }) => transaction
+                            .delete_credential(&provider_for_write)
+                            .map(|removed| {
+                                AuthStoreMutationOutcome::Logout(AuthStoreLogoutOutcome::Removed(
+                                    removed,
+                                ))
+                            }),
+                        Some(credential @ crate::config::Credential::Oauth { .. }) => {
+                            Ok(AuthStoreMutationOutcome::Logout(
+                                AuthStoreLogoutOutcome::OAuthCredential(credential.clone()),
+                            ))
+                        }
+                    }
+                }
+            })
+            .await;
+            let result = match write {
+                Ok(Ok(changed)) => Ok(changed),
+                Ok(Err(error)) => Err(error.to_string()),
+                Err(error) => Err(format!("Credential worker failed: {error}")),
+            };
+            if result_tx
+                .send(TuiMessage::AuthStoreMutationFinished(
+                    AuthStoreMutationResult {
+                        provider,
+                        purpose,
+                        result,
+                    },
+                ))
+                .is_err()
+            {
+                break;
+            }
+        }
+    });
+    mutation_tx
+}
+
+fn publish_usage_panel(
+    chat: &Container,
+    current: &mut Option<Arc<dyn Component>>,
+    generation: u64,
+    received_generation: u64,
+    panel: usage_panel::UsagePanel,
+) -> bool {
+    if generation != received_generation {
+        return false;
+    }
+    if let Some(previous) = current.take() {
+        chat.remove_child(&previous);
+    }
+    let panel: Arc<dyn Component> = Arc::new(panel);
+    chat.add_child(panel.clone());
+    *current = Some(panel);
+    true
+}
+
 enum TuiMessage {
     UserInput(String, Vec<ice_ai::types::ImageContent>),
     /// Provider changes are serialized with prompts, after the current run.
@@ -768,6 +907,7 @@ enum TuiMessage {
     ExportNativeSession,
     /// Show live usage/context stats (from `/usage` and `/context`).
     ShowUsage,
+    UsageReady(u64, usage_panel::UsagePanel),
     /// Fork the whole current branch (extension runtime action).
     ForkSession,
     /// `/fork`: pick the user message to fork before (ice
@@ -804,6 +944,39 @@ enum TuiMessage {
         action: String,
         result: Result<serde_json::Value, String>,
         purpose: ProviderOAuthPurpose,
+        flow_id: u64,
+    },
+    /// Persist or remove provider credentials away from both the key thread
+    /// and the async UI loop. Requests are serialized by one worker.
+    AuthStoreMutation(AuthStoreMutationRequest),
+    /// Completion of an auth-store worker operation.
+    AuthStoreMutationFinished(AuthStoreMutationResult),
+    /// Begin the built-in Codex browser/manual login flow. The flow itself is
+    /// owned by the async loop so the key thread never reads stdin or waits on
+    /// the callback listener.
+    CodexOAuthStart {
+        provider: String,
+        flow_id: u64,
+    },
+    /// Authorization URL plus the sender for the TUI's optional manual code
+    /// input. The same flow also listens for the loopback browser callback.
+    CodexOAuthInteraction {
+        provider: String,
+        authorization_url: String,
+        callback_available: bool,
+        browser_error: Option<String>,
+        manual_input: mpsc::Sender<String>,
+        flow_id: u64,
+    },
+    /// Built-in Codex login has finished, including local persistence.
+    CodexOAuthResult {
+        provider: String,
+        result: Result<(), String>,
+        flow_id: u64,
+    },
+    /// Cancel an in-flight built-in Codex login. Other OAuth handlers simply
+    /// ignore this message because their flow ids are not in the local map.
+    CodexOAuthCancel {
         flow_id: u64,
     },
     /// Request provider-aware logout. OAuth credentials are revoked before the
@@ -2155,12 +2328,18 @@ pub async fn interactive_tui(
                 != 0
             {
                 if key.code == KeyCode::Esc && key.modifiers == KeyModifiers::NONE {
+                    let flow_id = state_for_key
+                        .provider_auth_flow_id
+                        .load(std::sync::atomic::Ordering::Acquire);
                     finish_provider_login(
                         &state_for_key,
                         &ctx_for_key.editor_container,
                         &editor_for_key,
                         &tui_for_key,
                     );
+                    let _ = ctx_for_key
+                        .tx
+                        .send(TuiMessage::CodexOAuthCancel { flow_id });
                     add_note_message(&state_for_key.chat_container, "OAuth flow cancelled.");
                 }
                 tui_for_key.request_render_reusing_scroll_content();
@@ -3019,6 +3198,11 @@ pub async fn interactive_tui(
     .await;
 
     // ---- Main loop: process submitted input + lifecycle messages ----
+    let mut codex_oauth_cancellations: HashMap<u64, CancellationToken> = HashMap::new();
+    let auth_store_mutations = spawn_auth_store_mutation_worker(ctx.tx.clone());
+    let mut usage_generation = 0_u64;
+    let mut usage_task: Option<tokio::task::JoinHandle<()>> = None;
+    let mut usage_panel: Option<Arc<dyn Component>> = None;
     loop {
         if !*running.lock().unwrap() {
             break;
@@ -3140,6 +3324,11 @@ pub async fn interactive_tui(
                 }
             }
             Some(TuiMessage::NewSession) => {
+                if let Some(task) = usage_task.take() {
+                    task.abort();
+                }
+                usage_generation = usage_generation.wrapping_add(1);
+                usage_panel = None;
                 start_new_session(
                     &harness,
                     &lane,
@@ -3167,6 +3356,11 @@ pub async fn interactive_tui(
                 break;
             }
             Some(TuiMessage::SwitchSession(id)) => {
+                if let Some(task) = usage_task.take() {
+                    task.abort();
+                }
+                usage_generation = usage_generation.wrapping_add(1);
+                usage_panel = None;
                 switch_to_session(
                     &harness,
                     &lane,
@@ -3262,83 +3456,95 @@ pub async fn interactive_tui(
             }
             Some(TuiMessage::ShowUsage) => {
                 let stats = agent_session.usage_stats().await.ok();
-                let total = agent_session.total_usage().await.ok();
                 let snapshot = agent_session.snapshot().await.ok();
-                match stats {
-                    Some(stats) => {
-                        let mut lines = vec![
-                            "## Usage".to_string(),
-                            String::new(),
-                            format!("- messages: {}", stats.message_count),
-                            format!("- total tokens: {}", stats.total_tokens),
-                            format!("- cached tokens: {}", stats.cached_tokens),
-                            format!("- uncached tokens: {}", stats.uncached_tokens),
-                            format!("- cost: ${:.4}", stats.cost_total),
-                        ];
-                        match stats.cache_hit_ratio() {
-                            Some(ratio) => {
-                                lines.push(format!("- cache hit ratio: {:.1}%", ratio * 100.0))
-                            }
-                            None => lines.push("- cache hit ratio: n/a (no input yet)".to_string()),
-                        }
-                        if let Some(total) = total {
-                            lines.push(String::new());
-                            lines.push(format!(
-                                "- last cumulative input/output: {} / {}",
-                                total.input, total.output
-                            ));
-                        }
-                        if let Ok(coding) = agent_session.coding_session_stats().await {
-                            lines.push(String::new());
-                            lines.push("All history, including abandoned branches:".to_string());
-                            lines.push(format!(
-                                "- tokens: {} (in {}, out {}, cache read {}, cache write {})",
-                                coding.usage.total_tokens,
-                                coding.usage.input,
-                                coding.usage.output,
-                                coding.usage.cache_read,
-                                coding.usage.cache_write
-                            ));
-                            lines.push(format!(
-                                "- cost (provider-reported, not a local estimate): ${:.4}",
-                                coding.usage.cost
-                            ));
-                            match coding.context_usage {
-                                Some(usage) => match (usage.tokens, usage.percent) {
-                                    (Some(tokens), Some(percent)) => lines.push(format!(
-                                        "- active context (estimated): {tokens} / {} tokens ({percent:.1}%)",
-                                        usage.context_window
-                                    )),
-                                    _ => lines.push(format!(
-                                        "- active context: unknown until the model replies after compaction (window {})",
-                                        usage.context_window
-                                    )),
-                                },
-                                None => {}
-                            }
-                        }
-                        if let Some(snapshot) = snapshot {
-                            lines.push(String::new());
-                            lines.push(format!("- lane: `{}`", snapshot.lane));
-                            lines.push(format!(
-                                "- leaf: `{}`",
-                                snapshot.leaf_id.clone().unwrap_or_else(|| "(empty)".into())
-                            ));
-                            if let Some(active) = &snapshot.active {
-                                lines.push(format!(
-                                    "- active operation: {} (`{}`)",
-                                    active.kind.as_str(),
-                                    active.run_id
-                                ));
-                            }
-                        }
-                        add_note_message(&chat_container, &lines.join("\n"));
-                    }
-                    None => {
-                        add_error_message(&chat_container, "Could not read session usage stats.")
+                let Some(stats) = stats else {
+                    add_error_message(&chat_container, "Could not read session usage stats.");
+                    tui.request_render(false);
+                    continue;
+                };
+                let all_history = agent_session
+                    .coding_session_stats()
+                    .await
+                    .ok()
+                    .map(|coding| usage_panel::AllHistory {
+                        input: coding.usage.input,
+                        output: coding.usage.output,
+                        cache_read: coding.usage.cache_read,
+                        cache_write: coding.usage.cache_write,
+                        total_tokens: coding.usage.total_tokens,
+                        cost: coding.usage.cost,
+                        context: coding
+                            .context_usage
+                            .map(|usage| usage_panel::ContextOccupancy {
+                                tokens: usage.tokens,
+                                window: usage.context_window,
+                                percent: usage.percent,
+                            }),
+                    });
+                let mut footer = Vec::new();
+                if let Some(snapshot) = snapshot {
+                    footer.push(format!(
+                        "lane {} · leaf {}",
+                        snapshot.lane,
+                        snapshot.leaf_id.clone().unwrap_or_else(|| "(empty)".into())
+                    ));
+                    if let Some(active) = &snapshot.active {
+                        footer.push(format!(
+                            "active operation: {} ({})",
+                            active.kind.as_str(),
+                            active.run_id
+                        ));
                     }
                 }
-                tui.request_render(false);
+                let session = usage_panel::SessionSection {
+                    messages: stats.message_count,
+                    cached_tokens: stats.cached_tokens,
+                    uncached_tokens: stats.uncached_tokens,
+                    cost: stats.cost_total,
+                    all_history,
+                    footer,
+                };
+                // The plan limits come from the ChatGPT backend, so fetch them
+                // off the input loop and publish the whole panel once.
+                if let Some(task) = usage_task.take() {
+                    task.abort();
+                }
+                usage_generation = usage_generation.wrapping_add(1);
+                let generation = usage_generation;
+                let tx = ctx.tx.clone();
+                let offline = crate::args::offline_env_enabled();
+                usage_task = Some(tokio::spawn(async move {
+                    let chatgpt = if offline {
+                        usage_panel::ChatGptSection::SignedOut
+                    } else {
+                        match crate::codex_usage::fetch(
+                            crate::provider::OPENAI_CODEX_BASE_URL,
+                            &tokio_util::sync::CancellationToken::new(),
+                        )
+                        .await
+                        {
+                            Ok(Some(usage)) => usage_panel::ChatGptSection::Usage(usage),
+                            Ok(None) => usage_panel::ChatGptSection::SignedOut,
+                            Err(error) => usage_panel::ChatGptSection::Failed(error),
+                        }
+                    };
+                    let _ = tx.send(TuiMessage::UsageReady(
+                        generation,
+                        usage_panel::UsagePanel { chatgpt, session },
+                    ));
+                }));
+            }
+            Some(TuiMessage::UsageReady(generation, panel)) => {
+                if publish_usage_panel(
+                    &chat_container,
+                    &mut usage_panel,
+                    usage_generation,
+                    generation,
+                    panel,
+                ) {
+                    usage_task = None;
+                    tui.request_render(false);
+                }
             }
             Some(TuiMessage::ForkSession) => {
                 fork_session(
@@ -3427,6 +3633,180 @@ pub async fn interactive_tui(
                     });
                 });
             }
+            Some(TuiMessage::CodexOAuthStart { provider, flow_id }) => {
+                if state
+                    .provider_auth_flow_id
+                    .load(std::sync::atomic::Ordering::Acquire)
+                    != flow_id
+                {
+                    continue;
+                }
+
+                // Extension ownership is checked again on the async loop so
+                // a registry reload between selector choice and dispatch
+                // cannot allow the builtin flow to take precedence.
+                let extension_claims_provider =
+                    extension_owns_provider(&ctx.reload_context.extension_session, &provider);
+                let extension_owns_oauth =
+                    current_oauth_providers(&ctx.reload_context.extension_session)
+                        .iter()
+                        .any(|oauth| oauth.id.eq_ignore_ascii_case(&provider));
+                if extension_owns_oauth {
+                    let _ = ctx.tx.send(TuiMessage::ProviderOAuthAction {
+                        provider,
+                        action: "begin".to_string(),
+                        input: serde_json::json!({}),
+                        purpose: ProviderOAuthPurpose::Login,
+                        flow_id,
+                    });
+                    continue;
+                }
+                if extension_claims_provider {
+                    begin_provider_login(
+                        &state,
+                        &editor_container,
+                        &editor,
+                        &tui,
+                        &ctx.tx,
+                        &ctx.reload_context.extension_session,
+                        &provider,
+                    );
+                    continue;
+                }
+
+                let cancellation = CancellationToken::new();
+                codex_oauth_cancellations.insert(flow_id, cancellation.clone());
+                let (manual_input, manual_responses) = mpsc::channel(1);
+                let tx = ctx.tx.clone();
+                let provider_result = provider.clone();
+                tokio::spawn(async move {
+                    let begun = tokio::select! {
+                        _ = cancellation.cancelled() => return,
+                        result = crate::oauth_codex::LoginFlow::begin() => result,
+                    };
+                    match begun {
+                        Ok((authorization_url, flow)) => {
+                            if cancellation.is_cancelled() {
+                                return;
+                            }
+                            let callback_available = flow.callback_available();
+                            let browser_error =
+                                crate::codex_auth::open_browser(&authorization_url).err();
+                            if cancellation.is_cancelled() {
+                                return;
+                            }
+                            if tx
+                                .send(TuiMessage::CodexOAuthInteraction {
+                                    provider: provider_result.clone(),
+                                    authorization_url,
+                                    callback_available,
+                                    browser_error,
+                                    manual_input,
+                                    flow_id,
+                                })
+                                .is_err()
+                            {
+                                cancellation.cancel();
+                                return;
+                            }
+                            let result =
+                                match flow.complete(manual_responses, cancellation.clone()).await {
+                                    Ok(_) if cancellation.is_cancelled() => {
+                                        Err("OpenAI Codex OAuth was cancelled".to_string())
+                                    }
+                                    Ok(credential) => {
+                                        crate::codex_auth::persist_cancellable(
+                                            credential,
+                                            cancellation.clone(),
+                                        )
+                                        .await
+                                    }
+                                    Err(error) => Err(error.to_string()),
+                                };
+                            let _ = tx.send(TuiMessage::CodexOAuthResult {
+                                provider: provider_result,
+                                result,
+                                flow_id,
+                            });
+                        }
+                        Err(error) => {
+                            let _ = tx.send(TuiMessage::CodexOAuthResult {
+                                provider: provider_result,
+                                result: Err(error.to_string()),
+                                flow_id,
+                            });
+                        }
+                    }
+                });
+            }
+            Some(TuiMessage::CodexOAuthInteraction {
+                provider,
+                authorization_url,
+                callback_available,
+                browser_error,
+                manual_input,
+                flow_id,
+            }) => {
+                if state
+                    .provider_auth_flow_id
+                    .load(std::sync::atomic::Ordering::Acquire)
+                    != flow_id
+                {
+                    if let Some(cancellation) = codex_oauth_cancellations.remove(&flow_id) {
+                        cancellation.cancel();
+                    }
+                    continue;
+                }
+                begin_builtin_codex_oauth_input(
+                    &state,
+                    &editor_container,
+                    &editor,
+                    &tui,
+                    &ctx.tx,
+                    &provider,
+                    &authorization_url,
+                    callback_available,
+                    browser_error.as_deref(),
+                    manual_input,
+                    flow_id,
+                );
+            }
+            Some(TuiMessage::CodexOAuthResult {
+                provider,
+                result,
+                flow_id,
+            }) => {
+                codex_oauth_cancellations.remove(&flow_id);
+                if state
+                    .provider_auth_flow_id
+                    .load(std::sync::atomic::Ordering::Acquire)
+                    != flow_id
+                {
+                    continue;
+                }
+                finish_provider_login(&state, &editor_container, &editor, &tui);
+                match result {
+                    Ok(()) => {
+                        add_note_message(
+                            &chat_container,
+                            &format!(
+                                "OAuth credentials saved for {provider}; reloading providers…"
+                            ),
+                        );
+                        let _ = ctx.tx.send(TuiMessage::ReloadExtensions);
+                    }
+                    Err(error) => add_error_message(
+                        &chat_container,
+                        &format!("OAuth login failed for {provider}: {error}"),
+                    ),
+                }
+                tui.request_render(false);
+            }
+            Some(TuiMessage::CodexOAuthCancel { flow_id }) => {
+                if let Some(cancellation) = codex_oauth_cancellations.remove(&flow_id) {
+                    cancellation.cancel();
+                }
+            }
             Some(TuiMessage::ProviderOAuthResult {
                 provider,
                 action,
@@ -3454,77 +3834,54 @@ pub async fn interactive_tui(
                     flow_id,
                 );
             }
-            Some(TuiMessage::LogoutProvider(provider)) => {
-                let auth = match crate::config::read_auth() {
-                    Ok(auth) => auth,
-                    Err(error) => {
-                        add_error_message(
-                            &chat_container,
-                            &format!("Could not read saved credentials: {error}"),
-                        );
-                        tui.request_render(false);
-                        continue;
-                    }
-                };
-                let credential = auth.get(&provider).cloned();
-                match credential {
-                    Some(crate::config::Credential::Oauth {
-                        access, refresh, ..
-                    }) => {
-                        show_provider_auth_status(
-                            &state,
-                            &editor_container,
-                            &editor,
-                            &tui,
-                            &format!("Revoking OAuth credentials for {provider}…"),
-                        );
-                        let flow_id = state
-                            .provider_auth_generation
-                            .fetch_add(1, std::sync::atomic::Ordering::AcqRel)
-                            .wrapping_add(1);
-                        state
-                            .provider_auth_flow_id
-                            .store(flow_id, std::sync::atomic::Ordering::Release);
-                        let _ = ctx.tx.send(TuiMessage::ProviderOAuthAction {
-                            provider,
-                            action: "revoke".to_string(),
-                            input: serde_json::json!({
-                                "credential": {"access": access, "refresh": refresh}
-                            }),
-                            purpose: ProviderOAuthPurpose::Logout,
-                            flow_id,
-                        });
-                    }
-                    Some(crate::config::Credential::ApiKey { .. }) => {
-                        match crate::config::delete_credential(&provider) {
-                            Ok(true) => {
-                                add_note_message(
-                                    &chat_container,
-                                    &format!(
-                                        "Removed saved credentials for {provider}; reloading providers…"
-                                    ),
-                                );
-                                let _ = ctx.tx.send(TuiMessage::ReloadExtensions);
-                            }
-                            Ok(false) => add_note_message(
-                                &chat_container,
-                                &format!("No saved credentials found for {provider}."),
-                            ),
-                            Err(error) => add_error_message(
-                                &chat_container,
-                                &format!("Could not remove {provider} credentials: {error}"),
-                            ),
-                        }
-                        tui.request_render(false);
-                    }
-                    None => {
-                        add_note_message(
-                            &chat_container,
-                            &format!("No saved credentials found for {provider}."),
-                        );
-                        tui.request_render(false);
-                    }
+            Some(TuiMessage::AuthStoreMutation(request)) => {
+                if let Err(error) = auth_store_mutations.send(request) {
+                    let request = error.0;
+                    handle_auth_store_mutation_result(
+                        &state,
+                        &editor_container,
+                        &editor,
+                        &tui,
+                        &ctx.tx,
+                        AuthStoreMutationResult {
+                            provider: request.provider,
+                            purpose: request.purpose,
+                            result: Err("Credential worker is unavailable".to_string()),
+                        },
+                    );
                 }
+            }
+            Some(TuiMessage::AuthStoreMutationFinished(result)) => {
+                handle_auth_store_mutation_result(
+                    &state,
+                    &editor_container,
+                    &editor,
+                    &tui,
+                    &ctx.tx,
+                    result,
+                );
+            }
+            Some(TuiMessage::LogoutProvider(provider)) => {
+                let extension_owns_codex =
+                    if provider.eq_ignore_ascii_case(crate::codex_auth::PROVIDER_ID) {
+                        extension_owns_provider(&ctx.reload_context.extension_session, &provider)
+                    } else {
+                        false
+                    };
+                if ctx
+                    .tx
+                    .send(TuiMessage::AuthStoreMutation(AuthStoreMutationRequest {
+                        provider,
+                        operation: AuthStoreMutationOperation::Logout {
+                            extension_owns_codex,
+                        },
+                        purpose: AuthStoreMutationPurpose::LocalLogout,
+                    }))
+                    .is_err()
+                {
+                    add_error_message(&chat_container, "Could not queue credential removal.");
+                }
+                tui.request_render(false);
             }
             Some(TuiMessage::ReloadExtensions) => {
                 // B5d: drive the shared reload routine on the async runtime,
@@ -3604,6 +3961,12 @@ pub async fn interactive_tui(
     }
 
     // ---- Shutdown ----
+    if let Some(task) = usage_task {
+        task.abort();
+    }
+    for cancellation in codex_oauth_cancellations.into_values() {
+        cancellation.cancel();
+    }
     ask_user_bridge.shutdown();
     *running.lock().unwrap() = false;
     for handle in update_check_handles {
