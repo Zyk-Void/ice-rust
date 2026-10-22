@@ -777,12 +777,15 @@ async fn read_cancellable(
 }
 
 /// Read at most `max` newline-terminated lines without loading the whole file.
+/// Longest single line `read_lines_bounded` will buffer.
+const MAX_BOUNDED_LINE_BYTES: u64 = 1024 * 1024;
+
 async fn read_lines_bounded(
     path: &Path,
     max: usize,
     cancel: Option<&CancellationToken>,
 ) -> Result<Vec<String>, FileError> {
-    use tokio::io::AsyncBufReadExt;
+    use tokio::io::{AsyncBufReadExt, AsyncReadExt};
     let display = path.to_string_lossy();
     let read = async {
         let file = tokio::fs::File::open(path).await?;
@@ -790,8 +793,19 @@ async fn read_lines_bounded(
         let mut lines = Vec::new();
         while lines.len() < max {
             let mut buf = Vec::new();
-            if reader.read_until(b'\n', &mut buf).await? == 0 {
+            // Cap each line so one huge or newline-free line cannot exhaust memory.
+            let read = (&mut reader)
+                .take(MAX_BOUNDED_LINE_BYTES + 1)
+                .read_until(b'\n', &mut buf)
+                .await?;
+            if read == 0 {
                 break;
+            }
+            if buf.len() as u64 > MAX_BOUNDED_LINE_BYTES {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "line exceeds the bounded read limit",
+                ));
             }
             if buf.last() == Some(&b'\n') {
                 buf.pop();

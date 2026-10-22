@@ -396,8 +396,12 @@ fn write_new_file(output_path: &Path, contents: &str, what: &str) -> Result<(), 
                 format!("Could not write {what} export: {e}")
             }
         })?;
-    file.write_all(contents.as_bytes())
-        .map_err(|e| format!("Could not write {what} export: {e}"))
+    file.write_all(contents.as_bytes()).map_err(|e| {
+        // Don't leave a partial file behind: later exports refuse to overwrite it.
+        drop(file);
+        let _ = std::fs::remove_file(output_path);
+        format!("Could not write {what} export: {e}")
+    })
 }
 
 fn export_markdown(entries: &[Entry], output_path: &Path) -> Result<(), String> {

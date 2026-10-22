@@ -26,3 +26,17 @@ async fn bounded_read_does_not_touch_bytes_past_the_requested_lines() {
         .unwrap_err();
     assert!(error.to_string().contains("utf-8"), "{error}");
 }
+
+#[tokio::test]
+async fn bounded_read_rejects_a_single_oversized_line() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("huge.jsonl");
+    std::fs::write(&path, vec![b'a'; 2 * 1024 * 1024]).unwrap();
+    let env = OsExecutionEnv::with_cwd(dir.path().to_path_buf());
+
+    let error = env
+        .read_text_lines(&path.to_string_lossy(), Some(1), None)
+        .await
+        .unwrap_err();
+    assert!(error.to_string().contains("limit"), "{error}");
+}

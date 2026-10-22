@@ -264,6 +264,8 @@ impl FooterComponent {
         if let Ok(mut t) = self.context_tokens.lock() {
             *t = tokens;
         }
+        // A directly supplied count is a measurement, not an estimate.
+        *self.context_estimated.lock().unwrap() = false;
         self.recompute_context_percent();
     }
 
@@ -538,6 +540,20 @@ impl Component for FooterComponent {
 mod tests {
     use super::*;
     use crate::ansi::strip_ansi;
+
+    #[test]
+    fn measured_context_tokens_clear_the_estimate_marker() {
+        let footer = FooterComponent::new();
+        footer.set_context_estimate(Some(25_000), 100_000);
+        let estimated = strip_ansi(&footer.render(120).join("\n"));
+        assert!(estimated.contains("~25.0%"), "{estimated}");
+        footer.set_context_tokens(Some(30_000));
+        let measured = strip_ansi(&footer.render(120).join("\n"));
+        assert!(
+            measured.contains("30.0%") && !measured.contains("~30.0%"),
+            "{measured}"
+        );
+    }
 
     /// The extension status (langfuse ✓ …) renders after the run status and is
     /// independent of it: clearing the run status must not clear it.
