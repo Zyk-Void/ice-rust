@@ -150,6 +150,10 @@ fn plain_prompt_uses_codex_input_text_items_through_the_cli() {
             "--base-url",
         ])
         .arg(format!("http://{address}"))
+        // Custom endpoints require an explicitly supplied token; stored OAuth
+        // credentials must never be forwarded to this local fixture.
+        .arg("--api-key")
+        .arg(&access)
         .args([
             "--offline",
             "--no-extensions",
