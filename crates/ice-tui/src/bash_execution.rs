@@ -12,7 +12,7 @@
 //! distinction is visible, matching `bash-execution.ts`.
 
 use std::any::Any;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -84,6 +84,8 @@ pub struct BashExecutionComponent {
     /// Bumped by every mutator so a completed panel's cached render is dropped
     /// when the user expands it or a late update lands.
     revision: AtomicU64,
+    /// Pointer is over the collapsed hint row (see `set_hovered`).
+    hovered: AtomicBool,
     cache: Mutex<Option<BashRenderCache>>,
 }
 
@@ -113,6 +115,7 @@ impl BashExecutionComponent {
             started_at: Mutex::new(Some(Instant::now())),
             finished_at: Mutex::new(None),
             revision: AtomicU64::new(0),
+            hovered: AtomicBool::new(false),
             cache: Mutex::new(None),
         }
     }
@@ -121,6 +124,16 @@ impl BashExecutionComponent {
     pub fn set_user_shell(&self) {
         *self.user_shell.lock().unwrap() = true;
         self.bump();
+    }
+
+    /// Highlight the collapsed hint row while the pointer is over it. Returns
+    /// whether the state changed, so callers repaint only then.
+    pub fn set_hovered(&self, hovered: bool) -> bool {
+        let changed = self.hovered.swap(hovered, Ordering::AcqRel) != hovered;
+        if changed {
+            self.bump();
+        }
+        changed
     }
 
     /// Invalidate the memoized render (state changed).
@@ -331,6 +344,8 @@ impl BashExecutionComponent {
                 markdown: false,
                 expanded: *self.expanded.lock().unwrap(),
                 leading_spacer: true,
+                expand_id: Some(self as *const Self as usize),
+                hovered: self.hovered.load(Ordering::Acquire),
             },
             width,
         )
@@ -518,6 +533,45 @@ mod tests {
             text.contains("✗ Ran make") && text.contains("(exit 2)"),
             "{text}"
         );
+    }
+
+    #[test]
+    fn compact_bash_hint_is_clickable_and_highlights_on_hover() {
+        let theme = Theme::default();
+        let c = BashExecutionComponent::new("ls");
+        c.append_output(
+            &(1..=33)
+                .map(|i| format!("row {i}"))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
+        c.set_complete(Some(0), false, BashTruncation::default());
+        let render = |c: &BashExecutionComponent| {
+            let status = *c.status.lock().unwrap();
+            c.render_compact_panel(100, status, &theme)
+        };
+        let find_hint = |lines: &[String]| {
+            lines
+                .iter()
+                .find(|line| strip_ansi(line).contains("+30 lines"))
+                .cloned()
+                .unwrap()
+        };
+        let idle = find_hint(&render(&c));
+        let column = strip_ansi(&idle).find("+30").unwrap();
+        assert_eq!(
+            crate::expand_link_id(&idle, column),
+            Some(&c as *const BashExecutionComponent as usize)
+        );
+        let fill = theme.colors.accent.to_bg();
+        assert!(!idle.contains(&fill));
+
+        assert!(c.set_hovered(true));
+        assert!(!c.set_hovered(true));
+        let hovered = find_hint(&render(&c));
+        assert!(hovered.contains(&fill), "{hovered:?}");
+        assert!(c.set_hovered(false));
+        assert_eq!(find_hint(&render(&c)), idle);
     }
 
     #[test]

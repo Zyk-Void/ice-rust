@@ -532,6 +532,327 @@ pub(super) fn extract_transcript_selection(
     extract_selected_text(&snapshot.lines, (start.0, start.1), end)
 }
 
+pub(super) fn transcript_rows_unchanged(original: &[String], current: &[String]) -> bool {
+    current.len() >= original.len() && current[..original.len()] == *original
+}
+
+/// Begin a click candidate. Nothing is highlighted or copied until a Drag
+/// event confirms that the pointer moved with the left button held.
+/// Tool cell whose collapsed "… +N lines" row is under a screen cell.
+pub(super) fn expand_link_at(
+    snapshot: &ice_tui::ScreenSnapshot,
+    (column, row): (usize, usize),
+) -> Option<usize> {
+    if snapshot.has_capturing_overlay {
+        return None;
+    }
+    ice_tui::expand_link_id(snapshot.rows.get(row)?, column)
+}
+
+/// Tool cell a click at a screen cell toggles: the collapsed hint under the
+/// pointer, or any row of an expanded cell.
+pub(super) fn click_link_at(
+    snapshot: &ice_tui::ScreenSnapshot,
+    cell: (usize, usize),
+) -> Option<usize> {
+    expand_link_at(snapshot, cell).or_else(|| {
+        if snapshot.has_capturing_overlay {
+            return None;
+        }
+        ice_tui::collapse_link_id(snapshot.rows.get(cell.1)?)
+    })
+}
+
+pub(super) fn begin_mouse_selection(
+    tui: &TuiAltScreen,
+    origin: (usize, usize),
+) -> SelectionGesture {
+    let generation = tui.screen_generation();
+    let transcript_anchor = tui.transcript_snapshot().and_then(|snapshot| {
+        snapshot
+            .content_position(origin.0, origin.1, false)
+            .map(|logical| (logical, snapshot.content_width, snapshot.lines.clone()))
+    });
+    SelectionGesture::PendingClick {
+        origin,
+        generation,
+        transcript_anchor,
+    }
+}
+
+pub(super) fn mouse_selection_cancels_for_wheel(gesture: &SelectionGesture) -> bool {
+    matches!(
+        gesture,
+        SelectionGesture::PendingClick { .. }
+            | SelectionGesture::Dragging {
+                source: SelectionSource::Screen { .. },
+            }
+    )
+}
+
+/// Extend the current mouse gesture. Transcript drags retain their logical
+/// anchor across scrolling; a drag leaving that viewport switches to the
+/// captured composed screen only while the anchor remains visible.
+pub(super) fn update_mouse_selection(
+    gesture: &mut SelectionGesture,
+    tui: &TuiAltScreen,
+    endpoint: (usize, usize),
+) -> bool {
+    let current = gesture.clone();
+    let (source, generation, first_drag) = match current {
+        SelectionGesture::Idle => return false,
+        SelectionGesture::PendingClick {
+            origin,
+            generation,
+            transcript_anchor,
+        } => {
+            if generation != tui.screen_generation() {
+                *gesture = SelectionGesture::Idle;
+                return false;
+            }
+            let Some(snapshot) = tui
+                .screen_snapshot()
+                .filter(|snapshot| snapshot.generation == generation)
+            else {
+                *gesture = SelectionGesture::Idle;
+                return false;
+            };
+            if let Some((logical_anchor, content_width, original_lines)) = transcript_anchor {
+                let Some(transcript) = tui.transcript_snapshot() else {
+                    *gesture = SelectionGesture::Idle;
+                    return false;
+                };
+                if transcript.content_width != content_width
+                    || !transcript_rows_unchanged(&original_lines, &transcript.lines)
+                {
+                    *gesture = SelectionGesture::Idle;
+                    return false;
+                }
+                let endpoint_inside = transcript
+                    .content_position(endpoint.0, endpoint.1, false)
+                    .is_some();
+                if endpoint_inside {
+                    (
+                        SelectionSource::Transcript {
+                            logical_anchor,
+                            content_width,
+                            original_lines,
+                            generation,
+                        },
+                        generation,
+                        true,
+                    )
+                } else {
+                    let Some(screen_anchor) =
+                        transcript.screen_position(logical_anchor.0, logical_anchor.1)
+                    else {
+                        *gesture = SelectionGesture::Idle;
+                        return false;
+                    };
+                    (
+                        SelectionSource::Screen {
+                            snapshot,
+                            screen_anchor,
+                        },
+                        generation,
+                        true,
+                    )
+                }
+            } else {
+                (
+                    SelectionSource::Screen {
+                        snapshot,
+                        screen_anchor: origin,
+                    },
+                    generation,
+                    true,
+                )
+            }
+        }
+        SelectionGesture::Dragging { source, .. } => {
+            let generation = match &source {
+                SelectionSource::Transcript { generation, .. } => *generation,
+                SelectionSource::Screen { snapshot, .. } => snapshot.generation,
+            };
+            (source, generation, false)
+        }
+    };
+
+    if generation != tui.screen_generation() {
+        *gesture = SelectionGesture::Idle;
+        tui.set_selection(None);
+        return false;
+    }
+
+    let source = match source {
+        SelectionSource::Transcript {
+            logical_anchor,
+            content_width,
+            original_lines,
+            generation,
+        } => {
+            let Some(snapshot) = tui.transcript_snapshot() else {
+                *gesture = SelectionGesture::Idle;
+                tui.set_selection(None);
+                return false;
+            };
+            if snapshot.content_width != content_width
+                || !transcript_rows_unchanged(&original_lines, &snapshot.lines)
+            {
+                *gesture = SelectionGesture::Idle;
+                tui.set_selection(None);
+                return false;
+            }
+            if let Some(logical_end) = snapshot.content_position(endpoint.0, endpoint.1, false) {
+                tui.clear_screen_selection();
+                tui.set_selection(Some((logical_anchor, logical_end)));
+                SelectionSource::Transcript {
+                    logical_anchor,
+                    content_width,
+                    original_lines,
+                    generation,
+                }
+            } else {
+                let Some(screen_anchor) =
+                    snapshot.screen_position(logical_anchor.0, logical_anchor.1)
+                else {
+                    *gesture = SelectionGesture::Idle;
+                    tui.set_selection(None);
+                    return false;
+                };
+                let Some(screen_snapshot) = tui
+                    .screen_snapshot()
+                    .filter(|snapshot| snapshot.generation == generation)
+                else {
+                    *gesture = SelectionGesture::Idle;
+                    tui.set_selection(None);
+                    return false;
+                };
+                tui.set_selection(None);
+                if !tui.set_screen_selection(screen_snapshot.clone(), (screen_anchor, endpoint)) {
+                    *gesture = SelectionGesture::Idle;
+                    return false;
+                }
+                SelectionSource::Screen {
+                    snapshot: screen_snapshot,
+                    screen_anchor,
+                }
+            }
+        }
+        SelectionSource::Screen {
+            snapshot,
+            screen_anchor,
+        } => {
+            if !first_drag && !tui.has_screen_selection(snapshot.generation) {
+                *gesture = SelectionGesture::Idle;
+                return false;
+            }
+            if !tui.set_screen_selection(snapshot.clone(), (screen_anchor, endpoint)) {
+                *gesture = SelectionGesture::Idle;
+                return false;
+            }
+            SelectionSource::Screen {
+                snapshot,
+                screen_anchor,
+            }
+        }
+    };
+    *gesture = SelectionGesture::Dragging { source };
+    true
+}
+
+/// Resolve a completed drag to plain text from its retained source frame.
+pub(super) fn finish_mouse_selection(
+    gesture: &SelectionGesture,
+    tui: &TuiAltScreen,
+    endpoint: (usize, usize),
+) -> Option<String> {
+    let SelectionGesture::Dragging { source } = gesture else {
+        return None;
+    };
+    match source {
+        SelectionSource::Transcript {
+            logical_anchor,
+            content_width,
+            original_lines,
+            generation,
+        } => {
+            if *generation != tui.screen_generation() {
+                return None;
+            }
+            let endpoint = (
+                endpoint.0.min(u16::MAX as usize) as u16,
+                endpoint.1.min(u16::MAX as usize) as u16,
+            );
+            tui.transcript_snapshot().and_then(|snapshot| {
+                (snapshot.content_width == *content_width
+                    && transcript_rows_unchanged(original_lines, &snapshot.lines))
+                .then(|| {
+                    extract_transcript_selection(
+                        &snapshot,
+                        (logical_anchor.0, logical_anchor.1, *content_width),
+                        endpoint,
+                    )
+                })?
+            })
+        }
+        SelectionSource::Screen {
+            snapshot,
+            screen_anchor,
+        } => {
+            if !tui.has_screen_selection(snapshot.generation) {
+                return None;
+            }
+            extract_selected_text(&snapshot.rows, *screen_anchor, endpoint)
+        }
+    }
+}
+
+pub(super) fn mouse_selection_text_for_copy(
+    auto_copy: bool,
+    gesture: &SelectionGesture,
+    tui: &TuiAltScreen,
+    endpoint: (usize, usize),
+) -> Option<String> {
+    auto_copy
+        .then(|| finish_mouse_selection(gesture, tui, endpoint))
+        .flatten()
+}
+
+pub(super) fn cancel_mouse_selection(state: &TuiState, tui: &TuiAltScreen) {
+    *state.selection_gesture.lock().unwrap() = SelectionGesture::Idle;
+    tui.set_selection(None);
+    tui.clear_screen_selection();
+}
+
+pub(super) fn place_editor_caret_from_screen_click(
+    tui: &TuiAltScreen,
+    editor: &Arc<Editor>,
+    column: usize,
+    row: usize,
+) -> bool {
+    let Some(rect) = tui.component_rect(editor.as_ref()) else {
+        return false;
+    };
+    if column < rect.x
+        || column >= rect.x.saturating_add(rect.width)
+        || row < rect.y
+        || row >= rect.y.saturating_add(rect.height)
+    {
+        return false;
+    }
+    let visible_rows = rect.height.saturating_sub(2).max(1);
+    let rendered_row = row
+        .saturating_sub(rect.y)
+        .saturating_sub(1)
+        .min(visible_rows - 1);
+    editor.set_cursor_at_visual_position(rendered_row, column.saturating_sub(rect.x), rect.width);
+    editor.set_focused(true);
+    tui.set_focus(Some(editor.clone()));
+    tui.request_render_reusing_scroll_content();
+    true
+}
+
 /// Plain text of a mouse selection over cached logical transcript rows.
 ///
 /// `start` and `end` are `(column, row)` content cells, inclusive, in either

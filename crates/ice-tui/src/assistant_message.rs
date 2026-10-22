@@ -21,7 +21,6 @@ use super::image::{Image, ImageOptions};
 use super::markdown::Markdown;
 use super::spacer::Spacer;
 use super::text::Text;
-use crate::ansi::italic;
 use crate::theme::theme;
 
 /// A single visible block of an assistant message, in document order. This is
@@ -160,7 +159,7 @@ impl AssistantMessageComponent {
     /// **runs** of consecutive thinking blocks coalesce into one dim-italic
     /// markdown section (joined with `\n\n`), and a blank line separates a
     /// thinking run from a following visible block. When `hide_thinking` is
-    /// set, each thinking run collapses to a single dim label line.
+    /// set, thinking blocks and their spacing are omitted entirely.
     pub fn update_blocks(&self, blocks: &[AssistantBlock]) {
         *self.last_blocks.lock().unwrap() = blocks.to_vec();
         self.rebuild_content(blocks);
@@ -234,6 +233,9 @@ impl AssistantMessageComponent {
                 AssistantBlock::Image(_) => {
                     i += 1;
                 }
+                AssistantBlock::Thinking(_) if opts.hide_thinking => {
+                    i += 1;
+                }
                 AssistantBlock::Thinking(_) => {
                     // Coalesce a run of consecutive thinking blocks into one
                     // section, exactly like the TS inner loop.
@@ -254,14 +256,7 @@ impl AssistantMessageComponent {
                         continue;
                     }
 
-                    if opts.hide_thinking {
-                        // One static dim label per thinking run (TS path).
-                        self.content_container.add_child(Arc::new(Text::new(
-                            italic(&theme().colors.thinking_text.fg(&opts.hidden_thinking_label)),
-                            opts.output_pad,
-                            0,
-                        )));
-                    } else {
+                    {
                         // Render the joined thinking as one dim italic markdown
                         // section — the TS `color: thinkingText, italic: true`
                         // styling. The base style must be applied per rendered
@@ -538,7 +533,7 @@ mod tests {
     }
 
     #[test]
-    fn test_hide_thinking_shows_label_only() {
+    fn test_hide_thinking_removes_blocks_and_spacing() {
         let msg = AssistantMessageComponent::new(AssistantMessageOptions {
             hide_thinking: true,
             hidden_thinking_label: "Thinking...".to_string(),
@@ -549,7 +544,16 @@ mod tests {
             AssistantBlock::Text("Public answer.".to_string()),
         ]);
         let joined = strip_ansi(&msg.render(80).join("\n"));
-        assert!(joined.contains("Thinking..."), "label missing: {joined}");
+        assert!(
+            !joined.contains("Thinking..."),
+            "hidden label rendered: {joined}"
+        );
+        let text_only = AssistantMessageComponent::default();
+        text_only.update_text("Public answer.");
+        assert_eq!(msg.render(80), text_only.render(80));
+
+        msg.update_blocks(&[AssistantBlock::Thinking("secret reasoning".to_string())]);
+        assert!(msg.render(80).is_empty());
         assert!(
             !joined.contains("secret reasoning"),
             "hidden thinking leaked: {joined}"
@@ -590,7 +594,10 @@ mod tests {
             !after.contains("internal"),
             "not rebuilt after toggle: {after}"
         );
-        assert!(after.contains("Thinking..."));
+        assert!(!after.contains("Thinking..."));
+        assert!(after.contains("visible"));
+        msg.set_hide_thinking(false);
+        assert_eq!(strip_ansi(&msg.render(80).join("\n")), before);
     }
 
     #[test]

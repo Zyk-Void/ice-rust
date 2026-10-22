@@ -363,10 +363,35 @@ pub(super) struct TuiState {
     /// `set_pending_queue` skip redundant rebuilds + frame requests when the
     /// polled queue is unchanged.
     pub(super) pending_snapshot: std::sync::Mutex<ice_harness::agent_harness::QueuedMessages>,
-    /// Logical transcript (column, row, wrapping width) where a drag began.
-    pub(super) selection_start: std::sync::Mutex<Option<(usize, usize, usize)>>,
-    /// Logical transcript endpoint of the current selection.
-    pub(super) selection_end: std::sync::Mutex<Option<(u16, u16)>>,
+    /// Explicit mouse down / drag lifecycle for whole-screen selection.
+    pub(super) selection_gesture: std::sync::Mutex<SelectionGesture>,
+}
+
+#[derive(Clone)]
+pub(super) enum SelectionSource {
+    Transcript {
+        logical_anchor: (usize, usize),
+        content_width: usize,
+        original_lines: std::sync::Arc<Vec<String>>,
+        generation: u64,
+    },
+    Screen {
+        snapshot: ice_tui::ScreenSnapshot,
+        screen_anchor: (usize, usize),
+    },
+}
+
+#[derive(Clone)]
+pub(super) enum SelectionGesture {
+    Idle,
+    PendingClick {
+        origin: (usize, usize),
+        generation: u64,
+        transcript_anchor: Option<((usize, usize), usize, std::sync::Arc<Vec<String>>)>,
+    },
+    Dragging {
+        source: SelectionSource,
+    },
 }
 
 /// How many submitted messages are kept for ↑ recall (mirrors the TS

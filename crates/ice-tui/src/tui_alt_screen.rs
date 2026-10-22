@@ -4,7 +4,7 @@
 //! transcript and fixed bottom dock, as described in `tui-plan.md`.
 
 use std::any::Any;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
@@ -15,7 +15,7 @@ use super::layout::{
     composite_tui_line, extract_cursor_position, render_layout_frame,
     render_layout_frame_reusing_scroll_content, LayoutBox, LayoutFrame, LayoutRect,
 };
-use super::overlay::OverlayManager;
+use super::overlay::{OverlayManager, RenderedOverlay};
 use super::scroll_view::ScrollView;
 use super::tui::{OverlayHandle, OverlayOptions, TuiMode, TuiStopOptions, TUI};
 use crate::ansi::{visible_width, CURSOR_MARKER};
@@ -79,6 +79,41 @@ impl TranscriptSnapshot {
             content_row.min(self.lines.len() - 1),
         ))
     }
+
+    /// Convert a visible logical transcript cell back to its current screen
+    /// position. Returns `None` when scrolling has moved the row or column out
+    /// of the viewport.
+    pub fn screen_position(&self, column: usize, row: usize) -> Option<(usize, usize)> {
+        let rect = self.viewport;
+        if rect.width == 0 || rect.height == 0 || column < self.content_left {
+            return None;
+        }
+        let screen_row = rect.y.checked_add(row.checked_sub(self.viewport_top)?)?;
+        let screen_column = rect.x.checked_add(column - self.content_left)?;
+        (screen_row < rect.y.saturating_add(rect.height)
+            && screen_column < rect.x.saturating_add(rect.width))
+        .then_some((screen_column, screen_row))
+    }
+}
+
+/// The normalized, composed fullscreen frame used for screen-wide selection.
+/// Rows are captured after layout, jump indicator and overlays, but before any
+/// selection highlight. `cursor` is kept separately because cursor markers are
+/// removed from the copied/rendered rows.
+#[derive(Clone, Debug)]
+pub struct ScreenSnapshot {
+    pub width: usize,
+    pub height: usize,
+    pub rows: Arc<Vec<String>>,
+    pub cursor: Option<(usize, usize)>,
+    pub generation: u64,
+    pub has_capturing_overlay: bool,
+}
+
+#[derive(Clone)]
+struct ScreenSelection {
+    snapshot: ScreenSnapshot,
+    range: ((usize, usize), (usize, usize)),
 }
 
 /// Upper bound on the coalesced repaint rate, matching upstream's
@@ -249,6 +284,51 @@ fn paint_selection(
     }
 }
 
+/// Paint an inclusive screen-cell range over the already composed frame.
+fn paint_screen_selection(
+    lines: &mut [String],
+    snapshot: &ScreenSnapshot,
+    selection: ((usize, usize), (usize, usize)),
+) {
+    let key = |(column, row): (usize, usize)| (row, column);
+    let (a, b) = selection;
+    let ((first_row, first_col), (last_row, last_col)) = if key(a) <= key(b) {
+        (key(a), key(b))
+    } else {
+        (key(b), key(a))
+    };
+    if (first_row, first_col) == (last_row, last_col) {
+        return;
+    }
+    let first_row = first_row.min(snapshot.height.saturating_sub(1));
+    let last_row = last_row.min(snapshot.height.saturating_sub(1));
+    if first_row > last_row {
+        return;
+    }
+    for row in first_row..=last_row {
+        let Some(line) = lines.get_mut(row) else {
+            continue;
+        };
+        let from = if row == first_row { first_col } else { 0 };
+        let to = if row == last_row {
+            last_col.saturating_add(1)
+        } else {
+            snapshot.width
+        };
+        let from = from.min(snapshot.width);
+        let to = to.min(snapshot.width);
+        if to > from {
+            *line = invert_columns(line, from, to);
+        }
+    }
+}
+
+fn normalize_screen_rows(lines: &mut [String]) {
+    for line in lines {
+        *line = crate::ansi::terminal_row(&line.replace(CURSOR_MARKER, ""));
+    }
+}
+
 /// Inverse-video cells `start..end` of a rendered line in place, re-asserting
 /// the inverse after every SGR sequence inside the range so an embedded reset
 /// cannot end the highlight early. Surrounding styles are left untouched.
@@ -354,6 +434,13 @@ pub struct TuiAltScreen {
     /// Transcript selection being dragged, painted in inverse video. See
     /// [`TuiAltScreen::set_selection`].
     selection: Mutex<Option<((usize, usize), (usize, usize))>>,
+    /// Screen-coordinate selection over one frozen composed frame.
+    screen_selection: Arc<Mutex<Option<ScreenSelection>>>,
+    /// Changes whenever resize, overlay or layout lifecycle invalidates a
+    /// pending/active mouse gesture.
+    screen_generation: Arc<AtomicU64>,
+    /// Most recently painted, unhighlighted fullscreen frame.
+    current_screen_snapshot: Arc<Mutex<Option<ScreenSnapshot>>>,
 }
 
 impl TuiAltScreen {
@@ -398,6 +485,9 @@ impl TuiAltScreen {
             scheduler_thread: Mutex::new(None),
             progress_sent_at: Mutex::new(None),
             selection: Mutex::new(None),
+            screen_selection: Arc::new(Mutex::new(None)),
+            screen_generation: Arc::new(AtomicU64::new(0)),
+            current_screen_snapshot: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -535,6 +625,7 @@ impl TuiAltScreen {
     /// constrained alternate-screen viewport. Must be set before start.
     pub fn set_main_screen_mode(&self, enabled: bool) {
         if !self.is_running() {
+            self.invalidate_screen_selection();
             *self.main_screen_mode.lock().unwrap() = enabled;
         }
     }
@@ -548,6 +639,7 @@ impl TuiAltScreen {
 
     /// Set the layout root component.
     pub fn set_layout_root(&self, component: Option<Arc<dyn Component>>) {
+        self.invalidate_screen_selection();
         if let Ok(mut root) = self.layout_root.lock() {
             *root = component;
         }
@@ -568,6 +660,9 @@ impl TuiAltScreen {
     /// component). The terminal remains in raw/alternate-screen mode; only
     /// background repaint requests are suppressed.
     pub fn set_render_suspended(&self, suspended: bool) {
+        if self.is_render_suspended() != suspended {
+            self.invalidate_screen_selection();
+        }
         if let Ok(mut value) = self.render_suspended.lock() {
             *value = suspended;
         }
@@ -592,6 +687,99 @@ impl TuiAltScreen {
         let _render_guard = self.render_lock.lock().ok()?;
         let frame = self.current_frame.lock().ok()?;
         transcript_snapshot_of(frame.as_ref()?)
+    }
+
+    /// Snapshot the composed fullscreen rows from the last painted frame.
+    /// Main-screen mode uses terminal-owned scrollback and has no such frame.
+    pub fn screen_snapshot(&self) -> Option<ScreenSnapshot> {
+        if self.uses_main_screen() {
+            return None;
+        }
+        let _render_guard = self.render_lock.lock().ok()?;
+        self.current_screen_snapshot.lock().ok()?.clone()
+    }
+
+    /// Current selection generation, used to reject clicks that span a resize,
+    /// layout replacement or overlay lifecycle change.
+    pub fn screen_generation(&self) -> u64 {
+        self.screen_generation.load(Ordering::Acquire)
+    }
+
+    /// Find the visible layout rectangle for a component in the last frame.
+    /// This supports click-to-caret mapping without rebuilding widget layout.
+    pub fn component_rect(&self, component: &dyn Component) -> Option<LayoutRect> {
+        fn find(node: &LayoutBox, component: &dyn Component) -> Option<LayoutRect> {
+            if std::ptr::addr_eq(node.component.as_ref(), component) {
+                return Some(node.rect);
+            }
+            node.children
+                .iter()
+                .find_map(|child| find(child, component))
+        }
+        let _render_guard = self.render_lock.lock().ok()?;
+        let frame = self.current_frame.lock().ok()?;
+        find(&frame.as_ref()?.root, component)
+    }
+
+    /// Set the highlighted range over the captured screen frame. Returns false
+    /// if its geometry or lifecycle generation is already stale.
+    pub fn set_screen_selection(
+        &self,
+        snapshot: ScreenSnapshot,
+        range: ((usize, usize), (usize, usize)),
+    ) -> bool {
+        if snapshot.generation != self.screen_generation() {
+            return false;
+        }
+        let size = self
+            .painted_size
+            .lock()
+            .map(|size| *size)
+            .unwrap_or_default();
+        if size != (snapshot.width, snapshot.height) {
+            return false;
+        }
+        if let Ok(mut current) = self.selection.lock() {
+            *current = None;
+        }
+        if let Ok(mut current) = self.screen_selection.lock() {
+            *current = Some(ScreenSelection { snapshot, range });
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Whether the requested captured screen frame is still being highlighted.
+    pub fn has_screen_selection(&self, generation: u64) -> bool {
+        self.screen_selection.lock().ok().and_then(|selection| {
+            selection
+                .as_ref()
+                .map(|selection| selection.snapshot.generation)
+        }) == Some(generation)
+            && generation == self.screen_generation()
+    }
+
+    /// Clear an active screen highlight without invalidating the captured frame.
+    pub fn clear_screen_selection(&self) {
+        if let Ok(mut selection) = self.screen_selection.lock() {
+            *selection = None;
+        }
+    }
+
+    /// Cancel selection gestures because the screen's coordinate meaning is
+    /// changing. A fresh painted snapshot will be published by the next frame.
+    pub fn invalidate_screen_selection(&self) {
+        self.screen_generation.fetch_add(1, Ordering::AcqRel);
+        if let Ok(mut selection) = self.screen_selection.lock() {
+            *selection = None;
+        }
+        if let Ok(mut selection) = self.selection.lock() {
+            *selection = None;
+        }
+        if let Ok(mut snapshot) = self.current_screen_snapshot.lock() {
+            *snapshot = None;
+        }
     }
 
     /// Get the current scroll position.
@@ -642,6 +830,16 @@ impl TuiAltScreen {
         }
         self.scroll_to_bottom();
         true
+    }
+
+    /// Dispatch a jump-to-end action after a left click has been confirmed.
+    pub fn handle_scroll_to_end_indicator_click(&self, column: u16, row: u16) -> bool {
+        self.handle_scroll_to_end_indicator_mouse_event(&crossterm::event::MouseEvent {
+            kind: crossterm::event::MouseEventKind::Down(crossterm::event::MouseButton::Left),
+            column,
+            row,
+            modifiers: crossterm::event::KeyModifiers::NONE,
+        })
     }
 
     /// Scroll by the given number of lines.
@@ -733,6 +931,7 @@ impl TuiAltScreen {
         if let Ok(mut current) = self.selection.lock() {
             *current = selection;
         }
+        self.clear_screen_selection();
     }
 
     /// Show or clear the terminal's OSC 9;4 progress indicator (the tab or
@@ -790,6 +989,7 @@ impl TuiAltScreen {
     /// The repaint is forced even when the window ends up at the size it already
     /// had, because every intermediate resize reflowed the terminal's rows.
     pub fn note_resize(&self) {
+        self.invalidate_screen_selection();
         self.resize_dirty.store(true, Ordering::Release);
         self.request_render(false);
     }
@@ -812,6 +1012,7 @@ impl TuiAltScreen {
         if columns == 0 || rows == 0 || *self.painted_size.lock().unwrap() == (columns, rows) {
             return;
         }
+        self.invalidate_screen_selection();
         // Alt-screen frames need every row repainted: the terminal reflowed the
         // old frame, so it can no longer be patched cell by cell. Main-screen
         // mode keeps its document and rebuilds it when it sees the size change.
@@ -1213,26 +1414,61 @@ impl TuiAltScreen {
             *current = Some(frame.clone());
         }
 
-        // Get screen lines and composite modal overlays above the layout.
-        let mut visible = frame.lines.clone();
+        let painted = *self.painted_size.lock().unwrap();
+        if painted != (0, 0) && painted != (width, height) {
+            self.invalidate_screen_selection();
+        }
+
+        // Compose overlays once, then keep both the unselected copy source and
+        // the ordinary transcript-highlighted render. The screen snapshot is
+        // captured after overlays so covered text cannot leak into a copy.
+        let mut before_overlays = frame.lines.clone();
         self.jump_to_end
-            .paint(&frame, &mut visible, self.has_overlay());
+            .paint(&frame, &mut before_overlays, self.has_overlay());
+        let mut selected = before_overlays.clone();
         if let Some(selection) = self.selection.lock().ok().and_then(|s| *s) {
             if let Some(snapshot) = transcript_snapshot_of(&frame) {
-                paint_selection(&mut visible, &snapshot, selection);
+                paint_selection(&mut selected, &snapshot, selection);
             }
         }
-        self.paint_overlays(&mut visible, width, height);
+        let overlays = self.overlays.render_visible(width, height);
+        Self::paint_rendered_overlays(&mut before_overlays, width, height, &overlays);
+        Self::paint_rendered_overlays(&mut selected, width, height, &overlays);
 
         // Cursor markers are an internal layout protocol, not terminal output.
         // Extract the location first, then strip every marker before diffing or
         // writing. Sending the APC marker to some Windows terminals caused the
         // character under the cursor to be erased when moving left/right.
-        let cursor = extract_cursor_position(&visible, height);
-        // Normalize after the cursor column is known: tab expansion keeps the
-        // cell count, so the column stays valid.
-        for line in &mut visible {
-            *line = crate::ansi::terminal_row(&line.replace(CURSOR_MARKER, ""));
+        let selected_cursor = extract_cursor_position(&selected, height);
+        normalize_screen_rows(&mut before_overlays);
+        normalize_screen_rows(&mut selected);
+        let fresh_snapshot = ScreenSnapshot {
+            width,
+            height,
+            rows: Arc::new(before_overlays),
+            cursor: selected_cursor,
+            generation: self.screen_generation(),
+            has_capturing_overlay: self.has_capturing_overlay(),
+        };
+
+        let screen_selection = self.screen_selection.lock().ok().and_then(|selection| {
+            selection
+                .as_ref()
+                .filter(|selection| {
+                    selection.snapshot.generation == self.screen_generation()
+                        && (selection.snapshot.width, selection.snapshot.height) == (width, height)
+                })
+                .cloned()
+        });
+        let (visible, cursor, displayed_snapshot) = if let Some(selection) = screen_selection {
+            let mut visible = (*selection.snapshot.rows).clone();
+            paint_screen_selection(&mut visible, &selection.snapshot, selection.range);
+            (visible, selection.snapshot.cursor, selection.snapshot)
+        } else {
+            (selected, selected_cursor, fresh_snapshot)
+        };
+        if let Ok(mut snapshot) = self.current_screen_snapshot.lock() {
+            *snapshot = Some(displayed_snapshot);
         }
 
         // Check for full redraw
@@ -1241,7 +1477,6 @@ impl TuiAltScreen {
             .lock()
             .map(|p| p.clone())
             .unwrap_or_default();
-        let painted = *self.painted_size.lock().unwrap();
         let resize_dirty = self.resize_dirty.swap(false, Ordering::AcqRel);
         // A resize reflows the terminal's rows, so a frame captured at another
         // geometry (or before a resize notification) can no longer be patched
@@ -1327,14 +1562,19 @@ impl TuiAltScreen {
             .any(|(_, options)| !options.non_capturing)
     }
 
-    fn paint_overlays(&self, lines: &mut [String], width: usize, height: usize) {
-        for overlay in self.overlays.render_visible(width, height) {
+    fn paint_rendered_overlays(
+        lines: &mut [String],
+        width: usize,
+        height: usize,
+        overlays: &[RenderedOverlay],
+    ) {
+        for overlay in overlays {
             let (x, y, overlay_width) = (overlay.x, overlay.y, overlay.width);
-            let overlay_lines = overlay.lines;
+            let overlay_lines = &overlay.lines;
             let overlay_height = overlay_lines.len();
             for (index, line) in overlay_lines.iter().take(overlay_height).enumerate() {
                 let row = y + index;
-                if row >= lines.len() {
+                if row >= lines.len() || row >= height {
                     break;
                 }
                 lines[row] = composite_tui_line(&lines[row], line, x, overlay_width, width);
@@ -1430,16 +1670,21 @@ impl TUI for TuiAltScreen {
         component: Arc<dyn Component>,
         options: Option<OverlayOptions>,
     ) -> Arc<dyn OverlayHandle> {
+        self.invalidate_screen_selection();
         let handle = self.overlays.add(component, options.unwrap_or_default());
         self.request_render(false);
         Arc::new(ManagedOverlayHandle {
             handle,
             hidden: Mutex::new(false),
             focused: Mutex::new(true),
+            screen_selection: self.screen_selection.clone(),
+            screen_generation: self.screen_generation.clone(),
+            current_screen_snapshot: self.current_screen_snapshot.clone(),
         })
     }
 
     fn hide_overlay(&self) {
+        self.invalidate_screen_selection();
         self.overlays.remove_topmost();
         self.request_render(false);
     }
@@ -1623,10 +1868,26 @@ struct ManagedOverlayHandle {
     handle: super::overlay::OverlayHandle,
     hidden: Mutex<bool>,
     focused: Mutex<bool>,
+    screen_selection: Arc<Mutex<Option<ScreenSelection>>>,
+    screen_generation: Arc<AtomicU64>,
+    current_screen_snapshot: Arc<Mutex<Option<ScreenSnapshot>>>,
+}
+
+impl ManagedOverlayHandle {
+    fn invalidate_screen_selection(&self) {
+        self.screen_generation.fetch_add(1, Ordering::AcqRel);
+        if let Ok(mut selection) = self.screen_selection.lock() {
+            *selection = None;
+        }
+        if let Ok(mut snapshot) = self.current_screen_snapshot.lock() {
+            *snapshot = None;
+        }
+    }
 }
 
 impl OverlayHandle for ManagedOverlayHandle {
     fn hide(&self) {
+        self.invalidate_screen_selection();
         self.handle.hide();
         if let Ok(mut hidden) = self.hidden.lock() {
             *hidden = true;
@@ -1634,6 +1895,7 @@ impl OverlayHandle for ManagedOverlayHandle {
     }
 
     fn set_hidden(&self, hidden: bool) {
+        self.invalidate_screen_selection();
         self.handle.set_visible(!hidden);
         if let Ok(mut current) = self.hidden.lock() {
             *current = hidden;
@@ -1850,6 +2112,137 @@ mod tests {
     }
 
     #[test]
+    fn screen_selection_paints_borders_and_reasserts_inverse_video() {
+        let snapshot = ScreenSnapshot {
+            width: 12,
+            height: 2,
+            rows: Arc::new(vec![
+                "+---+\x1b[0m".to_owned(),
+                "\x1b[7mabc\x1b[27m def".to_owned(),
+            ]),
+            cursor: None,
+            generation: 0,
+            has_capturing_overlay: false,
+        };
+        let mut rows = (*snapshot.rows).clone();
+        paint_screen_selection(&mut rows, &snapshot, ((8, 1), (0, 0)));
+        assert!(rows[0].contains("\x1b[7m+---+"));
+        assert!(rows[1].contains("\x1b[7mabc"));
+        assert!(rows[1].contains("\x1b[7m def"));
+        assert_eq!(crate::strip_ansi(&rows[1]), "abc def");
+    }
+
+    #[test]
+    fn scrolled_transcript_snapshot_keeps_expand_links() {
+        use crate::{StackChild, StackEntry, ToolExecutionComponent, VStack};
+        let tui = TuiAltScreen::new(Box::new(ResizableTerminal::new(80, 12)), false, None);
+        let tool = Arc::new(ToolExecutionComponent::new("bash", r#"{"command":"ls"}"#));
+        tool.set_result(
+            &(1..=20)
+                .map(|n| format!("line {n}"))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            false,
+        );
+        /// Pins compact style without touching the process-wide setting.
+        struct Compact(Arc<ToolExecutionComponent>);
+        impl Component for Compact {
+            fn render(&self, width: usize) -> Vec<String> {
+                self.0
+                    .render_panel_with(width, &crate::theme(), crate::ToolStyle::Compact)
+            }
+            fn invalidate(&self) {}
+            fn as_any(&self) -> &dyn std::any::Any {
+                self
+            }
+        }
+        let scroll = Arc::new(ScrollView::primary(Arc::new(Compact(tool.clone()))));
+        let root = Arc::new(VStack::from_children(vec![StackChild::Entry(
+            StackEntry::new(scroll).basis(0).grow(1).min_size(1),
+        )]));
+        tui.set_layout_root(Some(root));
+        tui.start_readerless();
+        let rows = tui.screen_snapshot().unwrap().rows;
+        let found = rows.iter().find_map(|row| {
+            let x = crate::strip_ansi(row).find("+17")?;
+            Some(crate::expand_link_id(row, x))
+        });
+        assert_eq!(found, Some(Some(Arc::as_ptr(&tool) as usize)), "{rows:?}");
+    }
+
+    #[test]
+    fn screen_snapshot_rows_keep_osc8_links_for_click_targets() {
+        let screen = Arc::new(Text::new(
+            "plain\n\x1b]8;;ice://expand/7\x07+3 lines\x1b]8;;\x07",
+            0,
+            0,
+        ));
+        let tui = TuiAltScreen::new(Box::new(ResizableTerminal::new(24, 4)), false, None);
+        tui.set_layout_root(Some(screen));
+        tui.start_readerless();
+
+        let rows = tui.screen_snapshot().unwrap().rows;
+        assert_eq!(crate::expand_link_id(&rows[1], 1), Some(7));
+        assert_eq!(crate::expand_link_id(&rows[0], 1), None);
+    }
+
+    #[test]
+    fn screen_snapshot_composes_overlay_text_and_freezes_the_frame_during_drag() {
+        let screen = Arc::new(Text::new("HIDDEN!\nPROMPT: draft\n+-----+\nFOOTER", 0, 0));
+        let tui = TuiAltScreen::new(Box::new(ResizableTerminal::new(24, 6)), false, None);
+        tui.set_layout_root(Some(screen.clone()));
+        tui.start_readerless();
+
+        let initial = tui.screen_snapshot().unwrap();
+        let initial_text = initial
+            .rows
+            .iter()
+            .map(|row| crate::strip_ansi(row))
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(initial_text.contains("PROMPT: draft"));
+        assert!(initial_text.contains("+-----+"));
+        assert!(initial_text.contains("FOOTER"));
+
+        let overlay = tui.show_overlay(
+            Arc::new(Text::new("VISIBLE", 0, 0)),
+            Some(crate::OverlayOptions {
+                width: Some(crate::tui::SizeValue::Absolute(7)),
+                max_height: Some(crate::tui::SizeValue::Absolute(1)),
+                anchor: crate::OverlayAnchor::TopLeft,
+                ..Default::default()
+            }),
+        );
+        let composed = tui.screen_snapshot().unwrap();
+        assert!(composed.generation > initial.generation);
+        assert!(composed.has_capturing_overlay);
+        let first_row = crate::strip_ansi(&composed.rows[0]);
+        assert!(first_row.starts_with("VISIBLE"), "{first_row:?}");
+        assert!(!first_row.contains("HIDDEN!"), "{first_row:?}");
+        assert!(tui.set_screen_selection(composed.clone(), ((0, 0), (6, 0))));
+        tui.request_render(true);
+        assert!(tui.previous_screen.lock().unwrap()[0].contains("\x1b[7mVISIBLE"));
+        assert_eq!(tui.screen_snapshot().unwrap().rows, composed.rows);
+
+        screen.set_text("UPDATED\nPROMPT: changed\n+-----+\nFOOTER");
+        tui.request_render(false);
+        assert_eq!(tui.screen_snapshot().unwrap().rows, composed.rows);
+
+        tui.clear_screen_selection();
+        tui.request_render(true);
+        let refreshed = tui.screen_snapshot().unwrap();
+        assert!(!crate::strip_ansi(&refreshed.rows[0]).contains("HIDDEN!"));
+        assert!(crate::strip_ansi(&refreshed.rows[1]).contains("PROMPT: changed"));
+
+        overlay.hide();
+        tui.request_render(true);
+        let without_overlay = tui.screen_snapshot().unwrap();
+        assert!(!without_overlay.has_capturing_overlay);
+        assert!(without_overlay.generation > refreshed.generation);
+        assert!(crate::strip_ansi(&without_overlay.rows[0]).contains("UPDATED"));
+    }
+
+    #[test]
     fn progress_indicator_is_kept_alive_and_cleared_once() {
         let terminal = ResizableTerminal::new(80, 8);
         let output = terminal.output();
@@ -1927,6 +2320,9 @@ mod tests {
         assert!(crate::strip_ansi(&snapshot.lines[3]).starts_with("row3:"));
         assert!(crate::visible_width(&snapshot.lines[3]) > 80);
         assert_eq!(snapshot.content_position(90, 3, false), Some((90, 4)));
+        assert_eq!(snapshot.screen_position(90, 4), Some((90, 3)));
+        assert_eq!(snapshot.screen_position(0, 7), None);
+        assert_eq!(snapshot.screen_position(119, 4), None);
         assert_eq!(snapshot.content_position(0, 1, false), None);
         assert_eq!(snapshot.content_position(0, 6, false), None);
         assert_eq!(snapshot.content_position(119, 3, false), None);

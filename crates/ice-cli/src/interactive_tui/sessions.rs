@@ -478,10 +478,10 @@ pub(super) async fn replace_session_ui(
     state.cache_tracker.lock().unwrap().reset();
     state.clear_auto_send();
     state.new_message_count.reset();
-    *state.selection_start.lock().unwrap() = None;
-    *state.selection_end.lock().unwrap() = None;
+    *state.selection_gesture.lock().unwrap() = SelectionGesture::Idle;
     if let Some(tui) = &state.tui {
         tui.set_selection(None);
+        tui.clear_screen_selection();
     }
     // The startup banner reads live data, so it is kept as is (in ice it lives
     // in a header container that a session switch does not clear).

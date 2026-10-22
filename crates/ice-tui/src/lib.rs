@@ -148,7 +148,8 @@ pub use theme::{
     ThemeManager, ThemePreset, ThemeSpacing,
 };
 pub use tool_execution::{
-    set_tool_style, tool_style, ToolExecutionComponent, ToolStatus, ToolStyle,
+    collapse_link_id, expand_link_id, set_tool_style, tool_style, ToolExecutionComponent,
+    ToolStatus, ToolStyle,
 };
 pub use tool_group::{describe_exploration, ToolGroupComponent};
 pub use truncated_text::TruncatedText;
@@ -156,7 +157,9 @@ pub use tui::{
     OverlayAnchor, OverlayHandle as TuiOverlayHandle, OverlayMargin, OverlayOptions, TuiMode,
     TuiStopOptions, TUI,
 };
-pub use tui_alt_screen::{is_viewport_tui, TranscriptSnapshot, TuiAltScreen, VIEWPORT_TUI};
+pub use tui_alt_screen::{
+    is_viewport_tui, ScreenSnapshot, TranscriptSnapshot, TuiAltScreen, VIEWPORT_TUI,
+};
 pub use tui_main_screen::TuiMainScreen;
 pub use undo_stack::{RedoStack, UndoRedoManager, UndoStack};
 pub use user_message::UserMessageComponent;
