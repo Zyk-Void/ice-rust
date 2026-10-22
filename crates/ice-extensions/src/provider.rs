@@ -1183,7 +1183,7 @@ impl StreamMapper {
                 accumulated.push_str(&delta);
                 // Re-parse on every delta so the partial message renders live
                 // arguments (the same invariant the Anthropic mapper holds).
-                let parsed = rpi_ai::json_parse::parse_streaming_json(Some(accumulated));
+                let parsed = ice_ai::json_parse::parse_streaming_json(Some(accumulated));
                 if !self.apply_partial(partial) {
                     match self.output.content.get_mut(index) {
                         Some(Content::ToolCall(call)) => call.arguments = parsed,

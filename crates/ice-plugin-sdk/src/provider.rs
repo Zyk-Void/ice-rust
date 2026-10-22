@@ -8,7 +8,7 @@ use crate::{
     PluginApi, ProviderRequestFn, ProviderStreamControl, ProviderStreamEmitFn,
     ProviderStreamRequestFn, StbString, StbStringRef,
 };
-use rpi_ai::{
+use ice_ai::{
     AssistantMessage, AssistantMessageEvent, Context, Model, Provider, SimpleStreamOptions,
     StopReason,
 };
@@ -23,12 +23,12 @@ pub fn completions(
     options: &SimpleStreamOptions,
     anonymous: bool,
 ) -> Arc<dyn Provider> {
-    let client = rpi_ai::http::build_client(&model.base_url, None, None)
+    let client = ice_ai::http::build_client(&model.base_url, None, None)
         .unwrap_or_else(|_| reqwest::Client::new());
     if anonymous && options.api_key.is_none() {
-        Arc::new(rpi_ai::providers::openai_completions::OpenAiCompletionsProvider::with_models_without_auth(model.provider.clone(), client, vec![model.clone()]))
+        Arc::new(ice_ai::providers::openai_completions::OpenAiCompletionsProvider::with_models_without_auth(model.provider.clone(), client, vec![model.clone()]))
     } else {
-        Arc::new(rpi_ai::providers::openai_completions::OpenAiCompletionsProvider::with_models_without_env_api_key(model.provider.clone(), options.api_key.clone(), client, vec![model.clone()]))
+        Arc::new(ice_ai::providers::openai_completions::OpenAiCompletionsProvider::with_models_without_env_api_key(model.provider.clone(), options.api_key.clone(), client, vec![model.clone()]))
     }
 }
 
@@ -96,9 +96,9 @@ fn options(value: &serde_json::Value) -> SimpleStreamOptions {
         .and_then(|s| serde_json::from_value(serde_json::json!(s.to_ascii_lowercase())).ok());
     options.thinking_budgets = serde_json::from_value(value["thinkingBudgets"].clone()).ok();
     options.cache_retention = match value["cacheRetention"].as_str() {
-        Some("None") => rpi_ai::CacheRetention::None,
-        Some("Long") => rpi_ai::CacheRetention::Long,
-        _ => rpi_ai::CacheRetention::Short,
+        Some("None") => ice_ai::CacheRetention::None,
+        Some("Long") => ice_ai::CacheRetention::Long,
+        _ => ice_ai::CacheRetention::Short,
     };
     options
 }
@@ -143,12 +143,12 @@ fn reconstructs_text(
     {
         return false;
     }
-    let (Some(rpi_ai::Content::Text(before)), Some(rpi_ai::Content::Text(after))) =
+    let (Some(ice_ai::Content::Text(before)), Some(ice_ai::Content::Text(after))) =
         (content.get(index), next.content.get(index))
     else {
         return false;
     };
-    let rpi_ai::TextContent {
+    let ice_ai::TextContent {
         kind,
         text,
         text_signature,
@@ -358,8 +358,8 @@ mod bridge_tests;
 mod tests {
     use super::*;
     fn factory(_: &Model, _: &SimpleStreamOptions) -> Arc<dyn Provider> {
-        rpi_ai::providers::faux::FauxProvider::new(
-            rpi_ai::providers::faux::FauxScript::new()
+        ice_ai::providers::faux::FauxProvider::new(
+            ice_ai::providers::faux::FauxScript::new()
                 .with_tool_call("echo", serde_json::json!({"value":"hello"})),
         )
     }
@@ -373,7 +373,7 @@ mod tests {
         0
     }
     fn request() -> String {
-        serde_json::json!({"model":Model::new("m","M",rpi_ai::Api::Faux,"probe","http://localhost"),
+        serde_json::json!({"model":Model::new("m","M",ice_ai::Api::Faux,"probe","http://localhost"),
             "context":Context::new(vec![]),"options":{}})
         .to_string()
     }
@@ -453,7 +453,7 @@ mod tests {
         assert_eq!(options.timeout, Some(Duration::from_millis(42)));
         assert_eq!(options.max_retries, Some(3));
         assert_eq!(options.max_retry_delay, Some(Duration::from_millis(17)));
-        assert_eq!(options.reasoning, Some(rpi_ai::ThinkingLevel::Xhigh));
+        assert_eq!(options.reasoning, Some(ice_ai::ThinkingLevel::Xhigh));
         assert_eq!(options.max_tokens, Some(80));
         assert_eq!(options.session_id.as_deref(), Some("s"));
         assert_eq!(options.headers.unwrap()["x-custom"], "value");

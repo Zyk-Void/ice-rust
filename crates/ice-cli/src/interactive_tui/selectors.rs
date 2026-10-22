@@ -196,9 +196,9 @@ pub(super) fn open_model_selector(
 /// from other providers. Keep the actual current model when it is off-scope.
 pub(super) async fn cycle_model(
     lane: &Arc<dyn AgentLane>,
-    catalog: &[rpi_ai::Model],
+    catalog: &[ice_ai::Model],
     backwards: bool,
-) -> Result<Option<rpi_ai::Model>, String> {
+) -> Result<Option<ice_ai::Model>, String> {
     if catalog.is_empty() {
         return Ok(None);
     }
@@ -215,7 +215,7 @@ pub(super) async fn cycle_model(
 pub(super) async fn apply_model_selection(
     lane: &Arc<dyn AgentLane>,
     state: &Arc<TuiState>,
-    model: rpi_ai::Model,
+    model: ice_ai::Model,
     save_default: bool,
 ) -> Result<String, String> {
     let current = lane.get_model().await.map_err(|error| error.to_string())?;
@@ -240,7 +240,7 @@ pub(super) async fn report_model_selection(
     lane: &Arc<dyn AgentLane>,
     state: &Arc<TuiState>,
     tui: &Arc<TuiAltScreen>,
-    model: rpi_ai::Model,
+    model: ice_ai::Model,
     save_default: bool,
 ) {
     match apply_model_selection(lane, state, model, save_default).await {
@@ -253,9 +253,9 @@ pub(super) async fn report_model_selection(
 /// Cycle after the current provider/API/model identity, wrapping to the first.
 /// An empty catalog returns `None`; a missing anchor returns the first entry.
 pub(super) fn cycle_next_model(
-    catalog: &[rpi_ai::Model],
-    current: &rpi_ai::Model,
-) -> Option<rpi_ai::Model> {
+    catalog: &[ice_ai::Model],
+    current: &ice_ai::Model,
+) -> Option<ice_ai::Model> {
     if catalog.is_empty() {
         return None;
     }
@@ -276,9 +276,9 @@ pub(super) fn cycle_next_model(
 /// Cycle before the current provider/API/model identity, wrapping to the last —
 /// the mirror of [`cycle_next_model`] for the previous-model hotkey.
 pub(super) fn cycle_prev_model(
-    catalog: &[rpi_ai::Model],
-    current: &rpi_ai::Model,
-) -> Option<rpi_ai::Model> {
+    catalog: &[ice_ai::Model],
+    current: &ice_ai::Model,
+) -> Option<ice_ai::Model> {
     if catalog.is_empty() {
         return None;
     }

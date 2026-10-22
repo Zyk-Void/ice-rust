@@ -13,7 +13,7 @@ parser.add_argument("--quick", action="store_true")
 args = parser.parse_args()
 assert args.repeats > 0
 build = subprocess.run([
-    "cargo", "test", "-p", "rpi-extensions", "--features", args.features,
+    "cargo", "test", "-p", "ice-extensions", "--features", args.features,
     "--release", "--locked", "--no-run", "--message-format=json",
 ], check=True, text=True, stdout=subprocess.PIPE)
 executables = [item["executable"] for line in build.stdout.splitlines()
@@ -35,13 +35,13 @@ if not args.quick:
 names = ["BYTES", "CHUNK", "STREAMS", "DELAY_MS", "RESULT_ONLY", "SDK_ONLY"]
 for case in dict.fromkeys(cases):
     for run in range(args.repeats):
-        env = dict(os.environ, **{f"RPI_BENCH_{k}": str(v) for k, v in zip(names, case)})
+        env = dict(os.environ, **{f"ICERS_BENCH_{k}": str(v) for k, v in zip(names, case)})
         command = [executables[0], "offline_provider_pipeline", "--ignored", "--nocapture", "--test-threads=1"]
         if platform.system() == "Linux":
-            command = ["/usr/bin/time", "-f", 'RPI_OS {"user_s":%U,"system_s":%S,"max_rss_kib":%M}', *command]
+            command = ["/usr/bin/time", "-f", 'ICERS_OS {"user_s":%U,"system_s":%S,"max_rss_kib":%M}', *command]
         result = subprocess.run(command, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        metrics = next(json.loads(line.split("RPI_BENCH ", 1)[1]) for line in result.stdout.splitlines() if "RPI_BENCH " in line)
+        metrics = next(json.loads(line.split("ICERS_BENCH ", 1)[1]) for line in result.stdout.splitlines() if "ICERS_BENCH " in line)
         for line in result.stderr.splitlines():
-            if line.startswith("RPI_OS "):
-                metrics.update(json.loads(line.removeprefix("RPI_OS ")))
+            if line.startswith("ICERS_OS "):
+                metrics.update(json.loads(line.removeprefix("ICERS_OS ")))
         print(json.dumps(dict(run=run, **metrics)), flush=True)

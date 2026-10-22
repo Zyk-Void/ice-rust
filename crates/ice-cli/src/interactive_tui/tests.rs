@@ -677,8 +677,8 @@ async fn dequeue_restores_both_queues_images_and_folded_draft_without_aborting()
         true,
         None,
     ));
-    let image = rpi_ai::types::ImageContent {
-        kind: rpi_ai::types::ImageContentType,
+    let image = ice_ai::types::ImageContent {
+        kind: ice_ai::types::ImageContentType,
         data: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7".into(),
         mime_type: "image/gif".into(),
     };
@@ -719,22 +719,22 @@ fn hot_cycle_crosses_providers_and_anchors_duplicate_ids_to_the_live_lane() {
                 let harness = AgentHarness::create(Default::default()).await.unwrap();
                 let lane: Arc<dyn AgentLane> = harness.lane("main");
                 let state = test_tui_state();
-                let first = rpi_ai::Model::new(
+                let first = ice_ai::Model::new(
                     "shared",
                     "First",
-                    rpi_ai::Api::OpenaiCompletions,
+                    ice_ai::Api::OpenaiCompletions,
                     "first",
                     "http://first.invalid",
                 );
-                let second = rpi_ai::Model::new(
+                let second = ice_ai::Model::new(
                     "shared",
                     "Second",
-                    rpi_ai::Api::OpenaiCompletions,
+                    ice_ai::Api::OpenaiCompletions,
                     "second",
                     "http://second.invalid",
                 );
                 let mut responses = second.clone();
-                responses.api = rpi_ai::Api::OpenaiResponses;
+                responses.api = ice_ai::Api::OpenaiResponses;
                 let catalog = [first.clone(), second.clone(), responses.clone()];
                 lane.set_model(first.clone()).await.unwrap();
                 let next = cycle_model(&lane, &catalog, false).await.unwrap().unwrap();
@@ -2665,7 +2665,7 @@ fn assistant_error_text_keeps_terminal_provider_diagnostic_visible() {
     // one the transcript looks like the message was interrupted.
     let mut truncated = aborted;
     truncated.stop_reason = StopReason::Length;
-    truncated.content = vec![rpi_ai::types::Content::text("half an answer")];
+    truncated.content = vec![ice_ai::types::Content::text("half an answer")];
     let note = assistant_error_text(&truncated).expect("length must be surfaced");
     assert!(note.contains("truncated"), "{note}");
     assert!(note.contains("max_tokens"), "{note}");

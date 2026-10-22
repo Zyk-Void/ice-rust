@@ -39,4 +39,4 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = []
-provider-performance = ["rpi-plugin-sdk/provider"]
+provider-performance = ["ice-plugin-sdk/provider"]

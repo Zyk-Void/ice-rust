@@ -34,9 +34,9 @@ fn factory(_: &Model, _: &SimpleStreamOptions) -> Arc<dyn Provider> {
 }
 extern "C" fn collect(raw: StbString, data: *mut c_void) -> i32 {
     let owned = unsafe {
-        rpi_plugin_sdk::callbacks::OwnedString::from_raw(
+        ice_plugin_sdk::callbacks::OwnedString::from_raw(
             raw,
-            Some(rpi_plugin_sdk::callbacks::free_string),
+            Some(ice_plugin_sdk::callbacks::free_string),
         )
     };
     let frames = unsafe { &mut *data.cast::<Vec<serde_json::Value>>() };
@@ -63,7 +63,7 @@ fn mapped(mapper: &mut StreamMapper, chunk: serde_json::Value) -> Vec<AssistantM
 }
 #[test]
 fn compact_sdk_frames_match_full_frames_after_every_mapper_prefix() {
-    let mut message = AssistantMessage::empty(rpi_ai::Api::Faux, "probe", "m", 42);
+    let mut message = AssistantMessage::empty(ice_ai::Api::Faux, "probe", "m", 42);
     message.content.push(Content::text(""));
     let mut events = vec![
         AssistantMessageEvent::Start {
@@ -107,19 +107,19 @@ fn compact_sdk_frames_match_full_frames_after_every_mapper_prefix() {
     });
     events.push(text(&mut message, "after index switch"));
     let mut complete = message.clone();
-    complete.stop_reason = rpi_ai::StopReason::Stop;
+    complete.stop_reason = ice_ai::StopReason::Stop;
     let mut script = events.clone();
     script.push(AssistantMessageEvent::Done {
-        reason: rpi_ai::DoneReason::Stop,
+        reason: ice_ai::DoneReason::Stop,
         message: complete.clone(),
     });
     SCRIPT.with(|slot| *slot.borrow_mut() = script);
-    let request = serde_json::json!({"model":Model::new("m","M",rpi_ai::Api::Faux,"probe","http://localhost"),"context":Context::new(vec![]),"options":{}}).to_string();
+    let request = serde_json::json!({"model":Model::new("m","M",ice_ai::Api::Faux,"probe","http://localhost"),"context":Context::new(vec![]),"options":{}}).to_string();
     let mut frames = Vec::<serde_json::Value>::new();
     let mut out = StbString::empty();
     assert_eq!(
         unsafe {
-            rpi_plugin_sdk::provider::drive(
+            ice_plugin_sdk::provider::drive(
                 factory,
                 StbStringRef::from_str(&request),
                 Some(collect),
@@ -131,9 +131,9 @@ fn compact_sdk_frames_match_full_frames_after_every_mapper_prefix() {
         0
     );
     let owned = unsafe {
-        rpi_plugin_sdk::callbacks::OwnedString::from_raw(
+        ice_plugin_sdk::callbacks::OwnedString::from_raw(
             out,
-            Some(rpi_plugin_sdk::callbacks::free_string),
+            Some(ice_plugin_sdk::callbacks::free_string),
         )
     };
     assert_eq!(
@@ -151,8 +151,8 @@ fn compact_sdk_frames_match_full_frames_after_every_mapper_prefix() {
         frames[5].get("partial").is_some(),
         "metadata changes remain authoritative"
     );
-    let mut compact = StreamMapper::new(rpi_ai::Api::Faux, "probe".into(), "m".into());
-    let mut legacy = StreamMapper::new(rpi_ai::Api::Faux, "probe".into(), "m".into());
+    let mut compact = StreamMapper::new(ice_ai::Api::Faux, "probe".into(), "m".into());
+    let mut legacy = StreamMapper::new(ice_ai::Api::Faux, "probe".into(), "m".into());
     let mut full_bytes = 0;
     let mut compact_bytes = 0;
     for (event, frame) in events.iter().zip(frames) {

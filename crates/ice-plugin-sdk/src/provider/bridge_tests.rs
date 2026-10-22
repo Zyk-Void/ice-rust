@@ -1,12 +1,12 @@
 use super::*;
-use rpi_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
+use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
 
 fn fixture(_: &Model, _: &SimpleStreamOptions) -> Arc<dyn Provider> {
-    let mut message = AssistantMessage::empty(rpi_ai::Api::Faux, "faux", "m", 42);
+    let mut message = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 42);
     message.content = vec![
-        rpi_ai::Content::thinking("hmm"),
-        rpi_ai::Content::text("hi"),
-        rpi_ai::Content::tool_call("c1", "echo", serde_json::json!({})),
+        ice_ai::Content::thinking("hmm"),
+        ice_ai::Content::text("hi"),
+        ice_ai::Content::tool_call("c1", "echo", serde_json::json!({})),
     ];
     message.stop_reason = StopReason::ToolUse;
     let script = FauxScript::new();
@@ -15,7 +15,7 @@ fn fixture(_: &Model, _: &SimpleStreamOptions) -> Arc<dyn Provider> {
 }
 
 fn request() -> String {
-    serde_json::json!({"model":Model::new("m","M",rpi_ai::Api::Faux,"faux","http://localhost"),
+    serde_json::json!({"model":Model::new("m","M",ice_ai::Api::Faux,"faux","http://localhost"),
         "context":Context::new(vec![]),"options":{}})
     .to_string()
 }
@@ -140,10 +140,10 @@ fn bytes_and_partial_results_match_the_legacy_conversion_for_every_event_family(
 
 #[test]
 fn compaction_requires_exact_text_and_metadata_and_consecutive_deltas() {
-    let mut before = AssistantMessage::empty(rpi_ai::Api::Faux, "faux", "m", 42);
-    before.content = vec![rpi_ai::Content::text("α"), rpi_ai::Content::thinking("hmm")];
+    let mut before = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 42);
+    before.content = vec![ice_ai::Content::text("α"), ice_ai::Content::thinking("hmm")];
     let mut after = before.clone();
-    let rpi_ai::Content::Text(text) = &mut after.content[0] else {
+    let ice_ai::Content::Text(text) = &mut after.content[0] else {
         unreachable!()
     };
     text.text.push_str("🐈");
@@ -152,7 +152,7 @@ fn compaction_requires_exact_text_and_metadata_and_consecutive_deltas() {
     assert!(!reconstructs_text(&before, &after, 0, "α🐈"));
     assert!(!reconstructs_text(&before, &after, 1, "🐈"));
     let mutations: &[fn(&mut AssistantMessage)] = &[
-        |m| m.api = rpi_ai::Api::AnthropicMessages,
+        |m| m.api = ice_ai::Api::AnthropicMessages,
         |m| m.provider.push('x'),
         |m| m.model.push('x'),
         |m| m.response_model = Some("r".into()),
@@ -163,10 +163,10 @@ fn compaction_requires_exact_text_and_metadata_and_consecutive_deltas() {
         |m| m.error_message = Some("e".into()),
         |m| m.raw_stop_reason = Some("raw".into()),
         |m| m.end_turn = Some(true),
-        |m| m.content[1] = rpi_ai::Content::thinking("changed"),
-        |m| m.content.push(rpi_ai::Content::text("extra")),
+        |m| m.content[1] = ice_ai::Content::thinking("changed"),
+        |m| m.content.push(ice_ai::Content::text("extra")),
         |m| {
-            if let rpi_ai::Content::Text(t) = &mut m.content[0] {
+            if let ice_ai::Content::Text(t) = &mut m.content[0] {
                 t.text_signature = Some("signature".into());
             }
         },

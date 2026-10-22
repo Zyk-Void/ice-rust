@@ -7,8 +7,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-documentation = "https://docs.rs/rpi-plugin-sdk"
-description = "Stable C ABI and optional provider development helpers for rpi Rust-native plugins"
+documentation = "https://docs.rs/ice-plugin-sdk"
+description = "Stable C ABI and optional provider development helpers for icers Rust-native plugins"
 readme = "README.md"
 keywords = ["agent", "llm", "ai", "plugin", "ffi"]
 categories = ["api-bindings", "development-tools::ffi"]
@@ -20,8 +20,8 @@ categories = ["api-bindings", "development-tools::ffi"]
 # disable default features and do its own (de)serialization.
 serde_json = { workspace = true, optional = true }
 
-# Provider authoring helpers are opt-in; the ABI core stays independent of rpi-ai.
-rpi-ai = { workspace = true, optional = true, features = ["providers"] }
+# Provider authoring helpers are opt-in; the ABI core stays independent of ice-ai.
+ice-ai = { workspace = true, optional = true, features = ["providers"] }
 tokio = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 reqwest = { workspace = true, optional = true }
@@ -39,6 +39,6 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = ["json"]
 json = ["dep:serde_json"]
-provider = ["json", "dep:rpi-ai", "dep:tokio", "dep:serde", "dep:reqwest"]
+provider = ["json", "dep:ice-ai", "dep:tokio", "dep:serde", "dep:reqwest"]
 process = ["dep:windows-sys", "dep:libc"]
 stdio = ["dep:windows-sys", "dep:libc"]

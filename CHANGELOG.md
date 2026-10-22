@@ -46,7 +46,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 ### Other
 
-- update README website links to rpi.bigfisharc.cn
+- update README website links to icers.bigfisharc.cn
 - *(sdk)* consolidate provider bridge into optional SDK feature
 
 ## [0.6.2](https://github.com/bigfish1913/pi-rust/compare/v0.6.1...v0.6.2) - 2026-10-19

@@ -738,7 +738,7 @@ pub async fn build_prepared(
         .snapshot()
         .filter(|snapshot| {
             !snapshot
-                .handlers_for(rpi_plugin_sdk::EventTag::ToolCall)
+                .handlers_for(ice_plugin_sdk::EventTag::ToolCall)
                 .is_empty()
         })
         .map(|_| {
@@ -2158,7 +2158,7 @@ async fn fork_session_at_launch(
     dir: &Path,
     cwd: &str,
 ) -> Result<Session, BuildError> {
-    use rpi_harness::session::jsonl::{
+    use ice_harness::session::jsonl::{
         JsonlSessionCreateOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
     };
     use ice_harness::session::types::{ForkOptions, SessionStorage};

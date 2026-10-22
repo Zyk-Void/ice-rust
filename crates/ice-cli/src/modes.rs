@@ -18,13 +18,13 @@
 use std::io::{BufRead, IsTerminal, Write};
 use std::sync::{Arc, Mutex};
 
-use rpi_agent::events::AgentEvent;
-use rpi_ai::types::{AssistantMessage, Content, ImageContent, StopReason, UserMessage};
-use rpi_harness::agent_harness::{
+use ice_agent::events::AgentEvent;
+use ice_ai::types::{AssistantMessage, Content, ImageContent, StopReason, UserMessage};
+use ice_harness::agent_harness::{
     AgentHarness, AgentLane, CompactionOutcome, CompactionResult, HarnessRunOutcome,
 };
-use rpi_harness::events::{HarnessEvent, RunEndOutcome};
-use rpi_harness::session::types::{EntryOrder, LaneRecord, RecordQuery};
+use ice_harness::events::{HarnessEvent, RunEndOutcome};
+use ice_harness::session::types::{EntryOrder, LaneRecord, RecordQuery};
 
 use crate::args::Args;
 use crate::rpc::protocol as rpc_protocol;
@@ -290,9 +290,9 @@ fn emit_agent_event(event: &AgentEvent) {
 pub async fn rpc(
     harness: &AgentHarness,
     mut agent_events: Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
-    model_catalog: Vec<rpi_ai::Model>,
-    ui_dialog: rpi_extensions::UiDialogMailbox,
-    oauth_snapshot: Option<Arc<rpi_extensions::RegistrySnapshot>>,
+    model_catalog: Vec<ice_ai::Model>,
+    ui_dialog: ice_extensions::UiDialogMailbox,
+    oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
 ) -> i32 {
     rpc_with_io(
         harness,
@@ -309,9 +309,9 @@ pub async fn rpc(
 async fn rpc_with_io<R, W>(
     harness: &AgentHarness,
     mut agent_events: Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
-    model_catalog: Vec<rpi_ai::Model>,
-    ui_dialog: rpi_extensions::UiDialogMailbox,
-    oauth_snapshot: Option<Arc<rpi_extensions::RegistrySnapshot>>,
+    model_catalog: Vec<ice_ai::Model>,
+    ui_dialog: ice_extensions::UiDialogMailbox,
+    oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
     input: R,
     output: W,
 ) -> i32
@@ -782,7 +782,7 @@ fn compaction_json(result: &CompactionResult) -> serde_json::Value {
     let mut value = match &result.outcome {
         CompactionOutcome::Completed { leaf_id, entry } => {
             let (tokens_before, retained) = match entry {
-                rpi_harness::session::types::Entry::Compaction(compaction) => {
+                ice_harness::session::types::Entry::Compaction(compaction) => {
                     (compaction.tokens_before, compaction.retained_tail.len())
                 }
                 _ => (0, 0),
@@ -1036,7 +1036,7 @@ async fn rpc_get_stats(
                 *operation_counts.entry(key.to_string()).or_default() += 1;
                 if matches!(
                     &started.intent,
-                    rpi_harness::session::types::OperationIntent::Run {
+                    ice_harness::session::types::OperationIntent::Run {
                         resume_data: Some(_),
                         ..
                     }
@@ -1144,7 +1144,7 @@ async fn rpc_queue_message(
         .and_then(serde_json::Value::as_str)
         .filter(|text| !text.trim().is_empty())
         .ok_or_else(|| "queue_message requires a non-empty string `message`".to_string())?;
-    let message = rpi_agent::message::AgentMessage::User(UserMessage::new(text, rpc_now_ms()));
+    let message = ice_agent::message::AgentMessage::User(UserMessage::new(text, rpc_now_ms()));
     let queue = msg
         .get("deliverAs")
         .and_then(serde_json::Value::as_str)
@@ -1216,16 +1216,16 @@ async fn rpc_navigate(
         .await
         .map_err(|error| error.to_string())?;
     let (outcome, leaf_id, error) = match result.outcome {
-        rpi_harness::agent_harness::NavigationOutcome::Completed { new_leaf_id, .. } => {
+        ice_harness::agent_harness::NavigationOutcome::Completed { new_leaf_id, .. } => {
             ("completed", new_leaf_id, None)
         }
-        rpi_harness::agent_harness::NavigationOutcome::Declined { leaf_id } => {
+        ice_harness::agent_harness::NavigationOutcome::Declined { leaf_id } => {
             ("declined", leaf_id, None)
         }
-        rpi_harness::agent_harness::NavigationOutcome::Aborted { leaf_id } => {
+        ice_harness::agent_harness::NavigationOutcome::Aborted { leaf_id } => {
             ("aborted", leaf_id, None)
         }
-        rpi_harness::agent_harness::NavigationOutcome::Failed { leaf_id, error } => {
+        ice_harness::agent_harness::NavigationOutcome::Failed { leaf_id, error } => {
             ("failed", leaf_id, Some(error.message))
         }
     };
@@ -1243,8 +1243,8 @@ async fn rpc_navigate(
 /// compaction boundary), so the number matches what the next provider call will
 /// actually send rather than how many messages the transcript happens to hold.
 async fn rpc_context_usage(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> serde_json::Value {
-    use rpi_harness::compaction::{build_session_context, estimate_context_tokens};
-    use rpi_harness::session::types::{BranchBounds, EntryOrder, EntryQuery};
+    use ice_harness::compaction::{build_session_context, estimate_context_tokens};
+    use ice_harness::session::types::{BranchBounds, EntryOrder, EntryQuery};
 
     let entries = harness
         .find_entries_on_branch(
@@ -1313,7 +1313,7 @@ async fn rpc_get_messages(
     harness: &AgentHarness,
     msg: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
-    use rpi_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery};
+    use ice_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery};
 
     const DEFAULT_LIMIT: usize = 400;
     let limit = msg
@@ -1400,7 +1400,7 @@ async fn rpc_get_messages(
     }))
 }
 
-fn rpc_auth_provider_ids(model_catalog: &[rpi_ai::Model]) -> std::collections::BTreeSet<String> {
+fn rpc_auth_provider_ids(model_catalog: &[ice_ai::Model]) -> std::collections::BTreeSet<String> {
     let mut providers =
         std::collections::BTreeSet::from(["anthropic".to_string(), "openai".to_string()]);
     providers.extend(model_catalog.iter().map(|model| model.provider.clone()));
@@ -1411,8 +1411,8 @@ fn rpc_auth_provider_ids(model_catalog: &[rpi_ai::Model]) -> std::collections::B
 }
 
 fn rpc_get_auth_status(
-    model_catalog: &[rpi_ai::Model],
-    oauth_snapshot: Option<&Arc<rpi_extensions::RegistrySnapshot>>,
+    model_catalog: &[ice_ai::Model],
+    oauth_snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
 ) -> serde_json::Value {
     let store = crate::config::read_auth().unwrap_or_default();
     let models = crate::config::load_models_config().unwrap_or_default();
@@ -1442,7 +1442,7 @@ fn rpc_get_auth_status(
 }
 
 fn rpc_oauth(
-    snapshot: &Option<Arc<rpi_extensions::RegistrySnapshot>>,
+    snapshot: &Option<Arc<ice_extensions::RegistrySnapshot>>,
     msg: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
     let snapshot = snapshot
@@ -1464,12 +1464,12 @@ fn rpc_oauth(
         .get("input")
         .cloned()
         .unwrap_or_else(|| serde_json::json!({}));
-    let raw = rpi_extensions::request_oauth(snapshot, provider, action, input)
+    let raw = ice_extensions::request_oauth(snapshot, provider, action, input)
         .map_err(|_| "OAuth provider request failed".to_string())?;
-    let response = rpi_extensions::OAuthActionResponse::parse(raw)
+    let response = ice_extensions::OAuthActionResponse::parse(raw)
         .map_err(|_| "OAuth provider returned an invalid response".to_string())?;
     match response.kind {
-        rpi_extensions::OAuthResponseKind::Credential => {
+        ice_extensions::OAuthResponseKind::Credential => {
             let credential = response
                 .credential()
                 .map_err(|_| "OAuth provider returned an invalid credential".to_string())?
@@ -1486,16 +1486,16 @@ fn rpc_oauth(
                 "status": "authenticated"
             }))
         }
-        rpi_extensions::OAuthResponseKind::Interaction => Ok(serde_json::json!({
+        ice_extensions::OAuthResponseKind::Interaction => Ok(serde_json::json!({
             "provider": provider,
             "status": "interaction",
             "display": oauth_display(&response.payload)
         })),
-        rpi_extensions::OAuthResponseKind::Success => Ok(serde_json::json!({
+        ice_extensions::OAuthResponseKind::Success => Ok(serde_json::json!({
             "provider": provider,
             "status": "success"
         })),
-        rpi_extensions::OAuthResponseKind::Error => {
+        ice_extensions::OAuthResponseKind::Error => {
             Err("OAuth provider rejected the request".to_string())
         }
     }
@@ -1553,7 +1553,7 @@ async fn rpc_set_api_key(msg: &serde_json::Value) -> Result<serde_json::Value, S
     }))
 }
 
-fn rpc_get_available_models(catalog: &[rpi_ai::Model]) -> serde_json::Value {
+fn rpc_get_available_models(catalog: &[ice_ai::Model]) -> serde_json::Value {
     let models = catalog
         .iter()
         .map(crate::rpc::protocol::model_descriptor)
@@ -2023,7 +2023,7 @@ mod tests {
             &harness,
             None,
             vec![],
-            rpi_extensions::UiDialogMailbox::new(),
+            ice_extensions::UiDialogMailbox::new(),
             None,
             tokio::io::BufReader::new(&b"{\"type\":\"compact\",\"id\":1}\n"[..]),
             output.clone(),
@@ -2045,7 +2045,7 @@ mod tests {
             .await
             .unwrap();
         assert!(records.iter().any(|record| matches!(record,
-            rpi_harness::session::types::LaneRecord::OperationFinished(finished)
+            ice_harness::session::types::LaneRecord::OperationFinished(finished)
                 if finished.run_id == run_id)));
     }
 
@@ -2062,7 +2062,7 @@ mod tests {
             &harness,
             Some(rx),
             vec![],
-            rpi_extensions::UiDialogMailbox::new(),
+            ice_extensions::UiDialogMailbox::new(),
             None,
             tokio::io::BufReader::new(&b""[..]),
             output.clone(),
@@ -2171,7 +2171,7 @@ mod tests {
             &harness,
             Some(events),
             vec![],
-            rpi_extensions::UiDialogMailbox::new(),
+            ice_extensions::UiDialogMailbox::new(),
             None,
             tokio::io::BufReader::new(
                 &b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n"[..],
@@ -2203,7 +2203,7 @@ mod tests {
             .await
             .unwrap();
         assert!(records.iter().any(|record| matches!(record,
-            rpi_harness::session::types::LaneRecord::OperationFinished(finished)
+            ice_harness::session::types::LaneRecord::OperationFinished(finished)
                 if finished.run_id == run_id)));
         assert!(messages.iter().any(|message| {
             message["type"] == "response" && message["data"]["accepted"] == true
@@ -2303,7 +2303,7 @@ mod tests {
         let (harness, _) = rpc_test_harness("not completed", 20.0).await;
         let lane = harness.lane("main");
         let (mut client, output, task) =
-            start_test_rpc(harness, rpi_extensions::UiDialogMailbox::new());
+            start_test_rpc(harness, ice_extensions::UiDialogMailbox::new());
         client.write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n{\"type\":\"stop\",\"id\":2}\n").await.unwrap();
         assert_eq!(
             tokio::time::timeout(std::time::Duration::from_secs(3), task)

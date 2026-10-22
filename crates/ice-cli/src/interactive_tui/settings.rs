@@ -3,9 +3,9 @@
 use super::*;
 
 pub(super) fn scoped_catalog(
-    catalog: &[rpi_ai::Model],
-    current: &rpi_ai::Model,
-) -> Vec<rpi_ai::Model> {
+    catalog: &[ice_ai::Model],
+    current: &ice_ai::Model,
+) -> Vec<ice_ai::Model> {
     let scoped = crate::settings::load_settings()
         .ok()
         .and_then(|s| s.scoped_models)

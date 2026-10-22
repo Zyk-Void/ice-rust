@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Smoke-test the native JSONL RPC host, without the web bridge.
 
-    cargo build -p rpi-cli --bin rpi
-    RPI_BIN=$PWD/target/debug/rpi python3 scripts/rpc-smoke.py
+    cargo build -p ice-cli --bin icers
+    ICERS_BIN=$PWD/target/debug/icers python3 scripts/rpc-smoke.py
 
 Covers the parts of the protocol a UI depends on but cannot fake: compaction
 verdicts, the compaction marker inside `get_messages`, and the crash/resume
@@ -21,9 +21,9 @@ import threading
 import time
 import uuid
 
-BIN = os.environ.get("RPI_BIN", os.path.join(os.getcwd(), "target/debug/rpi"))
-HOME = os.environ.get("RPI_HOME", os.path.expanduser("~"))
-ROOT = os.environ.get("RPI_SMOKE_ROOT", "/tmp/rpi-rpc-smoke")
+BIN = os.environ.get("ICERS_BIN", os.path.join(os.getcwd(), "target/debug/icers"))
+HOME = os.environ.get("ICERS_HOME", os.path.expanduser("~"))
+ROOT = os.environ.get("ICERS_SMOKE_ROOT", "/tmp/ice-rpc-smoke")
 PROJECT = os.path.join(ROOT, "project")
 SESSIONS = os.path.join(ROOT, "sessions")
 

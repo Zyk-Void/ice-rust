@@ -24,12 +24,12 @@
 | --- | --- | --- |
 | 宿主 | 扩展发现、模型配置合并、凭据解析与存储、factory 选择、执行绑定、会话切换 | package 复用这些能力，不重新实现一套凭据优先级 |
 | package | provider ID、默认目录、认证策略、协议适配、供应商命令 / OAuth 流程 | 不将供应商特判写回 CLI |
-| `rpi-plugin-sdk::provider` | 同步 C ABI 与异步 Provider 桥接、流式事件、请求取消 | 开启 SDK 的 `provider` feature，使用普通 Rust factory 即可导出 package |
-| `rpi-ai` | `Model`、`Provider`、流式事件和可复用协议 | 优先复用现有协议解析、错误、用量与重试实现 |
-| `rpi-plugin-sdk` | 动态库入口、能力检测、跨 ABI 类型与字符串释放 | ABI 边界只传 SDK 类型及约定 JSON |
+| `ice-plugin-sdk::provider` | 同步 C ABI 与异步 Provider 桥接、流式事件、请求取消 | 开启 SDK 的 `provider` feature，使用普通 Rust factory 即可导出 package |
+| `ice-ai` | `Model`、`Provider`、流式事件和可复用协议 | 优先复用现有协议解析、错误、用量与重试实现 |
+| `ice-plugin-sdk` | 动态库入口、能力检测、跨 ABI 类型与字符串释放 | ABI 边界只传 SDK 类型及约定 JSON |
 
-package 运行时依赖可使用 `rpi-ai` 与开启 `provider` feature 的 `rpi-plugin-sdk`，不得依赖
-`rpi-cli` 或宿主私有 factory / binding。真实加载测试可把 `rpi-extensions` 放在
+package 运行时依赖可使用 `ice-ai` 与开启 `provider` feature 的 `ice-plugin-sdk`，不得依赖
+`ice-cli` 或宿主私有 factory / binding。真实加载测试可把 `ice-extensions` 放在
 `dev-dependencies`。依赖版本按当前仓库模板保持兼容，不根据示例假定 crate 已发布。
 
 宿主的私有 `ProviderFactory` 和 package 的 `fn(&Model, &SimpleStreamOptions)
@@ -89,8 +89,8 @@ provider ID、目录、认证策略与 factory。安装 / 卸载 / 升级一次�
 
 ```toml
 [dependencies]
-rpi-plugin-sdk = { path = "/path/to/pi-rust/crates/rpi-plugin-sdk", features = ["provider"] }
-rpi-ai = { path = "/path/to/pi-rust/crates/rpi-ai", features = ["providers"] }
+ice-plugin-sdk = { path = "/path/to/ice-rust/crates/ice-plugin-sdk", features = ["provider"] }
+ice-ai = { path = "/path/to/ice-rust/crates/ice-ai", features = ["providers"] }
 serde_json = "1"
 ```
 
@@ -121,10 +121,10 @@ fn models() -> Vec<Model> {
 
 fn create(model: &Model, options: &SimpleStreamOptions) -> Arc<dyn Provider> {
     // 使用本次请求的端点与凭据，不读取 OPENAI_API_KEY 等进程变量。
-    rpi_plugin_sdk::provider::completions(model, options, false)
+    ice_plugin_sdk::provider::completions(model, options, false)
 }
 
-rpi_plugin_sdk::export_provider!(
+ice_plugin_sdk::export_provider!(
     ID, BASE_URL, "openai-completions",
     serde_json::json!({
         "id": ID, "models": models(),

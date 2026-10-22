@@ -57,7 +57,7 @@
 //! `serde_json` optional for a plugin that wants to skip it.
 //!
 //! The optional `provider` feature adds the `provider` module and `export_provider!`
-//! for bridging Rust `rpi_ai::Provider` implementations to this ABI. It alone
+//! for bridging Rust `ice_ai::Provider` implementations to this ABI. It alone
 //! enables the AI, async and HTTP dependencies; the default ABI SDK stays light.
 
 #![deny(unsafe_op_in_unsafe_fn)]

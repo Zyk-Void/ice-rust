@@ -1,15 +1,15 @@
 #![cfg(feature = "provider")]
 
-use rpi_ai::{Api, AssistantMessage, Context, Model, Provider, SimpleStreamOptions, StopReason};
-use rpi_plugin_sdk as sdk;
+use ice_ai::{Api, AssistantMessage, Context, Model, Provider, SimpleStreamOptions, StopReason};
+use ice_plugin_sdk as sdk;
 use std::{ffi::c_void, ptr, sync::Arc};
 
 const ID: &str = "sdk-test";
 const BASE_URL: &str = "http://localhost";
 
 fn factory(_: &Model, _: &SimpleStreamOptions) -> Arc<dyn Provider> {
-    rpi_ai::providers::faux::FauxProvider::new(
-        rpi_ai::providers::faux::FauxScript::new().with_text("hello"),
+    ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new().with_text("hello"),
     )
 }
 
@@ -37,7 +37,7 @@ fn terminal_status(raw: sdk::StbString, free: sdk::FreeStringFn) -> i32 {
     match serde_json::from_str::<AssistantMessage>(&output.to_string_lossy()) {
         Ok(message)
             if message.stop_reason == StopReason::Stop
-                && matches!(message.content.as_slice(), [rpi_ai::Content::Text(text)] if text.text == "hello") =>
+                && matches!(message.content.as_slice(), [ice_ai::Content::Text(text)] if text.text == "hello") =>
         {
             0
         }
@@ -146,7 +146,7 @@ extern "C" fn runtime_action(
 
 fn api() -> sdk::PluginApi {
     sdk::PluginApi {
-        abi_version: sdk::RPI_PLUGIN_ABI_VERSION_UNIFIED,
+        abi_version: sdk::ICERS_PLUGIN_ABI_VERSION_UNIFIED,
         struct_size: std::mem::size_of::<sdk::PluginApi>() as u32,
         free_string: sdk::callbacks::free_string,
         register_tool: None,
@@ -174,7 +174,7 @@ fn exported_provider_prefers_streaming_and_returns_terminal_message() {
     let mut api = api();
     api.register_provider = Some(unused_one_shot);
     api.register_streaming_provider = Some(register_stream);
-    assert_eq!(rpi_plugin_register(&api), 0);
+    assert_eq!(ice_plugin_register(&api), 0);
 }
 
 #[test]
@@ -182,7 +182,7 @@ fn exported_provider_falls_back_to_one_shot_without_declarations() {
     let mut api = api();
     api.declare = None;
     api.register_provider = Some(register_one_shot);
-    assert_eq!(rpi_plugin_register(&api), 0);
+    assert_eq!(ice_plugin_register(&api), 0);
 }
 
 #[test]
@@ -193,10 +193,10 @@ fn exported_provider_propagates_declaration_errors() {
     let mut api = api();
     api.declare = Some(refuse);
     api.register_provider = Some(unused_one_shot);
-    assert_eq!(rpi_plugin_register(&api), 42);
+    assert_eq!(ice_plugin_register(&api), 42);
 }
 
 #[test]
 fn exported_provider_requires_a_host_registration_slot() {
-    assert_ne!(rpi_plugin_register(&api()), 0);
+    assert_ne!(ice_plugin_register(&api()), 0);
 }

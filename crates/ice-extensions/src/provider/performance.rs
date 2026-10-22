@@ -80,9 +80,9 @@ impl Provider for Fixture {
                 content: "x".repeat(bytes),
                 partial: Arc::new(message.clone()),
             });
-            message.stop_reason = rpi_ai::StopReason::Stop;
+            message.stop_reason = ice_ai::StopReason::Stop;
             prod.push(AssistantMessageEvent::Done {
-                reason: rpi_ai::DoneReason::Stop,
+                reason: ice_ai::DoneReason::Stop,
                 message,
             });
         });
@@ -98,7 +98,7 @@ fn factory(_: &Model, options: &SimpleStreamOptions) -> Arc<dyn Provider> {
 }
 
 struct Emit {
-    callback: rpi_plugin_sdk::ProviderStreamEmitFn,
+    callback: ice_plugin_sdk::ProviderStreamEmitFn,
     data: *mut c_void,
 }
 extern "C" fn counting_emit(raw: StbString, data: *mut c_void) -> i32 {
@@ -111,10 +111,10 @@ extern "C" fn request(_: StbStringRef, _: *mut StbString, _: *mut c_void) -> i32
 }
 extern "C" fn streaming(
     req: StbStringRef,
-    emit: Option<rpi_plugin_sdk::ProviderStreamEmitFn>,
+    emit: Option<ice_plugin_sdk::ProviderStreamEmitFn>,
     data: *mut c_void,
-    control: *const rpi_plugin_sdk::ProviderStreamControl,
-    _: Option<rpi_plugin_sdk::ProviderStreamCompletionFn>,
+    control: *const ice_plugin_sdk::ProviderStreamControl,
+    _: Option<ice_plugin_sdk::ProviderStreamCompletionFn>,
     _: *mut c_void,
     out: *mut StbString,
     _: *mut c_void,
@@ -122,12 +122,12 @@ extern "C" fn streaming(
     let mut relay = emit.map(|callback| Emit { callback, data });
     let (callback, data) = match relay.as_mut() {
         Some(relay) => (
-            Some(counting_emit as rpi_plugin_sdk::ProviderStreamEmitFn),
+            Some(counting_emit as ice_plugin_sdk::ProviderStreamEmitFn),
             (relay as *mut Emit).cast(),
         ),
         None => (None, std::ptr::null_mut()),
     };
-    unsafe { rpi_plugin_sdk::provider::drive(factory, req, callback, data, control, out) }
+    unsafe { ice_plugin_sdk::provider::drive(factory, req, callback, data, control, out) }
 }
 
 fn parameter(name: &str, default: usize) -> usize {
@@ -140,12 +140,12 @@ fn parameter(name: &str, default: usize) -> usize {
 #[test]
 #[ignore = "release-build offline benchmark; run alone with --nocapture"]
 fn offline_provider_pipeline() {
-    let bytes = parameter("RPI_BENCH_BYTES", 4096);
-    let chunk = parameter("RPI_BENCH_CHUNK", 64);
-    let concurrency = parameter("RPI_BENCH_STREAMS", 1);
-    let delay = parameter("RPI_BENCH_DELAY_MS", 0);
-    let result_only = parameter("RPI_BENCH_RESULT_ONLY", 0) != 0;
-    let sdk_only = parameter("RPI_BENCH_SDK_ONLY", 0) != 0;
+    let bytes = parameter("ICERS_BENCH_BYTES", 4096);
+    let chunk = parameter("ICERS_BENCH_CHUNK", 64);
+    let concurrency = parameter("ICERS_BENCH_STREAMS", 1);
+    let delay = parameter("ICERS_BENCH_DELAY_MS", 0);
+    let result_only = parameter("ICERS_BENCH_RESULT_ONLY", 0) != 0;
+    let sdk_only = parameter("ICERS_BENCH_SDK_ONLY", 0) != 0;
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(2)
         .enable_all()
@@ -159,7 +159,7 @@ fn offline_provider_pipeline() {
         let mut tasks = Vec::new();
         for _ in 0..concurrency {
             tasks.push(tokio::spawn(async move {
-                let model = Model::new("m", "M", rpi_ai::Api::Faux, "fixture", "http://localhost");
+                let model = Model::new("m", "M", ice_ai::Api::Faux, "fixture", "http://localhost");
                 let options = SimpleStreamOptions {
                     max_tokens: Some(bytes as u64),
                     temperature: Some(chunk as f64),
@@ -172,7 +172,7 @@ fn offline_provider_pipeline() {
                         let mut out = StbString::empty();
                         assert_eq!(
                             unsafe {
-                                rpi_plugin_sdk::provider::drive(
+                                ice_plugin_sdk::provider::drive(
                                     factory,
                                     StbStringRef::from_str(&json),
                                     None,
@@ -184,9 +184,9 @@ fn offline_provider_pipeline() {
                             0
                         );
                         let owned = unsafe {
-                            rpi_plugin_sdk::callbacks::OwnedString::from_raw(
+                            ice_plugin_sdk::callbacks::OwnedString::from_raw(
                                 out,
-                                Some(rpi_plugin_sdk::callbacks::free_string),
+                                Some(ice_plugin_sdk::callbacks::free_string),
                             )
                         };
                         serde_json::from_str::<AssistantMessage>(&owned.to_string_lossy()).unwrap()
@@ -200,7 +200,7 @@ fn offline_provider_pipeline() {
                         api_style: "faux".into(),
                         request_fn: request,
                         stream_fn: Some(streaming),
-                        plugin_free_string: rpi_plugin_sdk::callbacks::free_string,
+                        plugin_free_string: ice_plugin_sdk::callbacks::free_string,
                         user_data: std::ptr::null_mut(),
                     };
                     let snapshot = Arc::new(crate::ExtensionRegistry::new().snapshot());
@@ -222,7 +222,7 @@ fn offline_provider_pipeline() {
                 };
                 assert_eq!(message.content, vec![Content::text("x".repeat(bytes))]);
                 assert_eq!(message.timestamp, 42);
-                assert_eq!(message.stop_reason, rpi_ai::StopReason::Stop);
+                assert_eq!(message.stop_reason, ice_ai::StopReason::Stop);
             }));
         }
         for task in tasks {
@@ -236,5 +236,5 @@ fn offline_provider_pipeline() {
     let wire = WIRE.load(Ordering::Relaxed);
     let queue: Option<(usize, usize)> = None;
     let queue = serde_json::to_string(&queue).unwrap();
-    println!("RPI_BENCH {{\"bytes\":{bytes},\"chunk\":{chunk},\"streams\":{concurrency},\"delay_ms\":{delay},\"result_only\":{result_only},\"sdk_only\":{sdk_only},\"elapsed_s\":{elapsed},\"allocations\":{allocations},\"allocated_bytes\":{allocated_bytes},\"peak_live_bytes\":{peak},\"wire_bytes\":{wire},\"bridge_peak_count_bytes\":{queue}}}");
+    println!("ICERS_BENCH {{\"bytes\":{bytes},\"chunk\":{chunk},\"streams\":{concurrency},\"delay_ms\":{delay},\"result_only\":{result_only},\"sdk_only\":{sdk_only},\"elapsed_s\":{elapsed},\"allocations\":{allocations},\"allocated_bytes\":{allocated_bytes},\"peak_live_bytes\":{peak},\"wire_bytes\":{wire},\"bridge_peak_count_bytes\":{queue}}}");
 }

@@ -7,7 +7,7 @@ The stable `#[repr(C)]` ABI contract for icers plugins. Depend on this crate, an
 nothing else, to build a Rust `cdylib` that extends the `icers` agent with tools,
 providers, slash commands, event handlers, renderers and discovered resources.
 
-The default SDK has **no dependency on the rpi runtime** on purpose. A plugin
+The default SDK has **no dependency on the icers runtime** on purpose. A plugin
 must not link the host — both sides share only the ABI types defined here.
 The optional `provider` feature adds plugin-side AI helpers, without depending
 on the CLI or host loader.
@@ -119,12 +119,12 @@ platform-independent interface.
 
 ## Provider plugins
 
-Enable the optional `provider` feature when implementing an `rpi_ai::Provider`:
+Enable the optional `provider` feature when implementing an `ice_ai::Provider`:
 
 ```toml
 [dependencies]
-rpi-plugin-sdk = { path = "/path/to/pi-rust/crates/rpi-plugin-sdk", features = ["provider"] }
-rpi-ai = { path = "/path/to/pi-rust/crates/rpi-ai", features = ["providers"] }
+ice-plugin-sdk = { path = "/path/to/ice-rust/crates/ice-plugin-sdk", features = ["provider"] }
+ice-ai = { path = "/path/to/ice-rust/crates/ice-ai", features = ["providers"] }
 serde_json = "1"
 ```
 
@@ -144,10 +144,10 @@ The `provider` feature enables `json` and the AI, Tokio and HTTP dependencies.
 It is **off by default**; tool-only plugins retain the lightweight ABI SDK,
 and `default-features = false` still provides the std-only ABI core.
 
-This replaces the former `rpi-provider-runtime` crate. Remove that dependency,
-enable the SDK's `provider` feature, replace `rpi_provider_runtime::` helper
-paths with `rpi_plugin_sdk::provider::`, and invoke the export macro as
-`rpi_plugin_sdk::export_provider!`.
+This replaces the former `ice-provider-runtime` crate. Remove that dependency,
+enable the SDK's `provider` feature, replace `ice_provider_runtime::` helper
+paths with `ice_plugin_sdk::provider::`, and invoke the export macro as
+`ice_plugin_sdk::export_provider!`.
 
 ## Registered TUI text components
 
@@ -228,7 +228,7 @@ updated to `export_plugin!` and rebuilt with the current SDK.
 ## Versioning
 
 A plugin using only the ABI SDK has a version decoupled from the rest of the
-family. The optional `provider` helpers also depend on a compatible `rpi-ai`.
+family. The optional `provider` helpers also depend on a compatible `ice-ai`.
 ABI compatibility is checked through `abi_version` and
 `struct_size`; each optional capability must also be checked before use.
 Rebuild extensions when the SDK contract they require changes.

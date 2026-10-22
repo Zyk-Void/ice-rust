@@ -1901,11 +1901,11 @@ pub async fn interactive_tui(
                 }
                 continue;
             };
-            let key = rpi_tui::terminal::normalize_key_event_with_protocol(
+            let key = ice_tui::terminal::normalize_key_event_with_protocol(
                 key,
                 tui_for_key.terminal().info().supports_kitty_keyboard,
             );
-            // Diagnostic trace (off unless RPI_DEBUG_KEYS is set): records what
+            // Diagnostic trace (off unless ICERS_DEBUG_KEYS is set): records what
             // actually arrived before any routing decision, so a client that
             // sends LF for Enter is visible as `Char('j') mods=CONTROL`.
             crate::key_trace::key(&key, "");
@@ -2324,12 +2324,12 @@ pub async fn interactive_tui(
             let cycle_forward = keybinding_matches(
                 &keybindings_for_key,
                 &key,
-                rpi_tui::keybindings::keys::MODEL_CYCLE_FORWARD,
+                ice_tui::keybindings::keys::MODEL_CYCLE_FORWARD,
             );
             let cycle_backward = keybinding_matches(
                 &keybindings_for_key,
                 &key,
-                rpi_tui::keybindings::keys::MODEL_CYCLE_BACKWARD,
+                ice_tui::keybindings::keys::MODEL_CYCLE_BACKWARD,
             );
             if cycle_forward || cycle_backward {
                 let catalog = ctx_for_key

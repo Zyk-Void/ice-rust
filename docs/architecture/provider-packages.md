@@ -7,7 +7,7 @@
 
 核心保留 Anthropic Messages、OpenAI Chat Completions / Responses，以及离线测试用的 Faux。
 CLI 不依赖供应商实现。通用 ABI / 异步协议桥接由核心仓库的
-`rpi-plugin-sdk::provider` 提供，只有显式开启 SDK 的 `provider` feature 才会引入
+`ice-plugin-sdk::provider` 提供，只有显式开启 SDK 的 `provider` feature 才会引入
 AI、Tokio 与 HTTP 依赖；默认 ABI SDK 保持轻量。桥接层不内置供应商，也不解析宿主凭据。
 
 ## 统一包中的 provider
@@ -117,8 +117,8 @@ factory 负责提供协议实现，不读取环境变量、不决定凭据优先
 `maxTokens` 仍表示可见答案的额度，不是模型的服务端上限——声明该选项时两者需要分别核对。
 调用方显式传入的 `maxTokens` 按原值发送，不做叠加，默认由传入方自己算好思考余量。
 
-需要注意生效位置：插件 provider 在插件自己编进去的 `rpi-ai` 里执行请求构建，
-而不是宿主核心。因此这条选项对插件 provider 生效的前提，是插件把 `rpi-ai` 依赖升到包含它的版本；
+需要注意生效位置：插件 provider 在插件自己编进去的 `ice-ai` 里执行请求构建，
+而不是宿主核心。因此这条选项对插件 provider 生效的前提，是插件把 `ice-ai` 依赖升到包含它的版本；
 仅升级宿主 CLI 不会改变插件发出的 `maxTokens`。
 
 启动顺序是：加载扩展一次 → 收集 package 目录和 runtime factories → 合并用户模型配置 →

@@ -1,5 +1,5 @@
 //! Event projection shared by the P0 native host and its clients.
-use rpi_agent::events::AgentEvent;
+use ice_agent::events::AgentEvent;
 
 /// Reuse the existing wire-safe event projection while the P0 host is moved
 /// onto the dedicated `rpc` module. The projection contains no local handles

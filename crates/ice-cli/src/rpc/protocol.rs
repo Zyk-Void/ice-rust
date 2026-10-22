@@ -1,4 +1,4 @@
-//! Minimal P0 JSONL protocol for the native rpi RPC host.
+//! Minimal P0 JSONL protocol for the native icers RPC host.
 use serde_json::{json, Value};
 
 pub const MAX_FRAME_BYTES: usize = 1_048_576;
@@ -74,7 +74,7 @@ pub enum Command {
     },
     GetAvailableThinkingLevels,
     SetThinkingLevel {
-        level: rpi_ai::types::ThinkingLevel,
+        level: ice_ai::types::ThinkingLevel,
     },
     GetAvailableTools,
     SetActiveTools {
@@ -139,7 +139,7 @@ pub fn response(id: Option<Value>, command: &str, result: Result<Option<Value>, 
 pub fn ready() -> Value {
     json!({
         "type": "ready",
-        "protocol": "rpi",
+        "protocol": "icers",
         "piCompatibilityTarget": PI_BASELINE,
         "supportedCommands": SUPPORTED_COMMANDS,
         "semantics": {
@@ -153,7 +153,7 @@ pub fn ready() -> Value {
 }
 
 /// Only expose capability metadata, never provider credentials or headers.
-pub fn model_descriptor(model: &rpi_ai::Model) -> Value {
+pub fn model_descriptor(model: &ice_ai::Model) -> Value {
     json!({
         "id": model.id,
         "name": model.name,
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn ready_advertises_the_p0_contract() {
         let value = ready();
-        assert_eq!(value["protocol"], "rpi");
+        assert_eq!(value["protocol"], "icers");
         assert_eq!(value["semantics"]["settlementEvent"], "agent_settled");
         assert!(value["supportedCommands"]
             .as_array()

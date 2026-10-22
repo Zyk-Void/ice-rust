@@ -54,7 +54,7 @@ async fn declined_compaction_records_a_terminal_outcome() {
     let result = harness.compact(None).await.unwrap();
     assert!(matches!(
         result.outcome,
-        rpi_harness::agent_harness::CompactionOutcome::Declined { .. }
+        ice_harness::agent_harness::CompactionOutcome::Declined { .. }
     ));
     let records = harness
         .session()
@@ -64,7 +64,7 @@ async fn declined_compaction_records_a_terminal_outcome() {
     let terminal_records = records.iter().filter(|record| {
         matches!(record, LaneRecord::OperationFinished(finished)
             if finished.run_id == result.run_id
-                && finished.outcome == rpi_harness::session::types::OperationOutcome::Declined)
+                && finished.outcome == ice_harness::session::types::OperationOutcome::Declined)
     });
     assert_eq!(terminal_records.count(), 1);
 }

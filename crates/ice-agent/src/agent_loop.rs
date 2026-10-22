@@ -1071,7 +1071,7 @@ fn invalid_tool_call_reason(tool_call: &ToolCall) -> Option<String> {
 #[cfg(test)]
 mod invalid_tool_call_tests {
     use super::invalid_tool_call_reason;
-    use rpi_ai::types::{ToolCall, ToolCallType};
+    use ice_ai::types::{ToolCall, ToolCallType};
 
     fn call(id: &str, name: &str) -> ToolCall {
         ToolCall {
