@@ -209,6 +209,20 @@ impl Keybindings {
             },
         );
         map.insert(
+            "app.tools.collapse",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('o'), M::ALT)],
+                description: Some("Collapse all tool output"),
+            },
+        );
+        map.insert(
+            "app.tools.expandLast",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('o'), M::ALT | M::SHIFT)],
+                description: Some("Toggle the newest tool call"),
+            },
+        );
+        map.insert(
             "app.thinking.toggle",
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(Char('t'), M::CONTROL)],
@@ -1021,6 +1035,8 @@ pub mod keys {
     pub const MODEL_CYCLE_FORWARD: KeybindingId = "app.model.cycleForward";
     pub const MODEL_CYCLE_BACKWARD: KeybindingId = "app.model.cycleBackward";
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";
+    pub const TOOLS_COLLAPSE: KeybindingId = "app.tools.collapse";
+    pub const TOOLS_EXPAND_LAST: KeybindingId = "app.tools.expandLast";
     pub const THINKING_TOGGLE: KeybindingId = "app.thinking.toggle";
     pub const EXTERNAL_EDITOR: KeybindingId = "app.editor.external";
     pub const THINKING_CYCLE: KeybindingId = "app.thinking.cycle";

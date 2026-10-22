@@ -597,7 +597,13 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
         exclude_from_context,
     ));
     comp.set_user_shell();
-    comp.set_expanded(*ctx.state.tool_outputs_expanded.lock().unwrap());
+    comp.set_expanded(
+        ctx.state
+            .tool_outputs_expanded
+            .lock()
+            .unwrap()
+            .is_expanded(),
+    );
     ctx.chat.add_child(comp.clone());
 
     // Register the cancellation slot before spawning so an Esc arriving on the
@@ -1254,7 +1260,9 @@ pub async fn interactive_tui(
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         hide_thinking: Arc::new(std::sync::Mutex::new(hide_thinking)),
-        tool_outputs_expanded: Arc::new(std::sync::Mutex::new(tool_outputs_expanded)),
+        tool_outputs_expanded: Arc::new(std::sync::Mutex::new(
+            crate::transcript_view::ToolExpansion::new(tool_outputs_expanded),
+        )),
         show_terminal_progress,
         status: std::sync::Mutex::new(RunStatus::Idle),
         ext_status: reload_context.ext_status.clone(),
@@ -2358,15 +2366,34 @@ pub async fn interactive_tui(
                 continue;
             }
 
-            // 2d. Ctrl+O: toggle all tool output panels between compact and
-            // expanded rendering (upstream's global output toggle).
-            if keybinding_matches(
+            // 2d. Tool output expansion, as in ice: Ctrl+O opens the newest
+            // batch of cells (all closed again after the oldest), Alt+O closes
+            // everything, Shift+Alt+O toggles only the newest cell.
+            let tool_expansion = if keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::TOOLS_EXPAND,
             ) {
-                let expanded = state_for_key.toggle_tool_outputs();
+                Some(state_for_key.cycle_tool_outputs())
+            } else if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::TOOLS_COLLAPSE,
+            ) {
+                Some(state_for_key.collapse_tool_outputs())
+            } else if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::TOOLS_EXPAND_LAST,
+            ) {
+                Some(state_for_key.toggle_newest_tool_output())
+            } else {
+                None
+            };
+            if let Some(status) = tool_expansion {
+                add_note_message(&state_for_key.chat_container, &status);
                 // Persist per-session so a later `-c`/`-r` restores it.
+                let expanded = state_for_key.tool_outputs_open();
                 let session = ctx_for_key.session.clone();
                 tokio::spawn(async move {
                     let _ = session

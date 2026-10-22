@@ -125,7 +125,8 @@ fn replay_preserves_saved_expansion_live_members_and_first_toggle() {
                         .get_as::<bool>("display.tool_outputs_expanded")
                         .unwrap();
                     let state = test_tui_state();
-                    *state.tool_outputs_expanded.lock().unwrap() = expanded;
+                    *state.tool_outputs_expanded.lock().unwrap() =
+                        crate::transcript_view::ToolExpansion::new(expanded);
                     // Startup resolves the saved value before creating the panels.
                     render_session_history(
                         &harness,
@@ -163,7 +164,7 @@ fn replay_preserves_saved_expansion_live_members_and_first_toggle() {
                     );
 
                     // The very first toggle must change both the flag and the display.
-                    assert_eq!(state.toggle_tool_outputs(), !saved);
+                    assert_eq!(state.transcript_view().toggle_expanded(), !saved);
                     assert_replay_expansion(&state, !saved);
                     assert_eq!(
                         state
@@ -178,7 +179,7 @@ fn replay_preserves_saved_expansion_live_members_and_first_toggle() {
                     // from the value that this session originally restored.
                     replace_session_ui(&harness, &state.chat_container, &state).await;
                     assert_replay_expansion(&state, !saved);
-                    assert_eq!(state.toggle_tool_outputs(), saved);
+                    assert_eq!(state.transcript_view().toggle_expanded(), saved);
                     assert_replay_expansion(&state, saved);
 
                     // Tree navigation rebuilds the same history with the current flag.
