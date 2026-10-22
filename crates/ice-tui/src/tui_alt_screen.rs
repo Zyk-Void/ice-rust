@@ -805,6 +805,7 @@ impl TuiAltScreen {
                 last_changed = Some(index);
             }
         }
+        let mut restore_cursor = false;
         let viewport_top = *self.main_viewport_top.lock().unwrap();
         let changed_in_scrollback = first_changed.is_some_and(|first| {
             first < viewport_top || lines.len().saturating_sub(1) < viewport_top
@@ -849,7 +850,21 @@ impl TuiAltScreen {
                 } else {
                     first
                 };
+                // A same-height frame whose changed rows are all on screen (a
+                // spinner tick) is painted between save/restore cursor, so the
+                // cursor returns to the editor exactly, without being hidden:
+                // hiding it every tick restarts the terminal's blink phase.
+                restore_cursor = !deleted_tail_only
+                    && !append_start
+                    && lines.len() == previous.len()
+                    && cursor.is_some()
+                    && cursor == previous_cursor
+                    && move_target >= viewport_top
+                    && last <= viewport_bottom;
                 let mut output = String::from("\x1b[?2026h");
+                if restore_cursor {
+                    output.push_str("\x1b7");
+                }
                 if move_target > viewport_bottom {
                     let current_screen = hardware_row
                         .saturating_sub(viewport_top)
@@ -916,16 +931,25 @@ impl TuiAltScreen {
                         final_row = lines.len().saturating_sub(1);
                     }
                 }
+                if restore_cursor {
+                    output.push_str("\x1b8");
+                }
                 output.push_str("\x1b[?2026l");
                 terminal.write(&output);
                 let advanced = final_row.saturating_sub(viewport_top + height.saturating_sub(1));
                 viewport_top += advanced;
-                *self.main_hardware_row.lock().unwrap() = final_row;
+                *self.main_hardware_row.lock().unwrap() = if restore_cursor {
+                    cursor.map_or(final_row, |(row, _)| row)
+                } else {
+                    final_row
+                };
                 *self.main_viewport_top.lock().unwrap() = viewport_top;
             }
         }
 
-        if let Some((row, col)) = cursor {
+        if restore_cursor {
+            // The cursor is already back on the editor; nothing to place.
+        } else if let Some((row, col)) = cursor {
             let hardware_row = *self.main_hardware_row.lock().unwrap();
             let mut viewport_top = *self.main_viewport_top.lock().unwrap();
             let viewport_bottom = viewport_top + height.saturating_sub(1);
@@ -2072,6 +2096,50 @@ mod tests {
         let rendered = output.lock().unwrap().clone();
         assert!(rendered.contains("<raw-on>"));
         assert!(!rendered.contains("\x1b[?1049"));
+    }
+
+    /// A spinner tick repaints one row above the editor. The frame must bring
+    /// the cursor back with save/restore, never toggling its visibility (a hide
+    /// and show every tick restarts the terminal's blink phase, which flickers
+    /// the prompt cursor).
+    #[test]
+    fn regular_mode_spinner_tick_restores_the_cursor_without_toggling_it() {
+        let output = Arc::new(Mutex::new(String::new()));
+        let tui = TuiAltScreen::new(
+            Box::new(RecordingTerminal {
+                output: output.clone(),
+            }),
+            true,
+            None,
+        );
+        tui.set_main_screen_mode(true);
+        let spinner = Arc::new(Text::new("Working 1s", 0, 0));
+        let editor = Arc::new(Editor::simple());
+        editor.set_focused(true);
+        let root = crate::container::Container::new();
+        root.add_child(spinner.clone());
+        root.add_child(editor);
+        tui.set_layout_root(Some(Arc::new(root)));
+        tui.start();
+        output.lock().unwrap().clear();
+
+        spinner.set_text("Working 2s");
+        tui.render_now(false);
+
+        let frame = output.lock().unwrap().clone();
+        let save = frame.find("\x1b7").expect("cursor saved before painting");
+        let paint = frame
+            .find("\x1b[8C2")
+            .expect("changed digit patched in place");
+        let restore = frame
+            .rfind("\x1b8")
+            .expect("cursor restored after painting");
+        assert!(save < paint && paint < restore, "{frame:?}");
+        assert!(
+            !frame.contains("\x1b[?25l") && !frame.contains("\x1b[?25h"),
+            "{frame:?}"
+        );
+        tui.stop(TuiStopOptions::default());
     }
 
     #[test]
