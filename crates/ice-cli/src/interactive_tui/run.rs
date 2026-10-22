@@ -668,11 +668,33 @@ fn copy_via_clipboard_command(_text: &str) -> bool {
     false
 }
 
+/// Write `text` to the local clipboard. On Linux the platform tools
+/// (`wl-copy`, `xclip`, `xsel`) go first, as in ice: arboard is X11-only here,
+/// and on Wayland compositors such as Hyprland its write reports success
+/// without reaching Wayland clients, which used to skip the tools entirely.
+pub(super) fn copy_locally(
+    text: &str,
+    prefer_commands: bool,
+    native: impl FnOnce(&str) -> bool,
+    commands: impl FnOnce(&str) -> bool,
+) -> bool {
+    if prefer_commands {
+        commands(text) || native(text)
+    } else {
+        native(text) || commands(text)
+    }
+}
+
 /// Copy `text` like ice `copyToClipboard`: the system clipboard first, then,
 /// over SSH or mosh (where that clipboard is the remote machine's) or when it
 /// failed, also an OSC 52 request so the user's own terminal stores it.
 pub(super) fn copy_to_clipboard(text: &str) -> bool {
-    let copied = copy_to_system_clipboard(text) || copy_via_clipboard_command(text);
+    let copied = copy_locally(
+        text,
+        cfg!(target_os = "linux"),
+        copy_to_system_clipboard,
+        copy_via_clipboard_command,
+    );
     if copied && !is_remote_session(|key| std::env::var_os(key)) {
         return true;
     }
