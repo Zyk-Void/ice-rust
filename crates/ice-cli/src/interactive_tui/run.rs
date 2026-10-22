@@ -624,11 +624,55 @@ fn copy_to_system_clipboard(_text: &str) -> bool {
     false
 }
 
+/// Linux clipboard helpers tried in ice's order: `wl-copy` on Wayland, then
+/// `xclip`/`xsel`. arboard has no native-Wayland backend in this build, so
+/// these keep copy working there without another dependency.
+#[cfg(target_os = "linux")]
+pub(super) fn clipboard_commands(wayland: bool) -> Vec<(&'static str, &'static [&'static str])> {
+    let mut commands: Vec<(&'static str, &'static [&'static str])> = Vec::new();
+    if wayland {
+        commands.push(("wl-copy", &[]));
+    }
+    commands.push(("xclip", &["-selection", "clipboard"]));
+    commands.push(("xsel", &["--clipboard", "--input"]));
+    commands
+}
+
+#[cfg(target_os = "linux")]
+fn copy_via_clipboard_command(text: &str) -> bool {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    let wayland = std::env::var_os("WAYLAND_DISPLAY").is_some_and(|v| !v.is_empty());
+    clipboard_commands(wayland)
+        .into_iter()
+        .any(|(program, args)| {
+            let Ok(mut child) = Command::new(program)
+                .args(args)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+            else {
+                return false;
+            };
+            let wrote = child
+                .stdin
+                .take()
+                .is_some_and(|mut stdin| stdin.write_all(text.as_bytes()).is_ok());
+            wrote && child.wait().is_ok_and(|status| status.success())
+        })
+}
+
+#[cfg(not(target_os = "linux"))]
+fn copy_via_clipboard_command(_text: &str) -> bool {
+    false
+}
+
 /// Copy `text` like ice `copyToClipboard`: the system clipboard first, then,
 /// over SSH or mosh (where that clipboard is the remote machine's) or when it
 /// failed, also an OSC 52 request so the user's own terminal stores it.
 pub(super) fn copy_to_clipboard(text: &str) -> bool {
-    let copied = copy_to_system_clipboard(text);
+    let copied = copy_to_system_clipboard(text) || copy_via_clipboard_command(text);
     if copied && !is_remote_session(|key| std::env::var_os(key)) {
         return true;
     }

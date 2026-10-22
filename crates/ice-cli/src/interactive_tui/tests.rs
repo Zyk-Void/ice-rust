@@ -4849,6 +4849,22 @@ fn a_template_named_like_a_builtin_is_not_suggested_twice() {
 /// Over SSH the system clipboard is the remote machine's, so copies never
 /// reached the user. ice also sends OSC 52 then; oversized payloads are
 /// skipped because terminals drop or choke on them.
+/// Over SSH the system clipboard is the remote machine's, so copies never
+/// reached the user. ice also sends OSC 52 then; oversized payloads are
+/// skipped because terminals drop or choke on them.
+#[cfg(target_os = "linux")]
+#[test]
+fn clipboard_commands_prefer_wl_copy_only_on_wayland() {
+    let names = |wayland| {
+        clipboard_commands(wayland)
+            .into_iter()
+            .map(|(program, _)| program)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(names(true), ["wl-copy", "xclip", "xsel"]);
+    assert_eq!(names(false), ["xclip", "xsel"]);
+}
+
 #[test]
 fn osc52_copy_encodes_text_and_detects_remote_sessions() {
     assert_eq!(
