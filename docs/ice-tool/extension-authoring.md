@@ -524,11 +524,11 @@ Provider 负责推理，auth 负责凭据和登录流程，两者独立注册。
 ### Factory 与私有执行绑定
 
 统一包内复用 `crate::registration::register_provider!`；单 provider 教学包可使用
-`ice-provider-runtime::export_provider!`。模块提供
+`ice_plugin_sdk::export_provider!`，需显式开启 SDK 默认关闭的 `provider` feature。模块提供
 `fn(&Model, &SimpleStreamOptions) -> Arc<dyn Provider>`。OpenAI-compatible 接入可复用
-`ice_provider_runtime::completions(model, options, anonymous)`，无需复制 SSE 解析器。
+`ice_plugin_sdk::provider::completions(model, options, anonymous)`，无需复制 SSE 解析器。
 宿主私有 `ProviderFactory` 统一选择扩展 / 内置协议，不是插件需要实现的接口。
-运行时依赖使用 `ice-ai`、`ice-plugin-sdk` 与桥接库，不依赖 `ice-cli`；宿主加载器
+运行时依赖使用 `ice-ai` 与开启 `provider` feature 的 `ice-plugin-sdk`，不依赖 `ice-cli`；宿主加载器
 可以作为测试依赖。
 
 公开目录、当前模型及配置后 `Provider::models()` 返回的描述不携带请求头。

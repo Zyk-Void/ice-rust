@@ -237,6 +237,81 @@ fn turn_end_tool_result_ids(events: &[AgentEvent]) -> Vec<String> {
         .collect()
 }
 
+async fn assert_malformed_tool_call_lifecycle(mode: ToolExecutionMode) {
+    for (id, name) in [("", "echo"), ("call-1", ""), (" ", "echo"), ("call-1", " ")] {
+        let args = serde_json::json!({"value": "unused"});
+        let context = AgentContext {
+            system_prompt: String::new(),
+            messages: Vec::new(),
+            tools: Vec::new(),
+        };
+        let mut config = base_config();
+        config.tool_execution = mode;
+        let stream_fn = common::mock_stream_fn(vec![
+            common::assistant_tool_calls(vec![(id, name, args.clone())], StopReason::ToolUse),
+            common::assistant_text("done", StopReason::Stop),
+        ]);
+        let (events, _) = run_and_collect(
+            vec![user_message("reject malformed call")],
+            context,
+            config,
+            stream_fn,
+        )
+        .await;
+        let lifecycle: Vec<_> = events
+            .iter()
+            .filter(|event| {
+                matches!(
+                    event,
+                    AgentEvent::ToolExecutionStart { .. } | AgentEvent::ToolExecutionEnd { .. }
+                )
+            })
+            .collect();
+        assert_eq!(
+            lifecycle.len(),
+            2,
+            "rejected call must have one start/end pair"
+        );
+        match lifecycle[0] {
+            AgentEvent::ToolExecutionStart {
+                tool_call_id,
+                tool_name,
+                args: actual_args,
+            } => {
+                assert_eq!(tool_call_id, id);
+                assert_eq!(tool_name, name);
+                assert_eq!(actual_args, &args);
+            }
+            event => panic!("expected start before rejection, got {event:?}"),
+        }
+        match lifecycle[1] {
+            AgentEvent::ToolExecutionEnd {
+                tool_call_id,
+                tool_name,
+                is_error,
+                ..
+            } => {
+                assert_eq!(tool_call_id, id);
+                assert_eq!(tool_name, name);
+                assert!(*is_error, "malformed call must be rejected");
+            }
+            event => panic!("expected rejection end after start, got {event:?}"),
+        }
+        assert_eq!(tool_result_message_ids(&events), vec![id.to_string()]);
+        assert_eq!(turn_end_tool_result_ids(&events), vec![id.to_string()]);
+    }
+}
+
+#[tokio::test]
+async fn sequential_malformed_tool_calls_emit_start_before_rejection_end() {
+    assert_malformed_tool_call_lifecycle(ToolExecutionMode::Sequential).await;
+}
+
+#[tokio::test]
+async fn parallel_malformed_tool_calls_emit_start_before_rejection_end() {
+    assert_malformed_tool_call_lifecycle(ToolExecutionMode::Parallel).await;
+}
+
 #[tokio::test]
 async fn tool_execution_end_in_completion_order_results_in_source_order() {
     let coord = Coord {

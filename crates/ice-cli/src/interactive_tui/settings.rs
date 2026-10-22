@@ -2,27 +2,6 @@
 
 use super::*;
 
-/// Restrict a catalog to models whose provider matches the one owning
-/// `current_id`. The lane is bound to a single provider runtime, so hot-cycle
-/// shortcuts (`Ctrl+P` / `Shift+Ctrl+P`) must not jump across providers.
-pub(super) fn same_provider_catalog(
-    catalog: &[ice_ai::Model],
-    current_id: &str,
-) -> Vec<ice_ai::Model> {
-    let Some(provider) = catalog
-        .iter()
-        .find(|m| m.id.eq_ignore_ascii_case(current_id))
-        .map(|m| m.provider.clone())
-    else {
-        return catalog.to_vec();
-    };
-    catalog
-        .iter()
-        .filter(|m| m.provider == provider)
-        .cloned()
-        .collect()
-}
-
 /// Resolve the runtime scope in its chosen order. Legacy empty scope means all.
 pub(super) fn scoped_catalog(
     catalog: &[ice_ai::Model],
@@ -1331,15 +1310,14 @@ pub(super) async fn switch_provider(
     Ok((model, note))
 }
 
-/// Persist a specific default provider + model pair (used when `/model` picks a
-/// model from a different provider than the one currently bound to the lane).
+/// Persist a specific default provider + model pair after a live switch.
 pub(super) fn set_default_model(provider_id: &str, model_id: &str) -> Result<String, String> {
     let mut settings = crate::settings::load_settings().map_err(|error| error.to_string())?;
     settings.default_provider = Some(provider_id.to_string());
     settings.default_model = Some(model_id.to_string());
     crate::settings::save_settings(&settings).map_err(|error| error.to_string())?;
     Ok(format!(
-        "Default provider set to {provider_id} (model {model_id}) — used on the next launch."
+        "Default provider saved as {provider_id} (model {model_id})."
     ))
 }
 
@@ -1674,7 +1652,9 @@ pub(super) fn remove_provider(input: &str) -> Result<String, String> {
         settings.default_model = None;
         let _ = crate::settings::save_settings(&settings);
     }
-    Ok(format!("Removed models.json configuration for provider \"{id}\" — restart icers to apply. Installed provider packages remain available; use icers package unlink to remove a package."))
+    Ok(format!(
+        "Removed models.json configuration for provider \"{id}\" — restart icers to apply. Installed provider packages remain available; use icers package unlink to remove a package."
+    ))
 }
 
 /// Write the completed form into `models.json` as a new provider with one

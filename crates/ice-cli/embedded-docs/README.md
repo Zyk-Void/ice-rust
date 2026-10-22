@@ -19,7 +19,7 @@ by Mario Zechner. It now includes its own Rust-native plugin ABI and execution
 infrastructure. See [Acknowledgements](#acknowledgements) and the repository's
 [NOTICE](https://github.com/Zyk-Void/ice-rust/blob/main/NOTICE) for upstream attribution.
 
-Website: <https://rpi.laofu.online/> · Docs: <https://rpi.laofu.online/docs.html>
+Website: <https://icers.bigfisharc.cn/> · Docs: <https://icers.bigfisharc.cn/docs.html>
 
 ![icers interactive session](docs/images/ice-interactive.png)
 
@@ -279,7 +279,7 @@ The host loads project `.icers/extensions`, then global
 
 Ready-to-install extensions live in the companion
 [`ice-rust/ice-package`](https://github.com/ice-rust/ice-package) repository, with
-an [online catalog](https://rpi.laofu.online/packages.html).
+an [online catalog](https://icers.bigfisharc.cn/packages.html).
 
 ### Optional web and subagent tools
 
@@ -341,7 +341,7 @@ machine. See [`docs/remote/user-guide.md`](docs/remote/user-guide.md).
 
 | | |
 | --- | --- |
-| Current release | **[0.6.1](https://github.com/Zyk-Void/ice-rust/releases)** (nine crates, published together) |
+| Current release | **[0.8.0](https://github.com/Zyk-Void/ice-rust/releases)** (nine crates, published together) |
 | Stability | `ice-ai`, `ice-agent`, `ice-tools`, `ice-harness`, `ice-plugin-sdk` are the intended stable surface |
 | MSRV | 1.78 |
 | Platforms | Linux, macOS, Windows (CI runs the suite on Linux) |

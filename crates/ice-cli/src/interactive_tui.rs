@@ -1972,7 +1972,10 @@ pub async fn interactive_tui(
                 }
                 continue;
             };
-            let key = ice_tui::terminal::normalize_key_event(key);
+            let key = ice_tui::terminal::normalize_key_event_with_protocol(
+                key,
+                tui_for_key.terminal().info().supports_kitty_keyboard,
+            );
             // Diagnostic trace (off unless ICERS_DEBUG_KEYS is set): records what
             // actually arrived before any routing decision, so a client that
             // sends LF for Enter is visible as `Char('j') mods=CONTROL`.
@@ -2390,69 +2393,54 @@ pub async fn interactive_tui(
                 continue;
             }
 
-            // 2f. Ctrl+P: cycle to the next model in the catalog after the one
-            //     currently tracked in `current_model_id`, apply it live via
-            //     `lane.set_model` (takes effect on the next user message — the
-            //     in-flight run's config is already snapshotted), and update the
-            //     footer. `set_model` is async so it runs on a spawned task.
-            if keybinding_matches(
+            // Cycle the authenticated catalog, including other providers. Resolve
+            // the anchor from the live lane so duplicate model ids stay distinct.
+            let cycle_forward = keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::MODEL_CYCLE_FORWARD,
-            ) {
-                let current = state_for_key.current_model_id();
-                // Cycle within the session's `/scoped-models` selection when
-                // configured; otherwise the full catalog, restricted to the
-                // current provider (the lane cannot route another provider).
-                let catalog = ctx_for_key
-                    .model_catalog
-                    .read()
-                    .unwrap_or_else(|error| error.into_inner());
-                let provider_catalog = same_provider_catalog(&catalog, &current);
-                let scope = scoped_catalog(
-                    &provider_catalog,
-                    state_for_key.scoped_models.lock().unwrap().as_deref(),
-                );
-                if let Some(next) = cycle_next_model(&scope, &current) {
-                    spawn_set_model(
-                        &state_for_key,
-                        &lane_for_key,
-                        next,
-                        &state_for_key.chat_container,
-                        &tui_for_key,
-                        ModelSwitchMode::Cycle,
-                    );
-                }
-                continue;
-            }
-
-            // 2f-bis. Shift+Ctrl+P (Alt+P on Windows): cycle to the *previous*
-            //     model, the mirror of the Ctrl+P hotkey above.
-            if keybinding_matches(
+            );
+            let cycle_backward = keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::MODEL_CYCLE_BACKWARD,
-            ) {
-                let current = state_for_key.current_model_id();
+            );
+            if cycle_forward || cycle_backward {
                 let catalog = ctx_for_key
                     .model_catalog
                     .read()
-                    .unwrap_or_else(|error| error.into_inner());
-                let provider_catalog = same_provider_catalog(&catalog, &current);
-                let scope = scoped_catalog(
-                    &provider_catalog,
-                    state_for_key.scoped_models.lock().unwrap().as_deref(),
-                );
-                if let Some(prev) = cycle_prev_model(&scope, &current) {
-                    spawn_set_model(
-                        &state_for_key,
-                        &lane_for_key,
-                        prev,
-                        &state_for_key.chat_container,
-                        &tui_for_key,
-                        ModelSwitchMode::Cycle,
-                    );
-                }
+                    .unwrap_or_else(|error| error.into_inner())
+                    .clone();
+                let lane = lane_for_key.clone();
+                let state = state_for_key.clone();
+                let tui = tui_for_key.clone();
+                tokio::spawn(async move {
+                    let current = match lane.get_model().await {
+                        Ok(current) => current,
+                        Err(error) => {
+                            add_error_message(&state.chat_container, &error.to_string());
+                            tui.request_render(false);
+                            return;
+                        }
+                    };
+                    let scope =
+                        scoped_catalog(&catalog, state.scoped_models.lock().unwrap().as_deref());
+                    let next = if cycle_backward {
+                        cycle_prev_model(&scope, &current)
+                    } else {
+                        cycle_next_model(&scope, &current)
+                    };
+                    if let Some(model) = next {
+                        spawn_set_model(
+                            &state,
+                            &lane,
+                            model,
+                            &state.chat_container,
+                            &tui,
+                            ModelSwitchMode::Cycle,
+                        );
+                    }
+                });
                 continue;
             }
 
@@ -3410,7 +3398,9 @@ pub async fn interactive_tui(
                             Ok(true) => {
                                 add_note_message(
                                     &chat_container,
-                                    &format!("Removed saved credentials for {provider}; reloading providers…"),
+                                    &format!(
+                                        "Removed saved credentials for {provider}; reloading providers…"
+                                    ),
                                 );
                                 let _ = ctx.tx.send(TuiMessage::ReloadExtensions);
                             }

@@ -161,7 +161,7 @@ pub enum SessionSelection {
     ByExactId { id: String, dir: PathBuf },
     /// `--fork <path|id>`: fork the given session into a new one and start in
     /// the fork.
-    Fork { source: String },
+    Fork { source: String, dir: PathBuf },
 }
 
 /// Decide the session selection from parsed args + the resolved cwd.
@@ -177,7 +177,10 @@ pub fn select_session(args: &Args, cwd: &Path) -> SessionSelection {
         return SessionSelection::Latest { dir };
     }
     if let Some(s) = &args.fork {
-        return SessionSelection::Fork { source: s.clone() };
+        return SessionSelection::Fork {
+            source: s.clone(),
+            dir,
+        };
     }
     if let Some(s) = &args.session_id {
         return SessionSelection::ByExactId { id: s.clone(), dir };
@@ -757,13 +760,27 @@ pub async fn build_prepared(
     }
 
     // Share the live session cell with both /reload and the approval hook.
-    // Install the hook even when no plugins loaded yet: a later reload can
-    // discover the first permission gate.
+    // The hook is installed only when the current snapshot has a tool-call
+    // handler; a later reload rebuilds the hook state together with the
+    // extension session.
     let extension_session_cell = Arc::new(Mutex::new(extension_session.clone()));
-    let before_tool_call = Some(extension_tool_call_hook(
-        Arc::clone(&extension_session_cell),
-        ui_dialog_mailbox.clone(),
-    ));
+    // Only install the approval hook when a plugin actually registered a
+    // tool-call handler. An extension session may contain flags/resources but
+    // no handler; dispatching through that empty session needlessly crosses
+    // the plugin bridge and can leave a headless RPC tool call waiting.
+    let before_tool_call = extension_session
+        .snapshot()
+        .filter(|snapshot| {
+            !snapshot
+                .handlers_for(ice_plugin_sdk::EventTag::ToolCall)
+                .is_empty()
+        })
+        .map(|_| {
+            extension_tool_call_hook(
+                Arc::clone(&extension_session_cell),
+                ui_dialog_mailbox.clone(),
+            )
+        });
 
     let options = AgentHarnessOptions {
         model: resolved.model.clone(),
@@ -1399,7 +1416,7 @@ where
                     had_warnings: true,
                     details: vec![error.to_string()],
                     had_errors: true,
-                }
+                };
             }
         }
     } else {
@@ -1881,7 +1898,9 @@ pub enum BuildError {
     SessionDir(String),
     #[error("Could not open the saved session: {0}")]
     SessionOpen(String),
-    #[error("No session found for {requested} in {dir}. Start a fresh session instead (drop --continue/--resume/--session).")]
+    #[error(
+        "No session found for {requested} in {dir}. Start a fresh session instead (drop --continue/--resume/--session)."
+    )]
     SessionNotFound { requested: String, dir: String },
     #[error("Could not build the harness: {0}")]
     HarnessCreate(String),
@@ -2137,7 +2156,7 @@ async fn build_session(selection: &SessionSelection, cwd: &str) -> Result<Sessio
         SessionSelection::Latest { .. }
         | SessionSelection::ById { .. }
         | SessionSelection::ByExactId { .. } => restore_session(selection, cwd).await,
-        SessionSelection::Fork { source } => fork_session_at_launch(source, cwd).await,
+        SessionSelection::Fork { source, dir } => fork_session_at_launch(source, dir, cwd).await,
     }
 }
 
@@ -2189,14 +2208,18 @@ async fn restore_session(selection: &SessionSelection, cwd: &str) -> Result<Sess
 
 /// `--fork <path|id>`: open the source session, fork it into a new JSONL
 /// session (records the parent id), and start in the fork.
-async fn fork_session_at_launch(source: &str, cwd: &str) -> Result<Session, BuildError> {
+async fn fork_session_at_launch(
+    source: &str,
+    dir: &Path,
+    cwd: &str,
+) -> Result<Session, BuildError> {
     use ice_harness::session::jsonl::{
         JsonlSessionCreateOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
     };
     use ice_harness::session::types::{ForkOptions, SessionStorage};
     use ice_tools::FileSystem;
 
-    let dir = session_dir(Path::new(cwd));
+    let dir = dir.to_path_buf();
     std::fs::create_dir_all(&dir)
         .map_err(|e| BuildError::SessionDir(format!("{}: {e}", dir.display())))?;
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));

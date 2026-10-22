@@ -644,14 +644,18 @@ mod tests {
             scope.iter().map(full_id).collect::<Vec<_>>(),
             vec!["p/beta", "q/alpha", "p/alpha"]
         );
-        let provider = same_provider_catalog(&models, "beta");
-        let cycle = scoped_catalog(&provider, Some(&ids));
+        let current = scope
+            .iter()
+            .find(|model| full_id(model) == "p/beta")
+            .unwrap();
         assert_eq!(
-            cycle.iter().map(full_id).collect::<Vec<_>>(),
-            vec!["p/beta", "p/alpha"]
+            full_id(&cycle_next_model(&scope, current).unwrap()),
+            "q/alpha"
         );
-        assert_eq!(cycle_next_model(&cycle, "beta").unwrap().id, "alpha");
-        assert_eq!(cycle_prev_model(&cycle, "beta").unwrap().id, "alpha");
+        assert_eq!(
+            full_id(&cycle_prev_model(&scope, current).unwrap()),
+            "p/alpha"
+        );
         assert_eq!(scoped_catalog(&models, None), models);
         assert_eq!(
             canonical_scope(&models, Some(vec!["beta".into()])),

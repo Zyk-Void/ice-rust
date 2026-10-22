@@ -20,12 +20,16 @@ use std::io::{BufRead, IsTerminal, Write};
 use std::sync::{Arc, Mutex};
 
 use ice_agent::events::AgentEvent;
-use ice_ai::types::{AssistantMessage, Content, ImageContent, StopReason};
-use ice_harness::agent_harness::{AgentHarness, AgentLane, HarnessRunOutcome};
+use ice_ai::types::{AssistantMessage, Content, ImageContent, StopReason, UserMessage};
+use ice_harness::agent_harness::{
+    AgentHarness, AgentLane, CompactionOutcome, CompactionResult, HarnessRunOutcome,
+};
 use ice_harness::events::{HarnessEvent, RunEndOutcome};
+use ice_harness::session::types::{EntryOrder, LaneRecord, RecordQuery};
 
 use crate::args::Args;
-use crate::remote::protocol::RemoteResponse;
+use crate::rpc::protocol as rpc_protocol;
+use crate::rpc::writer::{start_rpc_writer, write_line, RpcWriter};
 
 /// Extract the concatenated text content from an assistant message. Mirrors the
 /// TS print-mode loop (`for content of assistantMsg.content if type===text`).
@@ -294,7 +298,8 @@ fn wire_agent_event_json(event: &AgentEvent) -> Option<serde_json::Value> {
 /// - fine-grained `AgentEvent`s via [`agent_event_json`] (each carries `type`),
 /// - a `{"type":"response","id":<id>,"status":"ok"|"error",...}` per command.
 ///
-/// Commands: `prompt` (streams the run), `abort`, `get_state`, `set_model`,
+/// Commands: `prompt`, `resume_pending`, and `compact` (drive the lane),
+/// `abort`, `get_state`, `set_model`,
 /// `set_thinking_level`, `set_active_tools`, `ping`, `stop`. `stop` (or stdin
 /// EOF) ends the loop. This is the process `ice-server` spawns and that
 /// `icers --connect` talks to. Mirrors TS `runRpcMode` / `modes/rpc`.
@@ -309,12 +314,14 @@ pub async fn rpc(
     mut agent_events: Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
     model_catalog: Vec<ice_ai::Model>,
     ui_dialog: ice_extensions::UiDialogMailbox,
+    oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
 ) -> i32 {
     rpc_with_io(
         harness,
         agent_events.take(),
         model_catalog,
         ui_dialog,
+        oauth_snapshot,
         tokio::io::BufReader::new(tokio::io::stdin()),
         std::io::stdout(),
     )
@@ -326,6 +333,7 @@ async fn rpc_with_io<R, W>(
     mut agent_events: Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
     model_catalog: Vec<ice_ai::Model>,
     ui_dialog: ice_extensions::UiDialogMailbox,
+    oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
     input: R,
     output: W,
 ) -> i32
@@ -333,8 +341,6 @@ where
     R: tokio::io::AsyncBufRead + Unpin,
     W: Write + Send + 'static,
 {
-    use tokio::io::AsyncBufReadExt;
-
     let lane: Arc<dyn AgentLane> = harness.lane("main");
     // One blocking writer owns stdout. Producers only enqueue bounded messages,
     // so pipe backpressure never blocks a Tokio worker on IO or a std mutex.
@@ -426,17 +432,16 @@ where
     let mut run_cancel = tokio_util::sync::CancellationToken::new();
     let mut cancel_on_exit = false;
 
-    // Readiness marker: a host/client can wait for the first line.
-    write_line(&stdout, &serde_json::json!({"type": "ready"})).await;
+    let mut input = input;
+    write_line(&stdout, &rpc_protocol::ready()).await;
 
-    let mut lines = input.lines();
     loop {
         let incoming = tokio::select! {
             _ = writer_failed.cancelled() => {
                 cancel_on_exit = true;
                 break;
             }
-            line = lines.next_line() => line,
+            frame = crate::rpc::framing::read_frame(&mut input) => frame,
         };
         let line = match incoming {
             Ok(Some(line)) => line,
@@ -447,20 +452,19 @@ where
                 break;
             }
         };
-        let line = line.trim();
-        if line.is_empty() {
+        if line.iter().all(u8::is_ascii_whitespace) {
             continue;
         }
-        let msg: serde_json::Value = match serde_json::from_str(line) {
+        let msg: serde_json::Value = match serde_json::from_slice(&line) {
             Ok(value) => value,
             Err(error) => {
                 write_line(
                     &stdout,
-                    &RemoteResponse::error(
-                        serde_json::Value::Null,
-                        format!("invalid json: {error}"),
-                    )
-                    .to_json(),
+                    &rpc_protocol::response(
+                        None,
+                        "invalid_request",
+                        Err(format!("invalid json: {error}")),
+                    ),
                 )
                 .await;
                 continue;
@@ -472,6 +476,21 @@ where
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
+
+        if rpc_protocol::SUPPORTED_COMMANDS.contains(&kind.as_str())
+            && serde_json::from_value::<rpc_protocol::Request>(msg.clone()).is_err()
+        {
+            write_line(
+                &stdout,
+                &rpc_protocol::response(
+                    Some(id.clone()),
+                    &kind,
+                    Err("invalid command payload".to_string()),
+                ),
+            )
+            .await;
+            continue;
+        }
 
         match kind.as_str() {
             "ui_dialog_response" => {
@@ -495,13 +514,18 @@ where
                 };
                 if msg.get("id").is_some() {
                     let response = match result {
-                        Ok(()) => RemoteResponse::ok(
-                            id,
-                            serde_json::json!({"accepted":true,"requestId":request_id}),
+                        Ok(()) => rpc_protocol::response(
+                            Some(id),
+                            "ui_dialog_response",
+                            Ok(Some(
+                                serde_json::json!({"accepted":true,"requestId":request_id}),
+                            )),
                         ),
-                        Err(error) => RemoteResponse::error(id, error),
+                        Err(error) => {
+                            rpc_protocol::response(Some(id), "ui_dialog_response", Err(error))
+                        }
                     };
-                    write_line(&stdout, &response.to_json()).await;
+                    write_line(&stdout, &response).await;
                 } else if let Err(error) = result {
                     eprintln!("[icers] ui_dialog_response: {error}");
                 }
@@ -511,28 +535,38 @@ where
                 cancel_on_exit = true;
                 write_line(
                     &stdout,
-                    &RemoteResponse::ok(id.clone(), serde_json::json!({"stopped": true})).to_json(),
+                    &rpc_protocol::response(
+                        Some(id.clone()),
+                        "stop",
+                        Ok(Some(serde_json::json!({"stopped": true}))),
+                    ),
                 )
                 .await;
                 break;
             }
-            "prompt" => {
-                if msg.get("images").is_some() {
+            "prompt" | "resume_pending" | "compact" => {
+                if kind == "prompt" && msg.get("images").is_some() {
                     write_line(
                         &stdout,
-                        &RemoteResponse::error(
-                            id.clone(),
-                            "RPC prompts do not support image attachments",
-                        )
-                        .to_json(),
+                        &rpc_protocol::response(
+                            Some(id.clone()),
+                            &kind,
+                            Err("RPC prompts do not support image attachments".to_string()),
+                        ),
                     )
                     .await;
                     continue;
                 }
+                let resume = kind == "resume_pending";
+                let compact = kind == "compact";
                 if run_active.swap(true, std::sync::atomic::Ordering::AcqRel) {
                     write_line(
                         &stdout,
-                        &RemoteResponse::error(id.clone(), "a run is already active").to_json(),
+                        &rpc_protocol::response(
+                            Some(id.clone()),
+                            &kind,
+                            Err("a run is already active".to_string()),
+                        ),
                     )
                     .await;
                     continue;
@@ -542,27 +576,70 @@ where
                 }
                 run_cancel = tokio_util::sync::CancellationToken::new();
                 let cancel_task = run_cancel.clone();
+                // Resuming spends the tokens the interrupted run never did, so it
+                // only proceeds when recovery actually left a pending run.
+                if resume && !lane.has_pending_resume().await {
+                    run_active.store(false, std::sync::atomic::Ordering::Release);
+                    write_line(
+                        &stdout,
+                        &rpc_protocol::response(
+                            Some(id),
+                            "resume_pending",
+                            Ok(Some(serde_json::json!({"resumed": false}))),
+                        ),
+                    )
+                    .await;
+                    continue;
+                }
+                // Existing fork clients send `content` and expect their response
+                // after completion; native `message` clients receive acceptance now.
+                let legacy_prompt = kind == "prompt" && msg.get("message").is_none();
                 let content = msg
-                    .get("content")
-                    .or_else(|| msg.get("prompt"))
+                    .get("message")
+                    .or_else(|| msg.get("content"))
                     .and_then(|v| v.as_str())
                     .map(str::to_owned);
                 let lane_task = Arc::clone(&lane);
                 let out_task = stdout.clone();
                 let active_task = Arc::clone(&run_active);
                 let mailbox_task = ui_dialog.clone();
-                let id_task = id.clone();
                 let flush_events = event_flush.clone();
+                let Some(content) = content.or_else(|| (resume || compact).then(String::new))
+                else {
+                    active_task.store(false, std::sync::atomic::Ordering::Release);
+                    write_line(
+                        &stdout,
+                        &rpc_protocol::response(
+                            Some(id),
+                            "prompt",
+                            Err("prompt requires a string `message`".to_string()),
+                        ),
+                    )
+                    .await;
+                    continue;
+                };
+                if !legacy_prompt {
+                    write_line(
+                        &stdout,
+                        &rpc_protocol::response(
+                            Some(id.clone()),
+                            &kind,
+                            Ok(Some(serde_json::json!({"accepted": true}))),
+                        ),
+                    )
+                    .await;
+                }
+                let instructions = msg
+                    .get("customInstructions")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_owned);
                 run_task = Some(tokio::spawn(async move {
-                    let result = match content {
-                        Some(content) => {
-                            rpc_prompt_cancellable(&lane_task, &content, cancel_task).await
-                        }
-                        None => Err("prompt requires a string `content`".to_string()),
-                    };
-                    let response = match result {
-                        Ok(value) => RemoteResponse::ok(id_task, value),
-                        Err(error) => RemoteResponse::error(id_task, error),
+                    let result = if compact {
+                        rpc_compact_cancellable(&lane_task, instructions, cancel_task).await
+                    } else if resume {
+                        rpc_resume_cancellable(&lane_task, cancel_task).await
+                    } else {
+                        rpc_prompt_cancellable(&lane_task, &content, cancel_task).await
                     };
                     if let Some(flush) = flush_events {
                         let (done, drained) = tokio::sync::oneshot::channel();
@@ -570,8 +647,46 @@ where
                             let _ = drained.await;
                         }
                     }
-                    write_line(&out_task, &response.to_json()).await;
-                    // A finished/aborted run leaves no dialog outstanding.
+                    let (outcome, aborted, error) = match &result {
+                        Ok(value) => {
+                            let outcome = value
+                                .get("outcome")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("completed")
+                                .to_string();
+                            let error = value
+                                .get("error")
+                                .and_then(|v| v.as_str())
+                                .map(str::to_owned);
+                            (outcome.clone(), outcome == "aborted", error)
+                        }
+                        Err(ref error) => ("failed".to_string(), false, Some(error.clone())),
+                    };
+                    // Recovery may leave a continuable run behind an abort, so the
+                    // settlement carries what the client needs to offer "continue".
+                    let pending_resume = lane_task.has_pending_resume().await;
+                    let summary = result
+                        .as_ref()
+                        .ok()
+                        .and_then(|value| value.get("summary"))
+                        .cloned();
+                    let settled = serde_json::json!({
+                        "type": "agent_settled",
+                        "runId": result.as_ref().ok().and_then(|value| value.get("runId")),
+                        "outcome": outcome,
+                        "aborted": aborted,
+                        "error": error,
+                        "summary": summary,
+                        "pendingResume": pending_resume,
+                    });
+                    write_line(&out_task, &settled).await;
+                    if legacy_prompt {
+                        write_line(
+                            &out_task,
+                            &rpc_protocol::response(Some(id), &kind, result.map(Some)),
+                        )
+                        .await;
+                    }
                     mailbox_task.cancel_all();
                     active_task.store(false, std::sync::atomic::Ordering::Release);
                 }));
@@ -592,18 +707,29 @@ where
                 .map(|_| serde_json::json!({"aborted": true}))
                 .map_err(|e| e.to_string()),
             "get_state" => Ok(rpc_get_state(&lane, harness).await),
+            "get_messages" => rpc_get_messages(&lane, harness, &msg).await,
+            "get_history" => rpc_get_history(&lane, harness, &msg).await,
+            "get_stats" => rpc_get_stats(&lane, harness).await,
+            "get_queue" => rpc_get_queue(&lane, harness, &msg).await,
+            "queue_message" => rpc_queue_message(&lane, &msg).await,
+            "cancel_queued" => rpc_cancel_queued(&lane, &msg).await,
+            "clear_queue" => rpc_clear_queue(&lane).await,
+            "navigate" => rpc_navigate(&lane, &msg).await,
+            "get_available_models" => Ok(rpc_get_available_models(&model_catalog)),
+            "get_auth_status" => Ok(rpc_get_auth_status(&model_catalog, oauth_snapshot.as_ref())),
+            "oauth" => rpc_oauth(&oauth_snapshot, &msg),
+            "set_api_key" => rpc_set_api_key(&msg).await,
             "set_model" => rpc_set_model(&lane, &model_catalog, &msg).await,
+            "get_available_thinking_levels" => Ok(rpc_get_available_thinking_levels(&lane).await),
             "set_thinking_level" => rpc_set_thinking_level(&lane, &msg).await,
+            "get_available_tools" => Ok(rpc_get_available_tools(&lane, harness).await),
             "set_active_tools" => rpc_set_active_tools(&lane, &msg).await,
             "ping" => Ok(serde_json::json!({"pong": true})),
             other => Err(format!("unknown command type: {other}")),
         };
 
-        let response = match result {
-            Ok(value) => RemoteResponse::ok(id.clone(), value),
-            Err(error) => RemoteResponse::error(id.clone(), error),
-        };
-        write_line(&stdout, &response.to_json()).await;
+        let response = rpc_protocol::response(Some(id.clone()), &kind, result.map(Some));
+        write_line(&stdout, &response).await;
     }
 
     // EOF closes the input half of the protocol, not an accepted prompt.
@@ -635,41 +761,6 @@ where
         }
     }
     exit_code
-}
-
-#[derive(Clone)]
-struct RpcWriter(tokio::sync::mpsc::Sender<Vec<u8>>);
-
-fn start_rpc_writer<W: Write + Send + 'static>(
-    mut output: W,
-) -> (
-    RpcWriter,
-    tokio::task::JoinHandle<std::io::Result<()>>,
-    tokio_util::sync::CancellationToken,
-) {
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
-    let failed = tokio_util::sync::CancellationToken::new();
-    let failure_signal = failed.clone();
-    let task = tokio::task::spawn_blocking(move || {
-        let result = (|| {
-            while let Some(line) = rx.blocking_recv() {
-                output.write_all(&line)?;
-                output.flush()?;
-            }
-            output.flush()
-        })();
-        if result.is_err() {
-            failure_signal.cancel();
-        }
-        result
-    });
-    (RpcWriter(tx), task, failed)
-}
-
-async fn write_line(out: &RpcWriter, value: &serde_json::Value) {
-    let mut line = value.to_string().into_bytes();
-    line.push(b'\n');
-    let _ = out.0.send(line).await;
 }
 
 async fn drain_rpc_events(
@@ -710,18 +801,131 @@ pub(crate) async fn rpc_prompt_cancellable(
     }
 }
 
-fn rpc_outcome_str(outcome: &HarnessRunOutcome) -> (&'static str, Option<String>) {
+/// Compact the branch, unless the caller cancels first.
+///
+/// Compaction is its own operation kind in the harness: it spends a provider
+/// call on the summary, so it takes the same single-run slot and reports the
+/// same settlement shape a prompt does.
+async fn rpc_compact_cancellable(
+    lane: &Arc<dyn AgentLane>,
+    instructions: Option<String>,
+    cancel: tokio_util::sync::CancellationToken,
+) -> Result<serde_json::Value, String> {
+    let compact = async {
+        match lane.compact(instructions.as_deref()).await {
+            Ok(result) => Ok(compaction_json(&result)),
+            Err(error) => Err(error.to_string()),
+        }
+    };
+    tokio::pin!(compact);
+    tokio::select! {
+        biased;
+        _ = cancel.cancelled() => {
+            let _ = lane.abort().await;
+            compact.await
+        }
+        result = &mut compact => result,
+    }
+}
+
+/// Reduce a compaction result to what a client needs: the verdict, and a line
+/// a transcript can print.
+fn compaction_json(result: &CompactionResult) -> serde_json::Value {
+    let mut value = match &result.outcome {
+        CompactionOutcome::Completed { leaf_id, entry } => {
+            let (tokens_before, retained) = match entry {
+                ice_harness::session::types::Entry::Compaction(compaction) => {
+                    (compaction.tokens_before, compaction.retained_tail.len())
+                }
+                _ => (0, 0),
+            };
+            serde_json::json!({
+                "outcome": "compacted",
+                "leafId": leaf_id,
+                "tokensBefore": tokens_before,
+                "retainedMessages": retained,
+                "summary": format!(
+                    "Conversation compacted · {} tokens before, {} messages kept.",
+                    tokens_before, retained
+                ),
+            })
+        }
+        CompactionOutcome::Declined { leaf_id } => serde_json::json!({
+            "outcome": "declined",
+            "leafId": leaf_id,
+            "summary": "Nothing to compact yet.",
+        }),
+        CompactionOutcome::Aborted { leaf_id } => serde_json::json!({
+            "outcome": "aborted",
+            "leafId": leaf_id,
+            "summary": "Compaction aborted.",
+        }),
+        CompactionOutcome::Failed { leaf_id, error } => serde_json::json!({
+            "outcome": "failed",
+            "leafId": leaf_id,
+            "error": error.message,
+            "summary": format!("Compaction failed: {}", error.message),
+        }),
+    };
+    value["runId"] = serde_json::json!(result.run_id);
+    value
+}
+
+/// Drive the run recovery left behind, unless the caller cancels first.
+///
+/// `Ok(None)` from the lane means there was nothing to resume: the run is
+/// reported as `skipped` so the client can settle without inventing an outcome.
+async fn rpc_resume_cancellable(
+    lane: &Arc<dyn AgentLane>,
+    cancel: tokio_util::sync::CancellationToken,
+) -> Result<serde_json::Value, String> {
+    let resume = async {
+        match lane.resume_pending().await {
+            Ok(Some(result)) => {
+                let (outcome, final_text, error) = rpc_outcome_str(&result.outcome);
+                Ok(serde_json::json!({
+                    "runId": result.run_id,
+                    "outcome": outcome,
+                    "finalText": final_text,
+                    "error": error,
+                    "resumed": true,
+                }))
+            }
+            Ok(None) => Ok(serde_json::json!({"outcome": "skipped", "resumed": false})),
+            Err(error) => Err(error.to_string()),
+        }
+    };
+    tokio::pin!(resume);
+    tokio::select! {
+        biased;
+        _ = cancel.cancelled() => {
+            let _ = lane.abort().await;
+            resume.await
+        }
+        result = &mut resume => result,
+    }
+}
+
+fn rpc_outcome_str(outcome: &HarnessRunOutcome) -> (&'static str, Option<String>, Option<String>) {
     match outcome {
         HarnessRunOutcome::Completed { final_message, .. } => {
-            ("completed", Some(assistant_text(final_message)))
+            ("completed", Some(assistant_text(final_message)), None)
         }
         HarnessRunOutcome::Aborted { final_message, .. } => {
-            ("aborted", Some(assistant_text(final_message)))
+            ("aborted", Some(assistant_text(final_message)), None)
         }
-        HarnessRunOutcome::Failed { final_message, .. } => {
-            ("failed", final_message.as_ref().map(assistant_text))
-        }
-        HarnessRunOutcome::Suspended { .. } => ("suspended", None),
+        // A failed run can end with nothing to say, which is exactly when the
+        // reason matters: rate limits and provider errors live here.
+        HarnessRunOutcome::Failed {
+            final_message,
+            error,
+            ..
+        } => (
+            "failed",
+            final_message.as_ref().map(assistant_text),
+            Some(error.message.clone()),
+        ),
+        HarnessRunOutcome::Suspended { .. } => ("suspended", None, None),
     }
 }
 
@@ -733,12 +937,14 @@ async fn rpc_prompt_text(
         .prompt_text(content, Vec::new())
         .await
         .map_err(|e| e.to_string())?;
-    let (outcome, final_text) = rpc_outcome_str(&result.outcome);
-    Ok(serde_json::json!({"outcome": outcome, "finalText": final_text}))
+    let (outcome, final_text, error) = rpc_outcome_str(&result.outcome);
+    Ok(
+        serde_json::json!({"runId":result.run_id, "outcome": outcome, "finalText": final_text, "error": error}),
+    )
 }
 
 async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> serde_json::Value {
-    let model = lane.get_model().await.ok().map(|m| m.id);
+    let model = lane.get_model().await.ok();
     let thinking = lane
         .get_thinking_level()
         .await
@@ -746,13 +952,692 @@ async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> ser
         .map(|t| serde_json::to_value(t).unwrap_or(serde_json::Value::Null));
     let active_tools = lane.get_active_tools().await.unwrap_or_default();
     let leaf_id = lane.get_leaf_id().await.ok().flatten();
+    let context = rpc_context_usage(lane, harness).await;
+    let active_operation = lane
+        .snapshot()
+        .await
+        .ok()
+        .and_then(|snapshot| snapshot.active)
+        .map(|active| {
+            serde_json::json!({
+                "runId": active.run_id,
+                "lane": active.lane,
+                "kind": format!("{:?}", active.kind).to_lowercase(),
+            })
+        });
+    let queued = lane.queued_messages().await.unwrap_or_default();
+    let stats = rpc_get_stats(lane, harness).await.ok();
     serde_json::json!({
-        "model": model,
+        "modelId": model.as_ref().map(|model| model.id.clone()),
+        "provider": model.as_ref().map(|model| model.provider.clone()),
         "thinkingLevel": thinking,
         "activeTools": active_tools,
         "leafId": leaf_id,
+        "context": context,
         "sessionId": harness.session().storage().metadata().id,
+        "activeOperation": active_operation,
+        "queue": {
+            "steering": queued.steering,
+            "followUp": queued.follow_up,
+            "steeringCount": queued.steering.len(),
+            "followUpCount": queued.follow_up.len(),
+        },
+        "stats": stats,
     })
+}
+
+fn rpc_now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as i64)
+        .unwrap_or_default()
+}
+
+fn rpc_message_text(value: &serde_json::Value) -> String {
+    let Some(content) = value.get("content") else {
+        return String::new();
+    };
+    if let Some(text) = content.as_str() {
+        return text.to_string();
+    }
+    content
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|block| block.get("text").and_then(|text| text.as_str()))
+        .collect::<Vec<_>>()
+        .join("\\n")
+}
+
+async fn rpc_get_history(
+    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let limit = msg
+        .get("limit")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(100)
+        .clamp(1, 500) as usize;
+    let after_seq = msg.get("afterSeq").and_then(serde_json::Value::as_u64);
+    let before_seq = msg.get("beforeSeq").and_then(serde_json::Value::as_u64);
+    let mut records = harness
+        .session()
+        .find_records(&RecordQuery {
+            lane: Some(lane.name().to_string()),
+            after_seq,
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .map_err(|error| error.to_string())?;
+    if let Some(before) = before_seq {
+        records.retain(|record| record.seq() < before);
+    }
+    let total = records.len();
+    let has_more = records.len() > limit;
+    if before_seq.is_some() {
+        if has_more {
+            records = records.split_off(records.len() - limit);
+        }
+    } else if after_seq.is_some() {
+        records.truncate(limit);
+    } else if has_more {
+        records = records.split_off(records.len() - limit);
+    }
+    let first_seq = records.first().map(LaneRecord::seq);
+    let last_seq = records.last().map(LaneRecord::seq);
+    let open_operations = harness
+        .session()
+        .find_open_operations(lane.name(), Some(50))
+        .await
+        .map_err(|error| error.to_string())?;
+    Ok(serde_json::json!({
+        "records": records.iter().map(|record| serde_json::to_value(record).unwrap_or(serde_json::Value::Null)).collect::<Vec<_>>(),
+        "total": total,
+        "limit": limit,
+        "afterSeq": after_seq,
+        "beforeSeq": before_seq,
+        "firstSeq": first_seq,
+        "lastSeq": last_seq,
+        "hasMore": has_more,
+        "leafId": lane.get_leaf_id().await.ok().flatten(),
+        "openOperations": open_operations.iter().map(|record| serde_json::to_value(record).unwrap_or(serde_json::Value::Null)).collect::<Vec<_>>(),
+    }))
+}
+
+async fn rpc_get_stats(
+    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
+) -> Result<serde_json::Value, String> {
+    let stats = lane.get_stats().await.map_err(|error| error.to_string())?;
+    let records = harness
+        .session()
+        .find_records(&RecordQuery {
+            lane: Some(lane.name().to_string()),
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .map_err(|error| error.to_string())?;
+    let mut operation_counts = std::collections::BTreeMap::<String, u64>::new();
+    for record in &records {
+        let kind = match record {
+            LaneRecord::OperationStarted(started) => {
+                let key = started.intent.kind();
+                *operation_counts.entry(key.to_string()).or_default() += 1;
+                if matches!(
+                    &started.intent,
+                    ice_harness::session::types::OperationIntent::Run {
+                        resume_data: Some(_),
+                        ..
+                    }
+                ) {
+                    *operation_counts.entry("resume".to_string()).or_default() += 1;
+                }
+                continue;
+            }
+            LaneRecord::OperationFinished(_) => "operation_finished",
+            LaneRecord::RetryPending(_) => "retry_pending",
+            LaneRecord::Usage(_) => "usage",
+            _ => continue,
+        };
+        *operation_counts.entry(kind.to_string()).or_default() += 1;
+    }
+    let count = |name: &str| operation_counts.get(name).copied().unwrap_or_default();
+    let model = lane.get_model().await.ok();
+    let input = stats.cached_tokens + stats.uncached_tokens;
+    Ok(serde_json::json!({
+        "messageCount": stats.message_count,
+        "operationCount": count("operation_finished"),
+        "retryCount": count("retry_pending"),
+        "compactionCount": count("compaction"),
+        "resumeCount": count("resume"),
+        "operationCounts": operation_counts,
+        "provider": model.as_ref().map(|value| value.provider.clone()),
+        "modelId": model.as_ref().map(|value| value.id.clone()),
+        "cachedTokens": stats.cached_tokens,
+        "uncachedTokens": stats.uncached_tokens,
+        "totalTokens": stats.total_tokens,
+        "costTotal": stats.cost_total,
+        "cacheHitRatio": if input > 0 { Some(stats.cached_tokens as f64 / input as f64) } else { None::<f64> },
+    }))
+}
+
+async fn rpc_get_queue(
+    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let include_completed = msg
+        .get("includeCompleted")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+    let records = harness
+        .session()
+        .find_records(&RecordQuery {
+            lane: Some(lane.name().to_string()),
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .map_err(|error| error.to_string())?;
+    let mut cancelled = std::collections::HashMap::<String, u64>::new();
+    for record in &records {
+        if let LaneRecord::QueueCancelled(record) = record {
+            cancelled.insert(record.entry_id.clone(), record.base.seq);
+        }
+    }
+    let mut items = Vec::new();
+    for record in records {
+        let LaneRecord::QueueEnqueued(record) = record else {
+            continue;
+        };
+        let Some(entry_id) = record.target.get("id").and_then(|value| value.as_str()) else {
+            continue;
+        };
+        let (status, completed_seq) = if let Some(seq) = cancelled.get(entry_id) {
+            ("cancelled", Some(*seq))
+        } else if let Some(entry) = harness.get_entry(entry_id).await.ok().flatten() {
+            ("consumed", Some(entry.base().seq))
+        } else {
+            ("queued", None)
+        };
+        if status != "queued" && !include_completed {
+            continue;
+        }
+        let message = record
+            .target
+            .get("message")
+            .cloned()
+            .unwrap_or(serde_json::Value::Null);
+        items.push(serde_json::json!({
+            "entryId": entry_id,
+            "queue": record.queue,
+            "status": status,
+            "text": rpc_message_text(&message),
+            "message": message,
+            "runId": record.run_id,
+            "seq": record.base.seq,
+            "completedSeq": completed_seq,
+        }));
+    }
+    Ok(
+        serde_json::json!({"items": items, "count": items.len(), "includeCompleted": include_completed}),
+    )
+}
+
+async fn rpc_queue_message(
+    lane: &Arc<dyn AgentLane>,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let text = msg
+        .get("message")
+        .and_then(serde_json::Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .ok_or_else(|| "queue_message requires a non-empty string `message`".to_string())?;
+    let message = ice_agent::message::AgentMessage::User(UserMessage::new(text, rpc_now_ms()));
+    let queue = msg
+        .get("deliverAs")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("followUp");
+    let result = match queue {
+        "steer" => lane.steer(message).await,
+        "followUp" | "follow_up" => lane.follow_up(message).await,
+        "nextTurn" | "next_run" => lane.next_run(message).await,
+        other => return Err(format!("unknown queue kind: {other}")),
+    }
+    .map_err(|error| error.to_string())?;
+    Ok(serde_json::json!({
+        "accepted": true,
+        "entryId": result.entry_id,
+        "queue": queue,
+    }))
+}
+
+async fn rpc_cancel_queued(
+    lane: &Arc<dyn AgentLane>,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let entry_id = msg
+        .get("entryId")
+        .and_then(serde_json::Value::as_str)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| "cancel_queued requires `entryId`".to_string())?;
+    let result = lane
+        .cancel_queued(entry_id)
+        .await
+        .map_err(|error| error.to_string())?;
+    Ok(serde_json::json!({
+        "entryId": entry_id,
+        "outcome": format!("{:?}", result.outcome).to_lowercase(),
+    }))
+}
+
+async fn rpc_clear_queue(lane: &Arc<dyn AgentLane>) -> Result<serde_json::Value, String> {
+    let result = lane
+        .clear_queue()
+        .await
+        .map_err(|error| error.to_string())?;
+    Ok(serde_json::json!({
+        "cleared": result.steering.len() + result.follow_up.len(),
+        "steering": result.steering,
+        "followUp": result.follow_up,
+    }))
+}
+
+async fn rpc_navigate(
+    lane: &Arc<dyn AgentLane>,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let target_id = msg
+        .get("targetId")
+        .and_then(serde_json::Value::as_str)
+        .filter(|value| !value.is_empty());
+    if lane
+        .snapshot()
+        .await
+        .map_err(|error| error.to_string())?
+        .active
+        .is_some()
+    {
+        return Err("cannot navigate while an operation is active".to_string());
+    }
+    let result = lane
+        .navigate_tree(target_id, false, None, None)
+        .await
+        .map_err(|error| error.to_string())?;
+    let (outcome, leaf_id, error) = match result.outcome {
+        ice_harness::agent_harness::NavigationOutcome::Completed { new_leaf_id, .. } => {
+            ("completed", new_leaf_id, None)
+        }
+        ice_harness::agent_harness::NavigationOutcome::Declined { leaf_id } => {
+            ("declined", leaf_id, None)
+        }
+        ice_harness::agent_harness::NavigationOutcome::Aborted { leaf_id } => {
+            ("aborted", leaf_id, None)
+        }
+        ice_harness::agent_harness::NavigationOutcome::Failed { leaf_id, error } => {
+            ("failed", leaf_id, Some(error.message))
+        }
+    };
+    Ok(serde_json::json!({
+        "runId": result.run_id,
+        "outcome": outcome,
+        "leafId": leaf_id,
+        "error": error,
+    }))
+}
+
+/// How full the model's context is, measured the way compaction measures it.
+///
+/// The branch is projected into model input first (that is what applies a
+/// compaction boundary), so the number matches what the next provider call will
+/// actually send rather than how many messages the transcript happens to hold.
+async fn rpc_context_usage(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> serde_json::Value {
+    use ice_harness::compaction::{build_session_context, estimate_context_tokens};
+    use ice_harness::session::types::{BranchBounds, EntryOrder, EntryQuery};
+
+    let entries = harness
+        .find_entries_on_branch(
+            &EntryQuery {
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            },
+            &BranchBounds::default(),
+        )
+        .await
+        .unwrap_or_default();
+    let estimate = estimate_context_tokens(&build_session_context(&entries).messages);
+    let window = lane
+        .get_model()
+        .await
+        .ok()
+        .map(|model| model.context_window)
+        .unwrap_or(0);
+    let settings = harness.compaction_settings();
+    let window = window as i64;
+    let threshold = window - settings.reserve_tokens;
+    let percent = if window > 0 {
+        (estimate.tokens as f64) * 100.0 / (window as f64)
+    } else {
+        0.0
+    };
+    serde_json::json!({
+        "tokens": estimate.tokens,
+        "window": window,
+        "threshold": threshold,
+        "percent": (percent * 10.0).round() / 10.0,
+        "reserveTokens": settings.reserve_tokens,
+        "keepRecentTokens": settings.keep_recent_tokens,
+        "compactionEnabled": settings.enabled,
+        // False once a real provider usage report backs the number; until then
+        // it is a character-based estimate.
+        "estimated": estimate.last_usage_index.is_none(),
+        "trailingTokens": estimate.trailing_tokens,
+    })
+}
+
+/// The window `get_messages` returns, expressed as a slice range plus whether an
+/// older page still exists. `before` is the index of the `beforeId` entry.
+fn page_window(
+    total: usize,
+    limit: usize,
+    before: Option<usize>,
+) -> (std::ops::Range<usize>, bool) {
+    match before {
+        Some(index) => {
+            let start = index.saturating_sub(limit);
+            (start..index, start > 0)
+        }
+        None => {
+            let skip = total.saturating_sub(limit);
+            (skip..total, skip > 0)
+        }
+    }
+}
+
+/// Read-only snapshot of the current branch, oldest first. Messages are
+/// projected with the same `AgentMessage` encoding the event stream uses, so a
+/// client can render a transcript without understanding session entries.
+async fn rpc_get_messages(
+    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    use ice_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery};
+
+    const DEFAULT_LIMIT: usize = 400;
+    let limit = msg
+        .get("limit")
+        .and_then(|value| value.as_u64())
+        .map(|value| value as usize)
+        .unwrap_or(DEFAULT_LIMIT)
+        .max(1);
+    // `beforeId` pages backwards: the returned window ends immediately before
+    // the entry with that id, so a client can walk a long branch one page at a
+    // time instead of always re-reading the tail.
+    let before_id = msg
+        .get("beforeId")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned);
+    let entries = harness
+        .find_entries_on_branch(
+            &EntryQuery {
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            },
+            &BranchBounds::default(),
+        )
+        .await
+        .map_err(|error| error.to_string())?;
+    let mut items: Vec<(String, serde_json::Value)> = Vec::new();
+    for entry in entries {
+        match entry {
+            Entry::Message(entry) => {
+                let mut value = serde_json::to_value(&entry.message).map_err(|e| e.to_string())?;
+                // The session entry id, not the message's own id: it is what
+                // `beforeId` keys on, and what makes rows stable across reloads.
+                value["entryId"] = serde_json::json!(entry.base.id);
+                items.push((entry.base.id, value));
+            }
+            // Compaction rewrites what the model sees, not the branch, so the
+            // transcript keeps its messages. Marking the boundary is what lets a
+            // client explain why the context suddenly shrank.
+            Entry::Compaction(compaction) => items.push((
+                compaction.base.id.clone(),
+                serde_json::json!({
+                    "role": "compaction",
+                    "entryId": compaction.base.id,
+                    "tokensBefore": compaction.tokens_before,
+                    "retainedMessages": compaction.retained_tail.len(),
+                    "timestamp": compaction.base.timestamp,
+                }),
+            )),
+            _ => {}
+        }
+    }
+    let total = items.len();
+    let before_index = match &before_id {
+        Some(before) => match items.iter().position(|(id, _)| id == before) {
+            Some(index) => Some(index),
+            None => return Err(format!("beforeId not found: {before}")),
+        },
+        None => None,
+    };
+    let (range, has_more) = page_window(total, limit, before_index);
+    let window = items[range].to_vec();
+    let first_id = window.first().map(|(id, _)| id.clone());
+    let last_id = window.last().map(|(id, _)| id.clone());
+    let messages = window
+        .iter()
+        .map(|(_, value)| value.clone())
+        .collect::<Vec<_>>();
+    // Read-only branch position: the leaf the snapshot ends on, and whether
+    // recovery left an interrupted run that a client may want to surface.
+    let leaf_id = lane.get_leaf_id().await.ok().flatten();
+    let pending_resume = lane.has_pending_resume().await;
+    Ok(serde_json::json!({
+        "messages": messages,
+        "total": total,
+        "truncated": has_more,
+        "limit": limit,
+        "firstId": first_id,
+        "lastId": last_id,
+        "hasMore": has_more,
+        "beforeId": before_id,
+        "leafId": leaf_id,
+        "pendingResume": pending_resume,
+    }))
+}
+
+fn rpc_auth_provider_ids(model_catalog: &[ice_ai::Model]) -> std::collections::BTreeSet<String> {
+    let mut providers =
+        std::collections::BTreeSet::from(["anthropic".to_string(), "openai".to_string()]);
+    providers.extend(model_catalog.iter().map(|model| model.provider.clone()));
+    if let Ok(models) = crate::config::load_models_config() {
+        providers.extend(models.providers.keys().cloned());
+    }
+    providers
+}
+
+fn rpc_get_auth_status(
+    model_catalog: &[ice_ai::Model],
+    oauth_snapshot: Option<&Arc<ice_extensions::RegistrySnapshot>>,
+) -> serde_json::Value {
+    let store = crate::config::read_auth().unwrap_or_default();
+    let models = crate::config::load_models_config().unwrap_or_default();
+    let providers = rpc_auth_provider_ids(model_catalog)
+        .into_iter()
+        .map(|provider| {
+            let credential = store.get(&provider);
+            let source = crate::credentials::resolve(
+                &provider,
+                models.providers.get(&provider),
+                &store,
+                None,
+            );
+            let oauth = matches!(credential, Some(crate::config::Credential::Oauth { .. }));
+            let oauth_available =
+                oauth_snapshot.is_some_and(|snapshot| snapshot.oauth_provider(&provider).is_some());
+            serde_json::json!({
+                "provider": provider,
+                "ready": source.source.is_present(),
+                "source": source.source.as_json_str(),
+                "oauth": oauth,
+                "oauthAvailable": oauth_available,
+            })
+        })
+        .collect::<Vec<_>>();
+    serde_json::json!({"providers": providers})
+}
+
+fn rpc_oauth(
+    snapshot: &Option<Arc<ice_extensions::RegistrySnapshot>>,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let snapshot = snapshot
+        .as_ref()
+        .ok_or_else(|| "OAuth is unavailable without an extension provider".to_string())?;
+    let provider = msg
+        .get("provider")
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| "oauth requires a provider".to_string())?;
+    let action = msg
+        .get("action")
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|value| matches!(*value, "begin" | "exchange" | "refresh" | "revoke"))
+        .ok_or_else(|| "oauth requires a valid action".to_string())?;
+    let input = msg
+        .get("input")
+        .cloned()
+        .unwrap_or_else(|| serde_json::json!({}));
+    let raw = ice_extensions::request_oauth(snapshot, provider, action, input)
+        .map_err(|_| "OAuth provider request failed".to_string())?;
+    let response = ice_extensions::OAuthActionResponse::parse(raw)
+        .map_err(|_| "OAuth provider returned an invalid response".to_string())?;
+    match response.kind {
+        ice_extensions::OAuthResponseKind::Credential => {
+            let credential = response
+                .credential()
+                .map_err(|_| "OAuth provider returned an invalid credential".to_string())?
+                .ok_or_else(|| "OAuth provider returned no credential".to_string())?;
+            crate::config::upsert_oauth_token(
+                provider,
+                credential.access,
+                credential.refresh,
+                credential.expires_at,
+            )
+            .map_err(|_| "OAuth credentials could not be saved".to_string())?;
+            Ok(serde_json::json!({
+                "provider": provider,
+                "status": "authenticated"
+            }))
+        }
+        ice_extensions::OAuthResponseKind::Interaction => Ok(serde_json::json!({
+            "provider": provider,
+            "status": "interaction",
+            "display": oauth_display(&response.payload)
+        })),
+        ice_extensions::OAuthResponseKind::Success => Ok(serde_json::json!({
+            "provider": provider,
+            "status": "success"
+        })),
+        ice_extensions::OAuthResponseKind::Error => {
+            Err("OAuth provider rejected the request".to_string())
+        }
+    }
+}
+
+/// Keep provider-defined OAuth UI data deliberately narrow. In particular,
+/// token-like fields never cross the RPC boundary, even if a plugin includes
+/// them in an interaction payload by mistake.
+fn oauth_display(payload: &serde_json::Value) -> serde_json::Value {
+    let display = payload.get("display").unwrap_or(payload);
+    let Some(object) = display.as_object() else {
+        return serde_json::json!({});
+    };
+    let mut safe = serde_json::Map::new();
+    for key in [
+        "title",
+        "url",
+        "instructions",
+        "user_code",
+        "verification_uri",
+    ] {
+        if let Some(value) = object.get(key) {
+            safe.insert(key.to_string(), value.clone());
+        }
+    }
+    serde_json::Value::Object(safe)
+}
+
+async fn rpc_set_api_key(msg: &serde_json::Value) -> Result<serde_json::Value, String> {
+    let provider = msg
+        .get("provider")
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| "set_api_key requires a provider".to_string())?;
+    let api_key = msg
+        .get("apiKey")
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| "set_api_key requires a non-empty apiKey".to_string())?;
+    crate::config::upsert_credential(
+        provider,
+        crate::config::Credential::ApiKey {
+            key: Some(api_key.to_string()),
+            env: None,
+        },
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(serde_json::json!({
+        "provider": provider,
+        "ready": true,
+        "source": "auth.json",
+        "requiresRestart": true,
+    }))
+}
+
+fn rpc_get_available_models(catalog: &[ice_ai::Model]) -> serde_json::Value {
+    let models = catalog
+        .iter()
+        .map(crate::rpc::protocol::model_descriptor)
+        .collect::<Vec<_>>();
+    serde_json::json!({"models": models})
+}
+
+async fn rpc_get_available_thinking_levels(lane: &Arc<dyn AgentLane>) -> serde_json::Value {
+    let levels = lane
+        .get_model()
+        .await
+        .map(|model| model.supported_thinking_levels())
+        .unwrap_or_default();
+    serde_json::json!({"levels": levels})
+}
+
+async fn rpc_get_available_tools(
+    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
+) -> serde_json::Value {
+    let active = lane.get_active_tools().await.unwrap_or_default();
+    let tools = harness
+        .get_tools()
+        .await
+        .map(|tools| {
+            tools
+                .iter()
+                .map(|tool| tool.tool.schema().name.clone())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_else(|_| active.clone());
+    serde_json::json!({"tools": tools, "activeTools": active})
 }
 
 async fn rpc_set_model(
@@ -761,16 +1646,21 @@ async fn rpc_set_model(
     msg: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
     let id = msg
-        .get("model")
+        .get("modelId")
+        .or_else(|| msg.get("model"))
         .and_then(|v| v.as_str())
-        .ok_or("set_model requires `model`")?;
+        .ok_or("set_model requires `modelId`")?;
+    let provider = msg.get("provider").and_then(|v| v.as_str());
     let model = catalog
         .iter()
-        .find(|m| m.id.eq_ignore_ascii_case(id))
+        .find(|m| {
+            m.id.eq_ignore_ascii_case(id)
+                && provider.is_none_or(|provider| m.provider.eq_ignore_ascii_case(provider))
+        })
         .cloned()
         .ok_or_else(|| format!("unknown model: {id}"))?;
     lane.set_model(model).await.map_err(|e| e.to_string())?;
-    Ok(serde_json::json!({"model": id}))
+    Ok(serde_json::json!({"modelId": id, "provider": provider}))
 }
 
 async fn rpc_set_thinking_level(
@@ -815,10 +1705,7 @@ async fn rpc_set_active_tools(
 /// Delegates to the shared [`crate::remote::protocol::RemoteEvent`] so the
 /// server and the `--connect` client agree on the wire shape by construction.
 fn agent_event_json(event: &AgentEvent) -> serde_json::Value {
-    serde_json::to_value(crate::remote::protocol::RemoteEvent::from_agent_event(
-        event,
-    ))
-    .unwrap_or(serde_json::Value::Null)
+    crate::rpc::events::project(event)
 }
 
 /// Emit a single harness event as a JSON line on stdout. Mirrors the TS
@@ -1250,6 +2137,22 @@ mod tests {
         }));
     }
 
+    #[test]
+    fn oauth_display_drops_token_like_fields() {
+        let display = oauth_display(&serde_json::json!({
+            "display": {
+                "title": "Sign in",
+                "url": "https://example.test/authorize",
+                "instructions": ["Paste the code"],
+                "access_token": "secret-access",
+                "refresh_token": "secret-refresh",
+            }
+        }));
+        assert_eq!(display["title"], "Sign in");
+        assert!(display.get("access_token").is_none());
+        assert!(display.get("refresh_token").is_none());
+    }
+
     #[derive(Clone, Default)]
     struct RpcOutput(Arc<Mutex<Vec<u8>>>);
 
@@ -1323,12 +2226,58 @@ mod tests {
                 None,
                 vec![],
                 ui,
+                None,
                 tokio::io::BufReader::new(input),
                 captured,
             )
             .await
         });
         (client, output, task)
+    }
+
+    #[tokio::test]
+    async fn rpc_oauth_reaches_handler_only_for_valid_payloads() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_test_harness("unused", 100.0).await;
+        let (mut client, output, task) =
+            start_test_rpc(harness, ice_extensions::UiDialogMailbox::new());
+        client
+            .write_all(
+                concat!(
+                    "{\"type\":\"oauth\",\"id\":1,\"provider\":\"fixture\",\"action\":\"begin\"}\n",
+                    "{\"type\":\"oauth\",\"id\":2,\"provider\":123,\"action\":\"begin\"}\n",
+                    "{\"type\":\"oauth\",\"id\":3,\"provider\":\"fixture\",\"action\":false}\n"
+                )
+                .as_bytes(),
+            )
+            .await
+            .unwrap();
+        client.shutdown().await.unwrap();
+        assert_eq!(
+            tokio::time::timeout(std::time::Duration::from_secs(3), task)
+                .await
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        let messages = output.messages();
+        for (id, expected_error) in [
+            (1, "OAuth is unavailable without an extension provider"),
+            (2, "invalid command payload"),
+            (3, "invalid command payload"),
+        ] {
+            let response = messages.iter().find(|message| message["id"] == id).unwrap();
+            assert_eq!(response["command"], "oauth");
+            assert_eq!(response["success"], false);
+            assert_eq!(response["error"], expected_error);
+        }
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -1338,7 +2287,7 @@ mod tests {
         let ui = ice_extensions::UiDialogMailbox::new();
         let (mut client, output, task) = start_test_rpc(harness, ui.clone());
         client
-            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"content\":\"test\"}\n")
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n")
             .await
             .unwrap();
         client.shutdown().await.unwrap();
@@ -1354,9 +2303,123 @@ mod tests {
             .into_iter()
             .find(|m| m["id"] == 1)
             .unwrap();
-        assert_eq!(response["result"]["outcome"], "completed");
-        assert_eq!(response["result"]["finalText"], "completed");
+        assert_eq!(response["command"], "prompt");
+        assert_eq!(response["data"]["accepted"], true);
+        assert!(output.messages().iter().any(|message| {
+            message["type"] == "agent_settled" && message["outcome"] == "completed"
+        }));
         assert!(!ui.is_attached());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_accepts_serialized_remote_commands_and_returns_remote_responses() {
+        use crate::remote::protocol::{RemoteCommand, RemoteResponse};
+        let (harness, provider) = rpc_test_harness("legacy answer", 0.0).await;
+        let mut prompt = serde_json::to_value(RemoteCommand::Prompt {
+            content: "legacy prompt".into(),
+        })
+        .unwrap();
+        prompt["id"] = serde_json::json!(42);
+        let input = format!("{prompt}\n");
+        let output = RpcOutput::default();
+        assert_eq!(
+            rpc_with_io(
+                &harness,
+                None,
+                vec![],
+                ice_extensions::UiDialogMailbox::new(),
+                None,
+                tokio::io::BufReader::new(input.as_bytes()),
+                output.clone(),
+            )
+            .await,
+            0
+        );
+        let messages = output.messages();
+        let responses: Vec<_> = messages.iter().filter(|value| value["id"] == 42).collect();
+        assert_eq!(
+            responses.len(),
+            1,
+            "legacy prompt gets completion, not acceptance"
+        );
+        let response: RemoteResponse = serde_json::from_value(responses[0].clone()).unwrap();
+        assert!(response.is_ok());
+        assert_eq!(response.result.unwrap()["finalText"], "legacy answer");
+        let mut client = crate::remote::session::RemoteSession::default();
+        for value in &messages {
+            client.apply_line(value);
+        }
+        assert!(client.ready);
+        assert!(!client.streaming);
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn rpc_rejects_oversized_input_before_dispatch() {
+        let (harness, provider) = rpc_test_harness("must not run", 0.0).await;
+        let output = RpcOutput::default();
+        let mut input = vec![b' '; crate::rpc::protocol::MAX_FRAME_BYTES + 1];
+        input.extend_from_slice(b"\n{\"type\":\"prompt\",\"id\":1,\"message\":\"must not run\"}\n");
+        let code = rpc_with_io(
+            &harness,
+            None,
+            vec![],
+            ice_extensions::UiDialogMailbox::new(),
+            None,
+            tokio::io::BufReader::new(input.as_slice()),
+            output.clone(),
+        )
+        .await;
+        assert_eq!(code, 0);
+        assert_eq!(output.messages().len(), 1);
+        assert_eq!(output.messages()[0]["type"], "ready");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_compaction_settlement_identifies_its_durable_operation() {
+        let (harness, _) = rpc_test_harness("unused", 0.0).await;
+        let output = RpcOutput::default();
+        let code = rpc_with_io(
+            &harness,
+            None,
+            vec![],
+            ice_extensions::UiDialogMailbox::new(),
+            None,
+            tokio::io::BufReader::new(&b"{\"type\":\"compact\",\"id\":1}\n"[..]),
+            output.clone(),
+        )
+        .await;
+        assert_eq!(code, 0);
+        let messages = output.messages();
+        let settled = messages
+            .iter()
+            .find(|message| message["type"] == "agent_settled")
+            .unwrap();
+        assert_eq!(settled["outcome"], "declined");
+        let run_id = settled["runId"]
+            .as_str()
+            .expect("compaction settlement needs its durable run id");
+        let records = harness
+            .session()
+            .find_records(&Default::default())
+            .await
+            .unwrap();
+        assert!(records.iter().any(|record| matches!(record,
+            ice_harness::session::types::LaneRecord::OperationFinished(finished)
+                if finished.run_id == run_id)));
     }
 
     #[tokio::test]
@@ -1373,6 +2436,7 @@ mod tests {
             Some(rx),
             vec![],
             ice_extensions::UiDialogMailbox::new(),
+            None,
             tokio::io::BufReader::new(&b""[..]),
             output.clone(),
         )
@@ -1481,8 +2545,9 @@ mod tests {
             Some(events),
             vec![],
             ice_extensions::UiDialogMailbox::new(),
+            None,
             tokio::io::BufReader::new(
-                &b"{\"type\":\"prompt\",\"id\":1,\"content\":\"test\"}\n"[..],
+                &b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n"[..],
             ),
             BackpressuredOutput {
                 entered: Arc::new(AtomicBool::new(false)),
@@ -1496,14 +2561,29 @@ mod tests {
         let messages = output.messages();
         let end = messages
             .iter()
-            .position(|m| m["type"] == "agent_end")
+            .position(|message| message["type"] == "agent_end")
             .unwrap();
-        let response = messages.iter().position(|m| m["id"] == 1).unwrap();
-        assert!(
-            end < response,
-            "a new prompt must not overtake the previous agent_end"
-        );
-        assert_eq!(messages[response]["result"]["outcome"], "completed");
+        let settled = messages
+            .iter()
+            .position(|message| message["type"] == "agent_settled")
+            .unwrap();
+        assert!(end < settled);
+        let run_id = messages[settled]["runId"].as_str().unwrap();
+        assert!(!run_id.is_empty(), "settlement identifies its durable run");
+        let records = harness
+            .session()
+            .find_records(&Default::default())
+            .await
+            .unwrap();
+        assert!(records.iter().any(|record| matches!(record,
+            ice_harness::session::types::LaneRecord::OperationFinished(finished)
+                if finished.run_id == run_id)));
+        assert!(messages.iter().any(|message| {
+            message["type"] == "response" && message["data"]["accepted"] == true
+        }));
+        assert!(messages.iter().any(|message| {
+            message["type"] == "agent_settled" && message["outcome"] == "completed"
+        }));
     }
 
     #[tokio::test]
@@ -1530,6 +2610,7 @@ mod tests {
                 None,
                 vec![],
                 ui.clone(),
+                None,
                 tokio::io::BufReader::new(input),
                 BrokenOutput,
             ),
@@ -1548,7 +2629,7 @@ mod tests {
         let (mut client, output, task) =
             start_test_rpc(harness, ice_extensions::UiDialogMailbox::new());
         client
-            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"content\":\"test\"}\n")
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n")
             .await
             .unwrap();
         tokio::time::timeout(std::time::Duration::from_secs(3), async {
@@ -1575,12 +2656,12 @@ mod tests {
             0
         );
         let messages = output.messages();
+        assert!(messages.iter().any(|message| {
+            message["type"] == "agent_settled"
+                && (message["outcome"] == "aborted" || message["outcome"] == "failed")
+        }));
         assert_eq!(
-            messages.iter().find(|m| m["id"] == 1).unwrap()["result"]["outcome"],
-            "aborted"
-        );
-        assert_eq!(
-            messages.iter().find(|m| m["id"] == 2).unwrap()["result"]["stopped"],
+            messages.iter().find(|m| m["id"] == 2).unwrap()["data"]["stopped"],
             true
         );
         assert!(
@@ -1600,14 +2681,14 @@ mod tests {
         let prompt = serde_json::json!({
             "type": "prompt",
             "id": 1,
-            "content": "look at this",
+            "message": "look at this",
             "images": [{"mimeType": "image/png", "data": "not-an-image"}],
         })
         .to_string()
             + "\n";
         client.write_all(prompt.as_bytes()).await.unwrap();
         let rejected = output.wait_for(|message| message["id"] == 1).await;
-        assert_eq!(rejected["status"], "error");
+        assert_eq!(rejected["success"], false);
         assert_eq!(
             rejected["error"],
             "RPC prompts do not support image attachments"
@@ -1731,9 +2812,9 @@ mod tests {
             + "\n";
         client.write_all(prompt.as_bytes()).await.unwrap();
         let response = output.wait_for(|message| message["id"] == 1).await;
-        assert_eq!(response["status"], "ok", "{response}");
-        assert_eq!(response["result"]["outcome"], "completed");
-        assert_eq!(response["result"]["finalText"], "recovered RPC answer");
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["data"]["outcome"], "completed");
+        assert_eq!(response["data"]["finalText"], "recovered RPC answer");
         assert_eq!(
             provider
                 .state()
@@ -1801,11 +2882,11 @@ mod tests {
         .expect("first prompt reaches the faux provider");
 
         client
-            .write_all(b"{\"type\":\"prompt\",\"id\":2,\"content\":\"must not queue\"}\n")
+            .write_all(b"{\"type\":\"prompt\",\"id\":2,\"message\":\"must not queue\"}\n")
             .await
             .unwrap();
         let rejected = output.wait_for(|message| message["id"] == 2).await;
-        assert_eq!(rejected["status"], "error");
+        assert_eq!(rejected["success"], false);
         assert_eq!(rejected["error"], "a run is already active");
         assert!(lane.queued_messages().await.unwrap().is_empty());
         assert_eq!(
@@ -1829,11 +2910,11 @@ mod tests {
         );
         let messages = output.messages();
         assert_eq!(
-            messages.iter().find(|message| message["id"] == 1).unwrap()["result"]["outcome"],
+            messages.iter().find(|message| message["id"] == 1).unwrap()["data"]["outcome"],
             "aborted"
         );
         assert_eq!(
-            messages.iter().find(|message| message["id"] == 3).unwrap()["result"]["stopped"],
+            messages.iter().find(|message| message["id"] == 3).unwrap()["data"]["stopped"],
             true
         );
         assert!(
@@ -1849,7 +2930,7 @@ mod tests {
         let lane = harness.lane("main");
         let (mut client, output, task) =
             start_test_rpc(harness, ice_extensions::UiDialogMailbox::new());
-        client.write_all(b"{\"type\":\"prompt\",\"id\":1,\"content\":\"test\"}\n{\"type\":\"stop\",\"id\":2}\n").await.unwrap();
+        client.write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n{\"type\":\"stop\",\"id\":2}\n").await.unwrap();
         assert_eq!(
             tokio::time::timeout(std::time::Duration::from_secs(3), task)
                 .await
@@ -1857,15 +2938,11 @@ mod tests {
                 .unwrap(),
             0
         );
-        let response = output
-            .messages()
-            .into_iter()
-            .find(|m| m["id"] == 1)
-            .unwrap();
-        assert!(
-            response["result"]["outcome"] == "aborted" || response["error"] == "Operation aborted",
-            "{response}"
-        );
+        let messages = output.messages();
+        assert!(messages.iter().any(|message| {
+            message["type"] == "agent_settled"
+                && (message["outcome"] == "aborted" || message["outcome"] == "failed")
+        }));
         assert!(lane.abort().await.is_err());
     }
 
@@ -1878,7 +2955,7 @@ mod tests {
         let (mut client, output, task) = start_test_rpc(harness, ui.clone());
         output.wait_for(|m| m["type"] == "ready").await;
         client
-            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"content\":\"test\"}\n")
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n")
             .await
             .unwrap();
         ui.handle(serde_json::json!({"requestId":"approval", "toolCallId":"call", "ui":{}}))
@@ -1898,14 +2975,9 @@ mod tests {
                 .unwrap(),
             0
         );
-        assert_eq!(
-            output
-                .messages()
-                .into_iter()
-                .find(|m| m["id"] == 1)
-                .unwrap()["result"]["outcome"],
-            "completed"
-        );
+        assert!(output.messages().iter().any(|message| {
+            message["type"] == "agent_settled" && message["outcome"] == "completed"
+        }));
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -1960,7 +3032,7 @@ mod tests {
                 .await
                 .unwrap();
             let ack = output.wait_for(|m| m["id"] == response_id).await;
-            assert_eq!(ack["result"]["accepted"], true);
+            assert_eq!(ack["data"]["accepted"], true);
             let result = ui.poll(request_id).unwrap();
             if request_id == "answered" {
                 assert_eq!(result["answer"]["values"][0], "No");
@@ -2085,5 +3157,32 @@ mod tests {
         assert_eq!(retry["maxRetries"], 10);
         assert_eq!(retry["delayMs"], 8_000);
         assert_eq!(retry["error"], "503 service unavailable");
+    }
+}
+
+#[cfg(test)]
+mod page_window_tests {
+    use super::page_window;
+
+    #[test]
+    fn tail_is_kept_without_before_id() {
+        // 12 items, limit 5 -> keep the last 5, more behind.
+        assert_eq!(page_window(12, 5, None), (7..12, true));
+        // Fewer items than the limit -> everything, nothing behind.
+        assert_eq!(page_window(3, 5, None), (0..3, false));
+    }
+
+    #[test]
+    fn before_id_opens_the_window_immediately_before_it() {
+        // Page back from index 10 with limit 4 -> [6,10), more behind.
+        assert_eq!(page_window(12, 4, Some(10)), (6..10, true));
+        // Same, but reaching the very start -> no more behind.
+        assert_eq!(page_window(12, 10, Some(10)), (0..10, false));
+    }
+
+    #[test]
+    fn limit_larger_than_the_branch_never_underflows() {
+        assert_eq!(page_window(5, 100, Some(2)), (0..2, false));
+        assert_eq!(page_window(5, 100, None), (0..5, false));
     }
 }
