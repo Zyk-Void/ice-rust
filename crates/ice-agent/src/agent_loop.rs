@@ -666,6 +666,20 @@ async fn execute_tool_calls_sequential(
         )
         .await;
 
+        if let Some(reason) = invalid_tool_call_reason(tool_call) {
+            let finalized = FinalizedToolCall {
+                tool_call: tool_call.clone(),
+                result: create_error_tool_result(&reason),
+                is_error: true,
+            };
+            emit_tool_execution_end(emit, &finalized).await;
+            let trm = create_tool_result_message(tool_call, &finalized.result, true);
+            emit_tool_result_message(emit, &trm).await;
+            messages.push(trm);
+            finalized_calls.push(finalized);
+            continue;
+        }
+
         let finalized =
             run_one_tool_call(current_context, assistant_message, tool_call, config, emit).await?;
 
@@ -722,6 +736,17 @@ async fn execute_tool_calls_parallel(
             },
         )
         .await;
+
+        if let Some(reason) = invalid_tool_call_reason(tool_call) {
+            let finalized = FinalizedToolCall {
+                tool_call: tool_call.clone(),
+                result: create_error_tool_result(&reason),
+                is_error: true,
+            };
+            emit_tool_execution_end(emit, &finalized).await;
+            entries.push(Entry::Done(finalized));
+            continue;
+        }
 
         match prepare_tool_call(current_context, assistant_message, tool_call, config).await {
             Prepared::Immediate { result, is_error } => {
@@ -928,6 +953,17 @@ async fn prepare_tool_call(
     tool_call: &ToolCall,
     config: &AgentLoopConfig,
 ) -> Prepared {
+    // A provider may begin a streamed tool block with empty metadata, but only
+    // the terminal tool call is executable. Never let an incomplete id/name
+    // reach a plugin approval hook or a real tool: an empty id cannot be
+    // correlated with its result and can leave the harness active forever.
+    if let Some(reason) = invalid_tool_call_reason(tool_call) {
+        return Prepared::Immediate {
+            result: create_error_tool_result(&reason),
+            is_error: true,
+        };
+    }
+
     let tool = current_context
         .tools
         .iter()
@@ -1017,6 +1053,44 @@ async fn prepare_tool_call(
     Prepared::Ready {
         tool,
         args: validated_args,
+    }
+}
+
+/// Reject provider tool-call records that cannot be correlated or dispatched.
+fn invalid_tool_call_reason(tool_call: &ToolCall) -> Option<String> {
+    if tool_call.id.trim().is_empty() {
+        return Some(format!(
+            "Tool call for {:?} was rejected: provider returned an empty tool-call id",
+            tool_call.name
+        ));
+    }
+    if tool_call.name.trim().is_empty() {
+        return Some("Tool call was rejected: provider returned an empty tool name".into());
+    }
+    None
+}
+
+#[cfg(test)]
+mod invalid_tool_call_tests {
+    use super::invalid_tool_call_reason;
+    use ice_ai::types::{ToolCall, ToolCallType};
+
+    fn call(id: &str, name: &str) -> ToolCall {
+        ToolCall {
+            kind: ToolCallType,
+            id: id.into(),
+            name: name.into(),
+            arguments: serde_json::json!({}),
+            thought_signature: None,
+            namespace: None,
+        }
+    }
+
+    #[test]
+    fn rejects_empty_id_or_name_but_accepts_complete_call() {
+        assert!(invalid_tool_call_reason(&call("", "bash")).is_some());
+        assert!(invalid_tool_call_reason(&call("call-1", "")).is_some());
+        assert!(invalid_tool_call_reason(&call("call-1", "bash")).is_none());
     }
 }
 

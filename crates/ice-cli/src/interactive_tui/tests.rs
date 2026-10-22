@@ -1640,6 +1640,125 @@ fn dequeue_places_the_caret_at_the_end_of_the_last_line_in_bytes() {
     );
 }
 
+#[tokio::test]
+async fn dequeue_restores_both_queues_images_and_folded_draft_without_aborting() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let lane: Arc<dyn AgentLane> = harness.lane("main");
+    let state = test_tui_state();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    let image = ice_ai::types::ImageContent {
+        kind: ice_ai::types::ImageContentType,
+        data: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7".into(),
+        mime_type: "image/gif".into(),
+    };
+    lane.steer(user_message_with_images("排队修改", vec![image.clone()]))
+        .await
+        .unwrap();
+    lane.follow_up(user_message_with_images("后续消息", vec![]))
+        .await
+        .unwrap();
+    refresh_pending_messages(&state, &lane).await;
+    let draft = "草稿\n".repeat(30);
+    state.editor.handle_paste(&draft);
+    state.set_status(RunStatus::Working);
+    handle_dequeue(lane.clone(), state.editor.clone(), state.clone(), tui).await;
+    let expected = format!("排队修改\n\n后续消息\n\n{draft}");
+    assert_eq!(state.editor.get_expanded_text(), expected);
+    assert_eq!(
+        state.editor.cursor_position(),
+        (expected.split('\n').count() - 1, 0)
+    );
+    assert_eq!(*state.pending_images.lock().unwrap(), vec![image]);
+    assert!(lane.queued_messages().await.unwrap().is_empty());
+    assert!(state.pending_snapshot.lock().unwrap().is_empty());
+    assert!(*state.status.lock().unwrap() == RunStatus::Working);
+    assert!(strip_ansi(&state.chat_container.render(120).join("\n"))
+        .contains("Restored 2 queued messages to editor"));
+    harness.close().await.unwrap();
+}
+
+#[test]
+fn hot_cycle_crosses_providers_and_anchors_duplicate_ids_to_the_live_lane() {
+    with_isolated_config_dir(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let state = test_tui_state();
+                let first = ice_ai::Model::new(
+                    "shared",
+                    "First",
+                    ice_ai::Api::OpenaiCompletions,
+                    "first",
+                    "http://first.invalid",
+                );
+                let second = ice_ai::Model::new(
+                    "shared",
+                    "Second",
+                    ice_ai::Api::OpenaiCompletions,
+                    "second",
+                    "http://second.invalid",
+                );
+                let mut responses = second.clone();
+                responses.api = ice_ai::Api::OpenaiResponses;
+                let catalog = [first.clone(), second.clone(), responses.clone()];
+                let harness = selection_test_harness(&catalog).await;
+                let lane: Arc<dyn AgentLane> = harness.lane("main");
+                lane.set_model(first.clone()).await.unwrap();
+                let next = cycle_model(&lane, &catalog, false).await.unwrap().unwrap();
+                assert_eq!(next, second);
+                let note = apply_model_selection(&lane, &state, next, false)
+                    .await
+                    .unwrap();
+                assert!(note.contains("second/shared"));
+                assert_eq!(lane.get_model().await.unwrap(), second);
+                assert!(
+                    strip_ansi(&state.footer.render(120).join("\n")).contains("(second) shared")
+                );
+                let saved = crate::settings::load_settings().unwrap();
+                assert_eq!(saved.default_provider.as_deref(), Some("second"));
+                assert_eq!(
+                    cycle_model(&lane, &catalog, true).await.unwrap().unwrap(),
+                    first
+                );
+                assert_eq!(
+                    cycle_model(&lane, &catalog, false).await.unwrap().unwrap(),
+                    responses
+                );
+                lane.set_model(responses).await.unwrap();
+                assert_eq!(
+                    cycle_model(&lane, &catalog, false).await.unwrap().unwrap(),
+                    first
+                );
+                let mut settings = saved.clone();
+                settings.scoped_models = Some(vec!["first/shared".into()]);
+                crate::settings::save_settings(&settings).unwrap();
+                assert_eq!(
+                    cycle_model(&lane, &catalog, false).await.unwrap().unwrap(),
+                    first
+                );
+                assert!(cycle_model(&lane, &[], false).await.unwrap().is_none());
+                let old_id = state.current_model_id();
+                let old_footer = state.footer.render(120);
+                harness.close().await.unwrap();
+                assert!(apply_model_selection(&lane, &state, first, true)
+                    .await
+                    .is_err());
+                assert_eq!(state.current_model_id(), old_id);
+                assert_eq!(state.footer.render(120), old_footer);
+                assert_eq!(
+                    crate::settings::load_settings().unwrap().default_provider,
+                    saved.default_provider
+                );
+            });
+    });
+}
+
 #[test]
 fn settings_menu_covers_the_wired_settings_surface() {
     let state = test_tui_state();
@@ -3623,6 +3742,15 @@ fn assistant_error_text_keeps_terminal_provider_diagnostic_visible() {
         assistant_error_text(&aborted).as_deref(),
         Some("Request aborted.")
     );
+
+    // A truncated turn keeps its text but still needs a visible reason: without
+    // one the transcript looks like the message was interrupted.
+    let mut truncated = aborted;
+    truncated.stop_reason = StopReason::Length;
+    truncated.content = vec![ice_ai::types::Content::text("half an answer")];
+    let note = assistant_error_text(&truncated).expect("length must be surfaced");
+    assert!(note.contains("truncated"), "{note}");
+    assert!(note.contains("max_tokens"), "{note}");
 }
 
 #[test]
@@ -3653,13 +3781,13 @@ fn test_cycle_next_model_wraps_around() {
     };
     let catalog = [mk("a"), mk("b"), mk("c")];
     // Next after "a" is "b"; after "c" wraps to "a".
-    assert_eq!(cycle_next_model(&catalog, "a").unwrap().id, "b");
-    assert_eq!(cycle_next_model(&catalog, "c").unwrap().id, "a");
+    assert_eq!(cycle_next_model(&catalog, &mk("a")).unwrap().id, "b");
+    assert_eq!(cycle_next_model(&catalog, &mk("c")).unwrap().id, "a");
     // An unknown current id falls back to the first model.
-    assert_eq!(cycle_next_model(&catalog, "zzz").unwrap().id, "a");
+    assert_eq!(cycle_next_model(&catalog, &mk("zzz")).unwrap().id, "a");
     // Empty catalog yields None.
     let empty: Vec<Model> = vec![];
-    assert!(cycle_next_model(&empty, "a").is_none());
+    assert!(cycle_next_model(&empty, &mk("a")).is_none());
 }
 
 #[test]
@@ -3676,13 +3804,13 @@ fn test_cycle_prev_model_wraps_around() {
     };
     let catalog = [mk("a"), mk("b"), mk("c")];
     // Previous before "b" is "a"; before "a" wraps to "c".
-    assert_eq!(cycle_prev_model(&catalog, "b").unwrap().id, "a");
-    assert_eq!(cycle_prev_model(&catalog, "a").unwrap().id, "c");
+    assert_eq!(cycle_prev_model(&catalog, &mk("b")).unwrap().id, "a");
+    assert_eq!(cycle_prev_model(&catalog, &mk("a")).unwrap().id, "c");
     // An unknown current id falls back to the first model.
-    assert_eq!(cycle_prev_model(&catalog, "zzz").unwrap().id, "a");
+    assert_eq!(cycle_prev_model(&catalog, &mk("zzz")).unwrap().id, "a");
     // Empty catalog yields None.
     let empty: Vec<Model> = vec![];
-    assert!(cycle_prev_model(&empty, "a").is_none());
+    assert!(cycle_prev_model(&empty, &mk("a")).is_none());
 }
 
 #[test]

@@ -1212,22 +1212,13 @@ dependencies = [
 name = "ice-plugin-sdk"
 version = "0.6.1"
 dependencies = [
- "libc",
- "serde_json",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "ice-provider-runtime"
-version = "0.6.1"
-dependencies = [
  "ice-ai",
- "ice-plugin-sdk",
+ "libc",
  "reqwest",
  "serde",
  "serde_json",
  "tokio",
- "tokio-util",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

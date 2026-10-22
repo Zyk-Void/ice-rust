@@ -323,6 +323,27 @@ async fn run_inner() -> i32 {
         .lock()
         .map(|session| session.owns_stdio())
         .unwrap_or(false);
+    let web_requested = match parsed.unknown_flags.get("web") {
+        Some(serde_json::Value::Bool(value)) => *value,
+        Some(serde_json::Value::String(value)) => {
+            !value.is_empty() && !value.eq_ignore_ascii_case("false")
+        }
+        _ => false,
+    };
+    let web_registered = reload_context
+        .extension_session
+        .lock()
+        .ok()
+        .and_then(|session| {
+            session
+                .snapshot()
+                .map(|snapshot| snapshot.flags().iter().any(|flag| flag.name == "web"))
+        })
+        .unwrap_or(false);
+    if web_requested && (!web_registered || !stdio_claimed) {
+        eprintln!("error: --web requires the ice-web server extension; it is missing, disabled, or failed to load.\nInstall it with: icers install ice-web --github ice-rust/ice-package\nThen restart with: icers --web");
+        return EXIT_USAGE;
+    }
     let stdio_lifecycle = reload_context
         .extension_session
         .lock()
@@ -482,11 +503,19 @@ async fn run_inner() -> i32 {
                     // `icers --connect` talks to. The extension `UiDialog`
                     // mailbox is bridged over the same channel so a permission
                     // gate can ask the client mid-run.
+                    let extension_snapshot = {
+                        reload_context
+                            .extension_session
+                            .lock()
+                            .unwrap()
+                            .snapshot_arc()
+                    };
                     crate::modes::rpc(
                         &harness,
                         Some(event_rx),
                         model_catalog,
                         reload_context.ui_dialog.clone(),
+                        extension_snapshot,
                     )
                     .await
                 };
