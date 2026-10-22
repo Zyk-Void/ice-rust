@@ -480,8 +480,19 @@ pub(super) async fn replace_session_ui(
     state.new_message_count.reset();
     *state.selection_start.lock().unwrap() = None;
     *state.selection_end.lock().unwrap() = None;
+    if let Some(tui) = &state.tui {
+        tui.set_selection(None);
+    }
+    // The startup banner reads live data, so it is kept as is (in ice it lives
+    // in a header container that a session switch does not clear).
+    let header = chat
+        .get_children()
+        .into_iter()
+        .find(|child| child.as_any().is::<SessionHeader>());
     chat.clear();
-    add_welcome_message(chat);
+    if let Some(header) = header {
+        add_welcome_message(chat, header);
+    }
     render_session_history(
         harness,
         chat,

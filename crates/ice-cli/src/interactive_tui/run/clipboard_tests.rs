@@ -111,3 +111,33 @@ fn clipboard_failed_write_discards_owner_and_next_copy_reinitializes() {
     drop(slot);
     assert_eq!(state.borrow().dropped, 2);
 }
+
+#[test]
+fn linux_copy_prefers_platform_tools_over_native_clipboard() {
+    // Regression: on Hyprland arboard's X11 write "succeeded" without reaching
+    // Wayland clients, so `wl-copy` never ran and nothing was copied.
+    let calls = RefCell::new(Vec::new());
+    let native = |_: &str| {
+        calls.borrow_mut().push("native");
+        true
+    };
+    let commands = |_: &str| {
+        calls.borrow_mut().push("commands");
+        true
+    };
+    assert!(copy_locally("x", true, native, commands));
+    assert_eq!(*calls.borrow(), ["commands"]);
+
+    calls.borrow_mut().clear();
+    assert!(copy_locally("x", false, native, commands));
+    assert_eq!(*calls.borrow(), ["native"]);
+
+    // A missing tool still falls back to the native clipboard.
+    calls.borrow_mut().clear();
+    let no_tools = |_: &str| {
+        calls.borrow_mut().push("commands");
+        false
+    };
+    assert!(copy_locally("x", true, native, no_tools));
+    assert_eq!(*calls.borrow(), ["commands", "native"]);
+}

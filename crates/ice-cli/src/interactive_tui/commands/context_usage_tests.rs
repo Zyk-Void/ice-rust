@@ -279,7 +279,6 @@ async fn context_command_appends_responsive_panel_without_usage_event_or_session
         model_catalog: catalog,
         cwd: dir.path().into(),
         resources: Arc::new(Mutex::new(Default::default())),
-        startup_context: None,
         reload_context,
         session: session.clone(),
     };

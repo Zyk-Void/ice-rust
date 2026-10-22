@@ -204,7 +204,7 @@ pub(super) struct TuiState {
     pub(super) hide_thinking: Arc<std::sync::Mutex<bool>>,
     /// Global tool-output expansion preference toggled by Ctrl+O (shared with
     /// the view).
-    pub(super) tool_outputs_expanded: Arc<std::sync::Mutex<bool>>,
+    pub(super) tool_outputs_expanded: Arc<std::sync::Mutex<crate::transcript_view::ToolExpansion>>,
     /// Whether the native-style terminal progress indicator is enabled.
     pub(super) show_terminal_progress: bool,
     /// Run status for the status indicator + interrupt routing.
@@ -1013,6 +1013,11 @@ impl TuiState {
                 // (OSC 2). No-op when `tui` is absent (unit tests).
                 if let Some(tui) = &self.tui {
                     tui.set_title(&crate::brand::window_title("⟳"));
+                    // OSC 9;4 busy marker in the tab/title bar (upstream
+                    // `terminal.setProgress(true)` on `agent_start`).
+                    if self.show_terminal_progress {
+                        tui.set_progress(true);
+                    }
                 }
                 self.status_container.clear();
                 // The working indicator renders inside the editor's top border.
@@ -1039,6 +1044,7 @@ impl TuiState {
                 self.footer.set_status("");
                 if let Some(tui) = &self.tui {
                     tui.set_title(&crate::brand::window_title(""));
+                    tui.set_progress(false);
                 }
                 self.loader.stop();
                 self.status_container.clear();
@@ -1290,10 +1296,25 @@ impl TuiState {
         next
     }
 
-    pub(super) fn toggle_tool_outputs(&self) -> bool {
-        let next = !*self.tool_outputs_expanded.lock().unwrap();
-        self.transcript_view().set_expanded(next);
-        next
+    /// Ctrl+O: open the next batch of newest tool cells, then close all.
+    pub(super) fn cycle_tool_outputs(&self) -> String {
+        self.transcript_view().cycle_expansion()
+    }
+
+    /// Collapse every tool cell.
+    pub(super) fn collapse_tool_outputs(&self) -> String {
+        self.transcript_view().set_expanded(false);
+        "Tool output: collapsed".to_string()
+    }
+
+    /// Toggle only the newest tool cell.
+    pub(super) fn toggle_newest_tool_output(&self) -> String {
+        self.transcript_view().toggle_newest()
+    }
+
+    /// Whether any tool output is open (persisted per session).
+    pub(super) fn tool_outputs_open(&self) -> bool {
+        self.tool_outputs_expanded.lock().unwrap().is_expanded()
     }
 
     /// The model id currently tracked as active (footer + Ctrl+P anchor).

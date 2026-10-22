@@ -453,10 +453,14 @@ impl Terminal for ProcessTerminal {
     fn set_progress(&self, active: bool) {
         // OSC 9;4 is supported by modern terminal emulators (including
         // Windows Terminal, iTerm2-compatible terminals, and many Linux
-        // terminals). State 1 starts an indeterminate progress indicator and
-        // state 0 clears it.
-        let state = if active { 1 } else { 0 };
-        self.write(&format!("\x1b]9;4;{state};0\x07"));
+        // terminals). State 3 is an indeterminate progress indicator and
+        // state 0 clears it. Terminals such as Ghostty drop a report that is
+        // not refreshed, so hosts re-send it (see `TuiAltScreen`).
+        self.write(if active {
+            "\x1b]9;4;3\x07"
+        } else {
+            "\x1b]9;4;0\x07"
+        });
         self.flush();
     }
 

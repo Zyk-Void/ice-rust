@@ -230,6 +230,16 @@ pub(super) fn settings_menu_items(
         .with_description("Copy selected text automatically in fullscreen mode")
         .with_values(&["true", "false"]),
         SettingItem::new(
+            "tool-style",
+            "Tool style",
+            match settings.tool_style() {
+                ice_tui::ToolStyle::Compact => "compact",
+                ice_tui::ToolStyle::Boxed => "boxed",
+            },
+        )
+        .with_description("compact: bullet rows grouped into summaries; boxed: padded blocks")
+        .with_values(&["compact", "boxed"]),
+        SettingItem::new(
             "double-escape-action",
             "Double-escape action",
             settings
@@ -334,6 +344,12 @@ pub(super) fn apply_setting_change(
         "terminal-progress" => {
             settings.show_terminal_progress = Some(as_bool());
             None
+        }
+        // Live: tool panels read the style on every render.
+        "tool-style" => {
+            settings.tool_style = Some(value.to_string());
+            ice_tui::set_tool_style(settings.tool_style());
+            Some(format!("Tool style: {value}."))
         }
         "double-escape-action" => {
             settings.double_escape_action = Some(value.to_string());
@@ -440,7 +456,7 @@ pub(super) fn open_settings_model_selector(
     lane_model_id: &str,
     chat: &Arc<Container>,
 ) {
-    let items = model_selector_items(catalog, lane_model_id);
+    let items = model_selector_items(catalog, lane_model_id, &favorite_models());
     if items.is_empty() {
         add_note_message(chat, "No models in the catalog.");
         tui.request_render(false);
@@ -499,12 +515,17 @@ pub(super) fn open_settings_model_selector(
 /// model id as the value so `/model <id>` and the selection callback share one
 /// lookup path, while making the provider visible for OpenAI-compatible
 /// gateways where the same model id may exist at multiple endpoints.
+///
+/// `favorites` are exact `provider/model` ids (`favoriteModels`); those rows
+/// are pinned first, in catalog order, and marked `[fav]` (upstream
+/// `favoritesFirst`).
 pub(super) fn model_selector_items(
     catalog: &[ice_ai::Model],
     lane_model_id: &str,
+    favorites: &[String],
 ) -> Vec<SelectItem> {
     let mut seen = std::collections::HashSet::new();
-    catalog
+    let mut items: Vec<SelectItem> = catalog
         .iter()
         .filter(|m| {
             seen.insert((
@@ -539,11 +560,46 @@ pub(super) fn model_selector_items(
             // Value carries the provider-qualified identity so a bare model id
             // that exists at multiple endpoints can never resolve to the wrong
             // provider (`find_model_selector_match` understands both forms).
+            let favorite = if favorites.contains(&identity) {
+                FAVORITE_MARKER
+            } else {
+                ""
+            };
             SelectItem::new(&identity, &label)
-                .with_description(&format!("{identity}{marker}"))
+                .with_description(&format!("{identity}{marker}{favorite}"))
                 .with_search_text(&search_text)
         })
-        .collect()
+        .collect();
+    // Stable, so catalog order is kept within each group.
+    items.sort_by_key(|item| !favorites.contains(&item.value));
+    items
+}
+
+/// Suffix on a favorite model's row in `/model`.
+pub(super) const FAVORITE_MARKER: &str = " [fav]";
+
+/// Add or remove `identity` (`provider/model`) in the global `favoriteModels`
+/// and return the new list. Settings are written before the caller redraws,
+/// so the selector never shows a state that was not saved.
+pub(super) fn toggle_favorite_model(identity: &str) -> Result<Vec<String>, String> {
+    let mut settings = crate::settings::load_settings().map_err(|error| error.to_string())?;
+    let mut favorites = settings.favorite_models.take().unwrap_or_default();
+    if let Some(index) = favorites.iter().position(|id| id == identity) {
+        favorites.remove(index);
+    } else {
+        favorites.push(identity.to_string());
+    }
+    settings.favorite_models = Some(favorites.clone());
+    crate::settings::save_settings(&settings)?;
+    Ok(favorites)
+}
+
+/// Saved favorite models; unreadable settings mean none.
+pub(super) fn favorite_models() -> Vec<String> {
+    crate::settings::load_settings()
+        .ok()
+        .and_then(|settings| settings.favorite_models)
+        .unwrap_or_default()
 }
 
 /// Resolve a selector input by either bare model id or the qualified

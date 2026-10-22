@@ -174,6 +174,126 @@ impl RenderScheduler {
     }
 }
 
+/// The primary transcript's content and geometry in `frame`.
+fn transcript_snapshot_of(frame: &LayoutFrame) -> Option<TranscriptSnapshot> {
+    fn primary(lbox: &LayoutBox) -> Option<&LayoutBox> {
+        if lbox
+            .scroll_view
+            .as_ref()
+            .is_some_and(|view| view.is_primary())
+        {
+            Some(lbox)
+        } else {
+            lbox.children.iter().find_map(primary)
+        }
+    }
+    let lbox = primary(&frame.root)?;
+    let cached = lbox.scroll_view.as_ref()?.rendered_content()?;
+    let content_rect = LayoutRect::new(
+        lbox.rect.x,
+        lbox.rect.y,
+        cached.content_width,
+        lbox.rect.height,
+    );
+    let viewport = content_rect.intersect(&lbox.clip);
+    Some(TranscriptSnapshot {
+        lines: cached.lines,
+        viewport,
+        viewport_top: cached.scroll_top + viewport.y.saturating_sub(lbox.rect.y),
+        content_left: viewport.x.saturating_sub(lbox.rect.x),
+        content_width: cached.content_width,
+    })
+}
+
+/// Paint a logical transcript selection (inclusive `(column, row)` content
+/// cells, either order) in inverse video onto the visible screen rows, like
+/// upstream `applySelection`. Only the transcript viewport is touched.
+fn paint_selection(
+    lines: &mut [String],
+    snapshot: &TranscriptSnapshot,
+    selection: ((usize, usize), (usize, usize)),
+) {
+    let key = |(column, row): (usize, usize)| (row, column);
+    let (a, b) = selection;
+    let ((first_row, first_col), (last_row, last_col)) = if key(a) <= key(b) {
+        (key(a), key(b))
+    } else {
+        (key(b), key(a))
+    };
+    if (first_row, first_col) == (last_row, last_col) {
+        return;
+    }
+    let rect = snapshot.viewport;
+    let left = snapshot.content_left;
+    let right = left + rect.width;
+    for screen_row in rect.y..rect.y + rect.height {
+        let row = snapshot.viewport_top + (screen_row - rect.y);
+        if row < first_row || row > last_row || row >= snapshot.lines.len() {
+            continue;
+        }
+        let Some(line) = lines.get_mut(screen_row) else {
+            continue;
+        };
+        let from = if row == first_row { first_col } else { 0 };
+        let to = if row == last_row {
+            last_col.saturating_add(1)
+        } else {
+            usize::MAX
+        };
+        let to = to.min(visible_width(&snapshot.lines[row]));
+        let (from, to) = (from.max(left), to.min(right));
+        if to <= from {
+            continue;
+        }
+        *line = invert_columns(line, rect.x + from - left, rect.x + to - left);
+    }
+}
+
+/// Inverse-video cells `start..end` of a rendered line in place, re-asserting
+/// the inverse after every SGR sequence inside the range so an embedded reset
+/// cannot end the highlight early. Surrounding styles are left untouched.
+fn invert_columns(line: &str, start: usize, end: usize) -> String {
+    use unicode_segmentation::UnicodeSegmentation;
+    let mut result = String::with_capacity(line.len() + 16);
+    let mut column = 0;
+    let mut active = false;
+    let mut rest = line;
+    while !rest.is_empty() {
+        if rest.starts_with('\x1b') {
+            let len = crate::ansi::escape_len(rest);
+            let code = &rest[..len];
+            result.push_str(code);
+            if active && code.starts_with("\x1b[") && code.ends_with('m') {
+                result.push_str("\x1b[7m");
+            }
+            rest = &rest[len..];
+            continue;
+        }
+        let text_end = rest.find('\x1b').unwrap_or(rest.len());
+        for grapheme in rest[..text_end].graphemes(true) {
+            let inside = column >= start && column < end;
+            if inside && !active {
+                result.push_str("\x1b[7m");
+                active = true;
+            } else if !inside && active {
+                result.push_str("\x1b[27m");
+                active = false;
+            }
+            result.push_str(grapheme);
+            column += visible_width(grapheme);
+        }
+        rest = &rest[text_end..];
+    }
+    if active {
+        result.push_str("\x1b[27m");
+    }
+    result
+}
+
+/// How often an active OSC 9;4 progress indicator is re-sent (upstream
+/// `TERMINAL_PROGRESS_KEEPALIVE_MS`).
+const PROGRESS_KEEPALIVE: Duration = Duration::from_millis(1000);
+
 /// Alternate screen TUI with application-owned scrolling.
 pub struct TuiAltScreen {
     /// Serializes the complete diff/render/write transaction. Input, streaming
@@ -228,6 +348,12 @@ pub struct TuiAltScreen {
     /// The scheduler thread, joined by [`TuiAltScreen::stop`] so a parked frame
     /// cannot repaint the terminal after shutdown.
     scheduler_thread: Mutex<Option<JoinHandle<()>>>,
+    /// When the OSC 9;4 progress indicator was last sent; `None` while it is
+    /// cleared. See [`TuiAltScreen::set_progress`].
+    progress_sent_at: Mutex<Option<Instant>>,
+    /// Transcript selection being dragged, painted in inverse video. See
+    /// [`TuiAltScreen::set_selection`].
+    selection: Mutex<Option<((usize, usize), (usize, usize))>>,
 }
 
 impl TuiAltScreen {
@@ -270,6 +396,8 @@ impl TuiAltScreen {
             scheduler: Arc::new(RenderScheduler::new()),
             scheduler_started: AtomicBool::new(false),
             scheduler_thread: Mutex::new(None),
+            progress_sent_at: Mutex::new(None),
+            selection: Mutex::new(None),
         }
     }
 
@@ -458,38 +586,12 @@ impl TuiAltScreen {
     /// Snapshot the transcript as last painted, for logical mouse selection.
     /// Never re-renders content or copies through a modal overlay.
     pub fn transcript_snapshot(&self) -> Option<TranscriptSnapshot> {
-        if self.uses_main_screen() || self.has_overlay() {
+        if self.uses_main_screen() || self.has_capturing_overlay() {
             return None;
         }
         let _render_guard = self.render_lock.lock().ok()?;
         let frame = self.current_frame.lock().ok()?;
-        fn primary(lbox: &LayoutBox) -> Option<&LayoutBox> {
-            if lbox
-                .scroll_view
-                .as_ref()
-                .is_some_and(|view| view.is_primary())
-            {
-                Some(lbox)
-            } else {
-                lbox.children.iter().find_map(primary)
-            }
-        }
-        let lbox = primary(&frame.as_ref()?.root)?;
-        let cached = lbox.scroll_view.as_ref()?.rendered_content()?;
-        let content_rect = LayoutRect::new(
-            lbox.rect.x,
-            lbox.rect.y,
-            cached.content_width,
-            lbox.rect.height,
-        );
-        let viewport = content_rect.intersect(&lbox.clip);
-        Some(TranscriptSnapshot {
-            lines: cached.lines,
-            viewport,
-            viewport_top: cached.scroll_top + viewport.y.saturating_sub(lbox.rect.y),
-            content_left: viewport.x.saturating_sub(lbox.rect.x),
-            content_width: cached.content_width,
-        })
+        transcript_snapshot_of(frame.as_ref()?)
     }
 
     /// Get the current scroll position.
@@ -621,6 +723,46 @@ impl TuiAltScreen {
         if let Ok(terminal) = self.terminal.lock() {
             terminal.set_title(title);
             terminal.flush();
+        }
+    }
+
+    /// Highlight a transcript selection: inclusive `(column, row)` logical
+    /// content cells as returned by [`TranscriptSnapshot::content_position`],
+    /// in either order. `None` clears it. Takes effect on the next frame.
+    pub fn set_selection(&self, selection: Option<((usize, usize), (usize, usize))>) {
+        if let Ok(mut current) = self.selection.lock() {
+            *current = selection;
+        }
+    }
+
+    /// Show or clear the terminal's OSC 9;4 progress indicator (the tab or
+    /// title-bar busy marker). Like `set_title`, this writes to the real
+    /// terminal. Call [`TuiAltScreen::refresh_progress`] periodically while
+    /// active: terminals such as Ghostty drop a report that is not refreshed.
+    pub fn set_progress(&self, active: bool) {
+        let Ok(mut sent_at) = self.progress_sent_at.lock() else {
+            return;
+        };
+        if !active && sent_at.is_none() {
+            return;
+        }
+        *sent_at = active.then(Instant::now);
+        if let Ok(terminal) = self.terminal.lock() {
+            terminal.set_progress(active);
+        }
+    }
+
+    /// Re-send an active progress indicator at most once per
+    /// [`PROGRESS_KEEPALIVE`]. Does nothing while progress is cleared.
+    pub fn refresh_progress(&self) {
+        let due = self
+            .progress_sent_at
+            .lock()
+            .ok()
+            .and_then(|sent_at| *sent_at)
+            .is_some_and(|sent_at| sent_at.elapsed() >= PROGRESS_KEEPALIVE);
+        if due {
+            self.set_progress(true);
         }
     }
 
@@ -805,6 +947,7 @@ impl TuiAltScreen {
                 last_changed = Some(index);
             }
         }
+        let mut restore_cursor = false;
         let viewport_top = *self.main_viewport_top.lock().unwrap();
         let changed_in_scrollback = first_changed.is_some_and(|first| {
             first < viewport_top || lines.len().saturating_sub(1) < viewport_top
@@ -849,7 +992,21 @@ impl TuiAltScreen {
                 } else {
                     first
                 };
+                // A same-height frame whose changed rows are all on screen (a
+                // spinner tick) is painted between save/restore cursor, so the
+                // cursor returns to the editor exactly, without being hidden:
+                // hiding it every tick restarts the terminal's blink phase.
+                restore_cursor = !deleted_tail_only
+                    && !append_start
+                    && lines.len() == previous.len()
+                    && cursor.is_some()
+                    && cursor == previous_cursor
+                    && move_target >= viewport_top
+                    && last <= viewport_bottom;
                 let mut output = String::from("\x1b[?2026h");
+                if restore_cursor {
+                    output.push_str("\x1b7");
+                }
                 if move_target > viewport_bottom {
                     let current_screen = hardware_row
                         .saturating_sub(viewport_top)
@@ -916,16 +1073,25 @@ impl TuiAltScreen {
                         final_row = lines.len().saturating_sub(1);
                     }
                 }
+                if restore_cursor {
+                    output.push_str("\x1b8");
+                }
                 output.push_str("\x1b[?2026l");
                 terminal.write(&output);
                 let advanced = final_row.saturating_sub(viewport_top + height.saturating_sub(1));
                 viewport_top += advanced;
-                *self.main_hardware_row.lock().unwrap() = final_row;
+                *self.main_hardware_row.lock().unwrap() = if restore_cursor {
+                    cursor.map_or(final_row, |(row, _)| row)
+                } else {
+                    final_row
+                };
                 *self.main_viewport_top.lock().unwrap() = viewport_top;
             }
         }
 
-        if let Some((row, col)) = cursor {
+        if restore_cursor {
+            // The cursor is already back on the editor; nothing to place.
+        } else if let Some((row, col)) = cursor {
             let hardware_row = *self.main_hardware_row.lock().unwrap();
             let mut viewport_top = *self.main_viewport_top.lock().unwrap();
             let viewport_bottom = viewport_top + height.saturating_sub(1);
@@ -1051,6 +1217,11 @@ impl TuiAltScreen {
         let mut visible = frame.lines.clone();
         self.jump_to_end
             .paint(&frame, &mut visible, self.has_overlay());
+        if let Some(selection) = self.selection.lock().ok().and_then(|s| *s) {
+            if let Some(snapshot) = transcript_snapshot_of(&frame) {
+                paint_selection(&mut visible, &snapshot, selection);
+            }
+        }
         self.paint_overlays(&mut visible, width, height);
 
         // Cursor markers are an internal layout protocol, not terminal output.
@@ -1147,6 +1318,13 @@ impl TuiAltScreen {
         if let Ok(mut painted) = self.painted_size.lock() {
             *painted = (width, height);
         }
+    }
+
+    fn has_capturing_overlay(&self) -> bool {
+        self.overlays
+            .get_visible()
+            .iter()
+            .any(|(_, options)| !options.non_capturing)
     }
 
     fn paint_overlays(&self, lines: &mut [String], width: usize, height: usize) {
@@ -1322,6 +1500,7 @@ impl TUI for TuiAltScreen {
             let _ = handle.join();
         }
 
+        self.set_progress(false);
         if self.uses_main_screen() {
             if let Ok(terminal) = self.terminal.lock() {
                 // Leave the shell prompt below the rendered footer while
@@ -1630,8 +1809,72 @@ mod tests {
         fn is_tty(&self) -> bool {
             true
         }
-        fn set_progress(&self, _active: bool) {}
+        fn set_progress(&self, active: bool) {
+            self.write(&format!("<progress:{active}>"));
+        }
         fn flush(&self) {}
+    }
+
+    #[test]
+    fn selection_is_painted_in_inverse_video_over_the_transcript_viewport() {
+        let snapshot = TranscriptSnapshot {
+            lines: Arc::new(vec![
+                "hello world".to_string(),
+                "\x1b[1msecond\x1b[0m line".to_string(),
+                "third".to_string(),
+            ]),
+            viewport: LayoutRect::new(0, 1, 20, 2),
+            viewport_top: 0,
+            content_left: 0,
+            content_width: 20,
+        };
+        let mut screen = vec![
+            "header".to_string(),
+            "hello world".to_string(),
+            "\x1b[1msecond\x1b[0m line".to_string(),
+            "dock".to_string(),
+        ];
+        // Dragged backwards from row 1 col 5 to row 0 col 6; row 2 is not
+        // visible, and nothing outside the viewport changes.
+        paint_selection(&mut screen, &snapshot, ((5, 1), (6, 0)));
+        assert_eq!(screen[0], "header");
+        assert_eq!(screen[1], "hello \x1b[7mworld\x1b[27m");
+        // The bold reset inside the range must not end the highlight early.
+        assert_eq!(screen[2], "\x1b[1m\x1b[7msecond\x1b[0m\x1b[7m\x1b[27m line");
+        assert_eq!(screen[3], "dock");
+
+        // A single-cell press is not a selection.
+        let mut untouched = vec!["header".to_string(), "hello world".to_string()];
+        paint_selection(&mut untouched, &snapshot, ((2, 0), (2, 0)));
+        assert_eq!(untouched[1], "hello world");
+    }
+
+    #[test]
+    fn progress_indicator_is_kept_alive_and_cleared_once() {
+        let terminal = ResizableTerminal::new(80, 8);
+        let output = terminal.output();
+        let tui = TuiAltScreen::new(Box::new(terminal), false, None);
+        let take = || std::mem::take(&mut *output.lock().unwrap());
+
+        // Clearing an inactive indicator and refreshing it are both silent.
+        tui.set_progress(false);
+        tui.refresh_progress();
+        assert_eq!(take(), "");
+
+        tui.set_progress(true);
+        assert_eq!(take(), "<progress:true>");
+        // Not due yet: the keepalive is throttled.
+        tui.refresh_progress();
+        assert_eq!(take(), "");
+        // Once the keepalive interval passes, the report is re-sent.
+        *tui.progress_sent_at.lock().unwrap() = Some(Instant::now() - PROGRESS_KEEPALIVE);
+        tui.refresh_progress();
+        assert_eq!(take(), "<progress:true>");
+
+        tui.set_progress(false);
+        tui.set_progress(false);
+        tui.refresh_progress();
+        assert_eq!(take(), "<progress:false>");
     }
 
     #[test]
@@ -1660,6 +1903,15 @@ mod tests {
         tui.start_readerless();
         scroll.scroll_to(3);
         tui.request_render_reusing_scroll_content();
+        let passive = tui.show_overlay(
+            Arc::new(Text::new("copied", 0, 0)),
+            Some(crate::OverlayOptions {
+                anchor: crate::OverlayAnchor::TopRight,
+                non_capturing: true,
+                ..Default::default()
+            }),
+        );
+        assert!(tui.transcript_snapshot().is_some());
         let snapshot = tui.transcript_snapshot().unwrap();
         assert_eq!(
             (
@@ -1687,6 +1939,11 @@ mod tests {
         let moved = tui.transcript_snapshot().unwrap();
         assert_eq!(moved.viewport_top, 5);
         assert!(Arc::ptr_eq(&snapshot.lines, &moved.lines));
+        passive.hide();
+        assert!(tui.transcript_snapshot().is_some());
+        let modal = tui.show_overlay(Arc::new(Text::new("modal", 0, 0)), None);
+        assert!(tui.transcript_snapshot().is_none());
+        modal.hide();
         assert_eq!(moved.content_position(3, 3, false), Some((3, 6)));
     }
 
@@ -2072,6 +2329,50 @@ mod tests {
         let rendered = output.lock().unwrap().clone();
         assert!(rendered.contains("<raw-on>"));
         assert!(!rendered.contains("\x1b[?1049"));
+    }
+
+    /// A spinner tick repaints one row above the editor. The frame must bring
+    /// the cursor back with save/restore, never toggling its visibility (a hide
+    /// and show every tick restarts the terminal's blink phase, which flickers
+    /// the prompt cursor).
+    #[test]
+    fn regular_mode_spinner_tick_restores_the_cursor_without_toggling_it() {
+        let output = Arc::new(Mutex::new(String::new()));
+        let tui = TuiAltScreen::new(
+            Box::new(RecordingTerminal {
+                output: output.clone(),
+            }),
+            true,
+            None,
+        );
+        tui.set_main_screen_mode(true);
+        let spinner = Arc::new(Text::new("Working 1s", 0, 0));
+        let editor = Arc::new(Editor::simple());
+        editor.set_focused(true);
+        let root = crate::container::Container::new();
+        root.add_child(spinner.clone());
+        root.add_child(editor);
+        tui.set_layout_root(Some(Arc::new(root)));
+        tui.start();
+        output.lock().unwrap().clear();
+
+        spinner.set_text("Working 2s");
+        tui.render_now(false);
+
+        let frame = output.lock().unwrap().clone();
+        let save = frame.find("\x1b7").expect("cursor saved before painting");
+        let paint = frame
+            .find("\x1b[8C2")
+            .expect("changed digit patched in place");
+        let restore = frame
+            .rfind("\x1b8")
+            .expect("cursor restored after painting");
+        assert!(save < paint && paint < restore, "{frame:?}");
+        assert!(
+            !frame.contains("\x1b[?25l") && !frame.contains("\x1b[?25h"),
+            "{frame:?}"
+        );
+        tui.stop(TuiStopOptions::default());
     }
 
     #[test]

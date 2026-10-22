@@ -159,7 +159,7 @@ pub(super) fn open_model_selector(
     chat: &Arc<Container>,
     initial_search: Option<&str>,
 ) -> Option<Arc<SearchableSelectList>> {
-    let items = model_selector_items(catalog, lane_model_id);
+    let items = model_selector_items(catalog, lane_model_id, &favorite_models());
     if items.is_empty() {
         add_note_message(
             chat,
@@ -219,7 +219,7 @@ pub(super) fn open_model_selector(
         editor,
         tui,
         Some("Select model"),
-        Some("Type to filter by name, provider, or id"),
+        Some("Type to filter by name, provider, or id · shift+f toggle favorite"),
         list,
         SelectorKind::Model,
     );
@@ -229,13 +229,32 @@ pub(super) fn open_model_selector(
     Some(searchable)
 }
 
+/// Shift+F in `/model` (upstream `toggleFavorite`): save the highlighted
+/// model's new favorite status, then re-pin the list with the same search
+/// text and the highlight kept on that model.
+pub(super) fn toggle_selected_favorite(
+    searchable: &SearchableSelectList,
+    catalog: &[ice_ai::Model],
+    current_model_id: &str,
+) -> Result<(), String> {
+    let Some(item) = searchable.list().get_selected_item() else {
+        return Ok(());
+    };
+    let favorites = toggle_favorite_model(&item.value)?;
+    let items = model_selector_items(catalog, current_model_id, &favorites);
+    searchable
+        .list()
+        .replace_items(items, &searchable.input().get_value(), Some(&item.value));
+    Ok(())
+}
+
 /// Index of the item `model_selector_items` marked as the current model, so
 /// `/model` opens on it.
 pub(super) fn current_model_index(items: &[SelectItem]) -> Option<usize> {
     items.iter().position(|item| {
         item.description
             .as_deref()
-            .is_some_and(|d| d.ends_with(" (current)"))
+            .is_some_and(|d| d.contains(" (current)"))
     })
 }
 

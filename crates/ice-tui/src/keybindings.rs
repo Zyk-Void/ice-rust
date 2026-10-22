@@ -183,6 +183,15 @@ impl Keybindings {
             },
         );
         map.insert(
+            "app.model.toggleFavorite",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('f'), M::SHIFT)],
+                description: Some(
+                    "Toggle the highlighted model's favorite status in the model selector",
+                ),
+            },
+        );
+        map.insert(
             "app.model.cycleForward",
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(Char('p'), M::CONTROL)],
@@ -206,6 +215,20 @@ impl Keybindings {
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(Char('o'), M::CONTROL)],
                 description: Some("Toggle tool output"),
+            },
+        );
+        map.insert(
+            "app.tools.collapse",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('o'), M::ALT)],
+                description: Some("Collapse all tool output"),
+            },
+        );
+        map.insert(
+            "app.tools.expandLast",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('o'), M::ALT | M::SHIFT)],
+                description: Some("Toggle the newest tool call"),
             },
         );
         map.insert(
@@ -987,6 +1010,25 @@ pub fn get_keybindings() -> std::sync::MutexGuard<'static, Keybindings> {
     guard.lock().expect("Failed to lock global keybindings")
 }
 
+/// The key(s) bound to the tool-output toggle, e.g. `Ctrl+O`; empty if unbound.
+pub fn tools_expand_key() -> String {
+    get_keybindings()
+        .get_keys(keys::TOOLS_EXPAND)
+        .iter()
+        .map(|key| key.display())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+/// ` (Ctrl+O to expand)` using the live binding, or nothing when unbound, so
+/// hints never name a key the user has rebound or removed.
+pub fn tools_expand_paren(action: &str) -> String {
+    match tools_expand_key().as_str() {
+        "" => String::new(),
+        key => format!(" ({key} to {action})"),
+    }
+}
+
 /// Predefined keybinding IDs.
 pub mod keys {
     use super::KeybindingId;
@@ -999,9 +1041,12 @@ pub mod keys {
     pub const SESSION_TREE: KeybindingId = "app.session.tree";
     pub const SESSION_FORK: KeybindingId = "app.session.fork";
     pub const SESSION_RESUME: KeybindingId = "app.session.resume";
+    pub const MODEL_TOGGLE_FAVORITE: KeybindingId = "app.model.toggleFavorite";
     pub const MODEL_CYCLE_FORWARD: KeybindingId = "app.model.cycleForward";
     pub const MODEL_CYCLE_BACKWARD: KeybindingId = "app.model.cycleBackward";
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";
+    pub const TOOLS_COLLAPSE: KeybindingId = "app.tools.collapse";
+    pub const TOOLS_EXPAND_LAST: KeybindingId = "app.tools.expandLast";
     pub const THINKING_TOGGLE: KeybindingId = "app.thinking.toggle";
     pub const EXTERNAL_EDITOR: KeybindingId = "app.editor.external";
     pub const THINKING_CYCLE: KeybindingId = "app.thinking.cycle";

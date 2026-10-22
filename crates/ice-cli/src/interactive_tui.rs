@@ -56,6 +56,8 @@ mod autocomplete;
 use autocomplete::*;
 mod rendering;
 use rendering::*;
+mod session_header;
+use session_header::*;
 mod panels;
 mod pet;
 mod side_questions;
@@ -273,8 +275,6 @@ struct CommandContext {
     cwd: std::path::PathBuf,
     /// Loaded resources for /context; refreshed after successful /reload.
     resources: Arc<Mutex<ice_harness::types::AgentHarnessResources>>,
-    /// Context file section retained in the startup header, if visible.
-    startup_context: Option<Arc<Container>>,
     /// B5d: the reload context `/reload` drives. `Arc<ReloadContext>` so the
     /// blocking submit thread can cheaply clone it into the `ReloadCommand`
     /// without an `.await` (the command can't drive reload directly — it signals
@@ -596,7 +596,14 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
         command,
         exclude_from_context,
     ));
-    comp.set_expanded(*ctx.state.tool_outputs_expanded.lock().unwrap());
+    comp.set_user_shell();
+    comp.set_expanded(
+        ctx.state
+            .tool_outputs_expanded
+            .lock()
+            .unwrap()
+            .is_expanded(),
+    );
     ctx.chat.add_child(comp.clone());
 
     // Register the cancellation slot before spawning so an Esc arriving on the
@@ -686,6 +693,48 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
 enum ProviderOAuthPurpose {
     Login,
     Logout,
+}
+
+struct CopyNotice(usize);
+
+impl Component for CopyNotice {
+    fn render(&self, width: usize) -> Vec<String> {
+        let noun = if self.0 == 1 { "line" } else { "lines" };
+        let label = current_theme()
+            .colors
+            .success
+            .fg(&format!("{} {noun} copied", self.0));
+        vec![ice_tui::truncate_to_width(&label, width, "")]
+    }
+
+    fn invalidate(&self) {}
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+fn show_copy_notice(tui: &Arc<TuiAltScreen>, runtime: &tokio::runtime::Handle, line_count: usize) {
+    let notice = Arc::new(CopyNotice(line_count));
+    let handle = tui.show_overlay(
+        notice,
+        Some(ice_tui::OverlayOptions {
+            anchor: ice_tui::OverlayAnchor::TopRight,
+            margin: Some(ice_tui::OverlayMargin {
+                top: 1,
+                right: 2,
+                ..Default::default()
+            }),
+            non_capturing: true,
+            ..Default::default()
+        }),
+    );
+    let tui_notice = tui.clone();
+    runtime.spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        handle.hide();
+        tui_notice.request_render(false);
+    });
 }
 
 /// Message type for communication between the key/callback threads and the
@@ -948,6 +997,7 @@ pub async fn interactive_tui(
     // which project settings or package update roots this TUI observes.
     let cwd = reload_context.cwd.clone();
     let saved_settings = crate::settings::load_settings().unwrap_or_default();
+    ice_tui::set_tool_style(saved_settings.tool_style());
     // Remember visited projects for the all-project session picker. The index
     // points to existing files; it never moves or rewrites a session log.
     if let Ok(agent_dir) = crate::config::agent_dir() {
@@ -1011,30 +1061,7 @@ pub async fn interactive_tui(
         .map(|model| format!("({}) {}", model.provider, short_model_name(&model.id)))
         .unwrap_or_else(|| short_model_name(&lane_model_id));
 
-    // Snapshot startup capabilities for the welcome screen. Both accessors
-    // return defensive clones, so rendering this summary does not retain a
-    // harness lock or trigger a second resource scan.
-    let mut active_tool_names = lane.get_active_tools().await.unwrap_or_default();
-    // AgentHarness uses an empty active-name list as the default "all tools"
-    // state. Do not expose that implementation sentinel as `Tools (0) none`
-    // in the welcome banner (it is especially visible on the first prompt).
-    if active_tool_names.is_empty() {
-        active_tool_names = harness
-            .get_tools()
-            .await
-            .unwrap_or_default()
-            .into_iter()
-            .map(|tool| tool.tool.schema().name.clone())
-            .collect();
-    }
     let resources_snapshot = harness.get_resources().await.unwrap_or_default();
-    let skill_names: Vec<String> = resources_snapshot
-        .skills
-        .as_deref()
-        .unwrap_or(&[])
-        .iter()
-        .map(|skill| skill.name.clone())
-        .collect();
 
     // Channel between the key/callback threads and the main async loop.
     let (tx, mut rx) = mpsc::unbounded_channel::<TuiMessage>();
@@ -1058,17 +1085,30 @@ pub async fn interactive_tui(
     ask_user_bridge.attach();
     tui.set_main_screen_mode(matches!(args.tui_mode, crate::args::TuiMode::Regular));
 
+    // ---- Footer + status ----
+    let footer = Arc::new(FooterComponent::new());
+    footer.set_model(&model_name);
+    if let Ok(level) = lane.get_thinking_level().await {
+        footer.set_thinking_level(Some(thinking_level_name(level)));
+    }
+    footer.set_cwd(&cwd.to_string_lossy());
+    footer.set_git_branch(git_branch_for(&cwd).as_deref());
+    if let Some(m) = model_catalog.iter().find(|m| m.id == lane_model_id) {
+        footer.set_context_window(m.context_window as i64);
+    }
+    footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
+
+    // /context and the startup banner share a resource snapshot that the async
+    // reload handler refreshes, so neither awaits the harness accessor.
+    let resources_arc = Arc::new(Mutex::new(resources_snapshot));
+
     let chat_container = Arc::new(Container::new());
-    let startup_context = if should_show_startup_listing(args.verbose, quiet_startup) {
-        Some(add_welcome_message_with_capabilities(
+    if should_show_startup_listing(args.verbose, quiet_startup) {
+        add_welcome_message(
             &chat_container,
-            &active_tool_names,
-            &skill_names,
-            &resources_snapshot.context_files,
-        ))
-    } else {
-        None
-    };
+            startup_header(&footer, &cwd, &resources_arc),
+        );
+    }
 
     // First-launch gate: if `~/.icers/.setup_done` is absent, show the welcome
     // banner once, then write the sentinel. The banner covers the theme hint;
@@ -1144,9 +1184,9 @@ pub async fn interactive_tui(
     ));
 
     // ---- Editor ----
-    // Bordered box matching upstream: no `> ` prompt, no placeholder — the
-    // editor renders full-width `─` top/bottom borders with padding-only lines
-    // (see Editor::render). padding_x:1 gives a 1-col inset inside the box.
+    // Bordered box matching upstream: a `❯ ` prompt gutter in the border color,
+    // no placeholder, full-width `─` top/bottom borders (see Editor::render).
+    // padding_x:1 gives a 1-col inset inside the box.
     let keybindings = configured_keybindings();
     let new_message_count = Arc::new(crate::transcript_navigation::NewMessageCount::default());
     crate::transcript_navigation::install_with_message_count(
@@ -1163,6 +1203,8 @@ pub async fn interactive_tui(
         EditorStyle::default(),
         keybindings.clone(),
     ));
+    // upstream `defaultEditor.setPrompt(`${sym("prompt")} `)`.
+    editor.set_prompt("❯ ");
     sync_editor_viewport(&editor);
 
     // Bash-mode border: a `!`-prefixed draft recolors the editor border to the
@@ -1181,19 +1223,6 @@ pub async fn interactive_tui(
             });
         }));
     }
-
-    // ---- Footer + status ----
-    let footer = Arc::new(FooterComponent::new());
-    footer.set_model(&model_name);
-    if let Ok(level) = lane.get_thinking_level().await {
-        footer.set_thinking_level(Some(thinking_level_name(level)));
-    }
-    footer.set_cwd(&cwd.to_string_lossy());
-    footer.set_git_branch(git_branch_for(&cwd).as_deref());
-    if let Some(m) = model_catalog.iter().find(|m| m.id == lane_model_id) {
-        footer.set_context_window(m.context_window as i64);
-    }
-    footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
 
     // Live git-branch refresh (native fs-watch on `.git/HEAD`): a checkout or
     // commit updates the footer's branch without a manual refresh.
@@ -1216,10 +1245,7 @@ pub async fn interactive_tui(
     // the template's frontmatter description (or a fallback) so the autocomplete
     // popover shows what each template does.
     //
-    // Build autocomplete from the initial templates. /context shares a resource
-    // snapshot that the async reload handler refreshes, so its blocking command
-    // can list the current files without awaiting the harness accessor.
-    let resources_arc = Arc::new(Mutex::new(resources_snapshot));
+    // Build autocomplete from the initial templates.
     // Build the built-in command registry once — the single source of truth for
     // both dispatch and the built-in autocomplete entries. The discovered
     // prompt-template commands are merged into the autocomplete list separately
@@ -1252,7 +1278,9 @@ pub async fn interactive_tui(
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         bash_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
         hide_thinking: Arc::new(std::sync::Mutex::new(hide_thinking)),
-        tool_outputs_expanded: Arc::new(std::sync::Mutex::new(tool_outputs_expanded)),
+        tool_outputs_expanded: Arc::new(std::sync::Mutex::new(
+            crate::transcript_view::ToolExpansion::new(tool_outputs_expanded),
+        )),
         show_terminal_progress,
         status: std::sync::Mutex::new(RunStatus::Idle),
         ext_status: reload_context.ext_status.clone(),
@@ -1319,6 +1347,7 @@ pub async fn interactive_tui(
                 }
                 if event.active {
                     if state.show_terminal_progress {
+                        tui.set_progress(true);
                         state.editor.set_working(Some(WorkingState {
                             frame: 0,
                             started_at: std::time::Instant::now(),
@@ -1447,7 +1476,6 @@ pub async fn interactive_tui(
         model_catalog: model_catalog_arc.clone(),
         cwd: cwd.clone(),
         resources: resources_arc.clone(),
-        startup_context,
         reload_context: Arc::new(reload_context.clone()),
         session: agent_session.clone(),
     };
@@ -1658,6 +1686,7 @@ pub async fn interactive_tui(
             // and a lost event would otherwise leave the fullscreen frame at the
             // previous geometry for the rest of the session.
             tui_tick.ensure_size();
+            tui_tick.refresh_progress();
             let side_changed = side_tick.lock().unwrap().sync(
                 &tui_tick,
                 &side_context,
@@ -1729,6 +1758,7 @@ pub async fn interactive_tui(
     let state_for_key = state.clone();
     let model_catalog_for_key = model_catalog_arc.clone();
     let ask_user_for_key = ask_user_bridge.clone();
+    let runtime_for_key = tokio::runtime::Handle::current();
     // Ctrl+L routes through the same registry as `/model` (one path, not two),
     // so the key loop needs the same `CommandContext` + registry the submit
     // handler uses. All fields are `Arc`/cheap, so this clone is free.
@@ -1809,6 +1839,7 @@ pub async fn interactive_tui(
                 sync_editor_viewport(&editor_for_key);
                 *state_for_key.selection_start.lock().unwrap() = None;
                 *state_for_key.selection_end.lock().unwrap() = None;
+                tui_for_key.set_selection(None);
                 tui_for_key.note_resize();
                 continue;
             }
@@ -1827,6 +1858,7 @@ pub async fn interactive_tui(
                 if tui_for_key.handle_scroll_to_end_indicator_mouse_event(&m) {
                     *state_for_key.selection_start.lock().unwrap() = None;
                     *state_for_key.selection_end.lock().unwrap() = None;
+                    tui_for_key.set_selection(None);
                     continue;
                 }
                 use crossterm::event::MouseEventKind;
@@ -1873,8 +1905,24 @@ pub async fn interactive_tui(
                         // Motion with the button held = a genuine selection drag.
                         // (Terminals only report this with button-event mouse
                         // tracking, which `ProcessTerminal` enables.)
-                        if state_for_key.selection_start.lock().unwrap().is_some() {
+                        let start = *state_for_key.selection_start.lock().unwrap();
+                        if let Some((column, row, width)) = start {
                             *state_for_key.selection_end.lock().unwrap() = Some((m.column, m.row));
+                            // Show the range being dragged (upstream
+                            // `applySelection`); the copy still happens on Up.
+                            let end = tui_for_key.transcript_snapshot().and_then(|snapshot| {
+                                (snapshot.content_width == width)
+                                    .then(|| {
+                                        snapshot.content_position(
+                                            m.column as usize,
+                                            m.row as usize,
+                                            true,
+                                        )
+                                    })
+                                    .flatten()
+                            });
+                            tui_for_key.set_selection(end.map(|end| ((column, row), end)));
+                            tui_for_key.request_render_reusing_scroll_content();
                         }
                     }
                     MouseEventKind::Up(crossterm::event::MouseButton::Left) => {
@@ -1907,14 +1955,23 @@ pub async fn interactive_tui(
                                         extract_transcript_selection(&snapshot, start, end)
                                     })
                                 {
-                                    if !selected_text.trim().is_empty() {
-                                        let _ = copy_to_clipboard(&selected_text);
+                                    if !selected_text.trim().is_empty()
+                                        && copy_to_clipboard(&selected_text)
+                                    {
+                                        let line_count = selected_text.split('\n').count();
+                                        show_copy_notice(
+                                            &tui_for_key,
+                                            &runtime_for_key,
+                                            line_count,
+                                        );
                                     }
                                 }
                             }
                         }
                         *state_for_key.selection_start.lock().unwrap() = None;
                         *state_for_key.selection_end.lock().unwrap() = None;
+                        tui_for_key.set_selection(None);
+                        tui_for_key.request_render_reusing_scroll_content();
                     }
                     _ => {}
                 }
@@ -2241,12 +2298,38 @@ pub async fn interactive_tui(
                     selector.handle_key(key);
                     continue;
                 }
-                let (selector, _kind) = state_for_key
+                let (selector, kind) = state_for_key
                     .active_selector
                     .lock()
                     .unwrap()
                     .clone()
                     .expect("selector_open guaranteed Some");
+                if let SelectorView::Searchable(searchable) = &selector {
+                    if kind == SelectorKind::Model
+                        && keybinding_matches(
+                            &keybindings_for_key,
+                            &key,
+                            ice_tui::keybindings::keys::MODEL_TOGGLE_FAVORITE,
+                        )
+                    {
+                        let catalog = model_catalog_for_key
+                            .read()
+                            .unwrap_or_else(|error| error.into_inner())
+                            .clone();
+                        if let Err(error) = toggle_selected_favorite(
+                            searchable,
+                            &catalog,
+                            &state_for_key.current_model_id(),
+                        ) {
+                            add_error_message(
+                                &state_for_key.chat_container,
+                                &format!("Could not save favorite models: {error}"),
+                            );
+                        }
+                        tui_for_key.request_render_reusing_scroll_content();
+                        continue;
+                    }
+                }
                 selector.handle_key(key);
                 tui_for_key.request_render_reusing_scroll_content();
                 continue;
@@ -2356,15 +2439,34 @@ pub async fn interactive_tui(
                 continue;
             }
 
-            // 2d. Ctrl+O: toggle all tool output panels between compact and
-            // expanded rendering (upstream's global output toggle).
-            if keybinding_matches(
+            // 2d. Tool output expansion, as in ice: Ctrl+O opens the newest
+            // batch of cells (all closed again after the oldest), Alt+O closes
+            // everything, Shift+Alt+O toggles only the newest cell.
+            let tool_expansion = if keybinding_matches(
                 &keybindings_for_key,
                 &key,
                 ice_tui::keybindings::keys::TOOLS_EXPAND,
             ) {
-                let expanded = state_for_key.toggle_tool_outputs();
+                Some(state_for_key.cycle_tool_outputs())
+            } else if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::TOOLS_COLLAPSE,
+            ) {
+                Some(state_for_key.collapse_tool_outputs())
+            } else if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::TOOLS_EXPAND_LAST,
+            ) {
+                Some(state_for_key.toggle_newest_tool_output())
+            } else {
+                None
+            };
+            if let Some(status) = tool_expansion {
+                add_note_message(&state_for_key.chat_container, &status);
                 // Persist per-session so a later `-c`/`-r` restores it.
+                let expanded = state_for_key.tool_outputs_open();
                 let session = ctx_for_key.session.clone();
                 tokio::spawn(async move {
                     let _ = session
@@ -3457,11 +3559,8 @@ pub async fn interactive_tui(
                                 }
                             })),
                         ));
-                        update_resource_listing(
-                            &ctx.resources,
-                            ctx.startup_context.as_ref(),
-                            resources,
-                        );
+                        // The startup banner reads this snapshot on render.
+                        *ctx.resources.lock().unwrap() = resources;
                     }
                 }
                 // B5e: the reload swapped a fresh `ExtensionSession` into the

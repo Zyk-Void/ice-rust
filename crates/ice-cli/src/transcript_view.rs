@@ -25,6 +25,63 @@ use ice_tui::{
 };
 use serde_json::Value;
 
+/// How many of the newest collapsed tool cells one expand press opens (ice
+/// `TOOL_EXPAND_BATCH`).
+const TOOL_EXPAND_BATCH: usize = 3;
+
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+enum ExpandFrom {
+    #[default]
+    Nothing,
+    All,
+    /// Cells at or after this one (identified by component address) are open.
+    Cell(usize),
+}
+
+/// Tool-output expansion, ice style: a "from here on" anchor that grows
+/// backwards in batches of [`TOOL_EXPAND_BATCH`], plus per-cell overrides.
+#[derive(Default)]
+pub struct ToolExpansion {
+    from: ExpandFrom,
+    overrides: HashMap<usize, bool>,
+}
+
+impl ToolExpansion {
+    pub fn new(expanded: bool) -> Self {
+        Self {
+            from: if expanded {
+                ExpandFrom::All
+            } else {
+                ExpandFrom::Nothing
+            },
+            overrides: HashMap::new(),
+        }
+    }
+
+    pub fn is_expanded(&self) -> bool {
+        self.from != ExpandFrom::Nothing
+    }
+}
+
+/// Address of a transcript child, stable while the transcript holds it.
+fn cell_id(child: &Arc<dyn ice_tui::Component>) -> usize {
+    Arc::as_ptr(child) as *const () as usize
+}
+
+fn is_tool_cell(child: &Arc<dyn ice_tui::Component>) -> bool {
+    let any = child.as_any();
+    any.is::<ToolExecutionComponent>() || any.is::<ToolGroupComponent>()
+}
+
+fn set_cell_expanded(child: &Arc<dyn ice_tui::Component>, expanded: bool) {
+    let any = child.as_any();
+    if let Some(tool) = any.downcast_ref::<ToolExecutionComponent>() {
+        tool.set_expanded(expanded);
+    } else if let Some(group) = any.downcast_ref::<ToolGroupComponent>() {
+        group.set_expanded(expanded);
+    }
+}
+
 /// A tool call visible in an assistant message snapshot, normalized to plain
 /// data so both the local (`ice_ai::Content::ToolCall`) and the wire
 /// (`{"type":"toolCall",…}`) shapes map onto it.
@@ -97,8 +154,8 @@ pub struct TranscriptView {
     bash_components: Arc<Mutex<HashMap<String, Arc<BashExecutionComponent>>>>,
     /// When true, thinking blocks collapse to a label (toggled by the host).
     hide_thinking: Arc<Mutex<bool>>,
-    /// Global tool-output expansion preference (toggled by the host).
-    expanded: Arc<Mutex<bool>>,
+    /// Tool-output expansion state (toggled by the host).
+    expanded: Arc<Mutex<ToolExpansion>>,
     /// Optional transformer applied to raw assistant markdown before rendering
     /// (installed by the local host from plugin `register_markdown_transformer`
     /// handlers; always `None` on the remote client).
@@ -118,7 +175,7 @@ impl TranscriptView {
             Arc::new(Mutex::new(HashMap::new())),
             Arc::new(Mutex::new(HashMap::new())),
             Arc::new(Mutex::new(false)),
-            Arc::new(Mutex::new(false)),
+            Arc::new(Mutex::new(ToolExpansion::default())),
             Arc::new(Mutex::new(None)),
         )
     }
@@ -133,7 +190,7 @@ impl TranscriptView {
         tool_components: Arc<Mutex<HashMap<String, Arc<ToolExecutionComponent>>>>,
         bash_components: Arc<Mutex<HashMap<String, Arc<BashExecutionComponent>>>>,
         hide_thinking: Arc<Mutex<bool>>,
-        expanded: Arc<Mutex<bool>>,
+        expanded: Arc<Mutex<ToolExpansion>>,
         markdown_transformer: Arc<Mutex<Option<MarkdownTransformer>>>,
     ) -> Self {
         Self {
@@ -226,29 +283,122 @@ impl TranscriptView {
         }
     }
 
-    /// Set the global tool-output expansion preference and re-apply it to every
-    /// live or restored panel.
+    /// Open or close every tool cell, dropping any per-cell overrides.
     pub fn set_expanded(&self, expanded: bool) {
-        *self.expanded.lock().unwrap() = expanded;
-        set_tool_panels_expanded(&self.chat, expanded);
-        for comp in self.tool_components.lock().unwrap().values() {
-            comp.set_expanded(expanded);
+        {
+            let mut state = self.expanded.lock().unwrap();
+            state.from = if expanded {
+                ExpandFrom::All
+            } else {
+                ExpandFrom::Nothing
+            };
+            state.overrides.clear();
+        }
+        self.apply_expansion();
+        // User `!` bash panels are not tool cells; they follow the global state.
+        for child in self.chat.get_children() {
+            if let Some(bash) = child.as_any().downcast_ref::<BashExecutionComponent>() {
+                bash.set_expanded(expanded);
+            }
         }
         for comp in self.bash_components.lock().unwrap().values() {
             comp.set_expanded(expanded);
         }
     }
 
-    /// Flip the expansion preference; returns the new value.
+    /// Flip between all-open and all-closed; returns the new value.
     pub fn toggle_expanded(&self) -> bool {
-        let next = !*self.expanded.lock().unwrap();
+        let next = !self.expanded();
         self.set_expanded(next);
         next
     }
 
+    /// Ctrl+O: open the next batch of the newest collapsed cells; once the
+    /// oldest is open, close everything. Returns the status line.
+    pub fn cycle_expansion(&self) -> String {
+        let children = self.chat.get_children();
+        let cells: Vec<_> = children.iter().filter(|c| is_tool_cell(c)).collect();
+        let from = self.expand_from_index(&cells);
+        if from == Some(0) {
+            self.set_expanded(false);
+            return "Tool output: collapsed".to_string();
+        }
+        let start = from
+            .unwrap_or(cells.len())
+            .saturating_sub(TOOL_EXPAND_BATCH);
+        let key = ice_tui::tools_expand_key();
+        if start == 0 {
+            self.set_expanded(true);
+            return format!("Tool output: all expanded ({key} collapses)");
+        }
+        let anchor = cell_id(cells[start]);
+        {
+            let mut state = self.expanded.lock().unwrap();
+            state.from = ExpandFrom::Cell(anchor);
+            state.overrides.clear();
+        }
+        self.apply_expansion();
+        format!(
+            "Tool output: last {} of {} expanded ({key} for more)",
+            cells.len() - start,
+            cells.len()
+        )
+    }
+
+    /// Toggle only the newest tool cell, leaving older cells as they are.
+    pub fn toggle_newest(&self) -> String {
+        let children = self.chat.get_children();
+        let cells: Vec<_> = children.iter().filter(|c| is_tool_cell(c)).collect();
+        let Some(newest) = cells.last() else {
+            return "No tool output yet".to_string();
+        };
+        let from = self.expand_from_index(&cells);
+        let id = cell_id(newest);
+        let expanded = {
+            let mut state = self.expanded.lock().unwrap();
+            let current = state
+                .overrides
+                .get(&id)
+                .copied()
+                .unwrap_or_else(|| from.is_some_and(|from| cells.len() - 1 >= from));
+            state.overrides.insert(id, !current);
+            !current
+        };
+        self.apply_expansion();
+        format!(
+            "Newest tool call: {}",
+            if expanded { "expanded" } else { "collapsed" }
+        )
+    }
+
+    /// Index of the first open cell: `None` when collapsed, `Some(0)` for
+    /// all-open or when the anchor cell is gone.
+    fn expand_from_index(&self, cells: &[&Arc<dyn ice_tui::Component>]) -> Option<usize> {
+        match self.expanded.lock().unwrap().from {
+            ExpandFrom::Nothing => None,
+            ExpandFrom::All => Some(0),
+            ExpandFrom::Cell(id) => Some(cells.iter().position(|c| cell_id(c) == id).unwrap_or(0)),
+        }
+    }
+
+    fn apply_expansion(&self) {
+        let children = self.chat.get_children();
+        let cells: Vec<_> = children.iter().filter(|c| is_tool_cell(c)).collect();
+        let from = self.expand_from_index(&cells);
+        let state = self.expanded.lock().unwrap();
+        for (index, cell) in cells.iter().enumerate() {
+            let open = state
+                .overrides
+                .get(&cell_id(cell))
+                .copied()
+                .unwrap_or_else(|| from.is_some_and(|from| index >= from));
+            set_cell_expanded(cell, open);
+        }
+    }
+
     /// Whether tool outputs are currently expanded.
     pub fn expanded(&self) -> bool {
-        *self.expanded.lock().unwrap()
+        self.expanded.lock().unwrap().is_expanded()
     }
 
     /// Hide/show thinking blocks on the in-flight assistant message.
@@ -1277,6 +1427,64 @@ mod tests {
         assert!(!view.expanded());
         assert!(view.toggle_expanded());
         assert!(view.expanded());
+    }
+
+    fn cells(count: usize) -> (TranscriptView, Vec<Arc<ToolExecutionComponent>>) {
+        let chat = Arc::new(Container::new());
+        let tools: Vec<_> = (0..count)
+            .map(|i| {
+                let tool = Arc::new(ToolExecutionComponent::new(
+                    "write",
+                    &format!("{{\"path\":\"f{i}\"}}"),
+                ));
+                chat.add_child(tool.clone());
+                tool
+            })
+            .collect();
+        (TranscriptView::new(chat), tools)
+    }
+
+    fn open(tools: &[Arc<ToolExecutionComponent>]) -> Vec<bool> {
+        tools.iter().map(|tool| tool.is_expanded()).collect()
+    }
+
+    /// ice `toggleToolOutputExpansion`: each press opens the next three newest
+    /// cells; after everything is open the next press closes all.
+    #[test]
+    fn cycle_expansion_opens_newest_batches_then_collapses() {
+        let (view, tools) = cells(7);
+        assert!(view.cycle_expansion().contains("last 3 of 7"));
+        assert_eq!(open(&tools), [false, false, false, false, true, true, true]);
+        assert!(view.cycle_expansion().contains("last 6 of 7"));
+        assert_eq!(open(&tools), [false, true, true, true, true, true, true]);
+        assert!(view.cycle_expansion().contains("all expanded"));
+        assert!(open(&tools).iter().all(|open| *open));
+        assert!(view.expanded());
+        assert_eq!(view.cycle_expansion(), "Tool output: collapsed");
+        assert!(open(&tools).iter().all(|open| !open));
+        assert!(!view.expanded());
+    }
+
+    #[test]
+    fn toggle_newest_changes_only_the_last_cell_and_set_expanded_resets_it() {
+        let (view, tools) = cells(3);
+        assert_eq!(view.toggle_newest(), "Newest tool call: expanded");
+        assert_eq!(open(&tools), [false, false, true]);
+        assert_eq!(view.toggle_newest(), "Newest tool call: collapsed");
+        assert_eq!(open(&tools), [false, false, false]);
+
+        // An override survives a batch expansion of older cells...
+        view.cycle_expansion(); // all three (3 <= batch)
+        assert!(open(&tools).iter().all(|open| *open));
+        view.toggle_newest();
+        assert_eq!(open(&tools), [true, true, false]);
+        // ...and collapse-all clears it.
+        view.set_expanded(false);
+        view.set_expanded(true);
+        assert!(open(&tools).iter().all(|open| *open));
+
+        let (empty, _) = cells(0);
+        assert_eq!(empty.toggle_newest(), "No tool output yet");
     }
 
     #[test]
