@@ -1864,6 +1864,7 @@ pub async fn interactive_tui(
                 sync_editor_viewport(&editor_for_key);
                 *state_for_key.selection_start.lock().unwrap() = None;
                 *state_for_key.selection_end.lock().unwrap() = None;
+                tui_for_key.set_selection(None);
                 tui_for_key.note_resize();
                 continue;
             }
@@ -1882,6 +1883,7 @@ pub async fn interactive_tui(
                 if tui_for_key.handle_scroll_to_end_indicator_mouse_event(&m) {
                     *state_for_key.selection_start.lock().unwrap() = None;
                     *state_for_key.selection_end.lock().unwrap() = None;
+                    tui_for_key.set_selection(None);
                     continue;
                 }
                 use crossterm::event::MouseEventKind;
@@ -1928,8 +1930,24 @@ pub async fn interactive_tui(
                         // Motion with the button held = a genuine selection drag.
                         // (Terminals only report this with button-event mouse
                         // tracking, which `ProcessTerminal` enables.)
-                        if state_for_key.selection_start.lock().unwrap().is_some() {
+                        let start = *state_for_key.selection_start.lock().unwrap();
+                        if let Some((column, row, width)) = start {
                             *state_for_key.selection_end.lock().unwrap() = Some((m.column, m.row));
+                            // Show the range being dragged (upstream
+                            // `applySelection`); the copy still happens on Up.
+                            let end = tui_for_key.transcript_snapshot().and_then(|snapshot| {
+                                (snapshot.content_width == width)
+                                    .then(|| {
+                                        snapshot.content_position(
+                                            m.column as usize,
+                                            m.row as usize,
+                                            true,
+                                        )
+                                    })
+                                    .flatten()
+                            });
+                            tui_for_key.set_selection(end.map(|end| ((column, row), end)));
+                            tui_for_key.request_render_reusing_scroll_content();
                         }
                     }
                     MouseEventKind::Up(crossterm::event::MouseButton::Left) => {
@@ -1977,6 +1995,8 @@ pub async fn interactive_tui(
                         }
                         *state_for_key.selection_start.lock().unwrap() = None;
                         *state_for_key.selection_end.lock().unwrap() = None;
+                        tui_for_key.set_selection(None);
+                        tui_for_key.request_render_reusing_scroll_content();
                     }
                     _ => {}
                 }

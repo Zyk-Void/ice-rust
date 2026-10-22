@@ -480,6 +480,9 @@ pub(super) async fn replace_session_ui(
     state.new_message_count.reset();
     *state.selection_start.lock().unwrap() = None;
     *state.selection_end.lock().unwrap() = None;
+    if let Some(tui) = &state.tui {
+        tui.set_selection(None);
+    }
     chat.clear();
     add_welcome_message(chat);
     render_session_history(
