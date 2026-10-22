@@ -63,6 +63,11 @@ pub enum Command {
     },
     GetAvailableModels,
     GetAuthStatus,
+    Oauth {
+        provider: String,
+        action: String,
+        input: Option<Value>,
+    },
     SetApiKey {
         provider: String,
         #[serde(rename = "apiKey")]
@@ -251,6 +256,46 @@ mod tests {
                 before_id: Some(_)
             }
         ));
+    }
+
+    #[test]
+    fn oauth_payload_accepts_provider_actions_and_optional_input() {
+        for action in ["begin", "exchange", "refresh", "revoke"] {
+            let request: Request = serde_json::from_value(json!({
+                "type": "oauth", "provider": "fixture", "action": action,
+                "input": {"code": "fixture-code"}
+            }))
+            .unwrap();
+            assert!(matches!(request.command, Command::Oauth {
+                provider, action: parsed_action, input: Some(input)
+            } if provider == "fixture" && parsed_action == action
+                && input == json!({"code": "fixture-code"})));
+        }
+        let request: Request = serde_json::from_value(json!({
+            "type": "oauth", "provider": "fixture", "action": "begin"
+        }))
+        .unwrap();
+        assert!(matches!(
+            request.command,
+            Command::Oauth { input: None, .. }
+        ));
+    }
+
+    #[test]
+    fn oauth_payload_rejects_missing_or_wrongly_typed_required_fields() {
+        for payload in [
+            json!({"type": "oauth", "action": "begin"}),
+            json!({"type": "oauth", "provider": "fixture"}),
+            json!({"type": "oauth", "provider": 1, "action": "begin"}),
+            json!({"type": "oauth", "provider": "fixture", "action": false}),
+            json!({"type": "oauth", "provider": null, "action": "begin"}),
+            json!({"type": "oauth", "provider": "fixture", "action": null}),
+        ] {
+            assert!(
+                serde_json::from_value::<Request>(payload.clone()).is_err(),
+                "{payload}"
+            );
+        }
     }
 
     #[test]

@@ -314,8 +314,8 @@ pub fn repair_orphaned_tool_calls(
     let mut input = messages.into_iter().peekable();
     let mut repaired = Vec::new();
     let mut report = ToolCallRepairReport::default();
-    while let Some(message) = input.next() {
-        let AgentMessage::Assistant(assistant) = &message else {
+    while let Some(mut message) = input.next() {
+        let AgentMessage::Assistant(assistant) = &mut message else {
             if let AgentMessage::ToolResult(result) = &message {
                 tracing::warn!(call_id = %result.tool_call_id, "omitting an orphaned tool result from provider context");
             } else {
@@ -323,6 +323,19 @@ pub fn repair_orphaned_tool_calls(
             }
             continue;
         };
+        // Keep the durable call and rejection events untouched, but never replay
+        // malformed correlation metadata to a provider. Text preserves the failed
+        // attempt in context without inventing ids or leaving an empty assistant.
+        for content in &mut assistant.content {
+            if let Content::ToolCall(call) = content {
+                if call.id.trim().is_empty() || call.name.trim().is_empty() {
+                    tracing::warn!(call_id = %call.id, tool_name = %call.name, "replacing a malformed tool call with text in provider context");
+                    *content = Content::text(
+                        "Tool call was rejected because the provider returned an empty tool-call id or tool name. The tool was not executed.",
+                    );
+                }
+            }
+        }
         let timestamp = assistant.timestamp;
         let mut pending: Vec<(String, String)> = assistant
             .content
@@ -472,6 +485,61 @@ mod tests {
             is_error: false,
             timestamp: 43,
         }))
+    }
+
+    #[test]
+    fn malformed_tool_calls_are_text_only_in_live_and_replayed_provider_context() {
+        for (id, name) in [("", "read"), (" \t", "read"), ("bad", ""), ("bad", " \t")] {
+            let mut rejected = tool_result(id, name);
+            if let AgentMessage::ToolResult(result) = &mut rejected {
+                result.is_error = true;
+                result.content = vec![Content::text("malformed call rejected")];
+            }
+            let history = vec![
+                assistant_with_calls(&[(id, name), ("valid", "read")]),
+                rejected,
+                tool_result("valid", "read"),
+            ];
+            let durable = history.clone();
+            let (repaired, report) = repair_orphaned_tool_calls(history.clone());
+            assert!(
+                report.is_empty(),
+                "malformed calls must not get synthetic results"
+            );
+            assert_eq!(repaired.len(), 2);
+            let AgentMessage::Assistant(assistant) = &repaired[0] else {
+                panic!("expected assistant");
+            };
+            assert!(matches!(&assistant.content[0], Content::Text(text) if !text.text.is_empty()));
+            assert!(
+                matches!(&assistant.content[1], Content::ToolCall(call) if call.id == "valid" && call.name == "read")
+            );
+            assert_eq!(repaired[1], durable[2]);
+
+            let live = convert_to_llm(history.clone());
+            assert_eq!(live.len(), 2);
+            assert!(
+                matches!(&live[0], Message::Assistant(assistant) if assistant.content == match &repaired[0] {
+                    AgentMessage::Assistant(expected) => expected.content.clone(),
+                    _ => unreachable!(),
+                })
+            );
+            assert!(
+                matches!(&live[1], Message::ToolResult(result) if result.tool_call_id == "valid" && result.tool_name == "read")
+            );
+            let replayed: Vec<AgentMessage> =
+                serde_json::from_str(&serde_json::to_string(&history).unwrap()).unwrap();
+            assert_eq!(convert_to_llm(replayed), live);
+            assert_eq!(
+                history, durable,
+                "provider repair must not mutate durable history"
+            );
+
+            let only_invalid = convert_to_llm(vec![assistant_with_calls(&[(id, name)])]);
+            assert!(
+                matches!(&only_invalid[..], [Message::Assistant(assistant)] if matches!(&assistant.content[..], [Content::Text(text)] if !text.text.is_empty()))
+            );
+        }
     }
 
     #[test]

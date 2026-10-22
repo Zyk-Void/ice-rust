@@ -2235,6 +2235,51 @@ mod tests {
         (client, output, task)
     }
 
+    #[tokio::test]
+    async fn rpc_oauth_reaches_handler_only_for_valid_payloads() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_test_harness("unused", 100.0).await;
+        let (mut client, output, task) =
+            start_test_rpc(harness, ice_extensions::UiDialogMailbox::new());
+        client
+            .write_all(
+                concat!(
+                    "{\"type\":\"oauth\",\"id\":1,\"provider\":\"fixture\",\"action\":\"begin\"}\n",
+                    "{\"type\":\"oauth\",\"id\":2,\"provider\":123,\"action\":\"begin\"}\n",
+                    "{\"type\":\"oauth\",\"id\":3,\"provider\":\"fixture\",\"action\":false}\n"
+                )
+                .as_bytes(),
+            )
+            .await
+            .unwrap();
+        client.shutdown().await.unwrap();
+        assert_eq!(
+            tokio::time::timeout(std::time::Duration::from_secs(3), task)
+                .await
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        let messages = output.messages();
+        for (id, expected_error) in [
+            (1, "OAuth is unavailable without an extension provider"),
+            (2, "invalid command payload"),
+            (3, "invalid command payload"),
+        ] {
+            let response = messages.iter().find(|message| message["id"] == id).unwrap();
+            assert_eq!(response["command"], "oauth");
+            assert_eq!(response["success"], false);
+            assert_eq!(response["error"], expected_error);
+        }
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+    }
+
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn rpc_eof_waits_for_accepted_prompt() {
         use tokio::io::AsyncWriteExt;
