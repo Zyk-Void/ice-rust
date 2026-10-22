@@ -596,6 +596,7 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
         command,
         exclude_from_context,
     ));
+    comp.set_user_shell();
     comp.set_expanded(*ctx.state.tool_outputs_expanded.lock().unwrap());
     ctx.chat.add_child(comp.clone());
 

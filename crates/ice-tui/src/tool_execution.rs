@@ -832,16 +832,16 @@ pub(crate) fn format_elapsed(duration: std::time::Duration) -> String {
 }
 
 /// Borrowed view of a tool call for [`render_compact`].
-struct CompactTool<'a> {
-    name: &'a str,
-    label: String,
-    summary: String,
-    status: ToolStatus,
-    result: Option<&'a str>,
-    diff: Option<&'a [String]>,
-    markdown: bool,
-    expanded: bool,
-    leading_spacer: bool,
+pub(crate) struct CompactTool<'a> {
+    pub(crate) name: &'a str,
+    pub(crate) label: String,
+    pub(crate) summary: String,
+    pub(crate) status: ToolStatus,
+    pub(crate) result: Option<&'a str>,
+    pub(crate) diff: Option<&'a [String]>,
+    pub(crate) markdown: bool,
+    pub(crate) expanded: bool,
+    pub(crate) leading_spacer: bool,
 }
 
 fn is_blank_row(line: &str) -> bool {
@@ -873,7 +873,7 @@ fn diff_stats(diff: &[String]) -> String {
 /// Port of ice `ToolExecutionComponent.renderCompact`: a bullet row, then the
 /// outcome under a `⎿` gutter. Collapsed shows a short preview; expanded shows
 /// the whole result.
-fn render_compact(colors: &ThemeColors, t: &CompactTool, width: usize) -> Vec<String> {
+pub(crate) fn render_compact(colors: &ThemeColors, t: &CompactTool, width: usize) -> Vec<String> {
     let width = if t.expanded {
         width
     } else {

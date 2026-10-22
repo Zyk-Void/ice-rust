@@ -21,6 +21,7 @@ use crate::ansi::bold;
 use crate::ansi::strip_ansi;
 use crate::spacer::Spacer;
 use crate::theme::{theme, theme_revision, Theme, ThemeColors};
+use crate::tool_execution::{render_compact, tool_style, CompactTool, ToolStatus, ToolStyle};
 use crate::tool_panel::ToolPanel;
 use crate::utils::{truncate_to_width, wrap_text_with_ansi};
 use crate::visual_truncate::truncate_to_visual_lines;
@@ -58,6 +59,7 @@ struct BashRenderCache {
     width: usize,
     revision: u64,
     theme_revision: u64,
+    style: ToolStyle,
     lines: Vec<String>,
 }
 
@@ -72,6 +74,9 @@ pub struct BashExecutionComponent {
     /// `true` for a `!!`-prefixed user command: render dim and keep out of the
     /// model context (`bash-execution.ts` `excludeFromContext`).
     exclude_from_context: Mutex<bool>,
+    /// `true` for a user-typed `!command`: always the boxed shell panel. Agent
+    /// bash calls follow the tool style (ice only boxes user shell commands).
+    user_shell: Mutex<bool>,
     /// When the command started / finished, for the live elapsed readout while
     /// running and the total elapsed after completion.
     started_at: Mutex<Option<Instant>>,
@@ -104,11 +109,18 @@ impl BashExecutionComponent {
             expanded: Mutex::new(false),
             truncation: Mutex::new(BashTruncation::default()),
             exclude_from_context: Mutex::new(exclude_from_context),
+            user_shell: Mutex::new(false),
             started_at: Mutex::new(Some(Instant::now())),
             finished_at: Mutex::new(None),
             revision: AtomicU64::new(0),
             cache: Mutex::new(None),
         }
+    }
+
+    /// Mark this as a user-typed `!command`, which keeps the boxed panel.
+    pub fn set_user_shell(&self) {
+        *self.user_shell.lock().unwrap() = true;
+        self.bump();
     }
 
     /// Invalidate the memoized render (state changed).
@@ -292,6 +304,38 @@ impl BashExecutionComponent {
         }
     }
 
+    /// Compact style for an agent bash call: the shared bullet row and gutter
+    /// preview, with the exit/truncation outcome appended to the output.
+    fn render_compact_panel(&self, width: usize, status: BashStatus, theme: &Theme) -> Vec<String> {
+        let command = self.command.lock().unwrap().clone();
+        let mut text = self.output_lines.lock().unwrap().join("\n");
+        let hidden = 0;
+        for line in self.status_line(hidden, &theme.colors) {
+            text.push('\n');
+            text.push_str(&strip_ansi(&line));
+        }
+        let tool_status = match status {
+            BashStatus::Running => ToolStatus::Running,
+            BashStatus::Complete => ToolStatus::Completed,
+            BashStatus::Cancelled | BashStatus::Error => ToolStatus::Failed,
+        };
+        render_compact(
+            &theme.colors,
+            &CompactTool {
+                name: "bash",
+                label: "bash".to_string(),
+                summary: command,
+                status: tool_status,
+                result: Some(text.as_str()).filter(|t| !t.trim().is_empty()),
+                diff: None,
+                markdown: false,
+                expanded: *self.expanded.lock().unwrap(),
+                leading_spacer: true,
+            },
+            width,
+        )
+    }
+
     /// Render against one theme snapshot; keep all insets inside the background.
     fn render_panel(&self, width: usize, status: BashStatus, theme: &Theme) -> Vec<String> {
         let colors = &theme.colors;
@@ -359,7 +403,7 @@ impl BashExecutionComponent {
             );
             lines.push(panel_line(&truncate_to_width(&row, content_width, "…")));
             if elapsed > LONG_RUNNING_HINT_AFTER {
-                let hint = format!("{} Esc / Ctrl+C 中止", colors.muted.fg("⏸"));
+                let hint = format!("{} Esc / Ctrl+C to abort", colors.muted.fg("⏸"));
                 for part in wrap_text_with_ansi(&hint, content_width) {
                     lines.push(panel_line(&part));
                 }
@@ -385,6 +429,7 @@ impl Component for BashExecutionComponent {
         let status = *self.status.lock().unwrap();
         let revision = self.revision.load(Ordering::Acquire);
         let theme_revision = theme_revision();
+        let style = tool_style();
 
         // A finished panel never changes (no live elapsed timer), so serve it
         // from the cache. A running panel is skipped — its elapsed timer must
@@ -395,6 +440,7 @@ impl Component for BashExecutionComponent {
                     if cached.width == width
                         && cached.revision == revision
                         && cached.theme_revision == theme_revision
+                        && cached.style == style
                     {
                         return cached.lines.clone();
                     }
@@ -402,7 +448,11 @@ impl Component for BashExecutionComponent {
             }
         }
 
-        let lines = self.render_panel(width, status, &theme());
+        let lines = if style == ToolStyle::Compact && !*self.user_shell.lock().unwrap() {
+            self.render_compact_panel(width, status, &theme())
+        } else {
+            self.render_panel(width, status, &theme())
+        };
 
         if status != BashStatus::Running {
             if let Ok(mut cache) = self.cache.lock() {
@@ -410,6 +460,7 @@ impl Component for BashExecutionComponent {
                     width,
                     revision,
                     theme_revision,
+                    style,
                     lines: lines.clone(),
                 });
             }
@@ -432,6 +483,42 @@ impl Component for BashExecutionComponent {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Agent bash calls render compact: one `Ran` row, a 3-row head under the
+    /// gutter and a hint; a failure keeps its exit code visible.
+    #[test]
+    fn compact_agent_bash_is_one_row_with_head_preview() {
+        let theme = Theme::default();
+        let c = BashExecutionComponent::new("ls -la && find crates -name Cargo.toml");
+        c.append_output(
+            &(1..=33)
+                .map(|i| format!("row {i}"))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
+        c.set_complete(Some(0), false, BashTruncation::default());
+        let plain = |c: &BashExecutionComponent| {
+            let status = *c.status.lock().unwrap();
+            strip_ansi(&c.render_compact_panel(100, status, &theme).join("\n"))
+        };
+        let done = plain(&c);
+        assert!(
+            done.contains("✓ Ran ls -la && find crates -name Cargo.toml"),
+            "{done}"
+        );
+        assert!(done.contains("⎿ row 1") && done.contains("row 3") && !done.contains("row 4"));
+        assert!(done.contains("… +30 lines"));
+        assert!(!done.contains("$ "));
+
+        let failed = BashExecutionComponent::new("make");
+        failed.append_output("boom");
+        failed.set_complete(Some(2), false, BashTruncation::default());
+        let text = plain(&failed);
+        assert!(
+            text.contains("✗ Ran make") && text.contains("(exit 2)"),
+            "{text}"
+        );
+    }
 
     #[test]
     fn panel_has_themed_insets_in_every_execution_state() {
