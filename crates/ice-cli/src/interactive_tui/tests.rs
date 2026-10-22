@@ -3405,9 +3405,9 @@ fn provider_selector_items_cover_builtin_providers() {
         // Every row advertises its model count, origin, and key status, so a
         // built-in catalog entry can't be mistaken for a configured one.
         assert!(items.iter().all(|item| {
-            item.description
-                .as_deref()
-                .is_some_and(|d| d.contains("model(s)") && d.contains("内置") && d.contains("key"))
+            item.description.as_deref().is_some_and(|d| {
+                d.contains("model(s)") && d.contains("built-in") && d.contains("key")
+            })
         }));
     });
 }

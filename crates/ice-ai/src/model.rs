@@ -85,7 +85,7 @@ pub fn prior_reasoning_is_replayed(model: &Model) -> bool {
                 if compat.requires_thinking_as_text == Some(true)
                     || compat.requires_reasoning_content == Some(true)
         ),
-        Api::OpenaiResponses | Api::AzureOpenaiResponses | Api::OpenaiCodexResponses => true,
+        Api::OpenaiResponses => true,
         Api::AnthropicMessages => true,
         _ => false,
     }
@@ -148,6 +148,88 @@ pub struct OpenaiResponsesCompat {
 #[serde(default, rename_all = "camelCase")]
 pub struct BedrockCompat {
     pub supports_strict_mode: Option<bool>,
+}
+
+/// A wire protocol icers implements natively. Closed on purpose: adding one is
+/// a compile-checked change, since every `match` on it (provider factory,
+/// default endpoint, compat parsing) must handle the new variant. Custom and
+/// plugin api styles are not protocols; they stay `Api::Other`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum WireProtocol {
+    AnthropicMessages,
+    OpenaiCompletions,
+    OpenaiResponses,
+}
+
+impl WireProtocol {
+    /// Every protocol, in the order the provider form offers them (Chat
+    /// Completions first: most compatible endpoints speak it).
+    pub const ALL: [WireProtocol; 3] = [
+        WireProtocol::OpenaiCompletions,
+        WireProtocol::AnthropicMessages,
+        WireProtocol::OpenaiResponses,
+    ];
+
+    /// The `Api` label models and messages of this protocol carry.
+    pub fn api(self) -> Api {
+        match self {
+            WireProtocol::AnthropicMessages => Api::AnthropicMessages,
+            WireProtocol::OpenaiCompletions => Api::OpenaiCompletions,
+            WireProtocol::OpenaiResponses => Api::OpenaiResponses,
+        }
+    }
+
+    /// The protocol behind an `Api` label, or `None` for `faux` and
+    /// custom/plugin api styles.
+    pub fn from_api(api: &Api) -> Option<Self> {
+        match api {
+            Api::AnthropicMessages => Some(WireProtocol::AnthropicMessages),
+            Api::OpenaiCompletions => Some(WireProtocol::OpenaiCompletions),
+            Api::OpenaiResponses => Some(WireProtocol::OpenaiResponses),
+            Api::Faux | Api::Other(_) => None,
+        }
+    }
+
+    /// Parse an `api` string such as `models.json` uses (`"openai-completions"`).
+    pub fn parse(api: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|protocol| protocol.as_str() == api)
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            WireProtocol::AnthropicMessages => "anthropic-messages",
+            WireProtocol::OpenaiCompletions => "openai-completions",
+            WireProtocol::OpenaiResponses => "openai-responses",
+        }
+    }
+
+    /// Decode a `models.json` `compat` object into this protocol's typed flags.
+    /// Unknown keys are ignored; a known key with the wrong type is an error.
+    pub fn parse_compat(
+        self,
+        value: serde_json::Value,
+    ) -> Result<StreamingProtocolCompat, serde_json::Error> {
+        Ok(match self {
+            WireProtocol::AnthropicMessages => {
+                StreamingProtocolCompat::AnthropicMessages(serde_json::from_value(value)?)
+            }
+            WireProtocol::OpenaiCompletions => {
+                StreamingProtocolCompat::OpenaiCompletions(serde_json::from_value(value)?)
+            }
+            WireProtocol::OpenaiResponses => {
+                StreamingProtocolCompat::OpenaiResponses(serde_json::from_value(value)?)
+            }
+        })
+    }
+}
+
+impl std::fmt::Display for WireProtocol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
 }
 
 /// Per-API compat blob. Matches the TS `compat?` discriminator on `Model`.
@@ -287,5 +369,60 @@ impl Model {
             }
         }
         Off
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn wire_protocol_strings_match_their_api_labels() {
+        for protocol in WireProtocol::ALL {
+            assert_eq!(protocol.api().as_str(), protocol.as_str());
+            assert_eq!(WireProtocol::parse(protocol.as_str()), Some(protocol));
+            assert_eq!(WireProtocol::from_api(&protocol.api()), Some(protocol));
+            assert_eq!(
+                serde_json::to_value(protocol).unwrap(),
+                serde_json::to_value(protocol.api()).unwrap()
+            );
+        }
+        assert_eq!(WireProtocol::parse("faux"), None);
+        assert_eq!(WireProtocol::from_api(&Api::Faux), None);
+        assert_eq!(WireProtocol::parse("google-generative-ai"), None);
+    }
+
+    #[test]
+    fn labels_without_a_protocol_round_trip_unchanged() {
+        // Older sessions and plugin providers may carry api labels icers has no
+        // protocol for; they must read back and serialize as the same string.
+        for label in [
+            "google-generative-ai",
+            "openai-codex-responses",
+            "my-plugin",
+        ] {
+            let api: Api = serde_json::from_value(serde_json::json!(label)).unwrap();
+            assert_eq!(api, Api::Other(label.to_string()));
+            assert_eq!(
+                serde_json::to_value(&api).unwrap(),
+                serde_json::json!(label)
+            );
+        }
+    }
+
+    #[test]
+    fn parse_compat_types_the_block_for_its_protocol() {
+        let value = serde_json::json!({ "supportsStrictMode": true });
+        assert!(matches!(
+            WireProtocol::OpenaiResponses.parse_compat(value.clone()),
+            Ok(StreamingProtocolCompat::OpenaiResponses(c)) if c.supports_strict_mode == Some(true)
+        ));
+        assert!(matches!(
+            WireProtocol::OpenaiCompletions.parse_compat(value),
+            Ok(StreamingProtocolCompat::OpenaiCompletions(c)) if c.supports_strict_mode == Some(true)
+        ));
+        assert!(WireProtocol::AnthropicMessages
+            .parse_compat(serde_json::json!({ "supportsStrictTools": 1 }))
+            .is_err());
     }
 }

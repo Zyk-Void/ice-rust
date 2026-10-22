@@ -2,6 +2,7 @@
 //! Authentication and model binding are applied once, outside every factory.
 use super::binding::{ExecutionBinding, RequestAuth};
 use super::*;
+use ice_ai::WireProtocol;
 use ice_extensions::{ExtensionSession, ProviderManifest};
 
 trait ProviderFactory: Send + Sync {
@@ -13,7 +14,7 @@ trait ProviderFactory: Send + Sync {
     ) -> Arc<dyn Provider>;
 }
 
-struct ProtocolFactory(ice_ai::Api);
+struct ProtocolFactory(WireProtocol);
 impl ProviderFactory for ProtocolFactory {
     fn create(
         &self,
@@ -21,17 +22,18 @@ impl ProviderFactory for ProtocolFactory {
         models: Vec<Model>,
         settings: &settings::Settings,
     ) -> Arc<dyn Provider> {
-        let fallback = if self.0 == ice_ai::Api::AnthropicMessages {
-            "https://api.anthropic.com"
-        } else {
-            "https://api.openai.com/v1"
+        let fallback = match self.0 {
+            WireProtocol::AnthropicMessages => "https://api.anthropic.com",
+            WireProtocol::OpenaiCompletions | WireProtocol::OpenaiResponses => {
+                "https://api.openai.com/v1"
+            }
         };
         let http = provider_http_client(&models, fallback, settings);
         match self.0 {
-            ice_ai::Api::AnthropicMessages => Arc::new(
+            WireProtocol::AnthropicMessages => Arc::new(
                 AnthropicProvider::with_models_without_env_api_key(None, http, models),
             ),
-            ice_ai::Api::OpenaiCompletions => {
+            WireProtocol::OpenaiCompletions => {
                 Arc::new(OpenAiCompletionsProvider::with_models_without_env_api_key(
                     provider_id,
                     None,
@@ -39,7 +41,7 @@ impl ProviderFactory for ProtocolFactory {
                     models,
                 ))
             }
-            ice_ai::Api::OpenaiResponses => {
+            WireProtocol::OpenaiResponses => {
                 Arc::new(OpenAiResponsesProvider::with_models_without_env_api_key(
                     provider_id,
                     None,
@@ -47,7 +49,6 @@ impl ProviderFactory for ProtocolFactory {
                     models,
                 ))
             }
-            _ => unreachable!("only supported wire protocols are registered"),
         }
     }
 }
@@ -68,19 +69,15 @@ pub(super) struct RuntimeFactories {
 
 impl Default for RuntimeFactories {
     fn default() -> Self {
-        let protocols = [
-            ice_ai::Api::AnthropicMessages,
-            ice_ai::Api::OpenaiCompletions,
-            ice_ai::Api::OpenaiResponses,
-        ]
-        .into_iter()
-        .map(|api| {
-            (
-                api.as_str().to_string(),
-                Arc::new(ProtocolFactory(api)) as Arc<dyn ProviderFactory>,
-            )
-        })
-        .collect();
+        let protocols = WireProtocol::ALL
+            .into_iter()
+            .map(|protocol| {
+                (
+                    protocol.as_str().to_string(),
+                    Arc::new(ProtocolFactory(protocol)) as Arc<dyn ProviderFactory>,
+                )
+            })
+            .collect();
         Self {
             protocols,
             providers: BTreeMap::new(),

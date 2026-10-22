@@ -33,7 +33,7 @@ pub mod types;
 // Flat re-exports — consumers do `use ice_ai::Message` not `ice_ai::types::Message`.
 pub use error::AiError;
 pub use event_stream::{AssistantMessageEventStream, AssistantMessageEventStreamProducer};
-pub use model::{Model, StreamingProtocolCompat};
+pub use model::{Model, StreamingProtocolCompat, WireProtocol};
 pub use provider::{
     CacheRetention, ContextPatch, NoopProviderHooks, Provider, ProviderHooks, SimpleStreamOptions,
     SimpleStreamOptionsPatch, DEFAULT_LLM_API_TIMEOUT,

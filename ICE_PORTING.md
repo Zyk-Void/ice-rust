@@ -616,11 +616,20 @@ General:
 
 ### 9.1 Wire APIs
 Rust implements 3: `anthropic-messages`, `openai-completions`, `openai-responses`
-(`crates/ice-ai/src/providers/`). The `Api` enum (`crates/ice-ai/src/types.rs:438`)
-names the others, but the factory hits `unreachable!` for them
-(`crates/ice-cli/src/provider/factories.rs:50`).
+(`crates/ice-ai/src/providers/`). The closed `ice_ai::WireProtocol` enum
+(`crates/ice-ai/src/model.rs`) lists exactly these. The provider factory, the
+default endpoints and `models.json` `compat` parsing all match on it
+exhaustively, so a new protocol is a compile-checked addition. Other `api`
+strings (provider packages, older sessions) stay `Api::Other` and are not
+served by a built-in protocol.
 
-Missing implementations (`ice:ai/src/api/*`):
+**Scope decision (2026-10-22):** icers speaks the OpenAI-compatible and
+Anthropic-compatible wire protocols, plus the ChatGPT subscription (Codex)
+endpoint. It does not port the other wire APIs below or the per-provider
+catalog in §9.2. Route other providers through an OpenAI- or
+Anthropic-compatible gateway (Omni router) instead.
+
+Not planned (`ice:ai/src/api/*`), except `openai-codex-responses`:
 
 | API | File | Notes |
 |---|---|---|
@@ -629,7 +638,7 @@ Missing implementations (`ice:ai/src/api/*`):
 | `bedrock-converse-stream` | `bedrock-converse-stream.ts` (42 KB) | AWS SigV4, event-stream decoding |
 | `mistral-conversations` | `mistral-conversations.ts` | |
 | `azure-openai-responses` | `azure-openai-responses.ts` | Azure deployment URLs on top of Responses |
-| `openai-codex-responses` | `openai-codex-responses.ts` (54 KB) | ChatGPT/Codex OAuth backend |
+| `openai-codex-responses` | `openai-codex-responses.ts` (54 KB) | ChatGPT/Codex OAuth backend. **Planned**, with built-in ChatGPT login |
 | `ice-messages` | `ice-messages.ts` | ice's own protocol: one POST `{model,context,options}` to `<baseUrl>/messages`, SSE of serialized assistant events plus `done`/`error`; used by the Radius gateway or any `"api": "ice-messages"` custom provider |
 | OpenRouter images | `openrouter-images.ts` | Rust has `crates/ice-ai/src/images.rs`; verify parity |
 

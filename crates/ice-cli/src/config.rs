@@ -37,7 +37,7 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use ice_ai::{Api, InputModality, Model, ModelCost, StreamingProtocolCompat, ThinkingLevelMap};
+use ice_ai::{InputModality, Model, ModelCost, ThinkingLevelMap, WireProtocol};
 
 /// The config directory name under the home dir.
 pub const CONFIG_DIR_NAME: &str = ".icers";
@@ -352,8 +352,8 @@ pub struct ModelsConfig {
 }
 
 /// A provider entry in `models.json`. The fields mirror the TS `ProviderConfig`
-/// one-for-one; v1 honors `base_url`/`api_key`/`headers`/`auth_header`/`models`,
-/// and **ignores** `api` values other than `anthropic-messages` (documented).
+/// one-for-one. `api` stays a string because provider packages may declare
+/// their own api style; [`ProviderConfig::protocol`] is the typed view.
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProviderConfig {
@@ -373,6 +373,18 @@ pub struct ProviderConfig {
     pub auth_header: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub models: Vec<ModelDefinition>,
+}
+
+impl ProviderConfig {
+    /// The built-in wire protocol this provider speaks. An omitted or empty
+    /// `api` means `anthropic-messages`; a custom or package api style is
+    /// `None`, because no built-in protocol serves it.
+    pub fn protocol(&self) -> Option<WireProtocol> {
+        match self.api.as_deref() {
+            None | Some("") => Some(WireProtocol::AnthropicMessages),
+            Some(api) => WireProtocol::parse(api),
+        }
+    }
 }
 
 /// One model under a provider. `id` is required (mirrors TS `ModelDefinition`).
@@ -805,26 +817,6 @@ fn resolve_command_uncached(cmd: &str) -> Option<String> {
     }
 }
 
-/// (`anthropic-messages`, or omitted/unknown). Unknown `api` is allowed through
-/// for forward-compat but flagged ignored-in-v1 in the docs. Public so
-/// [`crate::provider`] can scan models.json providers for an `authHeader:true`
-/// gateway bearer source.
-pub fn provider_is_anthropic_compatible(cfg: &ProviderConfig) -> bool {
-    match cfg.api.as_deref() {
-        None | Some("") | Some("anthropic-messages") => true,
-        _ => false,
-    }
-}
-
-/// Whether a configured provider uses the OpenAI Chat Completions protocol.
-pub fn provider_is_openai_completions(cfg: &ProviderConfig) -> bool {
-    matches!(cfg.api.as_deref(), Some("openai-completions"))
-}
-
-pub fn provider_is_openai_responses(cfg: &ProviderConfig) -> bool {
-    matches!(cfg.api.as_deref(), Some("openai-responses"))
-}
-
 /// Resolve an OpenAI-compatible provider key from its explicit config or a
 /// known provider's canonical environment variable. Arbitrary custom provider
 /// ids must declare `apiKey: "$ENV"`: deriving an env name by normalizing the
@@ -852,20 +844,14 @@ fn native_provider_api_key_env_var(provider_id: &str) -> Option<&'static str> {
 
 /// Convert a `(provider_id, ProviderConfig)` pair into a list of library
 /// [`Model`]s. Provider-level `base_url`/`headers`/`auth_header` fold into each
-/// model. Returns `None` for protocols that do not have a runtime provider.
+/// model. Returns `None` when no built-in protocol serves the provider's `api`.
 pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec<Model>> {
-    let api = if provider_is_anthropic_compatible(cfg) {
-        Api::AnthropicMessages
-    } else if provider_is_openai_completions(cfg) {
-        Api::OpenaiCompletions
-    } else if provider_is_openai_responses(cfg) {
-        Api::OpenaiResponses
-    } else {
-        return None;
-    };
-    let provider_base = cfg.base_url.clone().unwrap_or_else(|| match api {
-        Api::OpenaiCompletions | Api::OpenaiResponses => "https://api.openai.com".to_string(),
-        _ => default_anthropic_base_url(),
+    let protocol = cfg.protocol()?;
+    let provider_base = cfg.base_url.clone().unwrap_or_else(|| match protocol {
+        WireProtocol::OpenaiCompletions | WireProtocol::OpenaiResponses => {
+            "https://api.openai.com".to_string()
+        }
+        WireProtocol::AnthropicMessages => default_anthropic_base_url(),
     });
     let mut merged: Vec<Model> = Vec::with_capacity(cfg.models.len());
     for def in &cfg.models {
@@ -877,7 +863,7 @@ pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec
         let mut m = Model::new(
             def.id.clone(),
             name,
-            api.clone(),
+            protocol.api(),
             provider_id.to_string(),
             base_url,
         );
@@ -914,17 +900,12 @@ pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec
                 headers.insert(k, v);
             }
         }
-        if matches!(api, Api::OpenaiCompletions | Api::OpenaiResponses) {
-            if let Some(value) = def.compat.clone() {
-                if matches!(api, Api::OpenaiResponses) {
-                    if let Ok(compat) = serde_json::from_value(value) {
-                        m.compat = Some(StreamingProtocolCompat::OpenaiResponses(compat));
-                    }
-                } else if let Ok(compat) = serde_json::from_value(value) {
-                    m.compat = Some(StreamingProtocolCompat::OpenaiCompletions(compat));
-                }
-            }
-        }
+        // A malformed `compat` block is dropped rather than failing the whole
+        // provider, matching how unknown keys inside it are ignored.
+        m.compat = def
+            .compat
+            .clone()
+            .and_then(|value| protocol.parse_compat(value).ok());
         if !headers.is_empty() {
             m.headers = Some(headers);
         }
@@ -1078,6 +1059,7 @@ pub(crate) mod test_support {
 mod tests {
     use super::*;
     use crate::config::test_support::env_lock;
+    use ice_ai::{Api, StreamingProtocolCompat};
 
     /// Point `ICERS_CODING_AGENT_DIR` at a fresh temp dir for the duration of the
     /// test (cleaned up on drop). Holds the prior value of the env var to
@@ -1442,6 +1424,59 @@ mod tests {
         .unwrap();
         let plain_models = provider_to_models("qwen", &plain.providers["qwen"]).unwrap();
         assert!(plain_models[0].compat.is_none());
+    }
+
+    #[test]
+    fn provider_protocol_is_typed_and_custom_api_styles_are_not_built_in() {
+        let config: ModelsConfig = serde_json::from_str(
+            r#"{
+                "providers": {
+                    "implicit": { "models": [{"id":"m"}] },
+                    "empty": { "api": "", "models": [{"id":"m"}] },
+                    "chat": { "api": "openai-completions", "models": [{"id":"m"}] },
+                    "responses": { "api": "openai-responses", "models": [{"id":"m"}] },
+                    "package": { "api": "google-generative-ai", "models": [{"id":"m"}] }
+                }
+            }"#,
+        )
+        .unwrap();
+        let protocol = |id: &str| config.providers[id].protocol();
+        assert_eq!(protocol("implicit"), Some(WireProtocol::AnthropicMessages));
+        assert_eq!(protocol("empty"), Some(WireProtocol::AnthropicMessages));
+        assert_eq!(protocol("chat"), Some(WireProtocol::OpenaiCompletions));
+        assert_eq!(protocol("responses"), Some(WireProtocol::OpenaiResponses));
+        assert_eq!(protocol("package"), None);
+        assert!(provider_to_models("package", &config.providers["package"]).is_none());
+        let models = provider_to_models("responses", &config.providers["responses"]).unwrap();
+        assert_eq!(models[0].api, Api::OpenaiResponses);
+    }
+
+    #[test]
+    fn models_json_compat_reaches_the_model_for_anthropic_messages() {
+        let config: ModelsConfig = serde_json::from_str(
+            r#"{
+                "providers": {
+                    "proxy": {
+                        "api": "anthropic-messages",
+                        "baseUrl": "https://proxy.example.com",
+                        "models": [
+                            { "id": "a", "compat": { "supportsCacheControlOnTools": false } },
+                            { "id": "b", "compat": { "supportsCacheControlOnTools": "no" } }
+                        ]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+        let models = provider_to_models("proxy", &config.providers["proxy"]).unwrap();
+        match models[0].compat.as_ref().expect("compat must survive") {
+            StreamingProtocolCompat::AnthropicMessages(compat) => {
+                assert!(!compat.cache_control_on_tools());
+            }
+            other => panic!("expected AnthropicMessages compat, got {other:?}"),
+        }
+        // A wrongly typed flag drops that model's compat, not the provider.
+        assert!(models[1].compat.is_none());
     }
 
     #[test]

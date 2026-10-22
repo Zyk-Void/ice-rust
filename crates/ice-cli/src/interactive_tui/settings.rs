@@ -1,6 +1,7 @@
 //! Settings selectors, model catalog filtering, and setting changes.
 
 use super::*;
+use ice_ai::WireProtocol;
 
 /// Resolve the runtime scope in its chosen order. Legacy empty scope means all.
 pub(super) fn scoped_catalog(
@@ -1261,29 +1262,35 @@ fn provider_origin_protocol(
             .get(id)
             .and_then(|provider| provider.api.as_deref())
             .or_else(|| manifest.models.first().map(|model| model.api.as_str()));
-        let protocol = match api {
-            Some("anthropic-messages") => "Anthropic 兼容",
-            Some("openai-completions" | "openai-responses") => "OpenAI 兼容",
-            _ => "自定义协议",
-        };
-        return ("package", protocol);
+        return (
+            "package",
+            protocol_family(api.and_then(WireProtocol::parse)),
+        );
     }
     match id.to_ascii_lowercase().as_str() {
-        "anthropic" => ("内置", "Anthropic"),
-        "openai" => ("内置", "OpenAI"),
+        "anthropic" => ("built-in", "Anthropic"),
+        "openai" => ("built-in", "OpenAI"),
+        // Only an explicit `api` counts here: an entry without one is listed
+        // as a custom protocol rather than as Anthropic-compatible.
         _ => {
             let protocol = cfg
                 .providers
                 .get(id)
                 .and_then(|p| p.api.as_deref())
-                .map(|api| match api {
-                    "anthropic-messages" => "Anthropic 兼容",
-                    "openai-completions" | "openai-responses" => "OpenAI 兼容",
-                    _ => "自定义协议",
-                })
-                .unwrap_or("自定义协议");
-            ("自定义", protocol)
+                .and_then(WireProtocol::parse);
+            ("custom", protocol_family(protocol))
         }
+    }
+}
+
+/// The `/provider` label for a protocol family.
+fn protocol_family(protocol: Option<WireProtocol>) -> &'static str {
+    match protocol {
+        Some(WireProtocol::AnthropicMessages) => "Anthropic-compatible",
+        Some(WireProtocol::OpenaiCompletions | WireProtocol::OpenaiResponses) => {
+            "OpenAI-compatible"
+        }
+        None => "custom protocol",
     }
 }
 
@@ -1465,15 +1472,24 @@ fn show_provider_api_selector(
     editor: &Arc<Editor>,
     tui: &Arc<TuiAltScreen>,
 ) {
-    let items = vec![
-        SelectItem::new("openai-completions", "OpenAI Completions")
-            .with_description("OpenAI Chat Completions 兼容接口"),
-        SelectItem::new("anthropic-messages", "Anthropic Messages")
-            .with_description("Anthropic Messages 兼容接口"),
-        SelectItem::new("openai-responses", "OpenAI Responses")
-            .with_description("OpenAI Responses 接口"),
-    ];
-    let list = Arc::new(SelectList::new(items, 3));
+    let items: Vec<SelectItem> = WireProtocol::ALL
+        .into_iter()
+        .map(|protocol| {
+            let (label, description) = match protocol {
+                WireProtocol::OpenaiCompletions => (
+                    "OpenAI Completions",
+                    "OpenAI Chat Completions-compatible endpoint",
+                ),
+                WireProtocol::AnthropicMessages => (
+                    "Anthropic Messages",
+                    "Anthropic Messages-compatible endpoint",
+                ),
+                WireProtocol::OpenaiResponses => ("OpenAI Responses", "OpenAI Responses endpoint"),
+            };
+            SelectItem::new(protocol.as_str(), label).with_description(description)
+        })
+        .collect();
+    let list = Arc::new(SelectList::new(items, WireProtocol::ALL.len()));
 
     let frame = provider_form_frame(
         "Add provider · step 2/6",

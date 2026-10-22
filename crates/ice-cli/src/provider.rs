@@ -927,7 +927,7 @@ fn resolve_anthropic_credentials(
 ) -> AnthropicCredentials {
     let mut provider_ids = vec![DEFAULT_PROVIDER_ID.to_string()];
     for (provider_id, provider_cfg) in &cfg.providers {
-        if config::provider_is_anthropic_compatible(provider_cfg)
+        if provider_cfg.protocol() == Some(ice_ai::WireProtocol::AnthropicMessages)
             && !provider_ids.iter().any(|known| known == provider_id)
         {
             provider_ids.push(provider_id.clone());
@@ -989,9 +989,10 @@ fn resolve_openai_credentials(
 ) -> OpenAiCredentials {
     let mut provider_ids = vec!["openai".to_string()];
     for (provider_id, provider_cfg) in &cfg.providers {
-        if (config::provider_is_openai_completions(provider_cfg)
-            || config::provider_is_openai_responses(provider_cfg))
-            && !provider_ids.contains(provider_id)
+        if matches!(
+            provider_cfg.protocol(),
+            Some(ice_ai::WireProtocol::OpenaiCompletions | ice_ai::WireProtocol::OpenaiResponses)
+        ) && !provider_ids.contains(provider_id)
         {
             provider_ids.push(provider_id.clone());
         }
@@ -1009,7 +1010,9 @@ fn resolve_openai_credentials(
             crate::credentials::resolve(&provider_id, provider_cfg, auth_store, manifest);
         // Anthropic keys are represented by their own map, preserving bearer vs
         // x-api-key semantics. Anonymous declarations apply to every protocol.
-        if provider_cfg.is_some_and(config::provider_is_anthropic_compatible) {
+        if provider_cfg
+            .is_some_and(|cfg| cfg.protocol() == Some(ice_ai::WireProtocol::AnthropicMessages))
+        {
             if matches!(
                 resolved.source,
                 crate::credentials::CredentialSource::Anonymous
